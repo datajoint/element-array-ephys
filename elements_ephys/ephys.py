@@ -8,33 +8,32 @@ import hashlib
 from collections.abc import Mapping
 
 from .readers import neuropixels, kilosort
-from .probe import schema as probe_schema, ProbeType, ElectrodeConfig
-
+from . import probe
 
 schema = dj.schema()
 
 
 def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
     upstream_tables = ("Session", "SkullReference")
+    assert isinstance(add_objects, Mapping)
+    try:
+        raise RuntimeError("Table %s is required for module ephys" % next(
+            name for name in upstream_tables
+            if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed))))
+    except StopIteration:
+        pass  # all ok
+
     required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
     assert isinstance(add_objects, Mapping)
     try:
-        raise next(RuntimeError("Table %s is required for module ephys" % name)
-                   for name in upstream_tables
-                   if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed)))
+        raise RuntimeError("Function %s is required for module ephys" % next(
+            name for name in required_functions
+            if not inspect.isfunction(add_objects.get(name, None))))
     except StopIteration:
         pass  # all ok
 
-    assert isinstance(add_objects, Mapping)
-    try:
-        raise next(RuntimeError("Function %s is required for module ephys" % name)
-                   for name in required_functions
-                   if not inspect.isfunction(add_objects.get(name, None)))
-    except StopIteration:
-        pass  # all ok
-
-    if not probe_schema.is_activated:
-        probe_schema.activate(probe_schema_name or ephys_schema_name,
+    if not probe.schema.is_activated:
+        probe.schema.activate(probe_schema_name or ephys_schema_name,
                               create_schema=create_schema, create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
                     create_tables=create_tables, add_objects=add_objects)
@@ -67,7 +66,6 @@ def get_paramset_idx(ephys_rec_key: dict) -> int:
     raise NotImplementedError('Workflow module should define')
 
 
-
 def dict_to_uuid(key):
     """
     Given a dictionary `key`, returns a hash string
@@ -87,7 +85,7 @@ class ProbeInsertion(dj.Manual):  # (acute)
     -> Session  
     insertion_number: tinyint unsigned
     ---
-    -> Probe
+    -> probe.Probe
     """
 
 
@@ -134,7 +132,7 @@ class EphysRecording(dj.Imported):
         if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
             eg_members = []
             probe_type = {'probe_type': neuropixels_meta.probe_model}
-            q_electrodes = ProbeType.Electrode & probe_type
+            q_electrodes = probe.ProbeType.Electrode & probe_type
             for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
                 electrode = (q_electrodes & {'shank': shank,
                                              'shank_col': shank_col,
@@ -181,7 +179,7 @@ class LFP(dj.Imported):
     class Electrode(dj.Part):
         definition = """
         -> master
-        -> ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode  
         ---
         lfp: longblob               # (mV) recorded lfp at this electrode 
         """
@@ -200,7 +198,7 @@ class LFP(dj.Imported):
         Only store LFP for every 9th channel (defined in skip_chn_counts), counting in reverse
             Due to high channel density, close-by channels exhibit highly similar lfp
         '''
-        q_electrodes = ProbeType.Electrode * ElectrodeConfig.Electrode & key
+        q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
         electrodes = []
         for recorded_site in np.arange(lfp.shape[0]):
             shank, shank_col, shank_row, _ = neuropixels_recording.neuropixels_meta.shankmap['data'][recorded_site]
@@ -311,7 +309,7 @@ class Clustering(dj.Imported):
         -> master
         unit: int
         ---
-        -> ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
+        -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
         -> ClusterQualityLabel
         spike_count: int         # how many spikes in this recording of this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
@@ -376,7 +374,7 @@ class Waveform(dj.Imported):
     class Electrode(dj.Part):
         definition = """
         -> master
-        -> ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode  
         --- 
         waveform_mean: longblob   # mean over all spikes
         waveforms=null: longblob  # (spike x sample) waveform of each spike at each electrode
@@ -466,9 +464,9 @@ def get_neuropixels_chn2electrode_map(ephys_recording_key):
     neuropixels_dir = EphysRecording._get_neuropixels_data_directory(ephys_recording_key)
     meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
     neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
-    e_config_key = (EphysRecording * ElectrodeConfig & ephys_recording_key).fetch1('KEY')
+    e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
 
-    q_electrodes = ProbeType.Electrode * ElectrodeConfig.Electrode & e_config_key
+    q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & e_config_key
     chn2electrode_map = {}
     for recorded_site, (shank, shank_col, shank_row, _) in enumerate(neuropixels_meta.shankmap['data']):
         chn2electrode_map[recorded_site] = (q_electrodes
