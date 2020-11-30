@@ -1,0 +1,2 @@
+datajoint
+canonical-utils @ git+https://github.com/vathes/canonical-utils.git
