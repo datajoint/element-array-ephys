@@ -1,0 +1,238 @@
+<svg height="524pt" viewBox="0.00 0.00 562.00 524.00" width="562pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 520)">
+<title>%3</title>
+<polygon fill="white" points="-4,4 -4,-520 558,-520 558,4 -4,4" stroke="none"/>
+<!-- ProbeType.Electrode -->
+<g class="node" id="node1"><title>ProbeType.Electrode</title>
+<g id="a_node1"><a xlink:title="→ ProbeTypeelectrode            ------------------------------shank                shank_col            shank_row            x_coord=null         y_coord=null         ">
+<polygon fill="none" points="107,-437 0,-437 0,-418 107,-418 107,-437" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="8" y="-426">ProbeType.Electrode</text>
+</a>
+</g>
+</g>
+<!-- ElectrodeConfig.Electrode -->
+<g class="node" id="node14"><title>ElectrodeConfig.Electrode</title>
+<g id="a_node14"><a xlink:title="→ ElectrodeConfig→ ProbeType.Electrode------------------------------is_used              ">
+<polygon fill="none" points="169,-295 40,-295 40,-276 169,-276 169,-295" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="middle" x="104.5" y="-283">ElectrodeConfig.Electrode</text>
+</a>
+</g>
+</g>
+<!-- ProbeType.Electrode&#45;&gt;ElectrodeConfig.Electrode -->
+<g class="edge" id="edge1"><title>ProbeType.Electrode-&gt;ElectrodeConfig.Electrode</title>
+<path d="M54.4195,-417.773C56.3225,-401.706 61.4703,-366.566 72.5,-339 79.0824,-322.549 90.5834,-305.358 97.8564,-295.304" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- UnitSpikeTimes -->
+<g class="node" id="node2"><title>UnitSpikeTimes</title>
+<g id="a_node2"><a xlink:title="→ Unit------------------------------spike_count          unit_spike_times     ">
+<ellipse cx="155.5" cy="-72.5" fill="#00007f" fill-opacity="0.250980" rx="62.5" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="middle" x="155.5" y="-69.4">UnitSpikeTimes</text>
+</a>
+</g>
+</g>
+<!-- ClusterQualityLabel -->
+<g class="node" id="node3"><title>ClusterQualityLabel</title>
+<g id="a_node3"><a xlink:title="cluster_quality_label ------------------------------cluster_quality_description ">
+<polygon fill="#000000" fill-opacity="0.125490" points="335,-232 234,-232 234,-197 335,-197 335,-232" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="242" y="-213">ClusterQualityLabel</text>
+</a>
+</g>
+</g>
+<!-- Unit -->
+<g class="node" id="node5"><title>Unit</title>
+<g id="a_node5"><a xlink:title="→ Clusteringunit                 ------------------------------→ ElectrodeConfig.Electrode→ ClusterQualityLabel">
+<ellipse cx="282.5" cy="-143.5" fill="#00007f" fill-opacity="0.250980" rx="23.2507" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="start" text-decoration="underline" x="272" y="-141.4">Unit</text>
+</a>
+</g>
+</g>
+<!-- ClusterQualityLabel&#45;&gt;Unit -->
+<g class="edge" id="edge2"><title>ClusterQualityLabel-&gt;Unit</title>
+<path d="M284.016,-196.797C283.701,-185.949 283.293,-171.867 282.98,-161.049" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ClusteringMethod -->
+<g class="node" id="node4"><title>ClusteringMethod</title>
+<g id="a_node4"><a xlink:title="clustering_method    ------------------------------clustering_method_desc ">
+<polygon fill="#000000" fill-opacity="0.125490" points="430.5,-303 338.5,-303 338.5,-268 430.5,-268 430.5,-303" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="346.5" y="-284">ClusteringMethod</text>
+</a>
+</g>
+</g>
+<!-- Clustering -->
+<g class="node" id="node18"><title>Clustering</title>
+<g id="a_node18"><a xlink:title="→ EphysRecordingclustering_instance  ------------------------------→ ClusteringMethodclustering_time      quality_control      manual_curation      clustering_note=&quot;&quot;   ">
+<polygon fill="#00ff00" fill-opacity="0.188235" points="422,-232 353,-232 353,-197 422,-197 422,-232" stroke="#00ff00" stroke-opacity="0.188235"/>
+<text fill="darkgreen" font-family="arial" font-size="12.00" text-anchor="start" text-decoration="underline" x="361" y="-212.4">Clustering</text>
+</a>
+</g>
+</g>
+<!-- ClusteringMethod&#45;&gt;Clustering -->
+<g class="edge" id="edge3"><title>ClusteringMethod-&gt;Clustering</title>
+<path d="M385.226,-267.797C385.698,-256.949 386.31,-242.867 386.78,-232.049" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- Unit&#45;&gt;UnitSpikeTimes -->
+<g class="edge" id="edge4"><title>Unit-&gt;UnitSpikeTimes</title>
+<path d="M264.304,-132.614C243.042,-121.062 207.64,-101.828 183.016,-88.4494" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="2"/>
+</g>
+<!-- Waveform -->
+<g class="node" id="node9"><title>Waveform</title>
+<g id="a_node9"><a xlink:title="→ Unit------------------------------peak_chn_waveform_mean ">
+<ellipse cx="279.5" cy="-72.5" fill="#00007f" fill-opacity="0.250980" rx="43.5014" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="middle" x="279.5" y="-69.4">Waveform</text>
+</a>
+</g>
+</g>
+<!-- Unit&#45;&gt;Waveform -->
+<g class="edge" id="edge5"><title>Unit-&gt;Waveform</title>
+<path d="M281.774,-125.797C281.302,-114.949 280.69,-100.867 280.22,-90.0492" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="2"/>
+</g>
+<!-- ClusterQualityMetrics -->
+<g class="node" id="node12"><title>ClusterQualityMetrics</title>
+<g id="a_node12"><a xlink:title="→ Unit------------------------------amp                  snr                  isi_violation        firing_rate          presence_ratio       amplitude_cutoff     isolation_distance=null l_ratio=null         d_prime=null         nn_hit_rate=null     nn_miss_rate=null    silhouette_score=null max_drift=null       cumulative_drift=null ">
+<ellipse cx="420.5" cy="-72.5" fill="#00007f" fill-opacity="0.250980" rx="79.2502" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="middle" x="420.5" y="-69.4">ClusterQualityMetrics</text>
+</a>
+</g>
+</g>
+<!-- Unit&#45;&gt;ClusterQualityMetrics -->
+<g class="edge" id="edge6"><title>Unit-&gt;ClusterQualityMetrics</title>
+<path d="M301.399,-133.051C324.209,-121.646 362.867,-102.317 389.936,-88.7822" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="2"/>
+</g>
+<!-- LFP -->
+<g class="node" id="node6"><title>LFP</title>
+<g id="a_node6"><a xlink:title="→ EphysRecording------------------------------lfp_sample_rate      lfp_time_stamps      lfp_mean             ">
+<ellipse cx="191.5" cy="-214.5" fill="#00007f" fill-opacity="0.250980" rx="24.2506" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="middle" x="191.5" y="-211.4">LFP</text>
+</a>
+</g>
+</g>
+<!-- LFP.Electrode -->
+<g class="node" id="node11"><title>LFP.Electrode</title>
+<g id="a_node11"><a xlink:title="→ LFP→ ElectrodeConfig.Electrode------------------------------lfp                  ">
+<polygon fill="none" points="231,-153 152,-153 152,-134 231,-134 231,-153" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="middle" x="191.5" y="-141">LFP.Electrode</text>
+</a>
+</g>
+</g>
+<!-- LFP&#45;&gt;LFP.Electrode -->
+<g class="edge" id="edge7"><title>LFP-&gt;LFP.Electrode</title>
+<path d="M191.5,-196.797C191.5,-183.077 191.5,-164.185 191.5,-153.265" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ProbeInsertion -->
+<g class="node" id="node7"><title>ProbeInsertion</title>
+<g id="a_node7"><a xlink:title="→ `u24_subject`.`subject`→ `u24_experiment`.`session`insertion_number     ------------------------------→ Probe">
+<polygon fill="#00ff00" fill-opacity="0.188235" points="297.5,-374 205.5,-374 205.5,-339 297.5,-339 297.5,-374" stroke="#00ff00" stroke-opacity="0.188235"/>
+<text fill="darkgreen" font-family="arial" font-size="12.00" text-anchor="start" text-decoration="underline" x="213.5" y="-354.4">ProbeInsertion</text>
+</a>
+</g>
+</g>
+<!-- InsertionLocation -->
+<g class="node" id="node13"><title>InsertionLocation</title>
+<g id="a_node13"><a xlink:title="→ ProbeInsertion→ `u24_lab`.`#location`">
+<polygon fill="#00ff00" fill-opacity="0.188235" points="554,-303 449,-303 449,-268 554,-268 554,-303" stroke="#00ff00" stroke-opacity="0.188235"/>
+<text fill="darkgreen" font-family="arial" font-size="12.00" text-anchor="middle" x="501.5" y="-282.4">InsertionLocation</text>
+</a>
+</g>
+</g>
+<!-- ProbeInsertion&#45;&gt;InsertionLocation -->
+<g class="edge" id="edge8"><title>ProbeInsertion-&gt;InsertionLocation</title>
+<path d="M297.645,-342.764C340.394,-330.965 403.941,-313.426 448.697,-301.074" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- EphysRecording -->
+<g class="node" id="node15"><title>EphysRecording</title>
+<g id="a_node15"><a xlink:title="→ `u24_experiment`.`session`→ ProbeInsertion------------------------------→ ElectrodeConfig">
+<ellipse cx="251.5" cy="-285.5" fill="#00007f" fill-opacity="0.250980" rx="64.2502" ry="17.5" stroke="#00007f" stroke-opacity="0.250980"/>
+<text fill="#00007f" font-family="arial" font-size="12.00" text-anchor="middle" x="251.5" y="-282.4">EphysRecording</text>
+</a>
+</g>
+</g>
+<!-- ProbeInsertion&#45;&gt;EphysRecording -->
+<g class="edge" id="edge9"><title>ProbeInsertion-&gt;EphysRecording</title>
+<path d="M251.5,-338.797C251.5,-327.949 251.5,-313.867 251.5,-303.049" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="2"/>
+</g>
+<!-- ElectrodeConfig -->
+<g class="node" id="node8"><title>ElectrodeConfig</title>
+<g id="a_node8"><a xlink:title="→ ProbeTypeelectrode_config_name ------------------------------electrode_config_uuid UNIQUE INDEX (electrode_config_uuid)">
+<polygon fill="#000000" fill-opacity="0.125490" points="167,-374 82,-374 82,-339 167,-339 167,-374" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="90" y="-355">ElectrodeConfig</text>
+</a>
+</g>
+</g>
+<!-- ElectrodeConfig&#45;&gt;ElectrodeConfig.Electrode -->
+<g class="edge" id="edge10"><title>ElectrodeConfig-&gt;ElectrodeConfig.Electrode</title>
+<path d="M119.659,-338.797C115.682,-325.077 110.206,-306.185 107.041,-295.265" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ElectrodeConfig&#45;&gt;EphysRecording -->
+<g class="edge" id="edge11"><title>ElectrodeConfig-&gt;EphysRecording</title>
+<path d="M154.92,-338.973C175.907,-327.57 203.583,-312.534 223.927,-301.481" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- Waveform.Electrode -->
+<g class="node" id="node16"><title>Waveform.Electrode</title>
+<g id="a_node16"><a xlink:title="→ Waveform→ ElectrodeConfig.Electrode------------------------------waveform_mean        waveforms=null       ">
+<polygon fill="none" points="331.5,-19 227.5,-19 227.5,-0 331.5,-0 331.5,-19" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="middle" x="279.5" y="-7">Waveform.Electrode</text>
+</a>
+</g>
+</g>
+<!-- Waveform&#45;&gt;Waveform.Electrode -->
+<g class="edge" id="edge12"><title>Waveform-&gt;Waveform.Electrode</title>
+<path d="M279.5,-54.8315C279.5,-43.2612 279.5,-28.3217 279.5,-19.0782" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- Probe -->
+<g class="node" id="node10"><title>Probe</title>
+<g id="a_node10"><a xlink:title="probe                ------------------------------→ ProbeTypeprobe_comment=&quot;&quot;     ">
+<polygon fill="#000000" fill-opacity="0.125490" points="238.5,-445 196.5,-445 196.5,-410 238.5,-410 238.5,-445" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="204.5" y="-426">Probe</text>
+</a>
+</g>
+</g>
+<!-- Probe&#45;&gt;ProbeInsertion -->
+<g class="edge" id="edge13"><title>Probe-&gt;ProbeInsertion</title>
+<path d="M225.73,-409.797C231.076,-398.949 238.015,-384.867 243.345,-374.049" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ElectrodeConfig.Electrode&#45;&gt;Unit -->
+<g class="edge" id="edge14"><title>ElectrodeConfig.Electrode-&gt;Unit</title>
+<path d="M107.737,-275.825C114.579,-258.572 132.083,-219.668 158.5,-197 166.816,-189.864 229.469,-165.018 262.403,-152.232" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ElectrodeConfig.Electrode&#45;&gt;LFP.Electrode -->
+<g class="edge" id="edge15"><title>ElectrodeConfig.Electrode-&gt;LFP.Electrode</title>
+<path d="M104.746,-275.831C105.591,-259.249 109.301,-222.43 125.5,-197 137.929,-177.489 160.156,-162.064 175.353,-153.113" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ElectrodeConfig.Electrode&#45;&gt;Waveform.Electrode -->
+<g class="edge" id="edge16"><title>ElectrodeConfig.Electrode-&gt;Waveform.Electrode</title>
+<path d="M99.8847,-275.795C83.0651,-242.748 28.8292,-123.475 83.5,-55 101.189,-32.8443 175.395,-20.8856 227.241,-15.1058" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- EphysRecording&#45;&gt;LFP -->
+<g class="edge" id="edge17"><title>EphysRecording-&gt;LFP</title>
+<path d="M237.281,-268.148C227.162,-256.511 213.694,-241.024 203.989,-229.862" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="2"/>
+</g>
+<!-- EphysRecording&#45;&gt;Clustering -->
+<g class="edge" id="edge18"><title>EphysRecording-&gt;Clustering</title>
+<path d="M280.675,-269.698C302.373,-258.689 332.002,-243.657 354.552,-232.216" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ProbeType -->
+<g class="node" id="node17"><title>ProbeType</title>
+<g id="a_node17"><a xlink:title="probe_type           ">
+<polygon fill="#000000" fill-opacity="0.125490" points="85,-516 22,-516 22,-481 85,-481 85,-516" stroke="none"/>
+<text font-family="arial" font-size="10.00" text-anchor="start" text-decoration="underline" x="30" y="-497">ProbeType</text>
+</a>
+</g>
+</g>
+<!-- ProbeType&#45;&gt;ProbeType.Electrode -->
+<g class="edge" id="edge19"><title>ProbeType-&gt;ProbeType.Electrode</title>
+<path d="M53.5,-480.797C53.5,-467.077 53.5,-448.185 53.5,-437.265" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ProbeType&#45;&gt;ElectrodeConfig -->
+<g class="edge" id="edge20"><title>ProbeType-&gt;ElectrodeConfig</title>
+<path d="M81.6774,-480.784C94.1896,-471.817 107.802,-459.597 115.5,-445 127.326,-422.577 127.599,-392.443 126.33,-374.026" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- ProbeType&#45;&gt;Probe -->
+<g class="edge" id="edge21"><title>ProbeType-&gt;Probe</title>
+<path d="M85.1208,-484.196C117.885,-470.411 168.168,-449.256 196.396,-437.379" fill="none" stroke="#000000" stroke-dasharray="5,2" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+<!-- Clustering&#45;&gt;Unit -->
+<g class="edge" id="edge22"><title>Clustering-&gt;Unit</title>
+<path d="M362.35,-196.973C342.935,-184.215 316.598,-166.907 299.574,-155.72" fill="none" stroke="#000000" stroke-opacity="0.250980" stroke-width="0.75"/>
+</g>
+</g>
+</svg>
