@@ -36,7 +36,7 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
         context.update(**{name: add_objects[name]})
 
     # activate
-    if not probe.schema.is_activated:
+    if probe.schema.database is not None:
         probe.schema.activate(probe_schema_name or ephys_schema_name,
                               create_schema=create_schema, create_tables=create_tables)
 
@@ -372,10 +372,9 @@ class Waveform(dj.Imported):
     def make(self, key):
         units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
-        neuropixels_dir = EphysRecording._get_neuropixels_data_directory(key)
-        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
+        neuropixels_dir = get_neuropixels_data_directory(key)
 
-        ks_dir = ClusteringTask._get_ks_data_dir(key)
+        ks_dir = get_kilosort_output_directory(key)
         ks = kilosort.Kilosort(ks_dir)
 
         # -- Get channel and electrode-site mapping
@@ -410,7 +409,7 @@ class Waveform(dj.Imported):
         self.Electrode.insert(unit_waveforms, ignore_extra_fields=True)
 
 
-# ===================================== Quality Control [WIP] =====================================
+# ----------- Quality Control ----------
 
 @schema
 class ClusterQualityMetrics(dj.Imported):
