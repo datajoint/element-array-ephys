@@ -12,27 +12,31 @@ from . import probe
 
 schema = dj.schema()
 
+context = locals()
+
+table_classes = (dj.Manual, dj.Lookup, dj.Imported, dj.Computed)
+
 
 def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
     assert isinstance(add_objects, Mapping)
 
     upstream_tables = ("Session", "SkullReference")
-    try:
-        raise RuntimeError("Table %s is required for module ephys" % next(
-            name for name in upstream_tables
-            if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed, dj.user_tables.OrderedClass))))
-    except StopIteration:
-        pass  # all ok
+    for name in upstream_tables:
+        assert name in add_objects, "Upstream table %s is required in ephys.activate(add_objects=...)" % name
+        table = add_objects[name]
+        if inspect.isclass(table):
+            table = table()
+        assert isinstance(table, table_classes), "Upstream table %s must be a DataJoint table " \
+                                                 "object in ephys.activate(add_objects=...)" % name
 
     required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
-    try:
-        raise RuntimeError("Function %s is required for module ephys" % next(
-            name for name in required_functions
-            if not inspect.isfunction(add_objects.get(name, None))))
-    except StopIteration:
-        pass  # all ok
+    for name in required_functions:
+        assert name in add_objects, "Functions %s is required in ephys.activate(add_objects=...)" % name
+        assert inspect.isfunction(add_objects[name]), "%s must be a function in ephys.activate(add_objects=...)" % name
+        context.update(**{name: add_objects[name]})
 
-    if not probe.schema.database:
+    # activate
+    if not probe.schema.is_activated:
         probe.schema.activate(probe_schema_name or ephys_schema_name,
                               create_schema=create_schema, create_tables=create_tables)
 
@@ -40,7 +44,7 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
                     create_tables=create_tables, add_objects=add_objects)
 
 
-# REQUIREMENTS: The workflow module must define these functions ---------------
+# -------------- Functions required by the elements-ephys  ---------------
 
 
 def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
@@ -73,8 +77,7 @@ def get_paramset_idx(ephys_rec_key: dict) -> int:
     raise NotImplementedError('Workflow module should define function: get_paramset_idx')
 
 
-# ===================================== Probe Insertion =====================================
-
+# ----------------------------- Table declarations ----------------------
 
 @schema
 class ProbeInsertion(dj.Manual):  # (acute)
@@ -84,9 +87,6 @@ class ProbeInsertion(dj.Manual):  # (acute)
     ---
     -> probe.Probe
     """
-
-
-# ===================================== Insertion Location =====================================
 
 
 @schema
@@ -104,8 +104,6 @@ class InsertionLocation(dj.Manual):
     beta=null:   decimal(5, 2) # (deg) rotation about the shank of the probe [-180, 180] - clockwise is increasing in degree - 0 is the probe-front facing anterior
     """
 
-
-# ===================================== Ephys Recording =====================================
 
 @schema
 class EphysRecording(dj.Imported):
@@ -145,19 +143,12 @@ class EphysRecording(dj.Imported):
         e_config = {'electrode_config_hash': ec_hash}
 
         # ---- make new ElectrodeConfig if needed ----
-        if not (probe.ElectrodeConfig & e_config):
+        if not probe.ElectrodeConfig & e_config:
             probe.ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
             probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
 
         self.insert1({**key, **e_config, 'sampling_rate': neuropixels_meta.meta['imSampRate']})
 
-
-# ===========================================================================================
-# ================================= NON-CONFIGURABLE COMPONENTS =============================
-# ===========================================================================================
-
-
-# ===================================== Ephys LFP =====================================
 
 @schema
 class LFP(dj.Imported):
@@ -202,12 +193,12 @@ class LFP(dj.Imported):
 
         chn_lfp = list(zip(electrodes, lfp))
         skip_chn_counts = 9
-        self.Electrode.insert(({**key, **electrode, 'lfp': d}
-                               for electrode, d in chn_lfp[-1::-skip_chn_counts]), ignore_extra_fields=True)
+        self.Electrode().insert((
+            {**key, **electrode, 'lfp': d}
+            for electrode, d in chn_lfp[-1::-skip_chn_counts]), ignore_extra_fields=True)
 
 
-# ===================================== Clustering =====================================
-
+# ------------ Clustering --------------
 
 @schema
 class ClusteringMethod(dj.Lookup):
@@ -376,14 +367,13 @@ class Waveform(dj.Imported):
 
     @property
     def key_source(self):
-        return Clustering
+        return Clustering()
 
     def make(self, key):
         units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
         neuropixels_dir = EphysRecording._get_neuropixels_data_directory(key)
         meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
-        neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
 
         ks_dir = ClusteringTask._get_ks_data_dir(key)
         ks = kilosort.Kilosort(ks_dir)
@@ -451,7 +441,7 @@ class ClusterQualityMetrics(dj.Imported):
     def make(self, key):
         pass
 
-# ========================== HELPER FUNCTIONS =======================
+# ---------------- HELPER FUNCTIONS ----------------
 
 
 def get_neuropixels_chn2electrode_map(ephys_recording_key):
@@ -472,7 +462,7 @@ def get_neuropixels_chn2electrode_map(ephys_recording_key):
 
 def dict_to_uuid(key):
     """
-    Given a dictionary `key`, returns a hash string
+    Given a dictionary `key`, returns a hash string as UUID
     """
     hashed = hashlib.md5()
     for k, v in sorted(key.items()):
