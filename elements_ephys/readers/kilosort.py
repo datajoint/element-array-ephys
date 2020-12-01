@@ -4,20 +4,9 @@ import pandas as pd
 import numpy as np
 import re
 import logging
+from .utils import convert_to_number
 
 log = logging.getLogger(__name__)
-
-
-def convert_to_number(value: str):
-    if isinstance(value, str):
-        try:
-            value = int(value)
-        except ValueError:
-            try:
-                value = float(value)
-            except ValueError:
-                pass
-    return value
 
 
 class Kilosort:
@@ -85,7 +74,7 @@ class Kilosort:
                 prm = {}
                 for line in open(f, 'r').readlines():
                     k, v = line.strip('\n').split('=')
-                    prm[k.strip()] = handle_string(v.strip())
+                    prm[k.strip()] = convert_to_number(v.strip())
                 log.debug('prm: {}'.format(prm))
                 self._data[base] = prm
 
