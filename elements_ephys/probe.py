@@ -10,6 +10,7 @@ schema = dj.schema()
 def activate(schema_name, create_schema=True, create_tables=True):
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
+
 @schema
 class ProbeType(dj.Lookup):
     definition = """
