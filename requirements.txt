@@ -1,2 +1,1 @@
-datajoint
-canonical-utils @ git+https://github.com/vathes/canonical-utils.git
+datajoint>=0.12.7

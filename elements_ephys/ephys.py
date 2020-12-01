@@ -14,17 +14,17 @@ schema = dj.schema()
 
 
 def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
-    upstream_tables = ("Session", "SkullReference")
     assert isinstance(add_objects, Mapping)
+
+    upstream_tables = ("Session", "SkullReference")
     try:
         raise RuntimeError("Table %s is required for module ephys" % next(
             name for name in upstream_tables
-            if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed))))
+            if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed, dj.user_tables.OrderedClass))))
     except StopIteration:
         pass  # all ok
 
     required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
-    assert isinstance(add_objects, Mapping)
     try:
         raise RuntimeError("Function %s is required for module ephys" % next(
             name for name in required_functions
@@ -32,9 +32,10 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
     except StopIteration:
         pass  # all ok
 
-    if not probe.schema.is_activated:
+    if not probe.schema.database:
         probe.schema.activate(probe_schema_name or ephys_schema_name,
                               create_schema=create_schema, create_tables=create_tables)
+
     schema.activate(ephys_schema_name, create_schema=create_schema,
                     create_tables=create_tables, add_objects=add_objects)
 
@@ -42,39 +43,35 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
 # REQUIREMENTS: The workflow module must define these functions ---------------
 
 
-def get_neuropixels_data_directory():
-    return None
+def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
+    """
+    Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
+    :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
+    :return: a string for full path to the resulting Neuropixels data directory
+    """
+    assert set(ProbeInsertion().primary_key) <= set(probe_insertion_key)
+    raise NotImplementedError('Workflow module should define function: "get_neuropixels_data_directory"')
 
 
 def get_kilosort_output_directory(clustering_task_key: dict) -> str:
     """
     Retrieve the Kilosort output directory for a given ClusteringTask
-    :param clustering_task_key: a dictionary of one EphysRecording
+    :param clustering_task_key: a dictionary of one ClusteringTask `key`
     :return: a string for full path to the resulting Kilosort output directory
     """
     assert set(EphysRecording().primary_key) <= set(clustering_task_key)
-    raise NotImplementedError('Workflow module should define')
+    raise NotImplementedError('Workflow module should define function: "get_kilosort_output_directory"')
 
 
 def get_paramset_idx(ephys_rec_key: dict) -> int:
     """
-    Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording key.
-    :param ephys_rec_key: a dictionary of one EphysRecording
+    Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording.
+    :param ephys_rec_key: a dictionary of one EphysRecording `key`
     :return: int specifying the `paramset_idx`
     """
     assert set(EphysRecording().primary_key) <= set(ephys_rec_key)
-    raise NotImplementedError('Workflow module should define')
+    raise NotImplementedError('Workflow module should define function: get_paramset_idx')
 
-
-def dict_to_uuid(key):
-    """
-    Given a dictionary `key`, returns a hash string
-    """
-    hashed = hashlib.md5()
-    for k, v in sorted(key.items()):
-        hashed.update(str(k).encode())
-        hashed.update(str(v).encode())
-    return uuid.UUID(hex=hashed.hexdigest())
 
 # ===================================== Probe Insertion =====================================
 
@@ -109,17 +106,13 @@ class InsertionLocation(dj.Manual):
 
 
 # ===================================== Ephys Recording =====================================
-# The abstract function _get_neuropixels_data_directory() should expect one argument in the form of a
-# dictionary with the keys from user-defined Subject and Session, as well as
-# "insertion_number" (as int) based on the "ProbeInsertion" table definition in this djephys
-
 
 @schema
 class EphysRecording(dj.Imported):
     definition = """
     -> ProbeInsertion      
     ---
-    -> ElectrodeConfig
+    -> probe.ElectrodeConfig
     sampling_rate: float # (Hz) 
     """
 
@@ -143,7 +136,7 @@ class EphysRecording(dj.Imported):
                 neuropixels_meta.probe_model))
 
         # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
-        ec_hash = uuid.UUID(dict_to_uuid({k['electrode']: k for k in eg_members}))
+        ec_hash = dict_to_uuid({k['electrode']: k for k in eg_members})
 
         el_list = sorted([k['electrode'] for k in eg_members])
         el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
@@ -185,7 +178,7 @@ class LFP(dj.Imported):
         """
 
     def make(self, key):
-        neuropixels_dir = EphysRecording._get_neuropixels_data_directory(key)
+        neuropixels_dir = get_neuropixels_data_directory(key)
         neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
 
         lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
@@ -201,7 +194,7 @@ class LFP(dj.Imported):
         q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
         electrodes = []
         for recorded_site in np.arange(lfp.shape[0]):
-            shank, shank_col, shank_row, _ = neuropixels_recording.neuropixels_meta.shankmap['data'][recorded_site]
+            shank, shank_col, shank_row, _ = neuropixels_recording.npx_meta.shankmap['data'][recorded_site]
             electrodes.append((q_electrodes
                                & {'shank': shank,
                                   'shank_col': shank_col,
@@ -269,13 +262,14 @@ class ClusteringTask(dj.Imported):
     """
 
     def make(self, key):
-        key['paramset_idx'] = ClusteringTask._get_paramset_idx(key)
-        self.insert1(key)
+        key['paramset_idx'] = get_paramset_idx(key)
 
-        data_dir = pathlib.Path(ClusteringTask._get_ks_data_dir(key))
+        data_dir = pathlib.Path(get_kilosort_output_directory(key))
         if not data_dir.exists():
             # this is where we can trigger the clustering job
             print(f'Clustering results not yet found for {key} - Triggering kilosort not yet implemented!')
+
+        self.insert1(key)
 
 
 @schema
@@ -319,7 +313,7 @@ class Clustering(dj.Imported):
         """
 
     def make(self, key):
-        ks_dir = ClusteringTask._get_ks_data_dir(key)
+        ks_dir = get_kilosort_output_directory(key)
         ks = kilosort.Kilosort(ks_dir)
         # ---------- Clustering ----------
         creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
@@ -462,7 +456,7 @@ class ClusterQualityMetrics(dj.Imported):
 
 
 def get_neuropixels_chn2electrode_map(ephys_recording_key):
-    neuropixels_dir = EphysRecording._get_neuropixels_data_directory(ephys_recording_key)
+    neuropixels_dir = get_neuropixels_data_directory(ephys_recording_key)
     meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
     neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
     e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
@@ -475,3 +469,14 @@ def get_neuropixels_chn2electrode_map(ephys_recording_key):
                                                'shank_col': shank_col,
                                                'shank_row': shank_row}).fetch1('KEY')
     return chn2electrode_map
+
+
+def dict_to_uuid(key):
+    """
+    Given a dictionary `key`, returns a hash string
+    """
+    hashed = hashlib.md5()
+    for k, v in sorted(key.items()):
+        hashed.update(str(k).encode())
+        hashed.update(str(v).encode())
+    return uuid.UUID(hex=hashed.hexdigest())
