@@ -1,28 +1,91 @@
+import datajoint as dj
 import pathlib
 import re
 import numpy as np
-import datajoint as dj
+import inspect
 import uuid
+import hashlib
+from collections.abc import Mapping
 
-from . import utils
-from .probe import schema, Probe, ProbeType, ElectrodeConfig
-from ephys_loaders import neuropixels, kilosort
+from .readers import neuropixels, kilosort
+from . import probe
 
-from djutils.templates import required
+schema = dj.schema()
+
+
+def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
+    upstream_tables = ("Session", "SkullReference")
+    assert isinstance(add_objects, Mapping)
+    try:
+        raise RuntimeError("Table %s is required for module ephys" % next(
+            name for name in upstream_tables
+            if not isinstance(add_objects.get(name, None), (dj.Manual, dj.Lookup, dj.Imported, dj.Computed))))
+    except StopIteration:
+        pass  # all ok
+
+    required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
+    assert isinstance(add_objects, Mapping)
+    try:
+        raise RuntimeError("Function %s is required for module ephys" % next(
+            name for name in required_functions
+            if not inspect.isfunction(add_objects.get(name, None))))
+    except StopIteration:
+        pass  # all ok
+
+    if not probe.schema.is_activated:
+        probe.schema.activate(probe_schema_name or ephys_schema_name,
+                              create_schema=create_schema, create_tables=create_tables)
+    schema.activate(ephys_schema_name, create_schema=create_schema,
+                    create_tables=create_tables, add_objects=add_objects)
+
+
+# REQUIREMENTS: The workflow module must define these functions ---------------
+
+
+def get_neuropixels_data_directory():
+    return None
+
+
+def get_kilosort_output_directory(clustering_task_key: dict) -> str:
+    """
+    Retrieve the Kilosort output directory for a given ClusteringTask
+    :param clustering_task_key: a dictionary of one EphysRecording
+    :return: a string for full path to the resulting Kilosort output directory
+    """
+    assert set(EphysRecording().primary_key) <= set(clustering_task_key)
+    raise NotImplementedError('Workflow module should define')
+
+
+def get_paramset_idx(ephys_rec_key: dict) -> int:
+    """
+    Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording key.
+    :param ephys_rec_key: a dictionary of one EphysRecording
+    :return: int specifying the `paramset_idx`
+    """
+    assert set(EphysRecording().primary_key) <= set(ephys_rec_key)
+    raise NotImplementedError('Workflow module should define')
+
+
+def dict_to_uuid(key):
+    """
+    Given a dictionary `key`, returns a hash string
+    """
+    hashed = hashlib.md5()
+    for k, v in sorted(key.items()):
+        hashed.update(str(k).encode())
+        hashed.update(str(v).encode())
+    return uuid.UUID(hex=hashed.hexdigest())
 
 # ===================================== Probe Insertion =====================================
 
 
 @schema
 class ProbeInsertion(dj.Manual):  # (acute)
-
-    _Session = ...
-
     definition = """
-    -> self._Session  
+    -> Session  
     insertion_number: tinyint unsigned
     ---
-    -> Probe
+    -> probe.Probe
     """
 
 
@@ -32,12 +95,10 @@ class ProbeInsertion(dj.Manual):  # (acute)
 @schema
 class InsertionLocation(dj.Manual):
 
-    _SkullReference = ...
-
     definition = """
     -> ProbeInsertion
     ---
-    -> self._SkullReference
+    -> SkullReference
     ap_location: decimal(6, 2) # (um) anterior-posterior; ref is 0; more anterior is more positive
     ml_location: decimal(6, 2) # (um) medial axis; ref is 0 ; more right is more positive
     depth:       decimal(6, 2) # (um) manipulator depth relative to surface of the brain (0); more ventral is more negative
@@ -48,7 +109,7 @@ class InsertionLocation(dj.Manual):
 
 
 # ===================================== Ephys Recording =====================================
-# The abstract function _get_npx_data_dir() should expect one argument in the form of a
+# The abstract function _get_neuropixels_data_directory() should expect one argument in the form of a
 # dictionary with the keys from user-defined Subject and Session, as well as
 # "insertion_number" (as int) based on the "ProbeInsertion" table definition in this djephys
 
@@ -62,33 +123,27 @@ class EphysRecording(dj.Imported):
     sampling_rate: float # (Hz) 
     """
 
-    @staticmethod
-    @required
-    def _get_npx_data_dir():
-        return None
-
     def make(self, key):
-        npx_dir = EphysRecording._get_npx_data_dir(key)
+        neuropixels_dir = get_neuropixels_data_directory(key)
+        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
 
-        meta_filepath = next(pathlib.Path(npx_dir).glob('*.ap.meta'))
+        neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
 
-        npx_meta = neuropixels.NeuropixelsMeta(meta_filepath)
-
-        if re.search('(1.0|2.0)', npx_meta.probe_model):
+        if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
             eg_members = []
-            probe_type = {'probe_type': npx_meta.probe_model}
-            q_electrodes = ProbeType.Electrode & probe_type
-            for shank, shank_col, shank_row, is_used in npx_meta.shankmap['data']:
+            probe_type = {'probe_type': neuropixels_meta.probe_model}
+            q_electrodes = probe.ProbeType.Electrode & probe_type
+            for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
                 electrode = (q_electrodes & {'shank': shank,
                                              'shank_col': shank_col,
                                              'shank_row': shank_row}).fetch1('KEY')
                 eg_members.append({**electrode, 'used_in_reference': is_used})
         else:
             raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
-                npx_meta.probe_model))
+                neuropixels_meta.probe_model))
 
         # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
-        ec_hash = uuid.UUID(utils.dict_to_hash({k['electrode']: k for k in eg_members}))
+        ec_hash = uuid.UUID(dict_to_uuid({k['electrode']: k for k in eg_members}))
 
         el_list = sorted([k['electrode'] for k in eg_members])
         el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
@@ -101,7 +156,7 @@ class EphysRecording(dj.Imported):
             ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
             ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
 
-        self.insert1({**key, **e_config, 'sampling_rate': npx_meta.meta['imSampRate']})
+        self.insert1({**key, **e_config, 'sampling_rate': neuropixels_meta.meta['imSampRate']})
 
 
 # ===========================================================================================
@@ -124,29 +179,29 @@ class LFP(dj.Imported):
     class Electrode(dj.Part):
         definition = """
         -> master
-        -> ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode  
         ---
         lfp: longblob               # (mV) recorded lfp at this electrode 
         """
 
     def make(self, key):
-        npx_dir = EphysRecording._get_npx_data_dir(key)
-        npx_recording = neuropixels.Neuropixels(npx_dir)
+        neuropixels_dir = EphysRecording._get_neuropixels_data_directory(key)
+        neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
 
-        lfp = npx_recording.lfdata[:, :-1].T  # exclude the sync channel
+        lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
 
         self.insert1(dict(key,
-                          lfp_sampling_rate=npx_recording.lfmeta['imSampRate'],
-                          lfp_time_stamps=np.arange(lfp.shape[1]) / npx_recording.lfmeta['imSampRate'],
+                          lfp_sampling_rate=neuropixels_recording.lfmeta['imSampRate'],
+                          lfp_time_stamps=np.arange(lfp.shape[1]) / neuropixels_recording.lfmeta['imSampRate'],
                           lfp_mean=lfp.mean(axis=0)))
         '''
         Only store LFP for every 9th channel (defined in skip_chn_counts), counting in reverse
             Due to high channel density, close-by channels exhibit highly similar lfp
         '''
-        q_electrodes = ProbeType.Electrode * ElectrodeConfig.Electrode & key
+        q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
         electrodes = []
         for recorded_site in np.arange(lfp.shape[0]):
-            shank, shank_col, shank_row, _ = npx_recording.npx_meta.shankmap['data'][recorded_site]
+            shank, shank_col, shank_row, _ = neuropixels_recording.neuropixels_meta.shankmap['data'][recorded_site]
             electrodes.append((q_electrodes
                                & {'shank': shank,
                                   'shank_col': shank_col,
@@ -191,7 +246,7 @@ class ClusteringParamSet(dj.Lookup):
                       'paramset_idx': paramset_idx,
                       'paramset_desc': paramset_desc,
                       'params': params,
-                      'param_set_hash': uuid.UUID(utils.dict_to_hash(params))}
+                      'param_set_hash':  dict_to_uuid(params)}
         q_param = cls & {'param_set_hash': param_dict['param_set_hash']}
 
         if q_param:  # If the specified param-set already exists
@@ -211,26 +266,6 @@ class ClusteringTask(dj.Imported):
     ---
     -> ClusteringParamSet
     """
-
-    @staticmethod
-    @required
-    def _get_paramset_idx(ephys_rec_key: dict) -> int:
-        """
-        Retrieve the 'paramset_idx' (for ClusteringParamSet) to be used for this EphysRecording
-        :param ephys_rec_key: a dictionary of one EphysRecording
-        :return: int specifying the 'paramset_idx'
-        """
-        return None
-
-    @staticmethod
-    @required
-    def _get_ks_data_dir(clustering_task_key: dict) -> str:
-        """
-        Retrieve the Kilosort output directory for a given ClusteringTask
-        :param clustering_task_key: a dictionary of one EphysRecording
-        :return: a string for full path to the resulting Kilosort output directory
-        """
-        return None
 
     def make(self, key):
         key['paramset_idx'] = ClusteringTask._get_paramset_idx(key)
@@ -274,7 +309,7 @@ class Clustering(dj.Imported):
         -> master
         unit: int
         ---
-        -> ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
+        -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
         -> ClusterQualityLabel
         spike_count: int         # how many spikes in this recording of this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
@@ -294,7 +329,7 @@ class Clustering(dj.Imported):
         valid_units = ks.data['cluster_ids'][withspike_idx]
         valid_unit_labels = ks.data['cluster_groups'][withspike_idx]
         # -- Get channel and electrode-site mapping
-        chn2electrodes = get_npx_chn2electrode_map(key)
+        chn2electrodes = get_neuropixels_chn2electrode_map(key)
 
         # -- Spike-times --
         # spike_times_sec_adj > spike_times_sec > spike_times
@@ -339,7 +374,7 @@ class Waveform(dj.Imported):
     class Electrode(dj.Part):
         definition = """
         -> master
-        -> ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode  
         --- 
         waveform_mean: longblob   # mean over all spikes
         waveforms=null: longblob  # (spike x sample) waveform of each spike at each electrode
@@ -352,16 +387,16 @@ class Waveform(dj.Imported):
     def make(self, key):
         units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
-        npx_dir = EphysRecording._get_npx_data_dir(key)
-        meta_filepath = next(pathlib.Path(npx_dir).glob('*.ap.meta'))
-        npx_meta = neuropixels.NeuropixelsMeta(meta_filepath)
+        neuropixels_dir = EphysRecording._get_neuropixels_data_directory(key)
+        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
+        neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
 
         ks_dir = ClusteringTask._get_ks_data_dir(key)
         ks = kilosort.Kilosort(ks_dir)
 
         # -- Get channel and electrode-site mapping
         rec_key = (EphysRecording & key).fetch1('KEY')
-        chn2electrodes = get_npx_chn2electrode_map(rec_key)
+        chn2electrodes = get_neuropixels_chn2electrode_map(rec_key)
 
         is_qc = (Clustering & key).fetch1('quality_control')
 
@@ -375,10 +410,10 @@ class Waveform(dj.Imported):
                         if chn2electrodes[chn]['electrode'] == units[unit_no]['electrode']:
                             unit_peak_waveforms.append({**units[unit_no], 'peak_chn_waveform_mean': chn_wf})
         else:
-            npx_recording = neuropixels.Neuropixels(npx_dir)
+            neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
             for unit_no, unit_dict in units.items():
                 spks = (Clustering.Unit & unit_dict).fetch1('unit_spike_times')
-                wfs = npx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
+                wfs = neuropixels_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
                 wfs = wfs.transpose((1, 2, 0))  # (channel x spike x sample)
                 for chn, chn_wf in zip(ks.data['channel_map'], wfs):
                     unit_waveforms.append({**unit_dict, **chn2electrodes[chn],
@@ -425,15 +460,15 @@ class ClusterQualityMetrics(dj.Imported):
 # ========================== HELPER FUNCTIONS =======================
 
 
-def get_npx_chn2electrode_map(ephys_recording_key):
-    npx_dir = EphysRecording._get_npx_data_dir(ephys_recording_key)
-    meta_filepath = next(pathlib.Path(npx_dir).glob('*.ap.meta'))
-    npx_meta = neuropixels.NeuropixelsMeta(meta_filepath)
-    e_config_key = (EphysRecording * ElectrodeConfig & ephys_recording_key).fetch1('KEY')
+def get_neuropixels_chn2electrode_map(ephys_recording_key):
+    neuropixels_dir = EphysRecording._get_neuropixels_data_directory(ephys_recording_key)
+    meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
+    neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
+    e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
 
-    q_electrodes = ProbeType.Electrode * ElectrodeConfig.Electrode & e_config_key
+    q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & e_config_key
     chn2electrode_map = {}
-    for recorded_site, (shank, shank_col, shank_row, _) in enumerate(npx_meta.shankmap['data']):
+    for recorded_site, (shank, shank_col, shank_row, _) in enumerate(neuropixels_meta.shankmap['data']):
         chn2electrode_map[recorded_site] = (q_electrodes
                                             & {'shank': shank,
                                                'shank_col': shank_col,

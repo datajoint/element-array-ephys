@@ -1,7 +1,18 @@
 from datetime import datetime
 import numpy as np
 import pathlib
-from .utils import handle_string
+
+
+def convert_to_number(value: str):
+    if isinstance(value, str):
+        try:
+            value = int(value)
+        except ValueError:
+            try:
+                value = float(value)
+            except ValueError:
+                pass
+    return value
 
 
 class Neuropixels:
@@ -153,7 +164,7 @@ class NeuropixelsMeta:
 
     @staticmethod
     def _parse_shankmap(raw):
-        '''
+        """
         https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/UserManual.md#shank-map
         Parse shank map header structure. Converts:
 
@@ -166,8 +177,7 @@ class NeuropixelsMeta:
         into dict of form:
 
             {'shape': [x,y,z], 'data': [[a,b,c,d],...]}
-
-        '''
+        """
         res = {'shape': None, 'data': []}
 
         for u in (i.rstrip(')') for i in raw.split('(') if i != ''):
@@ -180,7 +190,7 @@ class NeuropixelsMeta:
 
     @staticmethod
     def _parse_imrotbl(raw):
-        '''
+        """
         https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/UserManual.md#imro-per-channel-settings
         Parse imro tbl structure. Converts:
 
@@ -193,7 +203,7 @@ class NeuropixelsMeta:
         into dict of form:
 
             {'shape': (x,y,z), 'data': []}
-        '''
+        """
         res = {'shape': None, 'data': []}
 
         for u in (i.rstrip(')') for i in raw.split('(') if i != ''):
@@ -208,13 +218,13 @@ class NeuropixelsMeta:
 # ============= HELPER FUNCTIONS =============
 
 def _read_meta(meta_filepath):
-    '''
+    """
     Read metadata in 'k = v' format.
 
     The fields '~snsChanMap' and '~snsShankMap' are further parsed into
     'snsChanMap' and 'snsShankMap' dictionaries via calls to
     Neuropixels._parse_chanmap and Neuropixels._parse_shankmap.
-    '''
+    """
 
     res = {}
     with open(meta_filepath) as f:
@@ -222,7 +232,7 @@ def _read_meta(meta_filepath):
             if '=' in l:
                 try:
                     k, v = l.split('=')
-                    v = handle_string(v)
+                    v = convert_to_number(v)
                     res[k] = v
                 except ValueError:
                     pass
