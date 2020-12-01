@@ -152,9 +152,9 @@ class EphysRecording(dj.Imported):
         e_config = {'electrode_config_hash': ec_hash}
 
         # ---- make new ElectrodeConfig if needed ----
-        if not (ElectrodeConfig & e_config):
-            ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
-            ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
+        if not probe.ElectrodeConfig & e_config:
+            probe.ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
+            probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
 
         self.insert1({**key, **e_config, 'sampling_rate': neuropixels_meta.meta['imSampRate']})
 
@@ -209,8 +209,9 @@ class LFP(dj.Imported):
 
         chn_lfp = list(zip(electrodes, lfp))
         skip_chn_counts = 9
-        self.Electrode.insert(({**key, **electrode, 'lfp': d}
-                               for electrode, d in chn_lfp[-1::-skip_chn_counts]), ignore_extra_fields=True)
+        self.Electrode().insert((
+            {**key, **electrode, 'lfp': d}
+            for electrode, d in chn_lfp[-1::-skip_chn_counts]), ignore_extra_fields=True)
 
 
 # ===================================== Clustering =====================================
