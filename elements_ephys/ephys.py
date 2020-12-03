@@ -234,8 +234,8 @@ class ClusteringParamSet(dj.Lookup):
         q_param = cls & {'param_set_hash': param_dict['param_set_hash']}
 
         if q_param:  # If the specified param-set already exists
-            pname = q_param.fetch1('param_set_name')
-            if pname == paramset_idx:  # If the existed set has the same name: job done
+            pname = q_param.fetch1('paramset_idx')
+            if pname == paramset_idx:  # If the existing set has the same name: job done
                 return
             else:  # If not same name: human error, trying to add the same paramset with different name
                 raise dj.DataJointError('The specified param-set already exists - name: {}'.format(pname))
