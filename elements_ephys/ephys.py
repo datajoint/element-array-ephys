@@ -13,8 +13,6 @@ from . import probe
 
 schema = dj.schema()
 
-
-
 required_upstream_tables = ("Session", "SkullReference")
 required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
 
