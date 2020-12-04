@@ -5,6 +5,7 @@ import numpy as np
 import inspect
 import uuid
 import hashlib
+import importlib
 from collections.abc import Mapping
 
 from .readers import neuropixels, kilosort
@@ -12,28 +13,40 @@ from . import probe
 
 schema = dj.schema()
 
-context = locals()
-
-table_classes = (dj.Manual, dj.Lookup, dj.Imported, dj.Computed)
 
 
-def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
-    assert isinstance(add_objects, Mapping)
+required_upstream_tables = ("Session", "SkullReference")
+required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
 
-    upstream_tables = ("Session", "SkullReference")
-    for name in upstream_tables:
-        assert name in add_objects, "Upstream table %s is required in ephys.activate(add_objects=...)" % name
-        table = add_objects[name]
+_table_classes = (dj.Manual, dj.Lookup, dj.Imported, dj.Computed)
+_required_objects = {}
+
+
+def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, ephys_requirement=None):
+    global _required_objects
+
+    if not isinstance(ephys_requirement, Mapping):
+        if isinstance(ephys_requirement, str):
+            ephys_requirement = importlib.import_module(ephys_requirement)
+
+        if inspect.ismodule(ephys_requirement):
+            ephys_requirement = {key: getattr(ephys_requirement, key) for key in dir(ephys_requirement)}
+        else:
+            raise ValueError("Argument 'ephys_requirement' must be a dictionary, a module's name or a module")
+
+    for name in required_upstream_tables:
+        assert name in ephys_requirement, "Upstream table %s is required in ephys.activate(ephys_requirement=...)" % name
+        table = ephys_requirement[name]
         if inspect.isclass(table):
             table = table()
-        assert isinstance(table, table_classes), "Upstream table %s must be a DataJoint table " \
-                                                 "object in ephys.activate(add_objects=...)" % name
+        assert isinstance(table, _table_classes), "Upstream table %s must be a DataJoint table " \
+                                                 "object in ephys.activate(ephys_requirement=...)" % name
+        _required_objects[name] = ephys_requirement[name]
 
-    required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
     for name in required_functions:
-        assert name in add_objects, "Functions %s is required in ephys.activate(add_objects=...)" % name
-        assert inspect.isfunction(add_objects[name]), "%s must be a function in ephys.activate(add_objects=...)" % name
-        context.update(**{name: add_objects[name]})
+        assert name in ephys_requirement, "Functions %s is required in ephys.activate(ephys_requirement=...)" % name
+        assert inspect.isfunction(ephys_requirement[name]), "%s must be a function in ephys.activate(ephys_requirement=...)" % name
+        _required_objects[name] = ephys_requirement[name]
 
     # activate
     if probe.schema.database is not None:
@@ -41,7 +54,7 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
                               create_schema=create_schema, create_tables=create_tables)
 
     schema.activate(ephys_schema_name, create_schema=create_schema,
-                    create_tables=create_tables, add_objects=add_objects)
+                    create_tables=create_tables, add_objects=_required_objects)
 
 
 # -------------- Functions required by the elements-ephys  ---------------
@@ -53,8 +66,7 @@ def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
     :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
     :return: a string for full path to the resulting Neuropixels data directory
     """
-    assert set(ProbeInsertion().primary_key) <= set(probe_insertion_key)
-    raise NotImplementedError('Workflow module should define function: "get_neuropixels_data_directory"')
+    return _required_objects['get_neuropixels_data_directory'](probe_insertion_key)
 
 
 def get_kilosort_output_directory(clustering_task_key: dict) -> str:
@@ -63,8 +75,7 @@ def get_kilosort_output_directory(clustering_task_key: dict) -> str:
     :param clustering_task_key: a dictionary of one ClusteringTask `key`
     :return: a string for full path to the resulting Kilosort output directory
     """
-    assert set(EphysRecording().primary_key) <= set(clustering_task_key)
-    raise NotImplementedError('Workflow module should define function: "get_kilosort_output_directory"')
+    return _required_objects['get_kilosort_output_directory'](clustering_task_key)
 
 
 def get_paramset_idx(ephys_rec_key: dict) -> int:
@@ -73,8 +84,7 @@ def get_paramset_idx(ephys_rec_key: dict) -> int:
     :param ephys_rec_key: a dictionary of one EphysRecording `key`
     :return: int specifying the `paramset_idx`
     """
-    assert set(EphysRecording().primary_key) <= set(ephys_rec_key)
-    raise NotImplementedError('Workflow module should define function: get_paramset_idx')
+    return _required_objects['get_paramset_idx'](ephys_rec_key)
 
 
 # ----------------------------- Table declarations ----------------------
