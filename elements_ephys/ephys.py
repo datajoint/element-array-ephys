@@ -5,43 +5,56 @@ import numpy as np
 import inspect
 import uuid
 import hashlib
-from collections.abc import Mapping
+import importlib
 
 from .readers import neuropixels, kilosort
 from . import probe
 
 schema = dj.schema()
 
-context = locals()
-
-table_classes = (dj.Manual, dj.Lookup, dj.Imported, dj.Computed)
+_required_module = None
 
 
-def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, create_tables=True, add_objects=None):
-    assert isinstance(add_objects, Mapping)
+def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
+             create_tables=True, required_module=None):
+    """
+    activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True, create_tables=True, dependency=None)
+        :param ephys_schema_name: schema name to activate the `ephys` element
+        :param probe_schema_name: schema name to activate the `probe` element
+         - may be omitted if the `probe` element is already activated
+        :param create_schema: create the schema if not yet existed (default = True)
+        :param create_tables: create the tables if not yet existed (default = True)
+        :param required_module: a module name or a module containing the
+         required dependencies to activate the `ephys` element:
+            Upstream tables:
+                + Session: parent table to ProbeInsertion, typically identifying a recording session
+                + SkullReference:
+            Functions:
+                + get_neuropixels_data_directory(probe_insertion_key: dict) -> str
+                    Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
+                    :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
+                    :return: a string for full path to the resulting Neuropixels data directory
+                + get_kilosort_output_directory(clustering_task_key: dict) -> str
+                    Retrieve the Kilosort output directory for a given ClusteringTask
+                    :param clustering_task_key: a dictionary of one ClusteringTask `key`
+                    :return: a string for full path to the resulting Kilosort output directory
+                + get_paramset_idx(ephys_rec_key: dict) -> int
+                    Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording.
+                    :param ephys_rec_key: a dictionary of one EphysRecording `key`
+                    :return: int specifying the `paramset_idx`
+    """
 
-    upstream_tables = ("Session", "SkullReference")
-    for name in upstream_tables:
-        assert name in add_objects, "Upstream table %s is required in ephys.activate(add_objects=...)" % name
-        table = add_objects[name]
-        if inspect.isclass(table):
-            table = table()
-        assert isinstance(table, table_classes), "Upstream table %s must be a DataJoint table " \
-                                                 "object in ephys.activate(add_objects=...)" % name
+    if isinstance(required_module, str):
+        required_module = importlib.import_module(required_module)
+    assert inspect.ismodule(required_module), "The argument 'dependency' must be a module's name or a module"
 
-    required_functions = ("get_neuropixels_data_directory", "get_paramset_idx", "get_kilosort_output_directory")
-    for name in required_functions:
-        assert name in add_objects, "Functions %s is required in ephys.activate(add_objects=...)" % name
-        assert inspect.isfunction(add_objects[name]), "%s must be a function in ephys.activate(add_objects=...)" % name
-        context.update(**{name: add_objects[name]})
+    global _required_module
+    _required_module = required_module
 
     # activate
-    if probe.schema.database is not None:
-        probe.schema.activate(probe_schema_name or ephys_schema_name,
-                              create_schema=create_schema, create_tables=create_tables)
-
+    probe.schema.activate(probe_schema_name, create_schema=create_schema, create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
-                    create_tables=create_tables, add_objects=add_objects)
+                    create_tables=create_tables, add_objects=_required_module.__dict__)
 
 
 # -------------- Functions required by the elements-ephys  ---------------
@@ -49,32 +62,32 @@ def activate(ephys_schema_name, probe_schema_name=None, create_schema=True, crea
 
 def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
     """
-    Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
-    :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
-    :return: a string for full path to the resulting Neuropixels data directory
+    get_neuropixels_data_directory(probe_insertion_key: dict) -> str
+        Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
+        :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
+        :return: a string for full path to the resulting Neuropixels data directory
     """
-    assert set(ProbeInsertion().primary_key) <= set(probe_insertion_key)
-    raise NotImplementedError('Workflow module should define function: "get_neuropixels_data_directory"')
+    return _required_module.get_neuropixels_data_directory(probe_insertion_key)
 
 
 def get_kilosort_output_directory(clustering_task_key: dict) -> str:
     """
-    Retrieve the Kilosort output directory for a given ClusteringTask
-    :param clustering_task_key: a dictionary of one ClusteringTask `key`
-    :return: a string for full path to the resulting Kilosort output directory
+    get_kilosort_output_directory(clustering_task_key: dict) -> str
+        Retrieve the Kilosort output directory for a given ClusteringTask
+        :param clustering_task_key: a dictionary of one ClusteringTask `key`
+        :return: a string for full path to the resulting Kilosort output directory
     """
-    assert set(EphysRecording().primary_key) <= set(clustering_task_key)
-    raise NotImplementedError('Workflow module should define function: "get_kilosort_output_directory"')
+    return _required_module.get_kilosort_output_directory(clustering_task_key)
 
 
 def get_paramset_idx(ephys_rec_key: dict) -> int:
     """
-    Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording.
-    :param ephys_rec_key: a dictionary of one EphysRecording `key`
-    :return: int specifying the `paramset_idx`
+    get_paramset_idx(ephys_rec_key: dict) -> int
+        Retrieve attribute `paramset_idx` from the ClusteringParamSet record for the given EphysRecording.
+        :param ephys_rec_key: a dictionary of one EphysRecording `key`
+        :return: int specifying the `paramset_idx`
     """
-    assert set(EphysRecording().primary_key) <= set(ephys_rec_key)
-    raise NotImplementedError('Workflow module should define function: get_paramset_idx')
+    return _required_module.get_paramset_idx(ephys_rec_key)
 
 
 # ----------------------------- Table declarations ----------------------
@@ -234,11 +247,11 @@ class ClusteringParamSet(dj.Lookup):
         q_param = cls & {'param_set_hash': param_dict['param_set_hash']}
 
         if q_param:  # If the specified param-set already exists
-            pname = q_param.fetch1('param_set_name')
-            if pname == paramset_idx:  # If the existed set has the same name: job done
+            pname = q_param.fetch1('paramset_idx')
+            if pname == paramset_idx:  # If the existing set has the same paramset_idx: job done
                 return
             else:  # If not same name: human error, trying to add the same paramset with different name
-                raise dj.DataJointError('The specified param-set already exists - name: {}'.format(pname))
+                raise dj.DataJointError('The specified param-set already exists - paramset_idx: {}'.format(pname))
         else:
             cls.insert1(param_dict)
 
