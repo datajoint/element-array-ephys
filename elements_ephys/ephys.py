@@ -28,7 +28,8 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
          required dependencies to activate the `ephys` element:
             Upstream tables:
                 + Session: parent table to ProbeInsertion, typically identifying a recording session
-                + SkullReference:
+                + SkullReference: Reference table for InsertionLocation, specifying the skull reference
+                 used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
                 + get_neuropixels_data_directory(probe_insertion_key: dict) -> str
                     Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
