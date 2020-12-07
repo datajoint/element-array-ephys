@@ -12,19 +12,19 @@ from . import probe
 
 schema = dj.schema()
 
-_required_module = None
+_linking_module = None
 
 
 def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
-             create_tables=True, required_module=None):
+             create_tables=True, linking_module=None):
     """
-    activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True, create_tables=True, dependency=None)
-        :param ephys_schema_name: schema name to activate the `ephys` element
-        :param probe_schema_name: schema name to activate the `probe` element
+    activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True, create_tables=True, linking_module=None)
+        :param ephys_schema_name: schema name on the database server to activate the `ephys` element
+        :param probe_schema_name: schema name on the database server to activate the `probe` element
          - may be omitted if the `probe` element is already activated
-        :param create_schema: create the schema if not yet existed (default = True)
-        :param create_tables: create the tables if not yet existed (default = True)
-        :param required_module: a module name or a module containing the
+        :param create_schema: when True (default), create schema in the database if it does not yet exist.
+        :param create_tables: when True (default), create tables in the database if they do not yet exist.
+        :param linking_module: a module name or a module containing the
          required dependencies to activate the `ephys` element:
             Upstream tables:
                 + Session: parent table to ProbeInsertion, typically identifying a recording session
@@ -45,17 +45,17 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                     :return: int specifying the `paramset_idx`
     """
 
-    if isinstance(required_module, str):
-        required_module = importlib.import_module(required_module)
-    assert inspect.ismodule(required_module), "The argument 'dependency' must be a module's name or a module"
+    if isinstance(linking_module, str):
+        linking_module = importlib.import_module(linking_module)
+    assert inspect.ismodule(linking_module), "The argument 'dependency' must be a module's name or a module"
 
-    global _required_module
-    _required_module = required_module
+    global _linking_module
+    _linking_module = linking_module
 
     # activate
     probe.schema.activate(probe_schema_name, create_schema=create_schema, create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
-                    create_tables=create_tables, add_objects=_required_module.__dict__)
+                    create_tables=create_tables, add_objects=_linking_module.__dict__)
 
 
 # -------------- Functions required by the elements-ephys  ---------------
@@ -68,7 +68,7 @@ def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
         :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
         :return: a string for full path to the resulting Neuropixels data directory
     """
-    return _required_module.get_neuropixels_data_directory(probe_insertion_key)
+    return _linking_module.get_neuropixels_data_directory(probe_insertion_key)
 
 
 def get_kilosort_output_directory(clustering_task_key: dict) -> str:
@@ -78,7 +78,7 @@ def get_kilosort_output_directory(clustering_task_key: dict) -> str:
         :param clustering_task_key: a dictionary of one ClusteringTask `key`
         :return: a string for full path to the resulting Kilosort output directory
     """
-    return _required_module.get_kilosort_output_directory(clustering_task_key)
+    return _linking_module.get_kilosort_output_directory(clustering_task_key)
 
 
 def get_paramset_idx(ephys_rec_key: dict) -> int:
@@ -88,7 +88,7 @@ def get_paramset_idx(ephys_rec_key: dict) -> int:
         :param ephys_rec_key: a dictionary of one EphysRecording `key`
         :return: int specifying the `paramset_idx`
     """
-    return _required_module.get_paramset_idx(ephys_rec_key)
+    return _linking_module.get_paramset_idx(ephys_rec_key)
 
 
 # ----------------------------- Table declarations ----------------------

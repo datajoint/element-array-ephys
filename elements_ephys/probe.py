@@ -10,9 +10,9 @@ schema = dj.schema()
 def activate(schema_name, create_schema=True, create_tables=True):
     """
     activate(schema_name, create_schema=True, create_tables=True)
-        :param schema_name: schema name to activate the `probe` element
-        :param create_schema: create the schema if not yet existed (default = True)
-        :param create_tables: create the tables if not yet existed (default = True)
+        :param schema_name: schema name on the database server to activate the `probe` element
+        :param create_schema: when True (default), create schema in the database if it does not yet exist.
+        :param create_tables: when True (default), create tables in the database if they do not yet exist.
     """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
