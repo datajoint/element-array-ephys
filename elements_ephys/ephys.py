@@ -53,7 +53,7 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
     _linking_module = linking_module
 
     # activate
-    probe.schema.activate(probe_schema_name, create_schema=create_schema, create_tables=create_tables)
+    probe.activate(probe_schema_name, create_schema=create_schema, create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
                     create_tables=create_tables, add_objects=_linking_module.__dict__)
 
