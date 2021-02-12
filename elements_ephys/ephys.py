@@ -93,6 +93,15 @@ def get_paramset_idx(ephys_rec_key: dict) -> int:
 
 # ----------------------------- Table declarations ----------------------
 
+
+@schema
+class AcquisitionSoftware(dj.Lookup):
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or OpenEphys
+    acq_software: varchar(24)    
+    """
+    contents = zip(['SpikeGLX', 'OpenEphys'])
+
+
 @schema
 class ProbeInsertion(dj.Manual):  # (acute)
     definition = """
@@ -125,8 +134,15 @@ class EphysRecording(dj.Imported):
     -> ProbeInsertion      
     ---
     -> probe.ElectrodeConfig
+    -> AcquisitionSoftware
     sampling_rate: float # (Hz) 
     """
+
+    class EphysFile(dj.Part):
+        definition = """
+        -> master
+        file_path: varchar(255)  # filepath relative to root data directory
+        """
 
     def make(self, key):
         neuropixels_dir = get_neuropixels_data_directory(key)
