@@ -4,6 +4,7 @@ Neuropixels Probes
 
 import datajoint as dj
 import numpy as np
+
 schema = dj.schema()
 
 
