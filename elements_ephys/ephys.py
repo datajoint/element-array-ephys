@@ -31,10 +31,13 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
-                + get_neuropixels_data_directory(probe_insertion_key: dict) -> str
-                    Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
-                    :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
-                    :return: a string for full path to the resulting Neuropixels data directory
+                + get_ephys_root_data_dir() -> str
+                    Retrieve the root data directory - e.g. containing all subject/sessions data
+                    :return: a string for full path to the root data directory
+                + get_session_directory(session_key: dict) -> str
+                    Retrieve the session directory containing the recorded Neuropixels data for a given Session
+                    :param session_key: a dictionary of one Session `key`
+                    :return: a string for full path to the session directory
                 + get_kilosort_output_directory(clustering_task_key: dict) -> str
                     Retrieve the Kilosort output directory for a given ClusteringTask
                     :param clustering_task_key: a dictionary of one ClusteringTask `key`
@@ -60,15 +63,23 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 # -------------- Functions required by the elements-ephys  ---------------
 
+def get_ephys_root_data_dir() -> str:
+    """
+    get_ephys_root_data_dir() -> str
+        Retrieve the root data directory - e.g. containing all subject/sessions data
+        :return: a string for full path to the root data directory
+    """
+    return _linking_module.get_ephys_root_data_dir()
 
-def get_neuropixels_data_directory(probe_insertion_key: dict) -> str:
+
+def get_session_directory(session_key: dict) -> str:
     """
-    get_neuropixels_data_directory(probe_insertion_key: dict) -> str
-        Retrieve the recorded Neuropixels data directory for a given ProbeInsertion
-        :param probe_insertion_key: a dictionary of one ProbeInsertion `key`
-        :return: a string for full path to the resulting Neuropixels data directory
+    get_session_directory(session_key: dict) -> str
+        Retrieve the session directory containing the recorded Neuropixels data for a given Session
+        :param session_key: a dictionary of one Session `key`
+        :return: a string for full path to the session directory
     """
-    return _linking_module.get_neuropixels_data_directory(probe_insertion_key)
+    return _linking_module.get_session_directory(session_key)
 
 
 def get_kilosort_output_directory(clustering_task_key: dict) -> str:
@@ -144,40 +155,55 @@ class EphysRecording(dj.Imported):
         file_path: varchar(255)  # filepath relative to root data directory
         """
 
+    @property
+    def key_source(self):
+        return _linking_module.Session()
+
     def make(self, key):
-        neuropixels_dir = get_neuropixels_data_directory(key)
-        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
+        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        sess_dir = pathlib.Path(get_session_directory(key))
 
-        neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
+        meta_filepaths = list(sess_dir.rglob('*.ap.meta'))
 
-        if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
-            eg_members = []
-            probe_type = {'probe_type': neuropixels_meta.probe_model}
-            q_electrodes = probe.ProbeType.Electrode & probe_type
-            for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
-                electrode = (q_electrodes & {'shank': shank,
-                                             'shank_col': shank_col,
-                                             'shank_row': shank_row}).fetch1('KEY')
-                eg_members.append({**electrode, 'used_in_reference': is_used})
-        else:
-            raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
-                neuropixels_meta.probe_model))
+        if len(meta_filepaths) == 0:
+            raise FileNotFoundError(f'Ephys recording data not found! No ".ap.meta" files found in {sess_dir}')
 
-        # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
-        ec_hash = dict_to_uuid({k['electrode']: k for k in eg_members})
+        for meta_filepath in meta_filepaths:
 
-        el_list = sorted([k['electrode'] for k in eg_members])
-        el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
-        ec_name = '; '.join([f'{el_list[s + 1]}-{el_list[e]}' for s, e in zip(el_jumps[:-1], el_jumps[1:])])
+            neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
+            insertion_key = (ProbeInsertion & key & {'probe': neuropixels_meta.probe_SN}).fetch1('KEY')
 
-        e_config = {'electrode_config_hash': ec_hash}
+            if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
+                eg_members = []
+                probe_type = {'probe_type': neuropixels_meta.probe_model}
+                q_electrodes = probe.ProbeType.Electrode & probe_type
+                for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
+                    electrode = (q_electrodes & {'shank': shank,
+                                                 'shank_col': shank_col,
+                                                 'shank_row': shank_row}).fetch1('KEY')
+                    eg_members.append({**electrode, 'used_in_reference': is_used})
+            else:
+                raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
+                    neuropixels_meta.probe_model))
 
-        # ---- make new ElectrodeConfig if needed ----
-        if not probe.ElectrodeConfig & e_config:
-            probe.ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
-            probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
+            # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
+            ec_hash = dict_to_uuid({k['electrode']: k for k in eg_members})
 
-        self.insert1({**key, **e_config, 'sampling_rate': neuropixels_meta.meta['imSampRate']})
+            el_list = sorted([k['electrode'] for k in eg_members])
+            el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
+            ec_name = '; '.join([f'{el_list[s + 1]}-{el_list[e]}' for s, e in zip(el_jumps[:-1], el_jumps[1:])])
+
+            e_config = {'electrode_config_hash': ec_hash}
+
+            # ---- make new ElectrodeConfig if needed ----
+            if not probe.ElectrodeConfig & e_config:
+                probe.ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
+                probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
+
+            self.insert1({**insertion_key, **e_config,
+                          'acq_software': 'SpikeGLX',
+                          'sampling_rate': neuropixels_meta.meta['imSampRate']})
+            self.EphysFile.insert1({**insertion_key, 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
 
 
 @schema
@@ -199,7 +225,10 @@ class LFP(dj.Imported):
         """
 
     def make(self, key):
-        neuropixels_dir = get_neuropixels_data_directory(key)
+        root_dir = pathlib.Path(get_ephys_root_data_dir())
+
+        npx_meta_fp = (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+        neuropixels_dir = (root_dir / npx_meta_fp).parent
         neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
 
         lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
