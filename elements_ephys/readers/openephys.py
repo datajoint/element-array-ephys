@@ -50,22 +50,28 @@ class OpenEphys:
                     probe['probe_model'] = 'neuropixels 1.0 - 3A'
                 # TODO: how to determine npx 2.0 SS and MS?
 
+                probe['probe_info'] = processor['EDITOR']['PROBE']
+                probe['probe_SN'] = probe['probe_info']['@probe_serial_number']
+
                 for r in recordings:
                     for c_info, c in zip(r.info['continuous'], r.continuous):
                         if c.metadata['processor_id'] != probe['processor_id']:
                             continue
 
-                        if c.metadata['subprocessor_id'] == 0:
+                        if c.metadata['subprocessor_id'] == 0:  # ap data
                             assert c_info['sample_rate'] == c.metadata['sample_rate'] == 30000
                             probe['ap_meta'] = c_info
-                            probe[]
-
-
-
-                probe['continuous_info'] = list(itertools.chain(*[[c for c in r.info['continuous']
-                                             if c['source_processor_id'] == probe['processor_id']]
-                                            for r in recordings]))
-                probe['continuous'] = [[c for c in r] for r in recordings]
+                            if 'ap_data' in probe:
+                                probe['ap_data'].append(c)
+                            else:
+                                probe['ap_data'] = [c]
+                        elif c.metadata['subprocessor_id'] == 1:  # lf data
+                            assert c_info['sample_rate'] == c.metadata['sample_rate'] == 2500
+                            probe['lf_meta'] = c_info
+                            if 'lf_data' in probe:
+                                probe['lf_data'].append(c)
+                            else:
+                                probe['lf_data'] = [c]
 
                 probes.append(probe)
 
