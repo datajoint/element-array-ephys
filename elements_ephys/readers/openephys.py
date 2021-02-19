@@ -1,7 +1,8 @@
 from open_ephys.analysis import Session as oeSession
 import xmltodict
 import pathlib
-import itertools
+
+import pyopenephys
 
 
 """
@@ -21,6 +22,11 @@ Record Node 102
       -- events
       -- spikes
       -- structure.oebin
+-- experiment 2
+   ...
+-- settings.xml
+-- settings2.xml
+...
 """
 
 
@@ -33,17 +39,23 @@ class OpenEphys:
         if not settings_fp.exists():
             raise FileNotFoundError(f'"settings.xml" not found for the OpenEphys session at: {self.root_dir}')
         with open(settings_fp) as f:
-            self.settings = xmltodict.parse(f.read())
+            self.settings = xmltodict.parse(f.read())['SETTINGS']
 
         oe_session = oeSession(self.root_dir.parent)  # this is on the Record Node level
 
         # extract the "recordings" for this session
-        recordings = [r for r in oe_session.recordings if pathlib.Path(r.directory).parent == self.root_dir]
+        self.oe_recordings = [r for r in oe_session.recordings if pathlib.Path(r.directory).parent == self.root_dir]
+        # extract probe data
+        self.probes = self.load_probe_data()
 
+    def load_probe_data(self):
         probes = []
-        for processor in self.settings['SETTINGS']['SIGNALCHAIN']['PROCESSOR']:
+        for processor in self.settings['SIGNALCHAIN']['PROCESSOR']:
             if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
-                probe = {'processor_id': int(processor['@NodeId'])}
+                probe = {'processor_id': int(processor['@NodeId']),
+                         'ap_meta': None, 'lf_meta': None,
+                         'ap_data': [], 'lf_data': [],
+                         'recording_duration': 0}
                 if processor['@pluginName'] == 'Neuropix-PXI':
                     probe['probe_model'] = 'neuropixels 1.0 - 3B'
                 elif processor['@pluginName'] == 'Neuropix-3a':
@@ -53,26 +65,30 @@ class OpenEphys:
                 probe['probe_info'] = processor['EDITOR']['PROBE']
                 probe['probe_SN'] = probe['probe_info']['@probe_serial_number']
 
-                for r in recordings:
-                    for c_info, c in zip(r.info['continuous'], r.continuous):
-                        if c.metadata['processor_id'] != probe['processor_id']:
+                t_start, t_end = 0, 0
+                for rec in self.oe_recordings:
+                    for cont_info, cont in zip(rec.info['continuous'], rec.continuous):
+                        if cont.metadata['processor_id'] != probe['processor_id']:
                             continue
 
-                        if c.metadata['subprocessor_id'] == 0:  # ap data
-                            assert c_info['sample_rate'] == c.metadata['sample_rate'] == 30000
-                            probe['ap_meta'] = c_info
-                            if 'ap_data' in probe:
-                                probe['ap_data'].append(c)
-                            else:
-                                probe['ap_data'] = [c]
-                        elif c.metadata['subprocessor_id'] == 1:  # lf data
-                            assert c_info['sample_rate'] == c.metadata['sample_rate'] == 2500
-                            probe['lf_meta'] = c_info
-                            if 'lf_data' in probe:
-                                probe['lf_data'].append(c)
-                            else:
-                                probe['lf_data'] = [c]
+                        if cont.metadata['subprocessor_id'] == 0:  # ap data
+                            assert cont_info['sample_rate'] == cont.metadata['sample_rate'] == 30000
+                            prefix = 'ap_'
+                            #
+                            t_start = (cont.timestamps[0] / cont_info['sample_rate']
+                                       if cont.timestamps[0] / cont_info['sample_rate'] < t_start
+                                       else t_start)
+                            t_end = (cont.timestamps[-1] / cont_info['sample_rate']
+                                     if cont.timestamps[-1] / cont_info['sample_rate'] > t_end
+                                     else t_end)
+                        elif cont.metadata['subprocessor_id'] == 1:  # lfp data
+                            assert cont_info['sample_rate'] == cont.metadata['sample_rate'] == 2500
+                            prefix = 'lfp_'
 
+                        probe[prefix + 'meta'] = cont_info
+                        probe[prefix + 'data'].append(cont)
+
+                probe['recording_duration'] = t_start - t_end
                 probes.append(probe)
 
-
+        return probes
