@@ -7,7 +7,7 @@ import uuid
 import hashlib
 import importlib
 
-from .readers import neuropixels, kilosort
+from .readers import neuropixels, kilosort, openephys
 from . import probe
 
 schema = dj.schema()
@@ -153,8 +153,8 @@ class EphysRecording(dj.Imported):
 
                 if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
                     eg_members = []
-                    probe_type = {'probe_type': neuropixels_meta.probe_model}
-                    q_electrodes = probe.ProbeType.Electrode & probe_type
+                    probe_type = neuropixels_meta.probe_model
+                    q_electrodes = probe.ProbeType.Electrode & {'probe_type': probe_type}
                     for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
                         electrode = (q_electrodes & {'shank': shank,
                                                      'shank_col': shank_col,
@@ -164,26 +164,17 @@ class EphysRecording(dj.Imported):
                     raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
                         neuropixels_meta.probe_model))
 
-                # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
-                ec_hash = dict_to_uuid({k['electrode']: k for k in eg_members})
-
-                el_list = sorted([k['electrode'] for k in eg_members])
-                el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
-                ec_name = '; '.join([f'{el_list[s + 1]}-{el_list[e]}' for s, e in zip(el_jumps[:-1], el_jumps[1:])])
-
-                e_config = {'electrode_config_hash': ec_hash}
-
-                # ---- make new ElectrodeConfig if needed ----
-                if not probe.ElectrodeConfig & e_config:
-                    probe.ElectrodeConfig.insert1({**e_config, **probe_type, 'electrode_config_name': ec_name})
-                    probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in eg_members)
+                e_config = generate_electrode_config(probe_type, eg_members)
 
                 self.insert1({**insertion_key, **e_config,
                               'acq_software': 'SpikeGLX',
                               'sampling_rate': neuropixels_meta.meta['imSampRate']})
                 self.EphysFile.insert1({**insertion_key, 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
         elif acq_software == 'OpenEphys':
-            pass
+            loaded_oe = openephys.OpenEphys(sess_dir)
+            for oe_probe in loaded_oe.probes:
+                pass
+
         else:
             raise NotImplementedError(f'Processing ephys files from acquisition software of type {acq_software} is not yet implemented')
 
@@ -497,6 +488,30 @@ def get_neuropixels_chn2electrode_map(ephys_recording_key):
                                                'shank_col': shank_col,
                                                'shank_row': shank_row}).fetch1('KEY')
     return chn2electrode_map
+
+
+def generate_electrode_config(probe_type: str, electrodes: list):
+    """
+    Generate and insert new ElectrodeConfig
+    :param probe_type: probe type (e.g. neuropixels 2.0 - SS)
+    :param electrodes: list of the electrode dict (keys of the probe.ProbeType.Electrode table)
+    :return: a dict representing a key of the probe.ElectrodeConfig table
+    """
+    # ---- compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode) ----
+    ec_hash = dict_to_uuid({k['electrode']: k for k in electrodes})
+
+    el_list = sorted([k['electrode'] for k in electrodes])
+    el_jumps = [-1] + np.where(np.diff(el_list) > 1)[0].tolist() + [len(el_list) - 1]
+    ec_name = '; '.join([f'{el_list[s + 1]}-{el_list[e]}' for s, e in zip(el_jumps[:-1], el_jumps[1:])])
+
+    e_config = {'electrode_config_hash': ec_hash}
+
+    # ---- make new ElectrodeConfig if needed ----
+    if not probe.ElectrodeConfig & e_config:
+        probe.ElectrodeConfig.insert1({**e_config, 'probe_type': probe_type, 'electrode_config_name': ec_name})
+        probe.ElectrodeConfig.Electrode.insert({**e_config, **m} for m in electrodes)
+
+    return e_config
 
 
 def dict_to_uuid(key):
