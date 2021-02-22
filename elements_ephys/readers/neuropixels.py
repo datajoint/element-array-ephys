@@ -56,7 +56,7 @@ class Neuropixels:
 
     def _read_bin(self, fname):
         nchan = self.npx_meta.meta['nSavedChans']
-        dtype = np.dtype((np.uint16, nchan))
+        dtype = np.dtype((np.int16, nchan))
         return np.memmap(fname, dtype, 'r')
 
     def extract_spike_waveforms(self, spikes, channel, n_wf=500, wf_win=(-32, 32), bit_volts=1):
