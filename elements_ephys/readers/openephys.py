@@ -60,7 +60,8 @@ class OpenEphys:
                 probe['probe_SN'] = probe['probe_info']['@probe_serial_number']
                 probe['recording_info'] = {'recording_count': 0,
                                            'recording_datetimes': [],
-                                           'recording_durations': []}
+                                           'recording_durations': [],
+                                           'recording_filepaths': []}
 
                 for rec in self.experiment.recordings:
                     for cont_info, analog_signal in zip(rec._oebin['continuous'], rec.analog_signals):
@@ -74,6 +75,8 @@ class OpenEphys:
                             probe['recording_info']['recording_count'] += 1
                             probe['recording_info']['recording_datetimes'].append(rec.datetime)
                             probe['recording_info']['recording_durations'].append(float(rec.duration))
+                            probe['recording_info']['recording_files'].append(
+                                rec.absolute_foldername / cont_info['folder_name'])
 
                         elif cont_info['source_processor_sub_idx'] == 1:  # lfp data
                             assert cont_info['sample_rate'] == analog_signal.sample_rate == 2500

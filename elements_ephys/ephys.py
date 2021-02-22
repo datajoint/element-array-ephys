@@ -167,14 +167,33 @@ class EphysRecording(dj.Imported):
                 e_config = generate_electrode_config(probe_type, eg_members)
 
                 self.insert1({**insertion_key, **e_config,
-                              'acq_software': 'SpikeGLX',
+                              'acq_software': acq_software,
                               'sampling_rate': neuropixels_meta.meta['imSampRate']})
                 self.EphysFile.insert1({**insertion_key, 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
+
         elif acq_software == 'OpenEphys':
             loaded_oe = openephys.OpenEphys(sess_dir)
             for oe_probe in loaded_oe.probes:
-                pass
+                insertion_key = (ProbeInsertion & key & {'probe': oe_probe['probe_SN']}).fetch1('KEY')
 
+                if re.search('(1.0|2.0)', oe_probe['probe_model']):
+                    eg_members = []
+                    probe_type = oe_probe['probe_model']
+                    q_electrodes = probe.ProbeType.Electrode & {'probe_type': probe_type}
+                    for chn_idx in oe_probe['ap_meta']['channels_ids']:
+                        electrode = (q_electrodes & {'electrode': chn_idx}).fetch1('KEY')
+                        eg_members.append(electrode)
+                else:
+                    raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
+                        oe_probe['probe_model']))
+
+                e_config = generate_electrode_config(probe_type, eg_members)
+
+                self.insert1({**insertion_key, **e_config,
+                              'acq_software': acq_software,
+                              'sampling_rate': oe_probe['ap_meta']['sample_rate']})
+                self.EphysFile.insert([{**insertion_key, 'file_path': fp.relative_to(root_dir).as_posix()}
+                                       for fp in oe_probe['recording_info']['recording_files']])
         else:
             raise NotImplementedError(f'Processing ephys files from acquisition software of type {acq_software} is not yet implemented')
 
