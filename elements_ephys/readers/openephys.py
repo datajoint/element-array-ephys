@@ -1,7 +1,4 @@
-from open_ephys.analysis import Session as oeSession
-import xmltodict
 import pathlib
-
 import pyopenephys
 
 
@@ -33,29 +30,26 @@ Record Node 102
 class OpenEphys:
 
     def __init__(self, experiment_dir):
-        self.root_dir = pathlib.Path(experiment_dir)
+        self.sess_dir = pathlib.Path(experiment_dir)
 
-        settings_fp = self.root_dir / 'settings.xml'
-        if not settings_fp.exists():
-            raise FileNotFoundError(f'"settings.xml" not found for the OpenEphys session at: {self.root_dir}')
-        with open(settings_fp) as f:
-            self.settings = xmltodict.parse(f.read())['SETTINGS']
-
-        oe_session = oeSession(self.root_dir.parent)  # this is on the Record Node level
+        oe_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
 
         # extract the "recordings" for this session
-        self.oe_recordings = [r for r in oe_session.recordings if pathlib.Path(r.directory).parent == self.root_dir]
+        self.experiment = [experiment for experiment in oe_file.experiments
+                           if pathlib.Path(experiment.absolute_foldername) == self.sess_dir][0]
+
+        self.recording_time = self.experiment.datetime
+
         # extract probe data
         self.probes = self.load_probe_data()
 
     def load_probe_data(self):
         probes = []
-        for processor in self.settings['SIGNALCHAIN']['PROCESSOR']:
+        for processor in self.experiment.settings['SIGNALCHAIN']['PROCESSOR']:
             if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
                 probe = {'processor_id': int(processor['@NodeId']),
-                         'ap_meta': None, 'lf_meta': None,
-                         'ap_data': [], 'lf_data': [],
-                         'recording_duration': 0}
+                         'ap_meta': None, 'lfp_meta': None,
+                         'ap_data': [], 'lfp_data': []}
                 if processor['@pluginName'] == 'Neuropix-PXI':
                     probe['probe_model'] = 'neuropixels 1.0 - 3B'
                 elif processor['@pluginName'] == 'Neuropix-3a':
@@ -64,31 +58,37 @@ class OpenEphys:
 
                 probe['probe_info'] = processor['EDITOR']['PROBE']
                 probe['probe_SN'] = probe['probe_info']['@probe_serial_number']
+                probe['recording_info'] = {'recording_count': 0,
+                                           'recording_datetimes': [],
+                                           'recording_durations': []}
 
-                t_start, t_end = 0, 0
-                for rec in self.oe_recordings:
-                    for cont_info, cont in zip(rec.info['continuous'], rec.continuous):
-                        if cont.metadata['processor_id'] != probe['processor_id']:
+                for rec in self.experiment.recordings:
+                    for cont_info, analog_signal in zip(rec._oebin['continuous'], rec.analog_signals):
+                        if cont_info['source_processor_id'] != probe['processor_id']:
                             continue
 
-                        if cont.metadata['subprocessor_id'] == 0:  # ap data
-                            assert cont_info['sample_rate'] == cont.metadata['sample_rate'] == 30000
+                        if cont_info['source_processor_sub_idx'] == 0:  # ap data
+                            assert cont_info['sample_rate'] == analog_signal.sample_rate == 30000
                             prefix = 'ap_'
-                            #
-                            t_start = (cont.timestamps[0] / cont_info['sample_rate']
-                                       if cont.timestamps[0] / cont_info['sample_rate'] < t_start
-                                       else t_start)
-                            t_end = (cont.timestamps[-1] / cont_info['sample_rate']
-                                     if cont.timestamps[-1] / cont_info['sample_rate'] > t_end
-                                     else t_end)
-                        elif cont.metadata['subprocessor_id'] == 1:  # lfp data
-                            assert cont_info['sample_rate'] == cont.metadata['sample_rate'] == 2500
+
+                            probe['recording_info']['recording_count'] += 1
+                            probe['recording_info']['recording_datetimes'].append(rec.datetime)
+                            probe['recording_info']['recording_durations'].append(float(rec.duration))
+
+                        elif cont_info['source_processor_sub_idx'] == 1:  # lfp data
+                            assert cont_info['sample_rate'] == analog_signal.sample_rate == 2500
                             prefix = 'lfp_'
 
-                        probe[prefix + 'meta'] = cont_info
-                        probe[prefix + 'data'].append(cont)
+                        if probe[prefix + 'meta'] is None:
+                            cont_info['channels_ids'] = analog_signal.channel_ids
+                            cont_info['channels_names'] = analog_signal.channel_names
+                            cont_info['channels_gains'] = analog_signal.gains
+                            probe[prefix + 'meta'] = cont_info
 
-                probe['recording_duration'] = t_start - t_end
+                        probe[prefix + 'data'].append(analog_signal)
+
                 probes.append(probe)
 
         return probes
+
+
