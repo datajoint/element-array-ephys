@@ -4,7 +4,7 @@ import pathlib
 from .utils import convert_to_number
 
 
-class Neuropixels:
+class SpikeGLX:
 
     def __init__(self, root_dir):
         '''
@@ -27,7 +27,7 @@ class Neuropixels:
         self.root_dir = root_dir
 
         meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
-        self.npx_meta = NeuropixelsMeta(meta_filepath)
+        self.npx_meta = SpikeGLXMeta(meta_filepath)
 
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
         self._apdata = None
@@ -86,7 +86,7 @@ class Neuropixels:
             return np.full((len(range(*wf_win)), len(channel), 1), np.nan)
 
 
-class NeuropixelsMeta:
+class SpikeGLXMeta:
 
     def __init__(self, meta_filepath):
         # a good processing reference: https://github.com/jenniferColonell/Neuropixels_evaluation_tools/blob/master/SGLXMetaToCoords.m
@@ -212,7 +212,7 @@ def _read_meta(meta_filepath):
 
     The fields '~snsChanMap' and '~snsShankMap' are further parsed into
     'snsChanMap' and 'snsShankMap' dictionaries via calls to
-    Neuropixels._parse_chanmap and Neuropixels._parse_shankmap.
+    SpikeGLX._parse_chanmap and SpikeGLX._parse_shankmap.
     """
 
     res = {}

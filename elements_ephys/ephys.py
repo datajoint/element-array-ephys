@@ -7,7 +7,7 @@ import uuid
 import hashlib
 import importlib
 
-from .readers import neuropixels, kilosort, openephys
+from .readers import spikeglx, kilosort, openephys
 from . import probe
 
 schema = dj.schema()
@@ -148,27 +148,27 @@ class EphysRecording(dj.Imported):
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
 
-                neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
-                insertion_key = (ProbeInsertion & key & {'probe': neuropixels_meta.probe_SN}).fetch1('KEY')
+                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+                insertion_key = (ProbeInsertion & key & {'probe': spikeglx_meta.probe_SN}).fetch1('KEY')
 
-                if re.search('(1.0|2.0)', neuropixels_meta.probe_model):
+                if re.search('(1.0|2.0)', spikeglx_meta.probe_model):
                     eg_members = []
-                    probe_type = neuropixels_meta.probe_model
+                    probe_type = spikeglx_meta.probe_model
                     q_electrodes = probe.ProbeType.Electrode & {'probe_type': probe_type}
-                    for shank, shank_col, shank_row, is_used in neuropixels_meta.shankmap['data']:
+                    for shank, shank_col, shank_row, is_used in spikeglx_meta.shankmap['data']:
                         electrode = (q_electrodes & {'shank': shank,
                                                      'shank_col': shank_col,
                                                      'shank_row': shank_row}).fetch1('KEY')
                         eg_members.append({**electrode, 'used_in_reference': is_used})
                 else:
                     raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
-                        neuropixels_meta.probe_model))
+                        spikeglx_meta.probe_model))
 
                 e_config = generate_electrode_config(probe_type, eg_members)
 
                 self.insert1({**insertion_key, **e_config,
                               'acq_software': acq_software,
-                              'sampling_rate': neuropixels_meta.meta['imSampRate']})
+                              'sampling_rate': spikeglx_meta.meta['imSampRate']})
                 self.EphysFile.insert1({**insertion_key, 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
 
         elif acq_software == 'OpenEphys':
@@ -224,21 +224,21 @@ class LFP(dj.Imported):
         acq_software, probe_sn = (EphysRecording * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
         if acq_software == 'SpikeGLX':
-            npx_meta_fp = (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-            neuropixels_dir = (root_dir / npx_meta_fp).parent
-            neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
+            spikeglx_meta_fp = (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+            spikeglx_rec_dir = (root_dir / spikeglx_meta_fp).parent
+            spikeglx_recording = spikeglx.SpikeGLX(spikeglx_rec_dir)
 
-            lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
+            lfp = spikeglx_recording.lfdata[:, :-1].T  # exclude the sync channel
 
             self.insert1(dict(key,
-                              lfp_sampling_rate=neuropixels_recording.lfmeta['imSampRate'],
-                              lfp_time_stamps=np.arange(lfp.shape[1]) / neuropixels_recording.lfmeta['imSampRate'],
+                              lfp_sampling_rate=spikeglx_recording.lfmeta['imSampRate'],
+                              lfp_time_stamps=np.arange(lfp.shape[1]) / spikeglx_recording.lfmeta['imSampRate'],
                               lfp_mean=lfp.mean(axis=0)))
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
             electrodes = []
             for recorded_site in np.arange(lfp.shape[0]):
-                shank, shank_col, shank_row, _ = neuropixels_recording.npx_meta.shankmap['data'][recorded_site]
+                shank, shank_col, shank_row, _ = spikeglx_recording.npx_meta.shankmap['data'][recorded_site]
                 electrodes.append((q_electrodes
                                    & {'shank': shank,
                                       'shank_col': shank_col,
@@ -464,10 +464,10 @@ class Waveform(dj.Imported):
                         if chn2electrodes[chn]['electrode'] == units[unit_no]['electrode']:
                             unit_peak_waveforms.append({**units[unit_no], 'peak_chn_waveform_mean': chn_wf})
         else:
-            neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
+            spikeglx_recording = spikeglx.SpikeGLX(neuropixels_dir)
             for unit_no, unit_dict in units.items():
                 spks = (Clustering.Unit & unit_dict).fetch1('unit_spike_times')
-                wfs = neuropixels_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
+                wfs = spikeglx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
                 wfs = wfs.transpose((1, 2, 0))  # (channel x spike x sample)
                 for chn, chn_wf in zip(ks.data['channel_map'], wfs):
                     unit_waveforms.append({**unit_dict, **chn2electrodes[chn],
@@ -521,12 +521,12 @@ def get_neuropixels_chn2electrode_map(ephys_recording_key):
     neuropixels_dir = (root_dir / npx_meta_fp).parent
 
     meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
-    neuropixels_meta = neuropixels.NeuropixelsMeta(meta_filepath)
+    spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
     e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
 
     q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & e_config_key
     chn2electrode_map = {}
-    for recorded_site, (shank, shank_col, shank_row, _) in enumerate(neuropixels_meta.shankmap['data']):
+    for recorded_site, (shank, shank_col, shank_row, _) in enumerate(spikeglx_meta.shankmap['data']):
         chn2electrode_map[recorded_site] = (q_electrodes
                                             & {'shank': shank,
                                                'shank_col': shank_col,
