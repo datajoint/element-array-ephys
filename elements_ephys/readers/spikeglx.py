@@ -73,11 +73,11 @@ class SpikeGLX:
         channel_idx = [np.where(self.npx_meta.recording_channels == chn)[0][0] for chn in channel]
 
         spikes = np.round(spikes * self.npx_meta.meta['imSampRate']).astype(int)  # convert to sample
+        # ignore spikes at the beginning or end of raw data
+        spikes = spikes[np.logical_and(spikes > -wf_win[0], spikes < data.shape[0] - wf_win[-1])]
 
         np.random.shuffle(spikes)
         spikes = spikes[:n_wf]
-        # ignore spikes at the beginning or end of raw data
-        spikes = spikes[np.logical_and(spikes > wf_win[0], spikes < data.shape[0] - wf_win[-1])]
         if len(spikes) > 0:
             # waveform at each spike: (sample x channel x spike)
             spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_idx] for spk in spikes])
