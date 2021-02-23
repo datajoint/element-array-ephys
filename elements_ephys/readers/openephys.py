@@ -61,7 +61,7 @@ class OpenEphys:
                 probe['recording_info'] = {'recording_count': 0,
                                            'recording_datetimes': [],
                                            'recording_durations': [],
-                                           'recording_filepaths': []}
+                                           'recording_files': []}
 
                 for rec in self.experiment.recordings:
                     for cont_info, analog_signal in zip(rec._oebin['continuous'], rec.analog_signals):
