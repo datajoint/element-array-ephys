@@ -216,37 +216,62 @@ class LFP(dj.Imported):
         lfp: longblob               # (mV) recorded lfp at this electrode 
         """
 
+    # Only store LFP for every 9th channel, due to high channel density, close-by channels exhibit highly similar LFP
+    _skip_chn_counts = 9
+
     def make(self, key):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
+        acq_software, probe_sn = (EphysRecording * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
-        npx_meta_fp = (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-        neuropixels_dir = (root_dir / npx_meta_fp).parent
-        neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
+        if acq_software == 'SpikeGLX':
+            npx_meta_fp = (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+            neuropixels_dir = (root_dir / npx_meta_fp).parent
+            neuropixels_recording = neuropixels.Neuropixels(neuropixels_dir)
 
-        lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
+            lfp = neuropixels_recording.lfdata[:, :-1].T  # exclude the sync channel
 
-        self.insert1(dict(key,
-                          lfp_sampling_rate=neuropixels_recording.lfmeta['imSampRate'],
-                          lfp_time_stamps=np.arange(lfp.shape[1]) / neuropixels_recording.lfmeta['imSampRate'],
-                          lfp_mean=lfp.mean(axis=0)))
-        '''
-        Only store LFP for every 9th channel (defined in skip_chn_counts), counting in reverse
-            Due to high channel density, close-by channels exhibit highly similar lfp
-        '''
-        q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
-        electrodes = []
-        for recorded_site in np.arange(lfp.shape[0]):
-            shank, shank_col, shank_row, _ = neuropixels_recording.npx_meta.shankmap['data'][recorded_site]
-            electrodes.append((q_electrodes
-                               & {'shank': shank,
-                                  'shank_col': shank_col,
-                                  'shank_row': shank_row}).fetch1('KEY'))
+            self.insert1(dict(key,
+                              lfp_sampling_rate=neuropixels_recording.lfmeta['imSampRate'],
+                              lfp_time_stamps=np.arange(lfp.shape[1]) / neuropixels_recording.lfmeta['imSampRate'],
+                              lfp_mean=lfp.mean(axis=0)))
 
-        chn_lfp = list(zip(electrodes, lfp))
-        skip_chn_counts = 9
-        self.Electrode().insert((
-            {**key, **electrode, 'lfp': d}
-            for electrode, d in chn_lfp[-1::-skip_chn_counts]), ignore_extra_fields=True)
+            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
+            electrodes = []
+            for recorded_site in np.arange(lfp.shape[0]):
+                shank, shank_col, shank_row, _ = neuropixels_recording.npx_meta.shankmap['data'][recorded_site]
+                electrodes.append((q_electrodes
+                                   & {'shank': shank,
+                                      'shank_col': shank_col,
+                                      'shank_row': shank_row}).fetch1('KEY'))
+
+            chn_lfp = list(zip(electrodes, lfp))
+            self.Electrode().insert((
+                {**key, **electrode, 'lfp': d}
+                for electrode, d in chn_lfp[-1::-self._skip_chn_counts]), ignore_extra_fields=True)
+        elif acq_software == 'OpenEphys':
+            sess_dir = pathlib.Path(get_session_directory(key))
+            loaded_oe = openephys.OpenEphys(sess_dir)
+            oe_probe = [p for p in loaded_oe.probes if p['probe_SN'] == probe_sn][0]
+            lfp = np.hstack([s.signal for s in oe_probe['lfp_data']])
+            lfp_timestamps = np.hstack([s.times for s in oe_probe['lfp_data']])
+
+            self.insert1(dict(key,
+                              lfp_sampling_rate=oe_probe['lfp_meta']['sample_rate'],
+                              lfp_time_stamps=lfp_timestamps,
+                              lfp_mean=lfp.mean(axis=0)))
+
+            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
+            electrodes = []
+            for chn_idx in oe_probe['lfp_meta']['channels_ids']:
+                electrodes.append((q_electrodes & {'electrode': chn_idx}).fetch1('KEY'))
+
+            chn_lfp = list(zip(electrodes, lfp))
+            self.Electrode().insert((
+                {**key, **electrode, 'lfp': d}
+                for electrode, d in chn_lfp[-1::-self._skip_chn_counts]), ignore_extra_fields=True)
+
+        else:
+            raise NotImplementedError(f'LFP extraction from acquisition software of type {acq_software} is not yet implemented')
 
 
 # ------------ Clustering --------------
