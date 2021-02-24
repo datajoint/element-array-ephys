@@ -446,10 +446,7 @@ class Waveform(dj.Imported):
         ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
         ks = kilosort.Kilosort(ks_dir)
 
-        acq_software = (EphysRecording & key).fetch1('acq_software')
-
-        npx_meta_fp = root_dir / (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-        neuropixels_dir = npx_meta_fp.parent
+        acq_software, probe_sn = (EphysRecording * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
         # -- Get channel and electrode-site mapping
         rec_key = (EphysRecording & key).fetch1('KEY')
@@ -467,10 +464,19 @@ class Waveform(dj.Imported):
                         if chn2electrodes[chn]['electrode'] == units[unit_no]['electrode']:
                             unit_peak_waveforms.append({**units[unit_no], 'peak_chn_waveform_mean': chn_wf})
         else:
-            spikeglx_recording = spikeglx.SpikeGLX(neuropixels_dir)
+            if acq_software == 'SpikeGLX':
+                npx_meta_fp = root_dir / (EphysRecording.EphysFile & key
+                                          & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+                neuropixels_dir = npx_meta_fp.parent
+                npx_recording = spikeglx.SpikeGLX(neuropixels_dir)
+            elif acq_software == 'OpenEphys':
+                sess_dir = pathlib.Path(get_session_directory(key))
+                loaded_oe = openephys.OpenEphys(sess_dir)
+                npx_recording = loaded_oe.probes[probe_sn]
+
             for unit_no, unit_dict in units.items():
                 spks = (Clustering.Unit & unit_dict).fetch1('unit_spike_times')
-                wfs = spikeglx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
+                wfs = npx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
                 wfs = wfs.transpose((1, 2, 0))  # (channel x spike x sample)
                 for chn, chn_wf in zip(ks.data['channel_map'], wfs):
                     unit_waveforms.append({**unit_dict, **chn2electrodes[chn],
