@@ -467,8 +467,7 @@ class Waveform(dj.Imported):
             if acq_software == 'SpikeGLX':
                 npx_meta_fp = root_dir / (EphysRecording.EphysFile & key
                                           & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-                neuropixels_dir = npx_meta_fp.parent
-                npx_recording = spikeglx.SpikeGLX(neuropixels_dir)
+                npx_recording = spikeglx.SpikeGLX(npx_meta_fp.parent)
             elif acq_software == 'OpenEphys':
                 sess_dir = pathlib.Path(get_session_directory(key))
                 loaded_oe = openephys.OpenEphys(sess_dir)
