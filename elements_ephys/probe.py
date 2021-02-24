@@ -144,6 +144,4 @@ class ElectrodeConfig(dj.Lookup):
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
-        ---
-        used_in_reference=null: bool  # is this channel used to form the internal reference
         """

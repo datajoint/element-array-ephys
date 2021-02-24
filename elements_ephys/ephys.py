@@ -159,7 +159,7 @@ class EphysRecording(dj.Imported):
                         electrode = (q_electrodes & {'shank': shank,
                                                      'shank_col': shank_col,
                                                      'shank_row': shank_row}).fetch1('KEY')
-                        eg_members.append({**electrode, 'used_in_reference': is_used})
+                        eg_members.append(electrode)
                 else:
                     raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
                         spikeglx_meta.probe_model))
