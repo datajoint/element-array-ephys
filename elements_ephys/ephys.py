@@ -440,8 +440,6 @@ class Waveform(dj.Imported):
         return Clustering()
 
     def make(self, key):
-        units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
-
         root_dir = pathlib.Path(get_ephys_root_data_dir())
         ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
         ks = kilosort.Kilosort(ks_dir)
@@ -453,6 +451,9 @@ class Waveform(dj.Imported):
         chn2electrodes = get_neuropixels_chn2electrode_map(rec_key, acq_software)
 
         is_qc = (Clustering & key).fetch1('quality_control')
+
+        # Get all units
+        units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
         unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
@@ -473,8 +474,8 @@ class Waveform(dj.Imported):
                 loaded_oe = openephys.OpenEphys(sess_dir)
                 npx_recording = loaded_oe.probes[probe_sn]
 
-            for unit_no, unit_dict in units.items():
-                spks = (Clustering.Unit & unit_dict).fetch1('unit_spike_times')
+            for unit_dict in units.values():
+                spks = unit_dict['spike_times']
                 wfs = npx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
                 wfs = wfs.transpose((1, 2, 0))  # (channel x spike x sample)
                 for chn, chn_wf in zip(ks.data['channel_map'], wfs):
