@@ -145,5 +145,5 @@ class ElectrodeConfig(dj.Lookup):
         -> master
         -> ProbeType.Electrode
         ---
-        used_in_reference: bool  # is this channel used to form the internal reference
+        used_in_reference=null: bool  # is this channel used to form the internal reference
         """

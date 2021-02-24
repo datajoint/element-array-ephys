@@ -137,7 +137,7 @@ class EphysRecording(dj.Imported):
         # search session dir and determine acquisition software
         acq_software = None
         for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'], ['SpikeGLX', 'OpenEphys']):
-            ephys_meta_filepaths = [fp.as_posix() for fp in sess_dir.rglob(ephys_pattern)]
+            ephys_meta_filepaths = [fp for fp in sess_dir.rglob(ephys_pattern)]
             if len(ephys_meta_filepaths):
                 acq_software = ephys_acq_type
                 break
@@ -235,7 +235,7 @@ class LFP(dj.Imported):
                               lfp_time_stamps=np.arange(lfp.shape[1]) / spikeglx_recording.lfmeta['imSampRate'],
                               lfp_mean=lfp.mean(axis=0)))
 
-            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
+            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
             for recorded_site in np.arange(lfp.shape[0]):
                 shank, shank_col, shank_row, _ = spikeglx_recording.npx_meta.shankmap['data'][recorded_site]
@@ -260,7 +260,7 @@ class LFP(dj.Imported):
                               lfp_time_stamps=lfp_timestamps,
                               lfp_mean=lfp.mean(axis=0)))
 
-            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & key
+            q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
             for chn_idx in oe_probe['lfp_meta']['channels_ids']:
                 electrodes.append((q_electrodes & {'electrode': chn_idx}).fetch1('KEY'))
