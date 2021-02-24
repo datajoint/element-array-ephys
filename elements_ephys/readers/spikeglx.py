@@ -88,7 +88,7 @@ class SpikeGLX:
             # 3A, 3B1, 3B2 (NP 1.0)
             chn_gains = [c[imroTbl_idx] for c in imroTbl_data]
 
-        return fI2V / np.array(chn_gains) * 1e6
+        return fI2V / np.array(chn_gains) * 1e6  # convert to uV as well
 
     def _read_bin(self, fname):
         nchan = self.apmeta.meta['nSavedChans']
