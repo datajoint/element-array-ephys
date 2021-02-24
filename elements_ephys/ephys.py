@@ -205,7 +205,7 @@ class LFP(dj.Imported):
     ---
     lfp_sampling_rate: float        # (Hz)
     lfp_time_stamps: longblob       # (s) timestamps with respect to the start of the recording (recording_timestamp)
-    lfp_mean: longblob              # (mV) mean of LFP across electrodes - shape (time,)
+    lfp_mean: longblob              # (uV) mean of LFP across electrodes - shape (time,)
     """
 
     class Electrode(dj.Part):
@@ -213,7 +213,7 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode  
         ---
-        lfp: longblob               # (mV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode 
         """
 
     # Only store LFP for every 9th channel, due to high channel density, close-by channels exhibit highly similar LFP
@@ -431,8 +431,8 @@ class Waveform(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode  
         --- 
-        waveform_mean: longblob   # mean over all spikes
-        waveforms=null: longblob  # (spike x sample) waveform of each spike at each electrode
+        waveform_mean: longblob   # (uV) mean over all spikes
+        waveforms=null: longblob  # (uV) (spike x sample) waveform of each spike at each electrode
         """
 
     @property

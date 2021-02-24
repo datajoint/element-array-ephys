@@ -114,11 +114,11 @@ class Probe:
     @property
     def ap_data(self):
         """
-        AP data concatenated across recordings. Shape: (channel x sample)
+        AP data concatenated across recordings. Shape: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
         if self._ap_data is None:
-            self._ap_data = np.hstack([s.signal for s in self.ap_analog_signals])
+            self._ap_data = np.hstack([s.signal for s in self.ap_analog_signals]).T
             self._ap_data = self._ap_data * self.ap_meta['channels_gains']
         return self._ap_data
 
@@ -131,11 +131,11 @@ class Probe:
     @property
     def lfp_data(self):
         """
-        LFP data concatenated across recordings. Shape: (channel x sample)
+        LFP data concatenated across recordings. Shape: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
         if self._lfp_data is None:
-            self._lfp_data = np.hstack([s.signal for s in self.lfp_analog_signals])
+            self._lfp_data = np.hstack([s.signal for s in self.lfp_analog_signals]).T
             self._lfp_data = self._lfp_data * self.lfp_meta['channels_gains']
         return self._lfp_data
 

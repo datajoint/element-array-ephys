@@ -39,6 +39,10 @@ class SpikeGLX:
 
     @property
     def apdata(self):
+        """
+        AP data: (sample x channel)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
         if self._apdata is None:
             self._apdata = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
             self._apdata = self._apdata * self.get_channel_bit_volts('ap')
@@ -52,6 +56,10 @@ class SpikeGLX:
 
     @property
     def lfdata(self):
+        """
+        LFP data: (sample x channel)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
         if self._lfdata is None:
             self._lfdata = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
             self._lfdata = self._lfdata * self.get_channel_bit_volts('lf')
