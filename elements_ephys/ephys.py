@@ -173,27 +173,27 @@ class EphysRecording(dj.Imported):
 
         elif acq_software == 'OpenEphys':
             loaded_oe = openephys.OpenEphys(sess_dir)
-            for oe_probe in loaded_oe.probes:
-                insertion_key = (ProbeInsertion & key & {'probe': oe_probe['probe_SN']}).fetch1('KEY')
+            for probe_SN, oe_probe in loaded_oe.probes.items():
+                insertion_key = (ProbeInsertion & key & {'probe': probe_SN}).fetch1('KEY')
 
-                if re.search('(1.0|2.0)', oe_probe['probe_model']):
+                if re.search('(1.0|2.0)', oe_probe.probe_model):
                     eg_members = []
-                    probe_type = oe_probe['probe_model']
+                    probe_type = oe_probe.probe_model
                     q_electrodes = probe.ProbeType.Electrode & {'probe_type': probe_type}
-                    for chn_idx in oe_probe['ap_meta']['channels_ids']:
+                    for chn_idx in oe_probe.ap_meta['channels_ids']:
                         electrode = (q_electrodes & {'electrode': chn_idx}).fetch1('KEY')
                         eg_members.append(electrode)
                 else:
                     raise NotImplementedError('Processing for neuropixels probe model {} not yet implemented'.format(
-                        oe_probe['probe_model']))
+                        oe_probe.probe_model))
 
                 e_config = generate_electrode_config(probe_type, eg_members)
 
                 self.insert1({**insertion_key, **e_config,
                               'acq_software': acq_software,
-                              'sampling_rate': oe_probe['ap_meta']['sample_rate']})
+                              'sampling_rate': oe_probe.ap_meta['sample_rate']})
                 self.EphysFile.insert([{**insertion_key, 'file_path': fp.relative_to(root_dir).as_posix()}
-                                       for fp in oe_probe['recording_info']['recording_files']])
+                                       for fp in oe_probe.recording_info['recording_files']])
         else:
             raise NotImplementedError(f'Processing ephys files from acquisition software of type {acq_software} is not yet implemented')
 
@@ -251,18 +251,18 @@ class LFP(dj.Imported):
         elif acq_software == 'OpenEphys':
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
-            oe_probe = [p for p in loaded_oe.probes if p['probe_SN'] == probe_sn][0]
-            lfp = np.hstack([s.signal for s in oe_probe['lfp_data']])
-            lfp_timestamps = np.hstack([s.times for s in oe_probe['lfp_data']])
+            oe_probe = loaded_oe.probes[probe_sn]
+            lfp = oe_probe.lfp_data
+            lfp_timestamps = oe_probe.lfp_timestamps
 
             self.insert1(dict(key,
-                              lfp_sampling_rate=oe_probe['lfp_meta']['sample_rate'],
+                              lfp_sampling_rate=oe_probe.lfp_meta['sample_rate'],
                               lfp_time_stamps=lfp_timestamps,
                               lfp_mean=lfp.mean(axis=0)))
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
-            for chn_idx in oe_probe['lfp_meta']['channels_ids']:
+            for chn_idx in oe_probe.lfp_meta['channels_ids']:
                 electrodes.append((q_electrodes & {'electrode': chn_idx}).fetch1('KEY'))
 
             chn_lfp = list(zip(electrodes, lfp))
@@ -373,6 +373,8 @@ class Clustering(dj.Imported):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
         ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
         ks = kilosort.Kilosort(ks_dir)
+        acq_software = (EphysRecording & key).fetch1('acq_software')
+
         # ---------- Clustering ----------
         creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
 
@@ -382,7 +384,7 @@ class Clustering(dj.Imported):
         valid_units = ks.data['cluster_ids'][withspike_idx]
         valid_unit_labels = ks.data['cluster_groups'][withspike_idx]
         # -- Get channel and electrode-site mapping
-        chn2electrodes = get_neuropixels_chn2electrode_map(key)
+        chn2electrodes = get_neuropixels_chn2electrode_map(key, acq_software)
 
         # -- Spike-times --
         # spike_times_sec_adj > spike_times_sec > spike_times
@@ -441,16 +443,17 @@ class Waveform(dj.Imported):
         units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
         root_dir = pathlib.Path(get_ephys_root_data_dir())
+        ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
+        ks = kilosort.Kilosort(ks_dir)
+
+        acq_software = (EphysRecording & key).fetch1('acq_software')
 
         npx_meta_fp = root_dir / (EphysRecording.EphysFile & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-        neuropixels_dir = (root_dir / npx_meta_fp).parent
-        ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
-
-        ks = kilosort.Kilosort(ks_dir)
+        neuropixels_dir = npx_meta_fp.parent
 
         # -- Get channel and electrode-site mapping
         rec_key = (EphysRecording & key).fetch1('KEY')
-        chn2electrodes = get_neuropixels_chn2electrode_map(rec_key)
+        chn2electrodes = get_neuropixels_chn2electrode_map(rec_key, acq_software)
 
         is_qc = (Clustering & key).fetch1('quality_control')
 
@@ -514,23 +517,35 @@ class ClusterQualityMetrics(dj.Imported):
 # ---------------- HELPER FUNCTIONS ----------------
 
 
-def get_neuropixels_chn2electrode_map(ephys_recording_key):
+def get_neuropixels_chn2electrode_map(ephys_recording_key, acq_software):
     root_dir = pathlib.Path(get_ephys_root_data_dir())
-    npx_meta_fp = root_dir / (EphysRecording.EphysFile
-                              & ephys_recording_key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-    neuropixels_dir = (root_dir / npx_meta_fp).parent
+    if acq_software == 'SpikeGLX':
+        npx_meta_fp = root_dir / (EphysRecording.EphysFile
+                                  & ephys_recording_key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+        neuropixels_dir = (root_dir / npx_meta_fp).parent
 
-    meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
-    spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-    e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
+        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
+        spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+        e_config_key = (EphysRecording * probe.ElectrodeConfig & ephys_recording_key).fetch1('KEY')
 
-    q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & e_config_key
-    chn2electrode_map = {}
-    for recorded_site, (shank, shank_col, shank_row, _) in enumerate(spikeglx_meta.shankmap['data']):
-        chn2electrode_map[recorded_site] = (q_electrodes
-                                            & {'shank': shank,
-                                               'shank_col': shank_col,
-                                               'shank_row': shank_row}).fetch1('KEY')
+        q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode & e_config_key
+        chn2electrode_map = {}
+        for recorded_site, (shank, shank_col, shank_row, _) in enumerate(spikeglx_meta.shankmap['data']):
+            chn2electrode_map[recorded_site] = (q_electrodes
+                                                & {'shank': shank,
+                                                   'shank_col': shank_col,
+                                                   'shank_row': shank_row}).fetch1('KEY')
+    elif acq_software == 'OpenEphys':
+        sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
+        loaded_oe = openephys.OpenEphys(sess_dir)
+        probe_sn = (ProbeInsertion & ephys_recording_key).fetch1('probe')
+        oe_probe = loaded_oe.probes[probe_sn]
+
+        q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & ephys_recording_key
+        chn2electrode_map = {}
+        for chn_idx in oe_probe.ap_meta['channels_ids']:
+            chn2electrode_map[chn_idx] = (q_electrodes & {'electrode': chn_idx}).fetch1('KEY')
+
     return chn2electrode_map
 
 
