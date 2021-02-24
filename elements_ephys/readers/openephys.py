@@ -113,8 +113,13 @@ class Probe:
 
     @property
     def ap_data(self):
+        """
+        AP data concatenated across recordings. Shape: (channel x sample)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
         if self._ap_data is None:
             self._ap_data = np.hstack([s.signal for s in self.ap_analog_signals])
+            self._ap_data = self._ap_data * self.ap_meta['channels_gains']
         return self._ap_data
 
     @property
@@ -125,8 +130,13 @@ class Probe:
 
     @property
     def lfp_data(self):
+        """
+        LFP data concatenated across recordings. Shape: (channel x sample)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
         if self._lfp_data is None:
             self._lfp_data = np.hstack([s.signal for s in self.lfp_analog_signals])
+            self._lfp_data = self._lfp_data * self.lfp_meta['channels_gains']
         return self._lfp_data
 
     @property
@@ -141,7 +151,6 @@ class Probe:
         :param channel: channel (name, not indices) to extract waveforms
         :param n_wf: number of spikes per unit to extract the waveforms
         :param wf_win: number of sample pre and post a spike
-        :param bit_volts: scalar required to convert int16 values into microvolts (default of 1)
         :return: waveforms (sample x channel x spike)
         """
         data = self.ap_data.T  # (sample x channel)
