@@ -153,7 +153,6 @@ class Probe:
         :param wf_win: number of sample pre and post a spike
         :return: waveforms (sample x channel x spike)
         """
-        data = self.ap_data.T  # (sample x channel)
         channel_ind = [np.where(self.ap_meta['channels_ids'] == chn)[0][0] for chn in channel]
 
         # ignore spikes at the beginning or end of raw data
@@ -166,7 +165,7 @@ class Probe:
         if len(spikes) > 0:
             spike_indices = np.searchsorted(self.ap_timestamps, spikes, side="left")
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
+            spike_wfs = np.dstack([self.ap_data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
                                    for spk in spike_indices])
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
