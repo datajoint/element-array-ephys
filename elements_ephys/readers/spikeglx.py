@@ -23,39 +23,67 @@ class SpikeGLX:
         name & associated meta - no interpretation of g0_t0.imec, etc is
         performed at this layer.
         '''
+        self._apmeta, self._apdata = None, None
+        self._lfmeta, self._lfdata = None, None
 
-        self.root_dir = root_dir
+        self.root_dir = pathlib.Path(root_dir)
 
         meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
-        self.npx_meta = SpikeGLXMeta(meta_filepath)
-
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
-        self._apdata = None
-        self._lfdata, self._lfmeta = None, None
+
+    @property
+    def apmeta(self):
+        if self._apmeta is None:
+            self._apmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.ap.meta'))
+        return self._apmeta
 
     @property
     def apdata(self):
-        if self._apdata is not None:
-            return self._apdata
-        else:
-            return self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+        if self._apdata is None:
+            self._apdata = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+            self._apdata = self._apdata * self.get_channel_bit_volts('ap')
+        return self._apdata
 
     @property
     def lfmeta(self):
-        if self._lfmeta is not None:
-            return self._lfmeta
-        else:
-            return _read_meta(self.root_dir / (self.root_name + '.lf.meta'))
+        if self._lfmeta is None:
+            self._lfmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.lf.meta'))
+        return self._lfmeta
 
     @property
     def lfdata(self):
-        if self._lfdata is not None:
-            return self._lfdata
+        if self._lfdata is None:
+            self._lfdata = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            self._lfdata = self._lfdata * self.get_channel_bit_volts('lf')
+        return self._lfdata
+
+    def get_channel_bit_volts(self, band='ap'):
+        """
+        Extract the AP and LF channels' int16 to microvolts
+        Following the steps specified in: https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+                dataVolts = dataInt * fI2V / gain
+        """
+        fI2V = float(self.apmeta.meta['imAiRangeMax']) / 512
+
+        if band == 'ap':
+            imroTbl_data = self.apmeta.imroTbl['data']
+            imroTbl_idx = 3
+        elif band == 'lf':
+            imroTbl_data = self.lfmeta.imroTbl['data']
+            imroTbl_idx = 4
+
+        # extract channels' gains
+        if 'imDatPrb_dock' in self.apmeta.meta:
+            # NP 2.0; APGain = 80 for all AP (LF is computed from AP)
+            chn_gains = [80] * len(imroTbl_data)
         else:
-            return self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            # 3A, 3B1, 3B2 (NP 1.0)
+            chn_gains = [c[imroTbl_idx] for c in imroTbl_data]
+
+        return fI2V / np.array(chn_gains) * 1e6
 
     def _read_bin(self, fname):
-        nchan = self.npx_meta.meta['nSavedChans']
+        nchan = self.apmeta.meta['nSavedChans']
         dtype = np.dtype((np.int16, nchan))
         return np.memmap(fname, dtype, 'r')
 
@@ -70,9 +98,9 @@ class SpikeGLX:
         """
 
         data = self.apdata
-        channel_idx = [np.where(self.npx_meta.recording_channels == chn)[0][0] for chn in channel]
+        channel_idx = [np.where(self.apmeta.recording_channels == chn)[0][0] for chn in channel]
 
-        spikes = np.round(spikes * self.npx_meta.meta['imSampRate']).astype(int)  # convert to sample
+        spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample
         # ignore spikes at the beginning or end of raw data
         spikes = spikes[np.logical_and(spikes > -wf_win[0], spikes < data.shape[0] - wf_win[-1])]
 
@@ -124,6 +152,8 @@ class SpikeGLXMeta:
         self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
 
         self.recording_channels = [c[0] for c in self.imroTbl['data']] if self.imroTbl else None
+
+        self._chan_gains = None
 
     @staticmethod
     def _parse_chanmap(raw):

@@ -231,14 +231,14 @@ class LFP(dj.Imported):
             lfp = spikeglx_recording.lfdata[:, :-1].T  # exclude the sync channel
 
             self.insert1(dict(key,
-                              lfp_sampling_rate=spikeglx_recording.lfmeta['imSampRate'],
-                              lfp_time_stamps=np.arange(lfp.shape[1]) / spikeglx_recording.lfmeta['imSampRate'],
+                              lfp_sampling_rate=spikeglx_recording.lfmeta.meta['imSampRate'],
+                              lfp_time_stamps=np.arange(lfp.shape[1]) / spikeglx_recording.lfmeta.meta['imSampRate'],
                               lfp_mean=lfp.mean(axis=0)))
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
             for recorded_site in np.arange(lfp.shape[0]):
-                shank, shank_col, shank_row, _ = spikeglx_recording.npx_meta.shankmap['data'][recorded_site]
+                shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrodes.append((q_electrodes
                                    & {'shank': shank,
                                       'shank_col': shank_col,
