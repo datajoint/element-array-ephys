@@ -125,7 +125,11 @@ class SpikeGLX:
 class SpikeGLXMeta:
 
     def __init__(self, meta_filepath):
-        # a good processing reference: https://github.com/jenniferColonell/Neuropixels_evaluation_tools/blob/master/SGLXMetaToCoords.m
+        """
+        Some good processing references:
+            https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+            https://github.com/jenniferColonell/Neuropixels_evaluation_tools/blob/master/SGLXMetaToCoords.m
+        """
 
         self.fname = meta_filepath
         self.meta = _read_meta(meta_filepath)
@@ -159,9 +163,7 @@ class SpikeGLXMeta:
         self.shankmap = self._parse_shankmap(self.meta['~snsShankMap']) if '~snsShankMap' in self.meta else None
         self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
 
-        self.recording_channels = [c[0] for c in self.imroTbl['data']] if self.imroTbl else None
-
-        self._chan_gains = None
+        self._recording_channels = None
 
     @staticmethod
     def _parse_chanmap(raw):
@@ -240,6 +242,28 @@ class SpikeGLXMeta:
                 res['data'].append([int(d) for d in u.split(' ')])
 
         return res
+
+    @property
+    def recording_channels(self):
+        if self._recording_channels is None:
+            if self.meta['snsSaveChanSubset'] == 'all':
+                # output = int32, 0 to nSavedChans - 1
+                self._recording_channels = np.arange(0, int(self.meta['nSavedChans']))
+            else:
+                # parse the snsSaveChanSubset string
+                # split at commas
+                chStrList = self.meta['snsSaveChanSubset'].split(sep = ',')
+                self._recording_channels = np.arange(0, 0)  # creates an empty array of int32
+                for sL in chStrList:
+                    currList = sL.split(sep = ':')
+                    if len(currList) > 1:
+                        # each set of contiguous channels specified by
+                        # chan1:chan2 inclusive
+                        newChans = np.arange(int(currList[0]), int(currList[1]) + 1)
+                    else:
+                        newChans = np.arange(int(currList[0]), int(currList[0]) + 1)
+                    self._recording_channels = np.append(self._recording_channels, newChans)
+        return self._recording_channels
 
 
 # ============= HELPER FUNCTIONS =============
