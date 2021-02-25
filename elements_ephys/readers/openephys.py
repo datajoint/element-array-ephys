@@ -96,10 +96,9 @@ class Probe:
         self.probe_SN = self.probe_info['@probe_serial_number']
 
         # Determine probe-model (TODO: how to determine npx 2.0 SS and MS?)
-        if processor['@pluginName'] == 'Neuropix-PXI':
-            self.probe_model = 'neuropixels 1.0 - 3B'
-        elif processor['@pluginName'] == 'Neuropix-3a':
-            self.probe_model = 'neuropixels 1.0 - 3A'
+        self.probe_model = {
+            "Neuropix-PXI": "neuropixels 1.0 - 3B",
+            "Neuropix-3a": "neuropixels 1.0 - 3A"}[processor['@pluginName']]
 
         self.ap_meta = None
         self.lfp_meta = None
@@ -112,21 +111,21 @@ class Probe:
                                'recording_durations': [],
                                'recording_files': []}
 
-        self._ap_data = None
+        self._ap_timeseries = None
         self._ap_timestamps = None
-        self._lfp_data = None
+        self._lfp_timeseries = None
         self._lfp_timestamps = None
 
     @property
-    def ap_data(self):
+    def ap_timeseries(self):
         """
         AP data concatenated across recordings. Shape: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
-        if self._ap_data is None:
-            self._ap_data = np.hstack([s.signal for s in self.ap_analog_signals]).T
-            self._ap_data = self._ap_data * self.ap_meta['channels_gains']
-        return self._ap_data
+        if self._ap_timeseries is None:
+            self._ap_timeseries = np.hstack([s.signal for s in self.ap_analog_signals]).T
+            self._ap_timeseries *= self.ap_meta['channels_gains']
+        return self._ap_timeseries
 
     @property
     def ap_timestamps(self):
@@ -135,15 +134,15 @@ class Probe:
         return self._ap_timestamps
 
     @property
-    def lfp_data(self):
+    def lfp_timeseries(self):
         """
         LFP data concatenated across recordings. Shape: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
-        if self._lfp_data is None:
-            self._lfp_data = np.hstack([s.signal for s in self.lfp_analog_signals]).T
-            self._lfp_data = self._lfp_data * self.lfp_meta['channels_gains']
-        return self._lfp_data
+        if self._lfp_timeseries is None:
+            self._lfp_timeseries = np.hstack([s.signal for s in self.lfp_analog_signals]).T
+            self._lfp_timeseries *= self.lfp_meta['channels_gains']
+        return self._lfp_timeseries
 
     @property
     def lfp_timestamps(self):
@@ -171,7 +170,7 @@ class Probe:
         if len(spikes) > 0:
             spike_indices = np.searchsorted(self.ap_timestamps, spikes, side="left")
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([self.ap_data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
+            spike_wfs = np.dstack([self.ap_timeseries[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
                                    for spk in spike_indices])
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)

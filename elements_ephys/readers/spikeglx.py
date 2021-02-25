@@ -23,8 +23,8 @@ class SpikeGLX:
         name & associated meta - no interpretation of g0_t0.imec, etc is
         performed at this layer.
         '''
-        self._apmeta, self._apdata = None, None
-        self._lfmeta, self._lfdata = None, None
+        self._apmeta, self._ap_timeseries = None, None
+        self._lfmeta, self._lf_timeseries = None, None
 
         self.root_dir = pathlib.Path(root_dir)
 
@@ -38,15 +38,15 @@ class SpikeGLX:
         return self._apmeta
 
     @property
-    def apdata(self):
+    def ap_timeseries(self):
         """
         AP data: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
-        if self._apdata is None:
-            self._apdata = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
-            self._apdata = self._apdata * self.get_channel_bit_volts('ap')
-        return self._apdata
+        if self._ap_timeseries is None:
+            self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+            self._ap_timeseries *= self.get_channel_bit_volts('ap')
+        return self._ap_timeseries
 
     @property
     def lfmeta(self):
@@ -55,15 +55,15 @@ class SpikeGLX:
         return self._lfmeta
 
     @property
-    def lfdata(self):
+    def lf_timeseries(self):
         """
         LFP data: (sample x channel)
         Channels' gains (bit_volts) applied - unit: uV
         """
-        if self._lfdata is None:
-            self._lfdata = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
-            self._lfdata = self._lfdata * self.get_channel_bit_volts('lf')
-        return self._lfdata
+        if self._lf_timeseries is None:
+            self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            self._lf_timeseries *= self.get_channel_bit_volts('lf')
+        return self._lf_timeseries
 
     def get_channel_bit_volts(self, band='ap'):
         """
@@ -105,7 +105,7 @@ class SpikeGLX:
         :return: waveforms (sample x channel x spike)
         """
 
-        data = self.apdata
+        data = self.ap_timeseries
         channel_idx = [np.where(self.apmeta.recording_channels == chn)[0][0] for chn in channel]
 
         spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample

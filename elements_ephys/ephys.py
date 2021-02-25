@@ -228,7 +228,7 @@ class LFP(dj.Imported):
             spikeglx_rec_dir = (root_dir / spikeglx_meta_fp).parent
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_rec_dir)
 
-            lfp = spikeglx_recording.lfdata[:, :-1].T  # exclude the sync channel
+            lfp = spikeglx_recording.lf_timeseries[:, :-1].T  # exclude the sync channel
 
             self.insert1(dict(key,
                               lfp_sampling_rate=spikeglx_recording.lfmeta.meta['imSampRate'],
@@ -252,7 +252,7 @@ class LFP(dj.Imported):
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
-            lfp = oe_probe.lfp_data
+            lfp = oe_probe.lfp_timeseries
             lfp_timestamps = oe_probe.lfp_timestamps
 
             self.insert1(dict(key,
