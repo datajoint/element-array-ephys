@@ -36,8 +36,8 @@ class OpenEphys:
         oe_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
 
         # extract the "recordings" for this session
-        self.experiment = [experiment for experiment in oe_file.experiments
-                           if pathlib.Path(experiment.absolute_foldername) == self.sess_dir][0]
+        self.experiment = next(experiment for experiment in oe_file.experiments
+                               if pathlib.Path(experiment.absolute_foldername) == self.sess_dir)
 
         self.recording_time = self.experiment.datetime
 
@@ -45,11 +45,17 @@ class OpenEphys:
         self.probes = self.load_probe_data()
 
     def load_probe_data(self):
+        """
+        Loop through all OpenEphys "processors", identify the processor for neuropixels probe, extract probe info
+            Loop through all recordings, associate recordings to the matching probes, extract recording info
+
+        Yielding multiple "Probe" objects, each containing meta information and timeseries data associated with each probe
+        """
+
         probes = {}
         for processor in self.experiment.settings['SIGNALCHAIN']['PROCESSOR']:
             if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
                 oe_probe = Probe(processor)
-
                 for rec in self.experiment.recordings:
                     for cont_info, analog_signal in zip(rec._oebin['continuous'], rec.analog_signals):
                         if cont_info['source_processor_id'] != oe_probe.processor_id:
