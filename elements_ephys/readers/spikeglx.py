@@ -4,6 +4,15 @@ import pathlib
 from .utils import convert_to_number
 
 
+AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
+
+# Imax values for different probe types - see metaguides (http://billkarsh.github.io/SpikeGLX/#metadata-guides)
+IMAX = {'neuropixels 1.0 - 3A': 512,
+        'neuropixels 1.0 - 3B': 512,
+        'neuropixels 2.0 - SS': 8192,
+        'neuropixels 2.0 - MS': 8192}
+
+
 class SpikeGLX:
 
     def __init__(self, root_dir):
@@ -69,26 +78,31 @@ class SpikeGLX:
         """
         Extract the AP and LF channels' int16 to microvolts
         Following the steps specified in: https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
-                dataVolts = dataInt * fI2V / gain
+                dataVolts = dataInt * Vmax / Imax / gain
         """
-        fI2V = float(self.apmeta.meta['imAiRangeMax']) / 512
+        vmax = float(self.apmeta.meta['imAiRangeMax'])
 
         if band == 'ap':
+            imax = IMAX[self.apmeta.probe_model]
             imroTbl_data = self.apmeta.imroTbl['data']
             imroTbl_idx = 3
+
         elif band == 'lf':
+            imax = IMAX[self.lfmeta.probe_model]
             imroTbl_data = self.lfmeta.imroTbl['data']
             imroTbl_idx = 4
+        else:
+            raise ValueError(f'Unsupported band: {band} - Must be "ap" or "lf"')
 
         # extract channels' gains
         if 'imDatPrb_dock' in self.apmeta.meta:
             # NP 2.0; APGain = 80 for all AP (LF is computed from AP)
-            chn_gains = [80] * len(imroTbl_data)
+            chn_gains = [AP_GAIN] * len(imroTbl_data)
         else:
             # 3A, 3B1, 3B2 (NP 1.0)
             chn_gains = [c[imroTbl_idx] for c in imroTbl_data]
 
-        return fI2V / np.array(chn_gains) * 1e6  # convert to uV as well
+        return vmax / imax / np.array(chn_gains) * 1e6  # convert to uV as well
 
     def _read_bin(self, fname):
         nchan = self.apmeta.meta['nSavedChans']
@@ -245,6 +259,14 @@ class SpikeGLXMeta:
 
     @property
     def recording_channels(self):
+        """
+        Because you can selectively save channels, the
+        ith channel in the file isn't necessarily the ith acquired channel.
+        Use this function to convert from ith stored to original index.
+
+        Credit to https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+            OriginalChans() function
+        """
         if self._recording_channels is None:
             if self.meta['snsSaveChanSubset'] == 'all':
                 # output = int32, 0 to nSavedChans - 1
@@ -252,16 +274,13 @@ class SpikeGLXMeta:
             else:
                 # parse the snsSaveChanSubset string
                 # split at commas
-                chStrList = self.meta['snsSaveChanSubset'].split(sep = ',')
+                chStrList = self.meta['snsSaveChanSubset'].split(sep=',')
                 self._recording_channels = np.arange(0, 0)  # creates an empty array of int32
                 for sL in chStrList:
-                    currList = sL.split(sep = ':')
-                    if len(currList) > 1:
-                        # each set of contiguous channels specified by
-                        # chan1:chan2 inclusive
-                        newChans = np.arange(int(currList[0]), int(currList[1]) + 1)
-                    else:
-                        newChans = np.arange(int(currList[0]), int(currList[0]) + 1)
+                    currList = sL.split(sep=':')
+                    # each set of continuous channels specified by chan1:chan2 inclusive
+                    newChans = np.arange(int(currList[0]), int(currList[min(1, len(currList))]) + 1)
+
                     self._recording_channels = np.append(self._recording_channels, newChans)
         return self._recording_channels
 
