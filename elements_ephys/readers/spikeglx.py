@@ -4,7 +4,16 @@ import pathlib
 from .utils import convert_to_number
 
 
-class Neuropixels:
+AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
+
+# Imax values for different probe types - see metaguides (http://billkarsh.github.io/SpikeGLX/#metadata-guides)
+IMAX = {'neuropixels 1.0 - 3A': 512,
+        'neuropixels 1.0 - 3B': 512,
+        'neuropixels 2.0 - SS': 8192,
+        'neuropixels 2.0 - MS': 8192}
+
+
+class SpikeGLX:
 
     def __init__(self, root_dir):
         '''
@@ -23,40 +32,81 @@ class Neuropixels:
         name & associated meta - no interpretation of g0_t0.imec, etc is
         performed at this layer.
         '''
+        self._apmeta, self._ap_timeseries = None, None
+        self._lfmeta, self._lf_timeseries = None, None
 
-        self.root_dir = root_dir
+        self.root_dir = pathlib.Path(root_dir)
 
         meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
-        self.npx_meta = NeuropixelsMeta(meta_filepath)
-
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
-        self._apdata = None
-        self._lfdata, self._lfmeta = None, None
 
     @property
-    def apdata(self):
-        if self._apdata is not None:
-            return self._apdata
-        else:
-            return self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+    def apmeta(self):
+        if self._apmeta is None:
+            self._apmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.ap.meta'))
+        return self._apmeta
+
+    @property
+    def ap_timeseries(self):
+        """
+        AP data: (sample x channel)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
+        if self._ap_timeseries is None:
+            self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+            self._ap_timeseries *= self.get_channel_bit_volts('ap')
+        return self._ap_timeseries
 
     @property
     def lfmeta(self):
-        if self._lfmeta is not None:
-            return self._lfmeta
-        else:
-            return _read_meta(self.root_dir / (self.root_name + '.lf.meta'))
+        if self._lfmeta is None:
+            self._lfmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.lf.meta'))
+        return self._lfmeta
 
     @property
-    def lfdata(self):
-        if self._lfdata is not None:
-            return self._lfdata
+    def lf_timeseries(self):
+        """
+        LFP data: (sample x channel)
+        Channels' gains (bit_volts) applied - unit: uV
+        """
+        if self._lf_timeseries is None:
+            self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            self._lf_timeseries *= self.get_channel_bit_volts('lf')
+        return self._lf_timeseries
+
+    def get_channel_bit_volts(self, band='ap'):
+        """
+        Extract the AP and LF channels' int16 to microvolts
+        Following the steps specified in: https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+                dataVolts = dataInt * Vmax / Imax / gain
+        """
+        vmax = float(self.apmeta.meta['imAiRangeMax'])
+
+        if band == 'ap':
+            imax = IMAX[self.apmeta.probe_model]
+            imroTbl_data = self.apmeta.imroTbl['data']
+            imroTbl_idx = 3
+
+        elif band == 'lf':
+            imax = IMAX[self.lfmeta.probe_model]
+            imroTbl_data = self.lfmeta.imroTbl['data']
+            imroTbl_idx = 4
         else:
-            return self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            raise ValueError(f'Unsupported band: {band} - Must be "ap" or "lf"')
+
+        # extract channels' gains
+        if 'imDatPrb_dock' in self.apmeta.meta:
+            # NP 2.0; APGain = 80 for all AP (LF is computed from AP)
+            chn_gains = [AP_GAIN] * len(imroTbl_data)
+        else:
+            # 3A, 3B1, 3B2 (NP 1.0)
+            chn_gains = [c[imroTbl_idx] for c in imroTbl_data]
+
+        return vmax / imax / np.array(chn_gains) * 1e6  # convert to uV as well
 
     def _read_bin(self, fname):
-        nchan = self.npx_meta.meta['nSavedChans']
-        dtype = np.dtype((np.uint16, nchan))
+        nchan = self.apmeta.meta['nSavedChans']
+        dtype = np.dtype((np.int16, nchan))
         return np.memmap(fname, dtype, 'r')
 
     def extract_spike_waveforms(self, spikes, channel, n_wf=500, wf_win=(-32, 32), bit_volts=1):
@@ -69,15 +119,15 @@ class Neuropixels:
         :return: waveforms (sample x channel x spike)
         """
 
-        data = self.apdata
-        channel_idx = [np.where(self.npx_meta.recording_channels == chn)[0][0] for chn in channel]
+        data = self.ap_timeseries
+        channel_idx = [np.where(self.apmeta.recording_channels == chn)[0][0] for chn in channel]
 
-        spikes = np.round(spikes * self.npx_meta.meta['imSampRate']).astype(int)  # convert to sample
+        spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample
+        # ignore spikes at the beginning or end of raw data
+        spikes = spikes[np.logical_and(spikes > -wf_win[0], spikes < data.shape[0] - wf_win[-1])]
 
         np.random.shuffle(spikes)
         spikes = spikes[:n_wf]
-        # ignore spikes at the beginning or end of raw data
-        spikes = spikes[np.logical_and(spikes > wf_win[0], spikes < data.shape[0] - wf_win[-1])]
         if len(spikes) > 0:
             # waveform at each spike: (sample x channel x spike)
             spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_idx] for spk in spikes])
@@ -86,10 +136,14 @@ class Neuropixels:
             return np.full((len(range(*wf_win)), len(channel), 1), np.nan)
 
 
-class NeuropixelsMeta:
+class SpikeGLXMeta:
 
     def __init__(self, meta_filepath):
-        # a good processing reference: https://github.com/jenniferColonell/Neuropixels_evaluation_tools/blob/master/SGLXMetaToCoords.m
+        """
+        Some good processing references:
+            https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+            https://github.com/jenniferColonell/Neuropixels_evaluation_tools/blob/master/SGLXMetaToCoords.m
+        """
 
         self.fname = meta_filepath
         self.meta = _read_meta(meta_filepath)
@@ -123,7 +177,7 @@ class NeuropixelsMeta:
         self.shankmap = self._parse_shankmap(self.meta['~snsShankMap']) if '~snsShankMap' in self.meta else None
         self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
 
-        self.recording_channels = [c[0] for c in self.imroTbl['data']] if self.imroTbl else None
+        self._recording_channels = None
 
     @staticmethod
     def _parse_chanmap(raw):
@@ -203,6 +257,33 @@ class NeuropixelsMeta:
 
         return res
 
+    @property
+    def recording_channels(self):
+        """
+        Because you can selectively save channels, the
+        ith channel in the file isn't necessarily the ith acquired channel.
+        Use this function to convert from ith stored to original index.
+
+        Credit to https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
+            OriginalChans() function
+        """
+        if self._recording_channels is None:
+            if self.meta['snsSaveChanSubset'] == 'all':
+                # output = int32, 0 to nSavedChans - 1
+                self._recording_channels = np.arange(0, int(self.meta['nSavedChans']))
+            else:
+                # parse the snsSaveChanSubset string
+                # split at commas
+                chStrList = self.meta['snsSaveChanSubset'].split(sep=',')
+                self._recording_channels = np.arange(0, 0)  # creates an empty array of int32
+                for sL in chStrList:
+                    currList = sL.split(sep=':')
+                    # each set of continuous channels specified by chan1:chan2 inclusive
+                    newChans = np.arange(int(currList[0]), int(currList[min(1, len(currList))]) + 1)
+
+                    self._recording_channels = np.append(self._recording_channels, newChans)
+        return self._recording_channels
+
 
 # ============= HELPER FUNCTIONS =============
 
@@ -212,7 +293,7 @@ def _read_meta(meta_filepath):
 
     The fields '~snsChanMap' and '~snsShankMap' are further parsed into
     'snsChanMap' and 'snsShankMap' dictionaries via calls to
-    Neuropixels._parse_chanmap and Neuropixels._parse_shankmap.
+    SpikeGLX._parse_chanmap and SpikeGLX._parse_shankmap.
     """
 
     res = {}
