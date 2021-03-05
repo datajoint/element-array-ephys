@@ -228,7 +228,11 @@ class LFP(dj.Imported):
             spikeglx_rec_dir = (root_dir / spikeglx_meta_fp).parent
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_rec_dir)
 
-            lfp = spikeglx_recording.lf_timeseries[:, :-1].T  # exclude the sync channel
+            lfp_chn_ind = spikeglx_recording.lfmeta.recording_channels[-1::-self.skip_chn_counts]
+
+            # Extract LFP data at specified channels and convert to uV
+            lfp = spikeglx_recording.lf_timeseries[:, lfp_chn_ind]  # (sample x channel)
+            lfp = (lfp * spikeglx_recording.get_channel_bit_volts('lf')[lfp_chn_ind]).T  # (channel x sample)
 
             self.insert1(dict(key,
                               lfp_sampling_rate=spikeglx_recording.lfmeta.meta['imSampRate'],
@@ -237,7 +241,7 @@ class LFP(dj.Imported):
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
-            for recorded_site in np.arange(lfp.shape[0]):
+            for recorded_site in lfp_chn_ind:
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrodes.append((q_electrodes
                                    & {'shank': shank,
@@ -247,12 +251,17 @@ class LFP(dj.Imported):
             chn_lfp = list(zip(electrodes, lfp))
             self.Electrode().insert((
                 {**key, **electrode, 'lfp': d}
-                for electrode, d in chn_lfp[-1::-self._skip_chn_counts]), ignore_extra_fields=True)
+                for electrode, d in chn_lfp), ignore_extra_fields=True)
+
         elif acq_software == 'OpenEphys':
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
-            lfp = oe_probe.lfp_timeseries
+
+            lfp_chn_ind = np.arange(len(oe_probe.lfp_meta['channels_ids']))[-1::-self.skip_chn_counts]
+
+            lfp = oe_probe.lfp_timeseries[:, lfp_chn_ind]  # (sample x channel)
+            lfp = (lfp * oe_probe.lfp_meta['channels_gains'][lfp_chn_ind]).T  # (channel x sample)
             lfp_timestamps = oe_probe.lfp_timestamps
 
             self.insert1(dict(key,
@@ -262,13 +271,13 @@ class LFP(dj.Imported):
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
-            for chn_idx in oe_probe.lfp_meta['channels_ids']:
+            for chn_idx in oe_probe.lfp_meta['channels_ids'][lfp_chn_ind]:
                 electrodes.append((q_electrodes & {'electrode': chn_idx}).fetch1('KEY'))
 
             chn_lfp = list(zip(electrodes, lfp))
             self.Electrode().insert((
                 {**key, **electrode, 'lfp': d}
-                for electrode, d in chn_lfp[-1::-self._skip_chn_counts]), ignore_extra_fields=True)
+                for electrode, d in chn_lfp), ignore_extra_fields=True)
 
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software of type {acq_software} is not yet implemented')
