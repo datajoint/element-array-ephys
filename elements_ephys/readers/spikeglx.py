@@ -41,7 +41,7 @@ class SpikeGLX:
             meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
         except StopIteration:
             raise FileNotFoundError(f'No SpikeGLX file (.ap.meta) found at: {root_dir}')
-            
+
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
 
     @property
@@ -187,8 +187,7 @@ class SpikeGLXMeta:
         self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
 
         # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
-        self.recording_channels = [int(v[0]) for k, v in self.chanmap.items()
-                                   if k != 'shape' and not k.startswith('SY')]
+        self.recording_channels = np.arange(len(self.imroTbl['data']))[self.get_recording_channels_indices(exclude_sync=True)]
 
     @staticmethod
     def _parse_chanmap(raw):

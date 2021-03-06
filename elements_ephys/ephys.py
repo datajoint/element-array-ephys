@@ -228,7 +228,7 @@ class LFP(dj.Imported):
             spikeglx_rec_dir = (root_dir / spikeglx_meta_fp).parent
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_rec_dir)
 
-            lfp_chn_ind = spikeglx_recording.lfmeta.recording_channels[-1::-self.skip_chn_counts]
+            lfp_chn_ind = spikeglx_recording.lfmeta.recording_channels[-1::-self._skip_chn_counts]
 
             # Extract LFP data at specified channels and convert to uV
             lfp = spikeglx_recording.lf_timeseries[:, lfp_chn_ind]  # (sample x channel)
@@ -258,10 +258,10 @@ class LFP(dj.Imported):
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
 
-            lfp_chn_ind = np.arange(len(oe_probe.lfp_meta['channels_ids']))[-1::-self.skip_chn_counts]
+            lfp_chn_ind = np.arange(len(oe_probe.lfp_meta['channels_ids']))[-1::-self._skip_chn_counts]
 
             lfp = oe_probe.lfp_timeseries[:, lfp_chn_ind]  # (sample x channel)
-            lfp = (lfp * oe_probe.lfp_meta['channels_gains'][lfp_chn_ind]).T  # (channel x sample)
+            lfp = (lfp * np.array(oe_probe.lfp_meta['channels_gains'])[lfp_chn_ind]).T  # (channel x sample)
             lfp_timestamps = oe_probe.lfp_timestamps
 
             self.insert1(dict(key,
@@ -271,7 +271,7 @@ class LFP(dj.Imported):
 
             q_electrodes = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording & key
             electrodes = []
-            for chn_idx in oe_probe.lfp_meta['channels_ids'][lfp_chn_ind]:
+            for chn_idx in np.array(oe_probe.lfp_meta['channels_ids'])[lfp_chn_ind]:
                 electrodes.append((q_electrodes & {'electrode': chn_idx}).fetch1('KEY'))
 
             chn_lfp = list(zip(electrodes, lfp))
