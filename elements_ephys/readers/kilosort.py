@@ -1,5 +1,6 @@
 from os import path
 from datetime import datetime
+import pathlib
 import pandas as pd
 import numpy as np
 import re
@@ -37,14 +38,19 @@ class Kilosort:
     # keys to self.files, .data are file name e.g. self.data['params'], etc.
     ks_keys = [path.splitext(i)[0] for i in ks_files]
 
-    def __init__(self, dname):
-        self._dname = dname
+    def __init__(self, ks_dir):
+        self._ks_dir = pathlib.Path(ks_dir)
         self._files = {}
         self._data = None
         self._clusters = None
 
-        self._info = {'time_created': datetime.fromtimestamp((dname / 'params.py').stat().st_ctime),
-                      'time_modified': datetime.fromtimestamp((dname / 'params.py').stat().st_mtime)}
+        params_fp = ks_dir / 'params.py'
+
+        if not params_fp.exists():
+            raise FileNotFoundError(f'No Kilosort output found in: {ks_dir}')
+
+        self._info = {'time_created': datetime.fromtimestamp(params_fp.stat().st_ctime),
+                      'time_modified': datetime.fromtimestamp(params_fp.stat().st_mtime)}
 
     @property
     def data(self):
@@ -59,7 +65,7 @@ class Kilosort:
     def _stat(self):
         self._data = {}
         for i in Kilosort.ks_files:
-            f = self._dname / i
+            f = self._ks_dir / i
 
             if not f.exists():
                 log.debug('skipping {} - doesnt exist'.format(f))
@@ -84,12 +90,12 @@ class Kilosort:
                 self._data[base] = np.reshape(d, d.shape[0]) if d.ndim == 2 and d.shape[1] == 1 else d
 
         # Read the Cluster Groups
-        if (self._dname / 'cluster_groups.csv').exists():
-            df = pd.read_csv(self._dname / 'cluster_groups.csv', delimiter='\t')
+        if (self._ks_dir / 'cluster_groups.csv').exists():
+            df = pd.read_csv(self._ks_dir / 'cluster_groups.csv', delimiter= '\t')
             self._data['cluster_groups'] = np.array(df['group'].values)
             self._data['cluster_ids'] = np.array(df['cluster_id'].values)
-        elif (self._dname / 'cluster_KSLabel.tsv').exists():
-            df = pd.read_csv(self._dname / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
+        elif (self._ks_dir / 'cluster_KSLabel.tsv').exists():
+            df = pd.read_csv(self._ks_dir / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
             self._data['cluster_groups'] = np.array(df['KSLabel'].values)
             self._data['cluster_ids'] = np.array(df['cluster_id'].values)
         else:

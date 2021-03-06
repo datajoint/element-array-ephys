@@ -320,16 +320,6 @@ class ClusteringParamSet(dj.Lookup):
 
 
 @schema
-class ClusteringTask(dj.Manual):
-    definition = """
-    -> EphysRecording
-    -> ClusteringParamSet
-    ---
-    clustering_output_dir: varchar(255)  #  clustering output directory relative to root data directory
-    """
-
-
-@schema
 class ClusterQualityLabel(dj.Lookup):
     definition = """
     # Quality
@@ -346,37 +336,87 @@ class ClusterQualityLabel(dj.Lookup):
 
 
 @schema
+class ClusteringTask(dj.Manual):
+    definition = """
+    -> EphysRecording
+    -> ClusteringParamSet
+    ---
+    clustering_output_dir: varchar(255)  #  clustering output directory relative to root data directory
+    task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
+    """
+
+
+@schema
 class Clustering(dj.Imported):
+    """
+    A processing table to handle each ClusteringTask:
+    + If `task_mode == "trigger"`: trigger clustering analysis according to the ClusteringParamSet (e.g. launch a kilosort job)
+    + If `task_mode == "load"`: verify output and create a corresponding entry in the Curation table
+    """
     definition = """
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
-    quality_control: bool      # has this clustering result undergone quality control?
-    manual_curation: bool      # has manual curation been performed on this clustering result?
-    clustering_note='': varchar(2000)  
+    clustering_time: datetime             # time of generation of this set of clustering results 
     """
-
-    class Unit(dj.Part):
-        definition = """   
-        -> master
-        unit: int
-        ---
-        -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
-        -> ClusterQualityLabel
-        spike_count: int         # how many spikes in this recording of this unit
-        spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
-        spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
-        """
 
     def make(self, key):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
-        ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
+        task_mode, output_dir = (ClusteringTask & key).fetch1('task_mode', 'clustering_output_dir')
+        ks_dir = root_dir / output_dir
+
+        if task_mode == 'load':
+            ks = kilosort.Kilosort(ks_dir)  # check if the directory is a valid Kilosort output
+            creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
+            # Synthesize curation_id
+            curation_id = (dj.U().aggr(Curation & key, n='max(curation_id)').fetch1('n') or 0) + 1
+
+            self.insert1({**key, 'clustering_time': creation_time})
+            Curation.insert1({**key, 'curation_id': curation_id,
+                              'curation_time': creation_time, 'curation_output_dir': output_dir,
+                              'quality_control': is_qc, 'manual_curation': is_curated})
+        elif task_mode == 'trigger':
+            raise NotImplementedError('Automatic triggering of clustering analysis is not yet supported')
+        else:
+            raise ValueError(f'Unknown task mode: {task_mode}')
+
+
+@schema
+class Curation(dj.Manual):
+    definition = """
+    -> ClusteringTask
+    curation_id: int
+    ---
+    curation_time: datetime             # time of generation of this set of curated clustering results 
+    curation_output_dir: varchar(255)   #  output directory of the curated results, relative to root data directory
+    quality_control: bool               # has this clustering result undergone quality control?
+    manual_curation: bool               # has manual curation been performed on this clustering result?
+    curation_note='': varchar(2000)  
+    """
+
+
+@schema
+class Unit(dj.Imported):
+    definition = """   
+    -> Curation
+    unit: int
+    ---
+    -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
+    -> ClusterQualityLabel
+    spike_count: int         # how many spikes in this recording of this unit
+    spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
+    spike_sites : longblob   # array of electrode associated with each spike
+    spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+    """
+
+    @property
+    def key_source(self):
+        return Curation()
+
+    def make(self, key):
+        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
         acq_software = (EphysRecording & key).fetch1('acq_software')
-
-        # ---------- Clustering ----------
-        creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
 
         # ---------- Unit ----------
         # -- Remove 0-spike units
@@ -413,15 +453,13 @@ class Clustering(dj.Imported):
                               'spike_sites': spike_sites[ks.data['spike_clusters'] == unit],
                               'spike_depths': spike_depths[ks.data['spike_clusters'] == unit]})
 
-        self.insert1({**key, 'clustering_time': creation_time,
-                      'quality_control': is_qc, 'manual_curation': is_curated})
-        self.Unit.insert([{**key, **u} for u in units])
+        self.insert([{**key, **u} for u in units])
 
 
 @schema
 class Waveform(dj.Imported):
     definition = """
-    -> Clustering.Unit
+    -> Unit
     ---
     peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
     """
@@ -437,11 +475,11 @@ class Waveform(dj.Imported):
 
     @property
     def key_source(self):
-        return Clustering()
+        return Curation()
 
     def make(self, key):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
-        ks_dir = root_dir / (ClusteringTask & key).fetch1('clustering_output_dir')
+        ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
 
         acq_software, probe_sn = (EphysRecording * ProbeInsertion & key).fetch1('acq_software', 'probe')
@@ -450,10 +488,10 @@ class Waveform(dj.Imported):
         rec_key = (EphysRecording & key).fetch1('KEY')
         chn2electrodes = get_neuropixels_chn2electrode_map(rec_key, acq_software)
 
-        is_qc = (Clustering & key).fetch1('quality_control')
+        is_qc = (Curation & key).fetch1('quality_control')
 
         # Get all units
-        units = {u['unit']: u for u in (Clustering.Unit & key).fetch(as_dict=True, order_by='unit')}
+        units = {u['unit']: u for u in (Unit & key).fetch(as_dict=True, order_by='unit')}
 
         unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
@@ -494,7 +532,7 @@ class Waveform(dj.Imported):
 @schema
 class ClusterQualityMetrics(dj.Imported):
     definition = """
-    -> Clustering.Unit
+    -> Unit
     ---
     amp: float
     snr: float
