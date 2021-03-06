@@ -295,18 +295,17 @@ class SpikeGLXMeta:
         """
         if self.meta['snsSaveChanSubset'] == 'all':
             # output = int32, 0 to nSavedChans - 1
-            chans = np.arange(0, int(self.meta['nSavedChans']))
+            channels = np.arange(0, int(self.meta['nSavedChans']))
         else:
             # parse the snsSaveChanSubset string
-            # split at commas
-            chStrList = self.meta['snsSaveChanSubset'].split(sep = ',')
-            chans = np.arange(0, 0)  # creates an empty array of int32
-            for sL in chStrList:
-                currList = sL.split(sep = ':')
+            channels = np.arange(0, 0)  # creates an empty array of int32
+            for sL in self.meta['snsSaveChanSubset'].split(sep = ','):  # split at commas
+                current_list = sL.split(sep = ':')
                 # each set of continuous channels specified by chan1:chan2 inclusive
-                newChans = np.arange(int(currList[0]), int(currList[min(1, len(currList) - 1)]) + 1)
-                chans = np.append(chans, newChans)
-        return chans
+                new_channels = np.arange(int(current_list[0]), int(current_list[min(1, len(current_list) - 1)]) + 1)
+                channels = np.append(channels, new_channels)
+        return channels
+
 
 # ============= HELPER FUNCTIONS =============
 
