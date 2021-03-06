@@ -1,2 +1,2 @@
-datajoint>=0.12.7
+datajoint>=0.13
 pyopenephys
