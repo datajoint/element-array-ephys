@@ -37,7 +37,11 @@ class SpikeGLX:
 
         self.root_dir = pathlib.Path(root_dir)
 
-        meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
+        try:
+            meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
+        except StopIteration:
+            raise FileNotFoundError(f'No SpikeGLX file (.ap.meta) found at: {root_dir}')
+            
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
 
     @property
