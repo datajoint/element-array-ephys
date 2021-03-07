@@ -297,13 +297,13 @@ class SpikeGLXMeta:
             # output = int32, 0 to nSavedChans - 1
             channels = np.arange(0, int(self.meta['nSavedChans']))
         else:
-            # parse the snsSaveChanSubset string
-            channels = np.arange(0, 0)  # creates an empty array of int32
-            for sL in self.meta['snsSaveChanSubset'].split(sep = ','):  # split at commas
-                current_list = sL.split(sep = ':')
-                # each set of continuous channels specified by chan1:chan2 inclusive
-                new_channels = np.arange(int(current_list[0]), int(current_list[min(1, len(current_list) - 1)]) + 1)
-                channels = np.append(channels, new_channels)
+            # parse the channel list self.meta['snsSaveChanSubset']
+            channels = np.arange(0)  # empty array
+            for channel_range in self.meta['snsSaveChanSubset'].split(','):
+                # a block of contiguous channels specified as chan or chan1:chan2 inclusive
+                ix = [int(r) for r in channel_range.split(':')]
+                assert len(ix) in (1, 2), f"Invalid channel range spec '{channel_range}'"
+                channels = np.append(np.r_[ix[0]:ix[-1] + 1])
         return channels
 
 
