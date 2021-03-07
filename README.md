@@ -12,7 +12,7 @@ ephys pipeline.
 
 ## The Pipeline Architecture
 
-![ephys pipeline diagram](images/attached_ephys_element.png)
+![ephys pipeline diagram](images/attached_ephys_element.svg)
 
 As the diagram depicts, the ephys element starts immediately downstream from ***Session***, 
 and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.

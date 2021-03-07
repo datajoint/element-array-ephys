@@ -37,7 +37,11 @@ class SpikeGLX:
 
         self.root_dir = pathlib.Path(root_dir)
 
-        meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
+        try:
+            meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
+        except StopIteration:
+            raise FileNotFoundError(f'No SpikeGLX file (.ap.meta) found at: {root_dir}')
+
         self.root_name = meta_filepath.name.replace('.ap.meta', '')
 
     @property
@@ -50,11 +54,11 @@ class SpikeGLX:
     def ap_timeseries(self):
         """
         AP data: (sample x channel)
-        Channels' gains (bit_volts) applied - unit: uV
+        Data are stored as np.memmap with dtype: int16
+        - to convert to microvolts, multiply with self.get_channel_bit_volts('ap')
         """
         if self._ap_timeseries is None:
             self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
-            self._ap_timeseries *= self.get_channel_bit_volts('ap')
         return self._ap_timeseries
 
     @property
@@ -67,16 +71,16 @@ class SpikeGLX:
     def lf_timeseries(self):
         """
         LFP data: (sample x channel)
-        Channels' gains (bit_volts) applied - unit: uV
+        Data are stored as np.memmap with dtype: int16
+        - to convert to microvolts, multiply with self.get_channel_bit_volts('lf')
         """
         if self._lf_timeseries is None:
             self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
-            self._lf_timeseries *= self.get_channel_bit_volts('lf')
         return self._lf_timeseries
 
     def get_channel_bit_volts(self, band='ap'):
         """
-        Extract the AP and LF channels' int16 to microvolts
+        Extract the recorded AP and LF channels' int16 to microvolts - no Sync (SY) channels
         Following the steps specified in: https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
                 dataVolts = dataInt * Vmax / Imax / gain
         """
@@ -86,11 +90,13 @@ class SpikeGLX:
             imax = IMAX[self.apmeta.probe_model]
             imroTbl_data = self.apmeta.imroTbl['data']
             imroTbl_idx = 3
+            chn_ind = self.apmeta.get_recording_channels_indices(exclude_sync=True)
 
         elif band == 'lf':
             imax = IMAX[self.lfmeta.probe_model]
             imroTbl_data = self.lfmeta.imroTbl['data']
             imroTbl_idx = 4
+            chn_ind = self.lfmeta.get_recording_channels_indices(exclude_sync=True)
         else:
             raise ValueError(f'Unsupported band: {band} - Must be "ap" or "lf"')
 
@@ -102,25 +108,26 @@ class SpikeGLX:
             # 3A, 3B1, 3B2 (NP 1.0)
             chn_gains = [c[imroTbl_idx] for c in imroTbl_data]
 
-        return vmax / imax / np.array(chn_gains) * 1e6  # convert to uV as well
+        chn_gains = np.array(chn_gains)[chn_ind]
+
+        return vmax / imax / chn_gains * 1e6  # convert to uV as well
 
     def _read_bin(self, fname):
         nchan = self.apmeta.meta['nSavedChans']
         dtype = np.dtype((np.int16, nchan))
         return np.memmap(fname, dtype, 'r')
 
-    def extract_spike_waveforms(self, spikes, channel, n_wf=500, wf_win=(-32, 32), bit_volts=1):
+    def extract_spike_waveforms(self, spikes, channel_ind, n_wf=500, wf_win=(-32, 32)):
         """
         :param spikes: spike times (in second) to extract waveforms
-        :param channel: channel (name, not indices) to extract waveforms
+        :param channel_ind: channel indices (of shankmap) to extract the waveforms from
         :param n_wf: number of spikes per unit to extract the waveforms
         :param wf_win: number of sample pre and post a spike
-        :param bit_volts: scalar required to convert int16 values into microvolts (default of 1)
-        :return: waveforms (sample x channel x spike)
+        :return: waveforms (in uV) - shape: (sample x channel x spike)
         """
+        channel_bit_volts = self.get_channel_bit_volts('ap')[channel_ind]
 
         data = self.ap_timeseries
-        channel_idx = [np.where(self.apmeta.recording_channels == chn)[0][0] for chn in channel]
 
         spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample
         # ignore spikes at the beginning or end of raw data
@@ -130,10 +137,12 @@ class SpikeGLX:
         spikes = spikes[:n_wf]
         if len(spikes) > 0:
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_idx] for spk in spikes])
-            return spike_wfs * bit_volts
+            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
+                                   * channel_bit_volts
+                                   for spk in spikes])
+            return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
-            return np.full((len(range(*wf_win)), len(channel), 1), np.nan)
+            return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
 
 
 class SpikeGLXMeta:
@@ -177,7 +186,8 @@ class SpikeGLXMeta:
         self.shankmap = self._parse_shankmap(self.meta['~snsShankMap']) if '~snsShankMap' in self.meta else None
         self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
 
-        self._recording_channels = None
+        # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
+        self.recording_channels = np.arange(len(self.imroTbl['data']))[self.get_recording_channels_indices(exclude_sync=True)]
 
     @staticmethod
     def _parse_chanmap(raw):
@@ -208,6 +218,9 @@ class SpikeGLXMeta:
     @staticmethod
     def _parse_shankmap(raw):
         """
+        The shankmap contains details on the shank info
+            for each electrode sites of the sites being recorded only
+
         https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/UserManual.md#shank-map
         Parse shank map header structure. Converts:
 
@@ -234,6 +247,10 @@ class SpikeGLXMeta:
     @staticmethod
     def _parse_imrotbl(raw):
         """
+        The imro table contains info for all electrode sites (no sync)
+            for a particular electrode configuration (all 384 sites)
+        Note: not all of these 384 sites are necessarily recorded
+
         https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/UserManual.md#imro-per-channel-settings
         Parse imro tbl structure. Converts:
 
@@ -257,8 +274,17 @@ class SpikeGLXMeta:
 
         return res
 
-    @property
-    def recording_channels(self):
+    def get_recording_channels_indices(self, exclude_sync=False):
+        """
+        The indices of recorded channels (in chanmap) with respect to the channels listed in the imro table
+        """
+        recorded_chns_ind = [int(v[0]) for k, v in self.chanmap.items()
+                             if k != 'shape' and (not k.startswith('SY') if exclude_sync else True)]
+        orig_chns_ind = self.get_original_chans()
+        _, _, chns_ind = np.intersect1d(orig_chns_ind, recorded_chns_ind, return_indices=True)
+        return chns_ind
+
+    def get_original_chans(self):
         """
         Because you can selectively save channels, the
         ith channel in the file isn't necessarily the ith acquired channel.
@@ -267,22 +293,18 @@ class SpikeGLXMeta:
         Credit to https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
             OriginalChans() function
         """
-        if self._recording_channels is None:
-            if self.meta['snsSaveChanSubset'] == 'all':
-                # output = int32, 0 to nSavedChans - 1
-                self._recording_channels = np.arange(0, int(self.meta['nSavedChans']))
-            else:
-                # parse the snsSaveChanSubset string
-                # split at commas
-                chStrList = self.meta['snsSaveChanSubset'].split(sep=',')
-                self._recording_channels = np.arange(0, 0)  # creates an empty array of int32
-                for sL in chStrList:
-                    currList = sL.split(sep=':')
-                    # each set of continuous channels specified by chan1:chan2 inclusive
-                    newChans = np.arange(int(currList[0]), int(currList[min(1, len(currList))]) + 1)
-
-                    self._recording_channels = np.append(self._recording_channels, newChans)
-        return self._recording_channels
+        if self.meta['snsSaveChanSubset'] == 'all':
+            # output = int32, 0 to nSavedChans - 1
+            channels = np.arange(0, int(self.meta['nSavedChans']))
+        else:
+            # parse the channel list self.meta['snsSaveChanSubset']
+            channels = np.arange(0)  # empty array
+            for channel_range in self.meta['snsSaveChanSubset'].split(','):
+                # a block of contiguous channels specified as chan or chan1:chan2 inclusive
+                ix = [int(r) for r in channel_range.split(':')]
+                assert len(ix) in (1, 2), f"Invalid channel range spec '{channel_range}'"
+                channels = np.append(np.r_[ix[0]:ix[-1] + 1])
+        return channels
 
 
 # ============= HELPER FUNCTIONS =============

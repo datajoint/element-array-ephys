@@ -120,11 +120,10 @@ class Probe:
     def ap_timeseries(self):
         """
         AP data concatenated across recordings. Shape: (sample x channel)
-        Channels' gains (bit_volts) applied - unit: uV
+        Data are stored as int16 - to convert to microvolts, multiply with self.ap_meta['channels_gains']
         """
         if self._ap_timeseries is None:
             self._ap_timeseries = np.hstack([s.signal for s in self.ap_analog_signals]).T
-            self._ap_timeseries *= self.ap_meta['channels_gains']
         return self._ap_timeseries
 
     @property
@@ -137,11 +136,10 @@ class Probe:
     def lfp_timeseries(self):
         """
         LFP data concatenated across recordings. Shape: (sample x channel)
-        Channels' gains (bit_volts) applied - unit: uV
+        Data are stored as int16 - to convert to microvolts, multiply with self.lfp_meta['channels_gains']
         """
         if self._lfp_timeseries is None:
             self._lfp_timeseries = np.hstack([s.signal for s in self.lfp_analog_signals]).T
-            self._lfp_timeseries *= self.lfp_meta['channels_gains']
         return self._lfp_timeseries
 
     @property
@@ -150,15 +148,15 @@ class Probe:
             self._lfp_timestamps = np.hstack([s.times for s in self.lfp_analog_signals])
         return self._lfp_timestamps
 
-    def extract_spike_waveforms(self, spikes, channel, n_wf=500, wf_win=(-32, 32)):
+    def extract_spike_waveforms(self, spikes, channel_ind, n_wf=500, wf_win=(-32, 32)):
         """
         :param spikes: spike times (in second) to extract waveforms
-        :param channel: channel (name, not indices) to extract waveforms
+        :param channel_ind: channel indices (of meta['channels_ids']) to extract waveforms
         :param n_wf: number of spikes per unit to extract the waveforms
         :param wf_win: number of sample pre and post a spike
         :return: waveforms (sample x channel x spike)
         """
-        channel_ind = [np.where(self.ap_meta['channels_ids'] == chn)[0][0] for chn in channel]
+        channel_bit_volts = np.array(self.ap_meta['channels_gains'])[channel_ind]
 
         # ignore spikes at the beginning or end of raw data
         spikes = spikes[np.logical_and(spikes > (-wf_win[0] / self.ap_meta['sample_rate']),
@@ -171,7 +169,8 @@ class Probe:
             spike_indices = np.searchsorted(self.ap_timestamps, spikes, side="left")
             # waveform at each spike: (sample x channel x spike)
             spike_wfs = np.dstack([self.ap_timeseries[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
+                                   * channel_bit_volts
                                    for spk in spike_indices])
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
-            return np.full((len(range(*wf_win)), len(channel), 1), np.nan)
+            return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
