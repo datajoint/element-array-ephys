@@ -360,7 +360,7 @@ class Clustering(dj.Imported):
     """
     A processing table to handle each ClusteringTask:
     + If `task_mode == "trigger"`: trigger clustering analysis according to the ClusteringParamSet (e.g. launch a kilosort job)
-    + If `task_mode == "load"`: verify output and create a corresponding entry in the Curation table
+    + If `task_mode == "load"`: verify output
     """
     definition = """
     -> ClusteringTask
@@ -375,24 +375,19 @@ class Clustering(dj.Imported):
 
         if task_mode == 'load':
             ks = kilosort.Kilosort(ks_dir)  # check if the directory is a valid Kilosort output
-            creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
-            # Synthesize curation_id
-            curation_id = (dj.U().aggr(Curation & key, n='max(curation_id)').fetch1('n') or 0) + 1
-
-            self.insert1({**key, 'clustering_time': creation_time})
-            Curation.insert1({**key, 'curation_id': curation_id,
-                              'curation_time': creation_time, 'curation_output_dir': output_dir,
-                              'quality_control': is_qc, 'manual_curation': is_curated})
+            creation_time, _, _ = kilosort.extract_clustering_info(ks_dir)
         elif task_mode == 'trigger':
             raise NotImplementedError('Automatic triggering of clustering analysis is not yet supported')
         else:
             raise ValueError(f'Unknown task mode: {task_mode}')
 
+        self.insert1({**key, 'clustering_time': creation_time})
+
 
 @schema
 class Curation(dj.Manual):
     definition = """
-    -> ClusteringTask
+    -> Clustering
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
@@ -401,6 +396,24 @@ class Curation(dj.Manual):
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
     """
+
+    def create1_from_clustering_task(self, key, curation_note=''):
+        """
+        A convenient function to create a new corresponding "Curation" for a particular "ClusteringTask"
+        """
+        if not len(Clustering & key):
+            raise ValueError(f'No corresponding entry in Clustering available for: {key}; do `Clustering.populate(key)`')
+
+        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        task_mode, output_dir = (ClusteringTask & key).fetch1('task_mode', 'clustering_output_dir')
+        ks_dir = root_dir / output_dir
+        creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
+        # Synthesize curation_id
+        curation_id = (dj.U().aggr(self & key, n='max(curation_id)').fetch1('n') or 0) + 1
+        self.insert1({**key, 'curation_id': curation_id,
+                      'curation_time': creation_time, 'curation_output_dir': output_dir,
+                      'quality_control': is_qc, 'manual_curation': is_curated,
+                      'curation_note': curation_note})
 
 
 @schema
