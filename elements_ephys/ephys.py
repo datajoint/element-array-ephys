@@ -401,7 +401,7 @@ class Curation(dj.Manual):
         """
         A convenient function to create a new corresponding "Curation" for a particular "ClusteringTask"
         """
-        if not len(Clustering & key):
+        if key not in Clustering():
             raise ValueError(f'No corresponding entry in Clustering available for: {key}; do `Clustering.populate(key)`')
 
         root_dir = pathlib.Path(get_ephys_root_data_dir())
@@ -409,7 +409,7 @@ class Curation(dj.Manual):
         ks_dir = root_dir / output_dir
         creation_time, is_curated, is_qc = kilosort.extract_clustering_info(ks_dir)
         # Synthesize curation_id
-        curation_id = (dj.U().aggr(self & key, n='max(curation_id)').fetch1('n') or 0) + 1
+        curation_id = dj.U().aggr(self & key, n='ifnull(max(curation_id)+1,1)').fetch1('n')
         self.insert1({**key, 'curation_id': curation_id,
                       'curation_time': creation_time, 'curation_output_dir': output_dir,
                       'quality_control': is_qc, 'manual_curation': is_curated,
