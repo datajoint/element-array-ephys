@@ -417,22 +417,23 @@ class Curation(dj.Manual):
 
 
 @schema
-class Unit(dj.Imported):
-    definition = """   
-    -> Curation
-    unit: int
-    ---
-    -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
-    -> ClusterQualityLabel
-    spike_count: int         # how many spikes in this recording of this unit
-    spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
-    spike_sites : longblob   # array of electrode associated with each spike
-    spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+class CuratedClustering(dj.Imported):
+    definition = """
+    -> Curation    
     """
 
-    @property
-    def key_source(self):
-        return Curation()
+    class Unit(dj.Part):
+        definition = """   
+        -> master
+        unit: int
+        ---
+        -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
+        -> ClusterQualityLabel
+        spike_count: int         # how many spikes in this recording of this unit
+        spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
+        spike_sites : longblob   # array of electrode associated with each spike
+        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        """
 
     def make(self, key):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
@@ -481,7 +482,7 @@ class Unit(dj.Imported):
 @schema
 class Waveform(dj.Imported):
     definition = """
-    -> Unit
+    -> CuratedClustering.Unit
     ---
     peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
     """
@@ -554,7 +555,7 @@ class Waveform(dj.Imported):
 @schema
 class ClusterQualityMetrics(dj.Imported):
     definition = """
-    -> Unit
+    -> CuratedClustering.Unit
     ---
     amp: float
     snr: float
