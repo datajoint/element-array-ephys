@@ -391,7 +391,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   #  output directory of the curated results, relative to root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
@@ -476,7 +476,8 @@ class CuratedClustering(dj.Imported):
                               'spike_sites': spike_sites[ks.data['spike_clusters'] == unit],
                               'spike_depths': spike_depths[ks.data['spike_clusters'] == unit]})
 
-        self.insert([{**key, **u} for u in units])
+        self.insert1(key)
+        self.Unit.insert([{**key, **u} for u in units])
 
 
 @schema
@@ -514,7 +515,7 @@ class Waveform(dj.Imported):
         is_qc = (Curation & key).fetch1('quality_control')
 
         # Get all units
-        units = {u['unit']: u for u in (Unit & key).fetch(as_dict=True, order_by='unit')}
+        units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(as_dict=True, order_by='unit')}
 
         unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
