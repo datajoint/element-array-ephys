@@ -303,7 +303,7 @@ class SpikeGLXMeta:
                 # a block of contiguous channels specified as chan or chan1:chan2 inclusive
                 ix = [int(r) for r in channel_range.split(':')]
                 assert len(ix) in (1, 2), f"Invalid channel range spec '{channel_range}'"
-                channels = np.append(np.r_[ix[0]:ix[-1] + 1])
+                channels = np.append(channels, np.r_[ix[0]:ix[-1] + 1])
         return channels
 
 

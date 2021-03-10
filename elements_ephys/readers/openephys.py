@@ -69,7 +69,7 @@ class OpenEphys:
                             oe_probe.recording_info['recording_datetimes'].append(rec.datetime)
                             oe_probe.recording_info['recording_durations'].append(float(rec.duration))
                             oe_probe.recording_info['recording_files'].append(
-                                rec.absolute_foldername / cont_info['folder_name'])
+                                rec.absolute_foldername / 'continuous' / cont_info['folder_name'])
 
                         elif cont_info['source_processor_sub_idx'] == 1:  # lfp data
                             assert cont_info['sample_rate'] == analog_signal.sample_rate == 2500
