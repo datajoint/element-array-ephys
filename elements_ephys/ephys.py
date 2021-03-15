@@ -27,7 +27,8 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
         :param linking_module: a module name or a module containing the
          required dependencies to activate the `ephys` element:
             Upstream tables:
-                + Session: parent table to ProbeInsertion, typically identifying a recording session
+                + Subject: parent table to ProbeInsertion, typically identifying the animal undergone a probe insertion
+                + Session: parent table to EphysRecording, typically identifying a recording session
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
@@ -88,7 +89,7 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class ProbeInsertion(dj.Manual):  # (acute)
     definition = """
-    -> Session  
+    -> Subject  
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
@@ -113,6 +114,7 @@ class InsertionLocation(dj.Manual):
 @schema
 class EphysRecording(dj.Imported):
     definition = """
+    -> Session
     -> ProbeInsertion      
     ---
     -> probe.ElectrodeConfig
