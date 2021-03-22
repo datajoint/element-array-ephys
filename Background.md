@@ -67,7 +67,7 @@ We engaged several labs to adopt and validate the Neuropixels Element during the
     + The lab uses on-premise institutional resource for data infrastructure and hosting
     + Repository: https://github.com/cajal/pipeline 
 + BrainCoGs (Princeton Neuroscience Institute) - Manuel Schottdorf, Alvaro Luna
-    + DataJoint NEURO conducted a training workshop on 3/01- 03. 
+    + DataJoint NEURO conducted a training workshop on March 1st to 3rd, 2021. 
     + The Neuropixels Element was adopted, connected to an existing BrainCoGs project pipeline. The ingestion routine was successfully validated on the existing Neuropixels dataset (acquired with SpikeGLX) and Kilosort outputs.
     + Manuel Schottdorf expressed interest in comparison study between different spike sorting algorithms, thus further validating our roadmap to integrate the SpikeInterface framework into the Neuropixels Element
     + The lab uses local institutional resource for data infrastructure and hosting
