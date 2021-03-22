@@ -14,8 +14,9 @@ yet this is accompanied by an equally great challenge in terms of data and compu
 ## Acquisition tools
 The typical instrumentation used for data acquisition is the Neuropixels probe and headstage interfacing with a PXIe acquisition module (https://www.neuropixels.org/control-system).
 Two main acquisition softwares are used for Neuropixels:
-SpikeGLX - developed by Bill Karsh and Tim Harris at HHMI/Janelia
-OpenEphys - developed by Joshua Siegle at the Allen Institute.
++ SpikeGLX - developed by Bill Karsh and Tim Harris at HHMI/Janelia
++ OpenEphys - developed by Joshua Siegle at the Allen Institute.
+
 These save the data into specific directory structure and file-naming convention as custom binary formats (e.g. “.bin”, “.dat”). Meta data are stored as separate files in xml or text format.
 
 ## Preprocessing tools
@@ -29,7 +30,11 @@ In recent years, several leaders have been emerging as de facto standards with s
 + SpyKING CIRCUS
 
 Kilosort provides most automation and has gained significant popularity, being adopted as one of the key spike sorting methods in the majority of the teams/collaborations we have worked with. As part of Year-1 U24 effort, we provide support for data ingestion of spike sorting results from Kilosort.
-Further effort will be devoted for the ingestion support of other spike sorting methods. On this end, a framework for unifying existing spike sorting methods, named SpikeInterface, has been developed by Alessio Buccino, et al. SpikeInterface provides a convenient Python-based wrapper to invoke, extract, compare spike sorting results from different sorting algorithms.
+Further effort will be devoted for the ingestion support of other spike sorting methods. 
+On this end, a framework for unifying existing spike sorting methods, 
+named [SpikeInterface](https://github.com/SpikeInterface/spikeinterface), 
+has been developed by Alessio Buccino, et al. 
+SpikeInterface provides a convenient Python-based wrapper to invoke, extract, compare spike sorting results from different sorting algorithms.
 
 ## Precursor projects and interviews
 
