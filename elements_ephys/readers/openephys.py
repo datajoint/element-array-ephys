@@ -46,10 +46,13 @@ class OpenEphys:
 
     def load_probe_data(self):
         """
-        Loop through all OpenEphys "processors", identify the processor for neuropixels probe, extract probe info
-            Loop through all recordings, associate recordings to the matching probes, extract recording info
+        Loop through all OpenEphys "processors", identify the processor for
+         neuropixels probe, extract probe info
+            Loop through all recordings, associate recordings to
+            the matching probes, extract recording info
 
-        Yielding multiple "Probe" objects, each containing meta information and timeseries data associated with each probe
+        Yielding multiple "Probe" objects, each containing meta information
+         and timeseries data associated with each probe
         """
 
         probes = {}
@@ -57,7 +60,8 @@ class OpenEphys:
             if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
                 oe_probe = Probe(processor)
                 for rec in self.experiment.recordings:
-                    for cont_info, analog_signal in zip(rec._oebin['continuous'], rec.analog_signals):
+                    for cont_info, analog_signal in zip(rec._oebin['continuous'],
+                                                        rec.analog_signals):
                         if cont_info['source_processor_id'] != oe_probe.processor_id:
                             continue
 
@@ -66,8 +70,10 @@ class OpenEphys:
                             cont_type = 'ap'
 
                             oe_probe.recording_info['recording_count'] += 1
-                            oe_probe.recording_info['recording_datetimes'].append(rec.datetime)
-                            oe_probe.recording_info['recording_durations'].append(float(rec.duration))
+                            oe_probe.recording_info['recording_datetimes'].append(
+                                rec.datetime)
+                            oe_probe.recording_info['recording_durations'].append(
+                                float(rec.duration))
                             oe_probe.recording_info['recording_files'].append(
                                 rec.absolute_foldername / 'continuous' / cont_info['folder_name'])
 
@@ -120,7 +126,8 @@ class Probe:
     def ap_timeseries(self):
         """
         AP data concatenated across recordings. Shape: (sample x channel)
-        Data are stored as int16 - to convert to microvolts, multiply with self.ap_meta['channels_gains']
+        Data are stored as int16 - to convert to microvolts,
+         multiply with self.ap_meta['channels_gains']
         """
         if self._ap_timeseries is None:
             self._ap_timeseries = np.hstack([s.signal for s in self.ap_analog_signals]).T
@@ -136,7 +143,8 @@ class Probe:
     def lfp_timeseries(self):
         """
         LFP data concatenated across recordings. Shape: (sample x channel)
-        Data are stored as int16 - to convert to microvolts, multiply with self.lfp_meta['channels_gains']
+        Data are stored as int16 - to convert to microvolts,
+         multiply with self.lfp_meta['channels_gains']
         """
         if self._lfp_timeseries is None:
             self._lfp_timeseries = np.hstack([s.signal for s in self.lfp_analog_signals]).T
@@ -160,7 +168,8 @@ class Probe:
 
         # ignore spikes at the beginning or end of raw data
         spikes = spikes[np.logical_and(spikes > (-wf_win[0] / self.ap_meta['sample_rate']),
-                                       spikes < (self.ap_timestamps.max() - wf_win[-1] / self.ap_meta['sample_rate']))]
+                                       spikes < (self.ap_timestamps.max() - wf_win[-1]
+                                                 / self.ap_meta['sample_rate']))]
         # select a randomized set of "n_wf" spikes
         np.random.shuffle(spikes)
         spikes = spikes[:n_wf]
@@ -168,9 +177,10 @@ class Probe:
         if len(spikes) > 0:
             spike_indices = np.searchsorted(self.ap_timestamps, spikes, side="left")
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([self.ap_timeseries[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
-                                   * channel_bit_volts
-                                   for spk in spike_indices])
+            spike_wfs = np.dstack([
+                self.ap_timeseries[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
+                * channel_bit_volts
+                for spk in spike_indices])
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
             return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
