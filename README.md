@@ -1,6 +1,7 @@
-# DataJoint Element - Canonical Electrophysiology
-DataJoint Element for electrophysiology.
-This repository features DataJoint pipeline design for extracellular electrophysiology, 
+# DataJoint Element - Array Electrophysiology Element
+DataJoint Element for array electrophysiology.
+
+This repository features DataJoint pipeline design for extracellular array electrophysiology, 
 with ***Neuropixels*** probe and ***kilosort*** spike sorting method. 
 
 The pipeline presented here is not a complete pipeline by itself, but rather a modular 
@@ -9,6 +10,8 @@ design of tables and dependencies specific to the extracellular electrophysiolog
 This modular pipeline element can be flexibly attached downstream 
 to any particular design of experiment session, thus assembling a fully functional 
 ephys pipeline.
+
+For background and development progess, see [here](./Background.md).
 
 ## The Pipeline Architecture
 
