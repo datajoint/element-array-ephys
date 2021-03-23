@@ -17,7 +17,7 @@ See [Background](Background.md) for the background information and development t
 
 ![ephys pipeline diagram](images/attached_ephys_element.svg)
 
-As the diagram depicts, the ephys element starts immediately downstream from ***Session***, 
+As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
 and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.
 
 ### The design of probe
@@ -55,4 +55,4 @@ This ephys element features automatic ingestion for spike sorting results from t
 
 ## Usage
 
-See [this project](https://github.com/vathes/canonical-full-ephys-pipeline) for an example usage of this ephys pipeline element.
+See [this project](https://github.com/datajoint/workflow-array-ephys) for an example usage of this Array Electrophysiology Element.
