@@ -39,12 +39,15 @@ class ProbeType(dj.Lookup):
     @staticmethod
     def create_neuropixels_probe(probe_type='neuropixels 1.0 - 3A'):
         """
-        Create `ProbeType` and `Electrode` for neuropixels probe 1.0 (3A and 3B), 2.0 (SS and MS)
-        For electrode location, the (0, 0) is the bottom left corner of the probe (ignore the tip portion)
+        Create `ProbeType` and `Electrode` for neuropixels probes:
+         1.0 (3A and 3B), 2.0 (SS and MS)
+        For electrode location, the (0, 0) is the
+         bottom left corner of the probe (ignore the tip portion)
         Electrode numbering is 1-indexing
         """
 
-        def build_electrodes(site_count, col_spacing, row_spacing, white_spacing, col_count=2,
+        def build_electrodes(site_count, col_spacing, row_spacing,
+                             white_spacing, col_count=2,
                              shank_count=1, shank_spacing=250):
             """
             :param site_count: site count per shank
@@ -73,7 +76,8 @@ class ProbeType(dj.Lookup):
                                         'shank_col': c_id,
                                         'shank_row': r_id,
                                         'x_coord': x + (shank_no * shank_spacing),
-                                        'y_coord': y} for e_id, (c_id, r_id, x, y) in enumerate(
+                                        'y_coord': y}
+                                       for e_id, (c_id, r_id, x, y) in enumerate(
                     zip(shank_cols, shank_rows, x_coords, y_coords))])
 
             return npx_electrodes
@@ -86,7 +90,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 1.0 - 3A'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 1.0 3B ----
         if probe_type == 'neuropixels 1.0 - 3B':
@@ -96,7 +101,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 1.0 - 3B'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 2.0 Single shank ----
         if probe_type == 'neuropixels 2.0 - SS':
@@ -107,7 +113,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 2.0 - SS'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 2.0 Multi shank ----
         if probe_type == 'neuropixels 2.0 - MS':
@@ -118,7 +125,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 2.0 - MS'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
 
 @schema
