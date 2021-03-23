@@ -558,15 +558,18 @@ class Waveform(dj.Imported):
 
         unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
-            unit_wfs = np.load(ks_dir / 'mean_waveforms.npy')  # unit x channel x sample
-            for unit_no, unit_wf in zip(ks.data['cluster_ids'], unit_wfs):
+            unit_waveforms = np.load(ks_dir / 'mean_waveforms.npy')  # unit x channel x sample
+            for unit_no, unit_waveform in zip(ks.data['cluster_ids'], unit_waveforms):
                 if unit_no in units:
-                    for chn, chn_wf in zip(ks.data['channel_map'], unit_wf):
-                        unit_waveforms.append({**units[unit_no], **channel2electrodes[chn],
-                                               'waveform_mean': chn_wf})
-                        if channel2electrodes[chn]['electrode'] == units[unit_no]['electrode']:
-                            unit_peak_waveforms.append({**units[unit_no],
-                                                        'peak_chn_waveform_mean': chn_wf})
+                    for channel, channel_waveform in zip(ks.data['channel_map'],
+                                                         unit_waveform):
+                        unit_waveforms.append({
+                            **units[unit_no], **channel2electrodes[channel],
+                            'waveform_mean': channel_waveform})
+                        if channel2electrodes[channel]['electrode'] == units[unit_no]['electrode']:
+                            unit_peak_waveforms.append({
+                                **units[unit_no],
+                                'peak_chn_waveform_mean': channel_waveform})
         else:
             if acq_software == 'SpikeGLX':
                 npx_meta_fp = root_dir / (EphysRecording.EphysFile & key
@@ -578,16 +581,18 @@ class Waveform(dj.Imported):
                 npx_recording = loaded_oe.probes[probe_sn]
 
             for unit_dict in units.values():
-                spks = unit_dict['spike_times']
-                wfs = npx_recording.extract_spike_waveforms(spks, ks.data['channel_map'])  # (sample x channel x spike)
-                wfs = wfs.transpose((1, 2, 0))  # (channel x spike x sample)
-                for chn, chn_wf in zip(ks.data['channel_map'], wfs):
-                    unit_waveforms.append({**unit_dict, **channel2electrodes[chn],
-                                           'waveform_mean': chn_wf.mean(axis=0),
-                                           'waveforms': chn_wf})
-                    if channel2electrodes[chn]['electrode'] == unit_dict['electrode']:
+                spikes = unit_dict['spike_times']
+                waveforms = npx_recording.extract_spike_waveforms(
+                    spikes, ks.data['channel_map'])  # (sample x channel x spike)
+                waveforms = waveforms.transpose((1, 2, 0))  # (channel x spike x sample)
+                for channel, channel_waveform in zip(ks.data['channel_map'], waveforms):
+                    unit_waveforms.append({**unit_dict, **channel2electrodes[channel],
+                                           'waveform_mean': channel_waveform.mean(axis=0),
+                                           'waveforms': channel_waveform})
+                    if channel2electrodes[channel]['electrode'] == unit_dict['electrode']:
                         unit_peak_waveforms.append({
-                            **unit_dict, 'peak_chn_waveform_mean': chn_wf.mean(axis=0)})
+                            **unit_dict,
+                            'peak_chn_waveform_mean': channel_waveform.mean(axis=0)})
 
         self.insert(unit_peak_waveforms, ignore_extra_fields=True)
         self.Electrode.insert(unit_waveforms, ignore_extra_fields=True)
