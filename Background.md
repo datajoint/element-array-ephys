@@ -49,9 +49,9 @@ These teams include:
 
 ## Pipeline Development
 Through our interviews and direct collaboration on the precursor projects,
- we identified the common motifs to create the Neuropixels Element with the repository hosted at https://github.com/datajoint/elements-neuropixels.
+ we identified the common motifs to create the Array Electrophysiology Element with the repository hosted at https://github.com/datajoint/element-array-ephys.
 
-Major features of the Neuropixels Element include:
+Major features of the Array Electrophysiology Element include:
 + Pipeline architecture defining:
     + Probe, electrode configuration compatible with Neuropixels probes and generalizable to other types of probes (e.g. tetrodes) - supporting both chronic and acute probe insertion mode
     + Probe-insertion, ephys-recordings, LFP extraction, clusterings, curations, sorted units and the associated data (e.g. spikes, waveforms, etc.)
@@ -60,29 +60,14 @@ Major features of the Neuropixels Element include:
 + Ingestion support for spike sorting outputs from Kilosort
 + Sample data and complete test suite for quality assurance
 
-Incorporation of SpikeInterface into the Neuropixels Element will be on DataJoint Elements development roadmap. 
+Incorporation of SpikeInterface into the Array Electrophysiology Element will be on DataJoint Elements development roadmap. 
 Dr. Loren Frank has led a development effort of a DataJoint pipeline with SpikeInterface framework and NeurodataWithoutBorders format integrated (https://github.com/LorenFrankLab/nwb_datajoint).
 
 ## Alpha release: Validation sites
-We engaged several labs to adopt and validate the Neuropixels Element during the alpha testing phase. These include:
-+ Andreas Tolias Lab (BCM) - Anthony Ramos and Saumil Patel
-    + The lab uses Neuropixels 1.0 probes, recording in rodents and monkeys in the near future
-    + The lab has an existing animal, lab management and imaging pipeline, in need of a Neuropixels ephys pipeline
-    + The lab uses OpenEphys acquisition system, we extended the Neuropixels Element to provide support for OpenEphys in order to facilitate adoption/validation with Tolias Lab
-    + The lab uses on-premise institutional resource for data infrastructure and hosting
-    + Repository: https://github.com/cajal/pipeline 
-+ BrainCoGs (Princeton Neuroscience Institute) - Manuel Schottdorf, Alvaro Luna
-    + DataJoint NEURO conducted a training workshop on March 1st to 3rd, 2021. 
-    + The Neuropixels Element was adopted, connected to an existing BrainCoGs project pipeline. The ingestion routine was successfully validated on the existing Neuropixels dataset (acquired with SpikeGLX) and Kilosort outputs.
-    + Manuel Schottdorf expressed interest in comparison study between different spike sorting algorithms, thus further validating our roadmap to integrate the SpikeInterface framework into the Neuropixels Element
-    + The lab uses local institutional resource for data infrastructure and hosting
-    + Repository: https://github.com/BrainCOGS/U19-pipeline_python
-+ Brody Lab (Princeton) - Adrian Bondy, Alvaro Luna
-    + The Brody Lab performs ephys recordings on chronically inserted Neuropixels and tetrode probes. The lab is in the process of converting their existing MySQL database server into a DataJoint-compatible pipeline, and is in need of an ephys pipeline.
-    + We have extended the Neuropixels Element and provided a design version capable of supporting chronic probe insertion experiments.
-    + Though the ingestion routines are not included for non-Neuropixels probes, the Neuropixels Element’s architecture is compatible to ingest existing tetrode data acquired previously by the Brody Lab
-    + The lab uses local institutional resource for data infrastructure and hosting
-    + Repository: private repository
+We engaged several labs to adopt and validate the Array Electrophysiology Element during the alpha testing phase. These include:
++ Andreas Tolias Lab (BCM)
++ BrainCoGs (Princeton Neuroscience Institute)
++ Brody Lab (Princeton)
 
 ## Beta release
 As the validation progresses, we expect to produce a beta version of the workflow for users to adopt independently by May 1, 2021.
