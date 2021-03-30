@@ -96,6 +96,7 @@ class ProbeInsertion(dj.Manual):  # (acute)
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
+    insertion_datetime=null: datetime
     """
 
 
