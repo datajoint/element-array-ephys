@@ -134,7 +134,7 @@ class EphysRecording(dj.Imported):
 
     @property
     def key_source(self):
-        return _linking_module.Session()
+        return _linking_module.Session & ProbeInsertion
 
     def make(self, key):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
@@ -176,11 +176,11 @@ class EphysRecording(dj.Imported):
 
                 e_config = generate_electrode_config(probe_type, eg_members)
 
-                self.insert1({**insertion_key, **e_config,
+                self.insert1({**key, **insertion_key, **e_config,
                               'acq_software': acq_software,
                               'sampling_rate': spikeglx_meta.meta['imSampRate']})
                 self.EphysFile.insert1({
-                    **insertion_key,
+                    **key, **insertion_key,
                     'file_path': meta_filepath.relative_to(root_dir).as_posix()})
 
         elif acq_software == 'OpenEphys':
@@ -202,10 +202,10 @@ class EphysRecording(dj.Imported):
 
                 e_config = generate_electrode_config(probe_type, eg_members)
 
-                self.insert1({**insertion_key, **e_config,
+                self.insert1({**key, **insertion_key, **e_config,
                               'acq_software': acq_software,
                               'sampling_rate': oe_probe.ap_meta['sample_rate']})
-                self.EphysFile.insert([{**insertion_key,
+                self.EphysFile.insert([{**key, **insertion_key,
                                         'file_path': fp.relative_to(root_dir).as_posix()}
                                        for fp in oe_probe.recording_info['recording_files']])
         else:
