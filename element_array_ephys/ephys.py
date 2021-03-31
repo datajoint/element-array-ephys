@@ -34,6 +34,10 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                 + get_ephys_root_data_dir() -> str
                     Retrieve the root data directory - e.g. containing all subject/sessions data
                     :return: a string for full path to the root data directory
+                + get_clustering_root_data_dir() -> str
+                    Retrieve the root data directory containing all subject/sessions clustering data
+                    Note: if not provided, use "get_ephys_root_data_dir()"
+                    :return: a string for full path to the clustering root data directory
                 + get_session_directory(session_key: dict) -> str
                     Retrieve the session directory containing the recorded Neuropixels data for a given Session
                     :param session_key: a dictionary of one Session `key`
@@ -60,10 +64,23 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 def get_ephys_root_data_dir() -> str:
     """
     get_ephys_root_data_dir() -> str
-        Retrieve the root data directory - e.g. containing all subject/sessions data
-        :return: a string for full path to the root data directory
+        Retrieve the root data directory - e.g. containing all subject/sessions ephys data
+        :return: a string for full path to the ephys root data directory
     """
     return _linking_module.get_ephys_root_data_dir()
+
+
+def get_clustering_root_data_dir() -> str:
+    """
+    get_clustering_root_data_dir() -> str
+        Retrieve the root data directory containing all subject/sessions clustering data
+        Note: if not provided, use "get_ephys_root_data_dir()"
+        :return: a string for full path to the clustering root data directory
+    """
+    if not hasattr(_linking_module, 'get_clustering_root_data_dir'):
+        return get_ephys_root_data_dir()
+
+    return _linking_module.get_clustering_root_data_dir()
 
 
 def get_session_directory(session_key: dict) -> str:
@@ -396,7 +413,7 @@ class Clustering(dj.Imported):
     """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
         ks_dir = root_dir / output_dir
@@ -435,7 +452,7 @@ class Curation(dj.Manual):
             raise ValueError(f'No corresponding entry in Clustering available'
                              f' for: {key}; do `Clustering.populate(key)`')
 
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
         ks_dir = root_dir / output_dir
@@ -468,7 +485,7 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
         acq_software = (EphysRecording & key).fetch1('acq_software')
@@ -539,7 +556,7 @@ class Waveform(dj.Imported):
         return Curation()
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
 
@@ -572,8 +589,9 @@ class Waveform(dj.Imported):
                                 'peak_chn_waveform_mean': channel_waveform})
         else:
             if acq_software == 'SpikeGLX':
-                npx_meta_fp = root_dir / (EphysRecording.EphysFile & key
-                                          & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+                ephys_root_dir = get_ephys_root_data_dir()
+                npx_meta_fp = ephys_root_dir / (EphysRecording.EphysFile & key
+                                                & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
                 npx_recording = spikeglx.SpikeGLX(npx_meta_fp.parent)
             elif acq_software == 'OpenEphys':
                 sess_dir = pathlib.Path(get_session_directory(key))
@@ -636,8 +654,8 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
     root_dir = pathlib.Path(get_ephys_root_data_dir())
     if acq_software == 'SpikeGLX':
         npx_meta_path = root_dir / (EphysRecording.EphysFile
-                                  & ephys_recording_key
-                                  & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+                                    & ephys_recording_key
+                                    & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
         neuropixels_dir = (root_dir / npx_meta_path).parent
 
         meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
@@ -651,9 +669,9 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
         for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
                 spikeglx_meta.shankmap['data']):
             channel2electrode_map[recorded_site] = (q_electrodes
-                                                & {'shank': shank,
-                                                   'shank_col': shank_col,
-                                                   'shank_row': shank_row}).fetch1('KEY')
+                                                    & {'shank': shank,
+                                                       'shank_col': shank_col,
+                                                       'shank_row': shank_row}).fetch1('KEY')
     elif acq_software == 'OpenEphys':
         sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
         loaded_oe = openephys.OpenEphys(sess_dir)
@@ -665,7 +683,8 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
                         * EphysRecording & ephys_recording_key)
         channel2electrode_map = {}
         for chn_idx in oe_probe.ap_meta['channels_ids']:
-            channel2electrode_map[chn_idx] = (q_electrodes & {'electrode': chn_idx}).fetch1('KEY')
+            channel2electrode_map[chn_idx] = (q_electrodes
+                                              & {'electrode': chn_idx}).fetch1('KEY')
 
     return channel2electrode_map
 
