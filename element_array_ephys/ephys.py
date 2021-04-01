@@ -63,8 +63,14 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 def get_ephys_root_data_dir() -> str:
     """
+    All data paths, directories in DataJoint Elements are recommended to be stored as
+    relative paths, with respect to some user-configured "root" directory,
+     this can change machine to machine (e.g. changing mounted drive locations)
+
     get_ephys_root_data_dir() -> str
-        Retrieve the root data directory - e.g. containing all subject/sessions ephys data
+        This user-provided function retrieves the root data directory
+         containing all subject/sessions ephys data
+         (e.g. acquired SpikeGLX or Open Ephys files)
         :return: a string for full path to the ephys root data directory
     """
     return _linking_module.get_ephys_root_data_dir()
@@ -72,8 +78,14 @@ def get_ephys_root_data_dir() -> str:
 
 def get_clustering_root_data_dir() -> str:
     """
+    All data paths, directories in DataJoint Elements are recommended to be stored as
+    relative paths, with respect to some user-configured "root" directory,
+     this can change machine to machine (e.g. changing mounted drive locations)
+
     get_clustering_root_data_dir() -> str
-        Retrieve the root data directory containing all subject/sessions clustering data
+        This user-provided function retrieves the root data directory
+         containing all subject/sessions clustering data
+        (e.g. output files from spike sorting routines)
         Note: if not provided, use "get_ephys_root_data_dir()"
         :return: a string for full path to the clustering root data directory
     """
@@ -393,7 +405,7 @@ class ClusteringTask(dj.Manual):
     -> EphysRecording
     -> ClusteringParamSet
     ---
-    clustering_output_dir: varchar(255)  #  clustering output directory relative to root data directory
+    clustering_output_dir: varchar(255)  #  clustering output directory relative to the clustering root data directory
     task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
 
@@ -437,7 +449,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
