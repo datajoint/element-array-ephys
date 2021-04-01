@@ -267,6 +267,8 @@ class LFP(dj.Imported):
         acq_software, probe_sn = (EphysRecording
                                   * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
+        electrode_keys, lfp = [], []
+
         if acq_software == 'SpikeGLX':
             spikeglx_meta_fp = (EphysRecording.EphysFile
                                 & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
@@ -289,18 +291,12 @@ class LFP(dj.Imported):
             q_electrodes = (probe.ProbeType.Electrode
                             * probe.ElectrodeConfig.Electrode
                             * EphysRecording & key)
-            electrodes = []
             for recorded_site in lfp_channel_ind:
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
-                electrodes.append((q_electrodes
+                electrode_keys.append((q_electrodes
                                    & {'shank': shank,
                                       'shank_col': shank_col,
                                       'shank_row': shank_row}).fetch1('KEY'))
-
-            channel_lfp = list(zip(electrodes, lfp))
-            self.Electrode().insert((
-                {**key, **electrode, 'lfp': d}
-                for electrode, d in channel_lfp), ignore_extra_fields=True)
 
         elif acq_software == 'OpenEphys':
             sess_dir = pathlib.Path(get_session_directory(key))
@@ -322,18 +318,16 @@ class LFP(dj.Imported):
             q_electrodes = (probe.ProbeType.Electrode
                             * probe.ElectrodeConfig.Electrode
                             * EphysRecording & key)
-            electrodes = []
             for channel_idx in np.array(oe_probe.lfp_meta['channels_ids'])[lfp_channel_ind]:
-                electrodes.append((q_electrodes & {'electrode': channel_idx}).fetch1('KEY'))
-
-            channel_lfp = list(zip(electrodes, lfp))
-            self.Electrode().insert((
-                {**key, **electrode, 'lfp': d}
-                for electrode, d in channel_lfp), ignore_extra_fields=True)
+                electrode_keys.append((q_electrodes & {'electrode': channel_idx}).fetch1('KEY'))
 
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software'
                                       f' of type {acq_software} is not yet implemented')
+
+        # single insert in loop to mitigate potential memory issue
+        for electrode_key, lfp_trace in zip(electrode_keys, lfp):
+            self.Electrode.insert1({**key, **electrode_key, 'lfp': lfp_trace})
 
 
 # ------------ Clustering --------------
@@ -585,20 +579,25 @@ class Waveform(dj.Imported):
         units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(
             as_dict=True, order_by='unit')}
 
-        unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
             unit_waveforms = np.load(ks_dir / 'mean_waveforms.npy')  # unit x channel x sample
-            for unit_no, unit_waveform in zip(ks.data['cluster_ids'], unit_waveforms):
-                if unit_no in units:
-                    for channel, channel_waveform in zip(ks.data['channel_map'],
-                                                         unit_waveform):
-                        unit_waveforms.append({
-                            **units[unit_no], **channel2electrodes[channel],
-                            'waveform_mean': channel_waveform})
-                        if channel2electrodes[channel]['electrode'] == units[unit_no]['electrode']:
-                            unit_peak_waveforms.append({
-                                **units[unit_no],
-                                'peak_chn_waveform_mean': channel_waveform})
+
+            def yield_unit_waveforms():
+                for unit_no, unit_waveform in zip(ks.data['cluster_ids'], unit_waveforms):
+                    unit_peak_waveform = {}
+                    unit_electrode_waveforms = []
+                    if unit_no in units:
+                        for channel, channel_waveform in zip(ks.data['channel_map'],
+                                                             unit_waveform):
+                            unit_electrode_waveforms.append({
+                                **units[unit_no], **channel2electrodes[channel],
+                                'waveform_mean': channel_waveform})
+                            if channel2electrodes[channel]['electrode'] == units[unit_no]['electrode']:
+                                unit_peak_waveform = {
+                                    **units[unit_no],
+                                    'peak_chn_waveform_mean': channel_waveform}
+                    yield unit_peak_waveform, unit_electrode_waveforms
+
         else:
             if acq_software == 'SpikeGLX':
                 ephys_root_dir = get_ephys_root_data_dir()
@@ -610,22 +609,31 @@ class Waveform(dj.Imported):
                 loaded_oe = openephys.OpenEphys(sess_dir)
                 npx_recording = loaded_oe.probes[probe_sn]
 
-            for unit_dict in units.values():
-                spikes = unit_dict['spike_times']
-                waveforms = npx_recording.extract_spike_waveforms(
-                    spikes, ks.data['channel_map'])  # (sample x channel x spike)
-                waveforms = waveforms.transpose((1, 2, 0))  # (channel x spike x sample)
-                for channel, channel_waveform in zip(ks.data['channel_map'], waveforms):
-                    unit_waveforms.append({**unit_dict, **channel2electrodes[channel],
-                                           'waveform_mean': channel_waveform.mean(axis=0),
-                                           'waveforms': channel_waveform})
-                    if channel2electrodes[channel]['electrode'] == unit_dict['electrode']:
-                        unit_peak_waveforms.append({
-                            **unit_dict,
-                            'peak_chn_waveform_mean': channel_waveform.mean(axis=0)})
+            def yield_unit_waveforms():
+                for unit_dict in units.values():
+                    unit_peak_waveform = {}
+                    unit_electrode_waveforms = []
 
-        self.insert(unit_peak_waveforms, ignore_extra_fields=True)
-        self.Electrode.insert(unit_waveforms, ignore_extra_fields=True)
+                    spikes = unit_dict['spike_times']
+                    waveforms = npx_recording.extract_spike_waveforms(
+                        spikes, ks.data['channel_map'])  # (sample x channel x spike)
+                    waveforms = waveforms.transpose((1, 2, 0))  # (channel x spike x sample)
+                    for channel, channel_waveform in zip(ks.data['channel_map'], waveforms):
+                        unit_electrode_waveforms.append({
+                            **unit_dict, **channel2electrodes[channel],
+                            'waveform_mean': channel_waveform.mean(axis=0),
+                            'waveforms': channel_waveform})
+                        if channel2electrodes[channel]['electrode'] == unit_dict['electrode']:
+                            unit_peak_waveform = {
+                                **unit_dict,
+                                'peak_chn_waveform_mean': channel_waveform.mean(axis=0)}
+
+                    yield unit_peak_waveform, unit_electrode_waveforms
+
+        # insert waveform on a per-unit basis to mitigate potential memory issue
+        for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
+            self.insert1(unit_peak_waveform, ignore_extra_fields=True)
+            self.Electrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
 # ----------- Quality Control ----------
