@@ -33,10 +33,10 @@ class OpenEphys:
     def __init__(self, experiment_dir):
         self.sess_dir = pathlib.Path(experiment_dir)
 
-        oe_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
+        openephys_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
 
         # extract the "recordings" for this session
-        self.experiment = next(experiment for experiment in oe_file.experiments
+        self.experiment = next(experiment for experiment in openephys_file.experiments
                                if pathlib.Path(experiment.absolute_foldername) == self.sess_dir)
 
         self.recording_time = self.experiment.datetime
@@ -58,47 +58,48 @@ class OpenEphys:
         probes = {}
         for processor in self.experiment.settings['SIGNALCHAIN']['PROCESSOR']:
             if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
-                if processor['@pluginName'] == 'Neuropix-3a':
-                    oe_probe = Probe(processor)
-                    probes[oe_probe.probeSN] = oe_probe
+                if (processor['@pluginName'] == 'Neuropix-3a'
+                        or 'NP_PROBE' not in processor['EDITOR']):
+                    probe = Probe(processor)
+                    probes[probe.probe_SN] = probe
                 else:
                     for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
-                        oe_probe = Probe(processor, probe_index)
-                        probes[oe_probe.probe_SN] = oe_probe
+                        probe = Probe(processor, probe_index)
+                        probes[probe.probe_SN] = probe
                         
-        for probe_index, probe_SN in enumerate(probes.keys()):
+        for probe_index, probe_SN in enumerate(probes):
             
-            oe_probe = probes[probe_SN]
+            probe = probes[probe_SN]
                     
             for rec in self.experiment.recordings:
-                for cont_info, analog_signal in zip(rec._oebin['continuous'],
-                                                    rec.analog_signals):
-                    if cont_info['source_processor_id'] != oe_probe.processor_id:
+                for continuous_info, analog_signal in zip(rec._oebin['continuous'],
+                                                          rec.analog_signals):
+                    if continuous_info['source_processor_id'] != probe.processor_id:
                         continue
 
-                    if cont_info['source_processor_sub_idx'] == probe_index * 2:  # ap data
-                        assert cont_info['sample_rate'] == analog_signal.sample_rate == 30000
-                        cont_type = 'ap'
+                    if continuous_info['source_processor_sub_idx'] == probe_index * 2:  # ap data
+                        assert continuous_info['sample_rate'] == analog_signal.sample_rate == 30000
+                        continuous_type = 'ap'
 
-                        oe_probe.recording_info['recording_count'] += 1
-                        oe_probe.recording_info['recording_datetimes'].append(
+                        probe.recording_info['recording_count'] += 1
+                        probe.recording_info['recording_datetimes'].append(
                             rec.datetime)
-                        oe_probe.recording_info['recording_durations'].append(
+                        probe.recording_info['recording_durations'].append(
                             float(rec.duration))
-                        oe_probe.recording_info['recording_files'].append(
-                            rec.absolute_foldername / 'continuous' / cont_info['folder_name'])
+                        probe.recording_info['recording_files'].append(
+                            rec.absolute_foldername / 'continuous' / continuous_info['folder_name'])
 
-                    elif cont_info['source_processor_sub_idx'] == probe_index * 2 + 1:  # lfp data
-                        assert cont_info['sample_rate'] == analog_signal.sample_rate == 2500
-                        cont_type = 'lfp'
+                    elif continuous_info['source_processor_sub_idx'] == probe_index * 2 + 1:  # lfp data
+                        assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
+                        continuous_type = 'lfp'
 
-                    if getattr(oe_probe, cont_type + '_meta') is None:
-                        cont_info['channels_ids'] = analog_signal.channel_ids
-                        cont_info['channels_names'] = analog_signal.channel_names
-                        cont_info['channels_gains'] = analog_signal.gains
-                        setattr(oe_probe, cont_type + '_meta', cont_info)
+                    if getattr(probe, continuous_type + '_meta') is None:
+                        continuous_info['channels_ids'] = analog_signal.channel_ids
+                        continuous_info['channels_names'] = analog_signal.channel_names
+                        continuous_info['channels_gains'] = analog_signal.gains
+                        setattr(probe, continuous_type + '_meta', continuous_info)
 
-                    oe_probe.__dict__[f'{cont_type}_analog_signals'].append(analog_signal)
+                    probe.__dict__[f'{continuous_type}_analog_signals'].append(analog_signal)
 
         return probes
 
@@ -108,11 +109,12 @@ class Probe:
     def __init__(self, processor, probe_index=0):
         self.processor_id = int(processor['@NodeId'])
         
-        if processor['@pluginName'] == 'Neuropix-3a':
-            
+        if processor['@pluginName'] == 'Neuropix-3a' or 'NP_PROBE' not in processor['EDITOR']:
             self.probe_info = processor['EDITOR']['PROBE']
             self.probe_SN = self.probe_info['@probe_serial_number']
-            self.probe_model = "Neuropixels 3A"
+            self.probe_model = {
+                "Neuropix-PXI": "neuropixels 1.0 - 3B",
+                "Neuropix-3a": "neuropixels 1.0 - 3A"}[processor['@pluginName']]
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
