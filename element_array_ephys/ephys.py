@@ -644,7 +644,7 @@ class Waveform(dj.Imported):
 
 @schema
 class QualityControl(dj.Imported):
-    definition = """  Quality control metrics for a set of CuratedClustering
+    definition = """  # Quality control metrics for a set of CuratedClustering
     -> CuratedClustering
     """
 
