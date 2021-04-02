@@ -556,7 +556,7 @@ class Waveform(dj.Imported):
 
     class UnitElectrode(dj.Part):
         definition = """
-        -> master.UnitWaveform
+        -> master.Unit
         -> probe.ElectrodeConfig.Electrode  
         --- 
         waveform_mean: longblob   # (uV) mean over all spikes
