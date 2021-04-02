@@ -111,10 +111,10 @@ def get_session_directory(session_key: dict) -> str:
 
 @schema
 class AcquisitionSoftware(dj.Lookup):
-    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or OpenEphys
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)    
     """
-    contents = zip(['SpikeGLX', 'OpenEphys'])
+    contents = zip(['SpikeGLX', 'Open Ephys'])
 
 
 @schema
@@ -169,7 +169,7 @@ class EphysRecording(dj.Imported):
         # search session dir and determine acquisition software
         acq_software = None
         for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
-                                                 ['SpikeGLX', 'OpenEphys']):
+                                                 ['SpikeGLX', 'Open Ephys']):
             ephys_meta_filepaths = [fp for fp in sess_dir.rglob(ephys_pattern)]
             if len(ephys_meta_filepaths):
                 acq_software = ephys_acq_type
@@ -177,7 +177,7 @@ class EphysRecording(dj.Imported):
 
         if acq_software is None:
             raise FileNotFoundError(f'Ephys recording data not found!'
-                                    f' Neither SpikeGLX nor OpenEphys recording files found')
+                                    f' Neither SpikeGLX nor Open Ephys recording files found')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
@@ -209,7 +209,7 @@ class EphysRecording(dj.Imported):
                     **insertion_key,
                     'file_path': meta_filepath.relative_to(root_dir).as_posix()})
 
-        elif acq_software == 'OpenEphys':
+        elif acq_software == 'Open Ephys':
             loaded_oe = openephys.OpenEphys(sess_dir)
             for probe_SN, oe_probe in loaded_oe.probes.items():
                 insertion_key = (ProbeInsertion & key & {'probe': probe_SN}).fetch1('KEY')
@@ -298,7 +298,7 @@ class LFP(dj.Imported):
                                       'shank_col': shank_col,
                                       'shank_row': shank_row}).fetch1('KEY'))
 
-        elif acq_software == 'OpenEphys':
+        elif acq_software == 'Open Ephys':
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
@@ -606,7 +606,7 @@ class Waveform(dj.Imported):
                 npx_meta_fp = ephys_root_dir / (EphysRecording.EphysFile & key
                                                 & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
                 npx_recording = spikeglx.SpikeGLX(npx_meta_fp.parent)
-            elif acq_software == 'OpenEphys':
+            elif acq_software == 'Open Ephys':
                 sess_dir = pathlib.Path(get_session_directory(key))
                 loaded_oe = openephys.OpenEphys(sess_dir)
                 npx_recording = loaded_oe.probes[probe_sn]
@@ -697,7 +697,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
                                                     & {'shank': shank,
                                                        'shank_col': shank_col,
                                                        'shank_row': shank_row}).fetch1('KEY')
-    elif acq_software == 'OpenEphys':
+    elif acq_software == 'Open Ephys':
         sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
         loaded_oe = openephys.OpenEphys(sess_dir)
         probe_sn = (ProbeInsertion & ephys_recording_key).fetch1('probe')
