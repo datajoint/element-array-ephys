@@ -543,23 +543,25 @@ class CuratedClustering(dj.Imported):
 @schema
 class Waveform(dj.Imported):
     definition = """
-    -> CuratedClustering.Unit
-    ---
-    peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
+    -> CuratedClustering
     """
 
-    class Electrode(dj.Part):
+    class Unit(dj.Part):
         definition = """
         -> master
+        -> CuratedClustering.Unit
+        ---
+        peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
+        """
+
+    class UnitElectrode(dj.Part):
+        definition = """
+        -> master.UnitWaveform
         -> probe.ElectrodeConfig.Electrode  
         --- 
         waveform_mean: longblob   # (uV) mean over all spikes
         waveforms=null: longblob  # (uV) (spike x sample) waveform of each spike at each electrode
         """
-
-    @property
-    def key_source(self):
-        return Curation()
 
     def make(self, key):
         root_dir = pathlib.Path(get_clustering_root_data_dir())
@@ -631,9 +633,10 @@ class Waveform(dj.Imported):
                     yield unit_peak_waveform, unit_electrode_waveforms
 
         # insert waveform on a per-unit basis to mitigate potential memory issue
+        self.insert1(key)
         for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
-            self.insert1(unit_peak_waveform, ignore_extra_fields=True)
-            self.Electrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
+            self.Unit.insert1(unit_peak_waveform, ignore_extra_fields=True)
+            self.UnitElectrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
 # ----------- Quality Control ----------
