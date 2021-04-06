@@ -639,39 +639,6 @@ class Waveform(dj.Imported):
             self.UnitElectrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
-# ----------- Quality Control ----------
-
-
-@schema
-class QualityControl(dj.Imported):
-    definition = """  # Quality control metrics for a set of CuratedClustering
-    -> CuratedClustering
-    """
-
-    class ClusterQualityMetrics(dj.Part):
-        definition = """  # Quality metrics for each cluster
-        -> master
-        -> CuratedClustering.Unit
-        ---
-        amp: float
-        snr: float
-        isi_violation: float
-        firing_rate: float
-        presence_ratio: float  # Fraction of epoch in which spikes are present
-        amplitude_cutoff: float  # Estimate of miss rate based on amplitude histogram
-        isolation_distance=null: float  # Distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
-        d_prime=null: float  # Classification accuracy based on LDA
-        nn_hit_rate=null: float  # 
-        nn_miss_rate=null: float
-        silhouette_score=null: float  # Standard metric for cluster overlap
-        max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        """
-
-    def make(self, key):
-        pass
-
 # ---------------- HELPER FUNCTIONS ----------------
 
 
