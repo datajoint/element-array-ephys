@@ -32,10 +32,10 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
                 + get_ephys_root_data_dir() -> str
-                    Retrieve the root data directory - e.g. containing all subject/sessions data
+                    Retrieve the root data directory - e.g. containing the raw ephys recording files for all subject/sessions.
                     :return: a string for full path to the root data directory
                 + get_clustering_root_data_dir() -> str
-                    Retrieve the root data directory containing all subject/sessions clustering data
+                    Retrieve the root data directory containing the clustering results for all subjects/sessions
                     Note: if not provided, use "get_ephys_root_data_dir()"
                     :return: a string for full path to the clustering root data directory
                 + get_session_directory(session_key: dict) -> str
@@ -65,12 +65,12 @@ def get_ephys_root_data_dir() -> str:
     """
     All data paths, directories in DataJoint Elements are recommended to be stored as
     relative paths, with respect to some user-configured "root" directory,
-     this can change machine to machine (e.g. changing mounted drive locations)
+     which varies from machine to machine (e.g. different mounted drive locations)
 
     get_ephys_root_data_dir() -> str
         This user-provided function retrieves the root data directory
-         containing all subject/sessions ephys data
-         (e.g. acquired SpikeGLX or Open Ephys files)
+         containing ephys data for all subjects/sessions
+         (e.g. acquired SpikeGLX or Open Ephys raw files)
         :return: a string for full path to the ephys root data directory
     """
     return _linking_module.get_ephys_root_data_dir()
@@ -80,11 +80,11 @@ def get_clustering_root_data_dir() -> str:
     """
     All data paths, directories in DataJoint Elements are recommended to be stored as
     relative paths, with respect to some user-configured "root" directory,
-     this can change machine to machine (e.g. changing mounted drive locations)
+     which varies from machine to machine (e.g. different mounted drive locations)
 
     get_clustering_root_data_dir() -> str
         This user-provided function retrieves the root data directory
-         containing all subject/sessions clustering data
+         containing clustering results for all subjects/sessions
         (e.g. output files from spike sorting routines)
         Note: if not provided, use "get_ephys_root_data_dir()"
         :return: a string for full path to the clustering root data directory
