@@ -8,7 +8,7 @@ import numpy as np
 schema = dj.schema()
 
 
-def activate(schema_name, create_schema=True, create_tables=True):
+def activate(schema_name, *, create_schema=True, create_tables=True):
     """
     activate(schema_name, create_schema=True, create_tables=True)
         :param schema_name: schema name on the database server to activate the `probe` element
@@ -137,7 +137,7 @@ class ProbeType(dj.Lookup):
 @schema
 class Probe(dj.Lookup):
     definition = """  # represent a physical probe
-    probe: varchar(32)  # unique identifier for this model of probe (e.g. part number)
+    probe: varchar(32)  # unique identifier for this model of probe (e.g. serial number)
     ---
     -> ProbeType
     probe_comment='' :  varchar(1000)
