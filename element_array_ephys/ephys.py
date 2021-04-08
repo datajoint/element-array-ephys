@@ -32,8 +32,12 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
                 + get_ephys_root_data_dir() -> str
-                    Retrieve the root data directory - e.g. containing all subject/sessions data
+                    Retrieve the root data directory - e.g. containing the raw ephys recording files for all subject/sessions.
                     :return: a string for full path to the root data directory
+                + get_clustering_root_data_dir() -> str
+                    Retrieve the root data directory containing the clustering results for all subjects/sessions
+                    Note: if not provided, use "get_ephys_root_data_dir()"
+                    :return: a string for full path to the clustering root data directory
                 + get_session_directory(session_key: dict) -> str
                     Retrieve the session directory containing the recorded Neuropixels data for a given Session
                     :param session_key: a dictionary of one Session `key`
@@ -59,11 +63,36 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 def get_ephys_root_data_dir() -> str:
     """
+    All data paths, directories in DataJoint Elements are recommended to be stored as
+    relative paths, with respect to some user-configured "root" directory,
+     which varies from machine to machine (e.g. different mounted drive locations)
+
     get_ephys_root_data_dir() -> str
-        Retrieve the root data directory - e.g. containing all subject/sessions data
-        :return: a string for full path to the root data directory
+        This user-provided function retrieves the root data directory
+         containing ephys data for all subjects/sessions
+         (e.g. acquired SpikeGLX or Open Ephys raw files)
+        :return: a string for full path to the ephys root data directory
     """
     return _linking_module.get_ephys_root_data_dir()
+
+
+def get_clustering_root_data_dir() -> str:
+    """
+    All data paths, directories in DataJoint Elements are recommended to be stored as
+    relative paths, with respect to some user-configured "root" directory,
+     which varies from machine to machine (e.g. different mounted drive locations)
+
+    get_clustering_root_data_dir() -> str
+        This user-provided function retrieves the root data directory
+         containing clustering results for all subjects/sessions
+        (e.g. output files from spike sorting routines)
+        Note: if not provided, use "get_ephys_root_data_dir()"
+        :return: a string for full path to the clustering root data directory
+    """
+    if not hasattr(_linking_module, 'get_clustering_root_data_dir'):
+        return get_ephys_root_data_dir()
+
+    return _linking_module.get_clustering_root_data_dir()
 
 
 def get_session_directory(session_key: dict) -> str:
@@ -82,10 +111,10 @@ def get_session_directory(session_key: dict) -> str:
 
 @schema
 class AcquisitionSoftware(dj.Lookup):
-    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or OpenEphys
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)    
     """
-    contents = zip(['SpikeGLX', 'OpenEphys'])
+    contents = zip(['SpikeGLX', 'Open Ephys'])
 
 
 @schema
@@ -140,7 +169,7 @@ class EphysRecording(dj.Imported):
         # search session dir and determine acquisition software
         acq_software = None
         for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
-                                                 ['SpikeGLX', 'OpenEphys']):
+                                                 ['SpikeGLX', 'Open Ephys']):
             ephys_meta_filepaths = [fp for fp in sess_dir.rglob(ephys_pattern)]
             if len(ephys_meta_filepaths):
                 acq_software = ephys_acq_type
@@ -148,7 +177,7 @@ class EphysRecording(dj.Imported):
 
         if acq_software is None:
             raise FileNotFoundError(f'Ephys recording data not found!'
-                                    f' Neither SpikeGLX nor OpenEphys recording files found')
+                                    f' Neither SpikeGLX nor Open Ephys recording files found')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
@@ -180,7 +209,7 @@ class EphysRecording(dj.Imported):
                     **insertion_key,
                     'file_path': meta_filepath.relative_to(root_dir).as_posix()})
 
-        elif acq_software == 'OpenEphys':
+        elif acq_software == 'Open Ephys':
             loaded_oe = openephys.OpenEphys(sess_dir)
             for probe_SN, oe_probe in loaded_oe.probes.items():
                 insertion_key = (ProbeInsertion & key & {'probe': probe_SN}).fetch1('KEY')
@@ -238,6 +267,8 @@ class LFP(dj.Imported):
         acq_software, probe_sn = (EphysRecording
                                   * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
+        electrode_keys, lfp = [], []
+
         if acq_software == 'SpikeGLX':
             spikeglx_meta_fp = (EphysRecording.EphysFile
                                 & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
@@ -260,20 +291,14 @@ class LFP(dj.Imported):
             q_electrodes = (probe.ProbeType.Electrode
                             * probe.ElectrodeConfig.Electrode
                             * EphysRecording & key)
-            electrodes = []
             for recorded_site in lfp_channel_ind:
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
-                electrodes.append((q_electrodes
+                electrode_keys.append((q_electrodes
                                    & {'shank': shank,
                                       'shank_col': shank_col,
                                       'shank_row': shank_row}).fetch1('KEY'))
 
-            channel_lfp = list(zip(electrodes, lfp))
-            self.Electrode().insert((
-                {**key, **electrode, 'lfp': d}
-                for electrode, d in channel_lfp), ignore_extra_fields=True)
-
-        elif acq_software == 'OpenEphys':
+        elif acq_software == 'Open Ephys':
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
@@ -293,18 +318,16 @@ class LFP(dj.Imported):
             q_electrodes = (probe.ProbeType.Electrode
                             * probe.ElectrodeConfig.Electrode
                             * EphysRecording & key)
-            electrodes = []
             for channel_idx in np.array(oe_probe.lfp_meta['channels_ids'])[lfp_channel_ind]:
-                electrodes.append((q_electrodes & {'electrode': channel_idx}).fetch1('KEY'))
-
-            channel_lfp = list(zip(electrodes, lfp))
-            self.Electrode().insert((
-                {**key, **electrode, 'lfp': d}
-                for electrode, d in channel_lfp), ignore_extra_fields=True)
+                electrode_keys.append((q_electrodes & {'electrode': channel_idx}).fetch1('KEY'))
 
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software'
                                       f' of type {acq_software} is not yet implemented')
+
+        # single insert in loop to mitigate potential memory issue
+        for electrode_key, lfp_trace in zip(electrode_keys, lfp):
+            self.Electrode.insert1({**key, **electrode_key, 'lfp': lfp_trace})
 
 
 # ------------ Clustering --------------
@@ -376,7 +399,7 @@ class ClusteringTask(dj.Manual):
     -> EphysRecording
     -> ClusteringParamSet
     ---
-    clustering_output_dir: varchar(255)  #  clustering output directory relative to root data directory
+    clustering_output_dir: varchar(255)  #  clustering output directory relative to the clustering root data directory
     task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
 
@@ -396,7 +419,7 @@ class Clustering(dj.Imported):
     """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
         ks_dir = root_dir / output_dir
@@ -420,7 +443,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
@@ -435,7 +458,7 @@ class Curation(dj.Manual):
             raise ValueError(f'No corresponding entry in Clustering available'
                              f' for: {key}; do `Clustering.populate(key)`')
 
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
         ks_dir = root_dir / output_dir
@@ -468,7 +491,7 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
         acq_software = (EphysRecording & key).fetch1('acq_software')
@@ -520,26 +543,28 @@ class CuratedClustering(dj.Imported):
 @schema
 class Waveform(dj.Imported):
     definition = """
-    -> CuratedClustering.Unit
-    ---
-    peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
+    -> CuratedClustering
     """
 
-    class Electrode(dj.Part):
+    class Unit(dj.Part):
         definition = """
         -> master
+        -> CuratedClustering.Unit
+        ---
+        peak_chn_waveform_mean: longblob  # mean over all spikes at the peak channel for this unit
+        """
+
+    class UnitElectrode(dj.Part):
+        definition = """
+        -> master.Unit
         -> probe.ElectrodeConfig.Electrode  
         --- 
         waveform_mean: longblob   # (uV) mean over all spikes
         waveforms=null: longblob  # (uV) (spike x sample) waveform of each spike at each electrode
         """
 
-    @property
-    def key_source(self):
-        return Curation()
-
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
+        root_dir = pathlib.Path(get_clustering_root_data_dir())
         ks_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
         ks = kilosort.Kilosort(ks_dir)
 
@@ -556,78 +581,63 @@ class Waveform(dj.Imported):
         units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(
             as_dict=True, order_by='unit')}
 
-        unit_waveforms, unit_peak_waveforms = [], []
         if is_qc:
             unit_waveforms = np.load(ks_dir / 'mean_waveforms.npy')  # unit x channel x sample
-            for unit_no, unit_waveform in zip(ks.data['cluster_ids'], unit_waveforms):
-                if unit_no in units:
-                    for channel, channel_waveform in zip(ks.data['channel_map'],
-                                                         unit_waveform):
-                        unit_waveforms.append({
-                            **units[unit_no], **channel2electrodes[channel],
-                            'waveform_mean': channel_waveform})
-                        if channel2electrodes[channel]['electrode'] == units[unit_no]['electrode']:
-                            unit_peak_waveforms.append({
-                                **units[unit_no],
-                                'peak_chn_waveform_mean': channel_waveform})
+
+            def yield_unit_waveforms():
+                for unit_no, unit_waveform in zip(ks.data['cluster_ids'], unit_waveforms):
+                    unit_peak_waveform = {}
+                    unit_electrode_waveforms = []
+                    if unit_no in units:
+                        for channel, channel_waveform in zip(ks.data['channel_map'],
+                                                             unit_waveform):
+                            unit_electrode_waveforms.append({
+                                **units[unit_no], **channel2electrodes[channel],
+                                'waveform_mean': channel_waveform})
+                            if channel2electrodes[channel]['electrode'] == units[unit_no]['electrode']:
+                                unit_peak_waveform = {
+                                    **units[unit_no],
+                                    'peak_chn_waveform_mean': channel_waveform}
+                    yield unit_peak_waveform, unit_electrode_waveforms
+
         else:
             if acq_software == 'SpikeGLX':
-                npx_meta_fp = root_dir / (EphysRecording.EphysFile & key
-                                          & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+                ephys_root_dir = get_ephys_root_data_dir()
+                npx_meta_fp = ephys_root_dir / (EphysRecording.EphysFile & key
+                                                & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
                 npx_recording = spikeglx.SpikeGLX(npx_meta_fp.parent)
-            elif acq_software == 'OpenEphys':
+            elif acq_software == 'Open Ephys':
                 sess_dir = pathlib.Path(get_session_directory(key))
                 loaded_oe = openephys.OpenEphys(sess_dir)
                 npx_recording = loaded_oe.probes[probe_sn]
 
-            for unit_dict in units.values():
-                spikes = unit_dict['spike_times']
-                waveforms = npx_recording.extract_spike_waveforms(
-                    spikes, ks.data['channel_map'])  # (sample x channel x spike)
-                waveforms = waveforms.transpose((1, 2, 0))  # (channel x spike x sample)
-                for channel, channel_waveform in zip(ks.data['channel_map'], waveforms):
-                    unit_waveforms.append({**unit_dict, **channel2electrodes[channel],
-                                           'waveform_mean': channel_waveform.mean(axis=0),
-                                           'waveforms': channel_waveform})
-                    if channel2electrodes[channel]['electrode'] == unit_dict['electrode']:
-                        unit_peak_waveforms.append({
-                            **unit_dict,
-                            'peak_chn_waveform_mean': channel_waveform.mean(axis=0)})
+            def yield_unit_waveforms():
+                for unit_dict in units.values():
+                    unit_peak_waveform = {}
+                    unit_electrode_waveforms = []
 
-        self.insert(unit_peak_waveforms, ignore_extra_fields=True)
-        self.Electrode.insert(unit_waveforms, ignore_extra_fields=True)
+                    spikes = unit_dict['spike_times']
+                    waveforms = npx_recording.extract_spike_waveforms(
+                        spikes, ks.data['channel_map'])  # (sample x channel x spike)
+                    waveforms = waveforms.transpose((1, 2, 0))  # (channel x spike x sample)
+                    for channel, channel_waveform in zip(ks.data['channel_map'], waveforms):
+                        unit_electrode_waveforms.append({
+                            **unit_dict, **channel2electrodes[channel],
+                            'waveform_mean': channel_waveform.mean(axis=0),
+                            'waveforms': channel_waveform})
+                        if channel2electrodes[channel]['electrode'] == unit_dict['electrode']:
+                            unit_peak_waveform = {
+                                **unit_dict,
+                                'peak_chn_waveform_mean': channel_waveform.mean(axis=0)}
 
+                    yield unit_peak_waveform, unit_electrode_waveforms
 
-# ----------- Quality Control ----------
+        # insert waveform on a per-unit basis to mitigate potential memory issue
+        self.insert1(key)
+        for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
+            self.Unit.insert1(unit_peak_waveform, ignore_extra_fields=True)
+            self.UnitElectrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
-@schema
-class ClusterQualityMetrics(dj.Imported):
-    definition = """
-    -> CuratedClustering.Unit
-    ---
-    amp: float
-    snr: float
-    isi_violation: float
-    firing_rate: float
-
-    presence_ratio: float  # Fraction of epoch in which spikes are present
-    amplitude_cutoff: float  # Estimate of miss rate based on amplitude histogram
-    isolation_distance=null: float  # Distance to nearest cluster in Mahalanobis space
-    l_ratio=null: float  # 
-    d_prime=null: float  # Classification accuracy based on LDA
-    nn_hit_rate=null: float  # 
-    nn_miss_rate=null: float
-    silhouette_score=null: float  # Standard metric for cluster overlap
-    max_drift=null: float  # Maximum change in spike depth throughout recording
-    cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-    """
-
-    @property
-    def key_source(self):
-        return Clustering
-
-    def make(self, key):
-        pass
 
 # ---------------- HELPER FUNCTIONS ----------------
 
@@ -636,8 +646,8 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
     root_dir = pathlib.Path(get_ephys_root_data_dir())
     if acq_software == 'SpikeGLX':
         npx_meta_path = root_dir / (EphysRecording.EphysFile
-                                  & ephys_recording_key
-                                  & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+                                    & ephys_recording_key
+                                    & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
         neuropixels_dir = (root_dir / npx_meta_path).parent
 
         meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
@@ -651,10 +661,10 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
         for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
                 spikeglx_meta.shankmap['data']):
             channel2electrode_map[recorded_site] = (q_electrodes
-                                                & {'shank': shank,
-                                                   'shank_col': shank_col,
-                                                   'shank_row': shank_row}).fetch1('KEY')
-    elif acq_software == 'OpenEphys':
+                                                    & {'shank': shank,
+                                                       'shank_col': shank_col,
+                                                       'shank_row': shank_row}).fetch1('KEY')
+    elif acq_software == 'Open Ephys':
         sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
         loaded_oe = openephys.OpenEphys(sess_dir)
         probe_sn = (ProbeInsertion & ephys_recording_key).fetch1('probe')
@@ -665,7 +675,8 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
                         * EphysRecording & ephys_recording_key)
         channel2electrode_map = {}
         for chn_idx in oe_probe.ap_meta['channels_ids']:
-            channel2electrode_map[chn_idx] = (q_electrodes & {'electrode': chn_idx}).fetch1('KEY')
+            channel2electrode_map[chn_idx] = (q_electrodes
+                                              & {'electrode': chn_idx}).fetch1('KEY')
 
     return channel2electrode_map
 
