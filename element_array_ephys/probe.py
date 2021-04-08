@@ -17,6 +17,11 @@ def activate(schema_name, create_schema=True, create_tables=True):
     """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
+    # Add neuropixels probes
+    for probe_type in ('neuropixels 1.0 - 3A', 'neuropixels 1.0 - 3B',
+                       'neuropixels 2.0 - SS', 'neuropixels 2.0 - MS'):
+        ProbeType.create_neuropixels_probe(probe_type)
+
 
 @schema
 class ProbeType(dj.Lookup):
