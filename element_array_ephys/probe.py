@@ -4,10 +4,17 @@ Neuropixels Probes
 
 import datajoint as dj
 import numpy as np
+
 schema = dj.schema()
 
 
 def activate(schema_name, create_schema=True, create_tables=True):
+    """
+    activate(schema_name, create_schema=True, create_tables=True)
+        :param schema_name: schema name on the database server to activate the `probe` element
+        :param create_schema: when True (default), create schema in the database if it does not yet exist.
+        :param create_tables: when True (default), create tables in the database if they do not yet exist.
+    """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
 
@@ -20,11 +27,11 @@ class ProbeType(dj.Lookup):
     class Electrode(dj.Part):
         definition = """
         -> master
-        electrode: int       # electrode index, starts at 1
+        electrode: int       # electrode index, starts at 0
         ---
-        shank: int           # shank index, starts at 1, advance left to right
-        shank_col: int       # column index, starts at 1, advance left to right
-        shank_row: int       # row index, starts at 1, advance tip to tail
+        shank: int           # shank index, starts at 0, advance left to right
+        shank_col: int       # column index, starts at 0, advance left to right
+        shank_row: int       # row index, starts at 0, advance tip to tail
         x_coord=NULL: float  # (um) x coordinate of the electrode within the probe, (0, 0) is the bottom left corner of the probe
         y_coord=NULL: float  # (um) y coordinate of the electrode within the probe, (0, 0) is the bottom left corner of the probe
         """
@@ -32,12 +39,15 @@ class ProbeType(dj.Lookup):
     @staticmethod
     def create_neuropixels_probe(probe_type='neuropixels 1.0 - 3A'):
         """
-        Create `ProbeType` and `Electrode` for neuropixels probe 1.0 (3A and 3B), 2.0 (SS and MS)
-        For electrode location, the (0, 0) is the bottom left corner of the probe (ignore the tip portion)
+        Create `ProbeType` and `Electrode` for neuropixels probes:
+         1.0 (3A and 3B), 2.0 (SS and MS)
+        For electrode location, the (0, 0) is the
+         bottom left corner of the probe (ignore the tip portion)
         Electrode numbering is 1-indexing
         """
 
-        def build_electrodes(site_count, col_spacing, row_spacing, white_spacing, col_count=2,
+        def build_electrodes(site_count, col_spacing, row_spacing,
+                             white_spacing, col_count=2,
                              shank_count=1, shank_spacing=250):
             """
             :param site_count: site count per shank
@@ -66,7 +76,8 @@ class ProbeType(dj.Lookup):
                                         'shank_col': c_id,
                                         'shank_row': r_id,
                                         'x_coord': x + (shank_no * shank_spacing),
-                                        'y_coord': y} for e_id, (c_id, r_id, x, y) in enumerate(
+                                        'y_coord': y}
+                                       for e_id, (c_id, r_id, x, y) in enumerate(
                     zip(shank_cols, shank_rows, x_coords, y_coords))])
 
             return npx_electrodes
@@ -79,7 +90,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 1.0 - 3A'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 1.0 3B ----
         if probe_type == 'neuropixels 1.0 - 3B':
@@ -89,7 +101,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 1.0 - 3B'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 2.0 Single shank ----
         if probe_type == 'neuropixels 2.0 - SS':
@@ -100,7 +113,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 2.0 - SS'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
         # ---- 2.0 Multi shank ----
         if probe_type == 'neuropixels 2.0 - MS':
@@ -111,7 +125,8 @@ class ProbeType(dj.Lookup):
             probe_type = {'probe_type': 'neuropixels 2.0 - MS'}
             with ProbeType.connection.transaction:
                 ProbeType.insert1(probe_type, skip_duplicates=True)
-                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes], skip_duplicates=True)
+                ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
+                                           skip_duplicates=True)
 
 
 @schema
@@ -137,6 +152,4 @@ class ElectrodeConfig(dj.Lookup):
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
-        ---
-        used_in_reference: bool  # is this channel used to form the internal reference
         """

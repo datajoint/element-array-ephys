@@ -1,5 +1,6 @@
 from os import path
 from datetime import datetime
+import pathlib
 import pandas as pd
 import numpy as np
 import re
@@ -37,14 +38,19 @@ class Kilosort:
     # keys to self.files, .data are file name e.g. self.data['params'], etc.
     ks_keys = [path.splitext(i)[0] for i in ks_files]
 
-    def __init__(self, dname):
-        self._dname = dname
+    def __init__(self, ks_dir):
+        self._ks_dir = pathlib.Path(ks_dir)
         self._files = {}
         self._data = None
         self._clusters = None
 
-        self._info = {'time_created': datetime.fromtimestamp((dname / 'params.py').stat().st_ctime),
-                      'time_modified': datetime.fromtimestamp((dname / 'params.py').stat().st_mtime)}
+        params_fp = ks_dir / 'params.py'
+
+        if not params_fp.exists():
+            raise FileNotFoundError(f'No Kilosort output found in: {ks_dir}')
+
+        self._info = {'time_created': datetime.fromtimestamp(params_fp.stat().st_ctime),
+                      'time_modified': datetime.fromtimestamp(params_fp.stat().st_mtime)}
 
     @property
     def data(self):
@@ -59,7 +65,7 @@ class Kilosort:
     def _stat(self):
         self._data = {}
         for i in Kilosort.ks_files:
-            f = self._dname / i
+            f = self._ks_dir / i
 
             if not f.exists():
                 log.debug('skipping {} - doesnt exist'.format(f))
@@ -81,22 +87,24 @@ class Kilosort:
             if ext == '.npy':
                 log.debug('loading npy {}'.format(f))
                 d = np.load(f, mmap_mode='r', allow_pickle=False, fix_imports=False)
-                self._data[base] = np.reshape(d, d.shape[0]) if d.ndim == 2 and d.shape[1] == 1 else d
+                self._data[base] = (np.reshape(d, d.shape[0])
+                                    if d.ndim == 2 and d.shape[1] == 1 else d)
 
         # Read the Cluster Groups
-        if (self._dname / 'cluster_groups.csv').exists():
-            df = pd.read_csv(self._dname / 'cluster_groups.csv', delimiter='\t')
+        if (self._ks_dir / 'cluster_groups.csv').exists():
+            df = pd.read_csv(self._ks_dir / 'cluster_groups.csv', delimiter= '\t')
             self._data['cluster_groups'] = np.array(df['group'].values)
             self._data['cluster_ids'] = np.array(df['cluster_id'].values)
-        elif (self._dname / 'cluster_KSLabel.tsv').exists():
-            df = pd.read_csv(self._dname / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
+        elif (self._ks_dir / 'cluster_KSLabel.tsv').exists():
+            df = pd.read_csv(self._ks_dir / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
             self._data['cluster_groups'] = np.array(df['KSLabel'].values)
             self._data['cluster_ids'] = np.array(df['cluster_id'].values)
         else:
             raise FileNotFoundError('Neither cluster_groups.csv nor cluster_KSLabel.tsv found!')
 
     def get_best_channel(self, unit):
-        template_idx = self.data['spike_templates'][np.where(self.data['spike_clusters'] == unit)[0][0]]
+        template_idx = self.data['spike_templates'][
+            np.where(self.data['spike_clusters'] == unit)[0][0]]
         chn_templates = self.data['templates'][template_idx, :, :]
         max_chn_idx = np.abs(np.abs(chn_templates).max(axis=0)).argmax()
         max_chn = self.data['channel_map'][max_chn_idx]
@@ -116,7 +124,8 @@ class Kilosort:
         # ycoords of those channels?
         spk_feature_ycoord = ycoords[spk_feature_ind]
         # center of mass is sum(coords.*features)/sum(features)
-        self._data['spike_depths'] = np.sum(spk_feature_ycoord * pc_features**2, axis=1) / np.sum(pc_features**2, axis=1)
+        self._data['spike_depths'] = (np.sum(spk_feature_ycoord * pc_features**2, axis=1)
+                                      / np.sum(pc_features**2, axis=1))
 
         # ---- extract spike sites ----
         max_site_ind = np.argmax(np.abs(self.data['templates']).max(axis=1), axis=1)
@@ -133,7 +142,8 @@ def extract_clustering_info(cluster_output_dir):
     if phylog_fp.exists():
         phylog = pd.read_fwf(phylog_fp, colspecs=[(6, 40), (41, 250)])
         phylog.columns = ['meta', 'detail']
-        curation_row = [bool(re.match('|'.join(phy_curation_indicators), str(s))) for s in phylog.detail]
+        curation_row = [bool(re.match('|'.join(phy_curation_indicators), str(s)))
+                        for s in phylog.detail]
         is_curated = bool(np.any(curation_row))
         if creation_time is None and is_curated:
             row_meta = phylog.meta[np.where(curation_row)[0].max()]
@@ -144,8 +154,9 @@ def extract_clustering_info(cluster_output_dir):
                 creation_time = datetime.fromtimestamp(phylog_fp.stat().st_ctime)
                 time_str = re.search('\d{2}:\d{2}:\d{2}', row_meta)
                 if time_str:
-                    creation_time = datetime.combine(creation_time.date(),
-                                                     datetime.strptime(time_str.group(), '%H:%M:%S').time())
+                    creation_time = datetime.combine(
+                        creation_time.date(),
+                        datetime.strptime(time_str.group(), '%H:%M:%S').time())
     else:
         is_curated = False
 
