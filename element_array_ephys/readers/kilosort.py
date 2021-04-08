@@ -36,7 +36,7 @@ class Kilosort:
     ]
 
     # keys to self.files, .data are file name e.g. self.data['params'], etc.
-    ks_keys = [path.splitext(i)[0] for i in ks_files]
+    ks_keys = [path.splitext(ks_file)[0] for ks_file in ks_files]
 
     def __init__(self, ks_dir):
         self._ks_dir = pathlib.Path(ks_dir)
@@ -44,13 +44,13 @@ class Kilosort:
         self._data = None
         self._clusters = None
 
-        params_fp = ks_dir / 'params.py'
+        params_filepath = ks_dir / 'params.py'
 
-        if not params_fp.exists():
+        if not params_filepath.exists():
             raise FileNotFoundError(f'No Kilosort output found in: {ks_dir}')
 
-        self._info = {'time_created': datetime.fromtimestamp(params_fp.stat().st_ctime),
-                      'time_modified': datetime.fromtimestamp(params_fp.stat().st_mtime)}
+        self._info = {'time_created': datetime.fromtimestamp(params_filepath.stat().st_ctime),
+                      'time_modified': datetime.fromtimestamp(params_filepath.stat().st_mtime)}
 
     @property
     def data(self):
@@ -64,29 +64,29 @@ class Kilosort:
 
     def _stat(self):
         self._data = {}
-        for i in Kilosort.ks_files:
-            f = self._ks_dir / i
+        for ks_filename in Kilosort.ks_files:
+            ks_filepath = self._ks_dir / ks_filename
 
-            if not f.exists():
-                log.debug('skipping {} - doesnt exist'.format(f))
+            if not ks_filepath.exists():
+                log.debug('skipping {} - does not exist'.format(ks_filepath))
                 continue
 
-            base, ext = path.splitext(i)
-            self._files[base] = f
+            base, ext = path.splitext(ks_filename)
+            self._files[base] = ks_filepath
 
-            if i == 'params.py':
-                log.debug('loading params.py {}'.format(f))
+            if ks_filename == 'params.py':
+                log.debug('loading params.py {}'.format(ks_filepath))
                 # params.py is a 'key = val' file
-                prm = {}
-                for line in open(f, 'r').readlines():
+                params = {}
+                for line in open(ks_filepath, 'r').readlines():
                     k, v = line.strip('\n').split('=')
-                    prm[k.strip()] = convert_to_number(v.strip())
-                log.debug('prm: {}'.format(prm))
-                self._data[base] = prm
+                    params[k.strip()] = convert_to_number(v.strip())
+                log.debug('params: {}'.format(params))
+                self._data[base] = params
 
             if ext == '.npy':
-                log.debug('loading npy {}'.format(f))
-                d = np.load(f, mmap_mode='r', allow_pickle=False, fix_imports=False)
+                log.debug('loading npy {}'.format(ks_filepath))
+                d = np.load(ks_filepath, mmap_mode='r', allow_pickle=False, fix_imports=False)
                 self._data[base] = (np.reshape(d, d.shape[0])
                                     if d.ndim == 2 and d.shape[1] == 1 else d)
 
@@ -105,11 +105,11 @@ class Kilosort:
     def get_best_channel(self, unit):
         template_idx = self.data['spike_templates'][
             np.where(self.data['spike_clusters'] == unit)[0][0]]
-        chn_templates = self.data['templates'][template_idx, :, :]
-        max_chn_idx = np.abs(np.abs(chn_templates).max(axis=0)).argmax()
-        max_chn = self.data['channel_map'][max_chn_idx]
+        channel_templates = self.data['templates'][template_idx, :, :]
+        max_channel_idx = np.abs(np.abs(channel_templates).max(axis=0)).argmax()
+        max_channel = self.data['channel_map'][max_channel_idx]
 
-        return max_chn, max_chn_idx
+        return max_channel, max_channel_idx
 
     def extract_spike_depths(self):
         """ Reimplemented from https://github.com/cortex-lab/spikes/blob/master/analysis/ksDriftmap.m """
@@ -138,9 +138,9 @@ def extract_clustering_info(cluster_output_dir):
 
     phy_curation_indicators = ['Merge clusters', 'Split cluster', 'Change metadata_group']
     # ---- Manual curation? ----
-    phylog_fp = cluster_output_dir / 'phy.log'
-    if phylog_fp.exists():
-        phylog = pd.read_fwf(phylog_fp, colspecs=[(6, 40), (41, 250)])
+    phylog_filepath = cluster_output_dir / 'phy.log'
+    if phylog_filepath.exists():
+        phylog = pd.read_fwf(phylog_filepath, colspecs=[(6, 40), (41, 250)])
         phylog.columns = ['meta', 'detail']
         curation_row = [bool(re.match('|'.join(phy_curation_indicators), str(s)))
                         for s in phylog.detail]
@@ -151,7 +151,7 @@ def extract_clustering_info(cluster_output_dir):
             if datetime_str:
                 creation_time = datetime.strptime(datetime_str.group(), '%Y-%m-%d %H:%M:%S')
             else:
-                creation_time = datetime.fromtimestamp(phylog_fp.stat().st_ctime)
+                creation_time = datetime.fromtimestamp(phylog_filepath.stat().st_ctime)
                 time_str = re.search('\d{2}:\d{2}:\d{2}', row_meta)
                 if time_str:
                     creation_time = datetime.combine(
@@ -161,16 +161,16 @@ def extract_clustering_info(cluster_output_dir):
         is_curated = False
 
     # ---- Quality control? ----
-    metric_fp = cluster_output_dir / 'metrics.csv'
-    if metric_fp.exists():
+    metric_filepath = cluster_output_dir / 'metrics.csv'
+    if metric_filepath.exists():
         is_qc = True
         if creation_time is None:
-            creation_time = datetime.fromtimestamp(metric_fp.stat().st_ctime)
+            creation_time = datetime.fromtimestamp(metric_filepath.stat().st_ctime)
     else:
         is_qc = False
 
     if creation_time is None:
-        spk_fp = next(cluster_output_dir.glob('spike_times.npy'))
-        creation_time = datetime.fromtimestamp(spk_fp.stat().st_ctime)
+        spiketimes_filepath = next(cluster_output_dir.glob('spike_times.npy'))
+        creation_time = datetime.fromtimestamp(spiketimes_filepath.stat().st_ctime)
 
     return creation_time, is_curated, is_qc
