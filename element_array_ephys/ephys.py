@@ -162,6 +162,8 @@ class EphysRecording(dj.Imported):
         root_dir = pathlib.Path(get_ephys_root_data_dir())
         sess_dir = pathlib.Path(get_session_directory(key))
 
+        inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1('probe')
+
         # search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
                                                  ['SpikeGLX', 'Open Ephys']):
@@ -169,15 +171,15 @@ class EphysRecording(dj.Imported):
             if ephys_meta_filepaths:
                 acq_software = ephys_acq_type
                 break
-            else:
-                raise FileNotFoundError(
-                    f'Ephys recording data not found!'
-                    f' Neither SpikeGLX nor Open Ephys recording files found')
+        else:
+            raise FileNotFoundError(
+                f'Ephys recording data not found!'
+                f' Neither SpikeGLX nor Open Ephys recording files found')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
                 spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-                if spikeglx_meta.probe_SN == key['probe']:
+                if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
                     break
             else:
                 raise FileNotFoundError(
@@ -189,7 +191,7 @@ class EphysRecording(dj.Imported):
 
                 probe_electrodes = {
                     (shank, shank_col, shank_row): key
-                    for key, shank, shank_col, shank_row in zip(electrode_query.fetch(
+                    for key, shank, shank_col, shank_row in zip(*electrode_query.fetch(
                         'KEY', 'shank', 'shank_col', 'shank_row'))}
 
                 electrode_group_members = [
@@ -212,7 +214,7 @@ class EphysRecording(dj.Imported):
         elif acq_software == 'Open Ephys':
             dataset = openephys.OpenEphys(sess_dir)
             for serial_number, probe_data in dataset.probes.items():
-                if serial_number == key['probe']:
+                if str(serial_number) == inserted_probe_serial_number:
                     break
             else:
                 raise FileNotFoundError(
@@ -300,7 +302,7 @@ class LFP(dj.Imported):
                                * EphysRecording & key)
             probe_electrodes = {
                 (shank, shank_col, shank_row): key
-                for key, shank, shank_col, shank_row in zip(electrode_query.fetch(
+                for key, shank, shank_col, shank_row in zip(*electrode_query.fetch(
                     'KEY', 'shank', 'shank_col', 'shank_row'))}
 
             for recorded_site in lfp_channel_ind:
@@ -676,7 +678,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
 
         probe_electrodes = {
             (shank, shank_col, shank_row): key
-            for key, shank, shank_col, shank_row in zip(electrode_query.fetch(
+            for key, shank, shank_col, shank_row in zip(*electrode_query.fetch(
                 'KEY', 'shank', 'shank_col', 'shank_row'))}
 
         channel2electrode_map = {
