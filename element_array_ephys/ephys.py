@@ -686,9 +686,9 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
 
     elif acq_software == 'Open Ephys':
         sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
-        loaded_oe = openephys.OpenEphys(sess_dir)
-        probe_sn = (ProbeInsertion & ephys_recording_key).fetch1('probe')
-        oe_probe = loaded_oe.probes[probe_sn]
+        openephys_dataset = openephys.OpenEphys(sess_dir)
+        probe_serial_number = (ProbeInsertion & ephys_recording_key).fetch1('probe')
+        probe_dataset = openephys_dataset.probes[probe_serial_number]
 
         electrode_query = (probe.ProbeType.Electrode
                            * probe.ElectrodeConfig.Electrode
@@ -699,7 +699,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
 
         channel2electrode_map = {
             channel_idx: probe_electrodes[channel_idx]
-            for channel_idx in oe_probe.ap_meta['channels_ids']}
+            for channel_idx in probe_dataset.ap_meta['channels_ids']}
 
     return channel2electrode_map
 
