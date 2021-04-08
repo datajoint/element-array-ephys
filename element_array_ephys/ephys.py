@@ -120,7 +120,7 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class ProbeInsertion(dj.Manual):  # (acute)
     definition = """
-    -> Session  
+    -> Session
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
@@ -495,9 +495,9 @@ class CuratedClustering(dj.Imported):
         -> master
         unit: int
         ---
-        -> probe.ElectrodeConfig.Electrode  # electrode on the probe that this unit has highest response amplitude
+        -> probe.ElectrodeConfig.Electrode  # electrode with highest waveform amplitude for this unit
         -> ClusterQualityLabel
-        spike_count: int         # how many spikes in this recording of this unit
+        spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
         spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
@@ -564,7 +564,7 @@ class Waveform(dj.Imported):
         -> master
         -> CuratedClustering.Unit
         ---
-        peak_electrode_waveform: longblob  # mean over all spikes at the peak channel for this unit
+        peak_electrode_waveform: longblob  # (uV) mean waveform for this unit's peak electrode
         """
 
     class UnitElectrode(dj.Part):
