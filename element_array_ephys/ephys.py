@@ -272,17 +272,14 @@ class LFP(dj.Imported):
     _skip_channel_counts = 9
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
         acq_software, probe_sn = (EphysRecording
                                   * ProbeInsertion & key).fetch1('acq_software', 'probe')
 
         electrode_keys, lfp = [], []
 
         if acq_software == 'SpikeGLX':
-            spikeglx_meta_fp = (EphysRecording.EphysFile
-                                & key & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-            spikeglx_rec_dir = (root_dir / spikeglx_meta_fp).parent
-            spikeglx_recording = spikeglx.SpikeGLX(spikeglx_rec_dir)
+            spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+            spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
 
             lfp_channel_ind = spikeglx_recording.lfmeta.recording_channels[
                           -1::-self._skip_channel_counts]
@@ -619,10 +616,8 @@ class Waveform(dj.Imported):
 
         else:
             if acq_software == 'SpikeGLX':
-                ephys_root_dir = get_ephys_root_data_dir()
-                npx_meta_fp = ephys_root_dir / (EphysRecording.EphysFile & key
-                                                & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-                neuropixels_recording = spikeglx.SpikeGLX(npx_meta_fp.parent)
+                spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+                neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             elif acq_software == 'Open Ephys':
                 sess_dir = pathlib.Path(get_session_directory(key))
                 openephys_dataset = openephys.OpenEphys(sess_dir)
@@ -659,17 +654,35 @@ class Waveform(dj.Imported):
 
 # ---------------- HELPER FUNCTIONS ----------------
 
+def get_spikeglx_meta_filepath(ephys_recording_key):
+    # attempt to retrieve from EphysRecording.EphysFile
+    ephys_root_dir = get_ephys_root_data_dir()
+    spikeglx_meta_filepath = ephys_root_dir / (
+            EphysRecording.EphysFile & ephys_recording_key
+            & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+    # if not found, search in session_dir again
+    if not spikeglx_meta_filepath.exists():
+        sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
+        inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                                        & ephys_recording_key).fetch1('probe')
+
+        spikeglx_meta_filepaths = [fp for fp in sess_dir.rglob('*.ap.meta')]
+        for meta_filepath in spikeglx_meta_filepaths:
+            spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+            if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
+                spikeglx_meta_filepath = meta_filepath
+                break
+        else:
+            raise FileNotFoundError(
+                'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
+
+    return spikeglx_meta_filepath
+
 
 def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
-    root_dir = pathlib.Path(get_ephys_root_data_dir())
     if acq_software == 'SpikeGLX':
-        npx_meta_path = root_dir / (EphysRecording.EphysFile
-                                    & ephys_recording_key
-                                    & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-        neuropixels_dir = (root_dir / npx_meta_path).parent
-
-        meta_filepath = next(pathlib.Path(neuropixels_dir).glob('*.ap.meta'))
-        spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+        spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
+        spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
         electrode_config_key = (EphysRecording * probe.ElectrodeConfig
                                 & ephys_recording_key).fetch1('KEY')
 
