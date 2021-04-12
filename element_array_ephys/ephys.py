@@ -31,7 +31,7 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
-                + get_ephys_root_data_dir() -> str
+                + get_ephys_root_data_dir() -> list
                     Retrieve the root data directory - e.g. containing the raw ephys recording files for all subject/sessions.
                     :return: a string for full path to the root data directory
                 + get_session_directory(session_key: dict) -> str
