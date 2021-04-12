@@ -91,16 +91,28 @@ class Kilosort:
                                     if d.ndim == 2 and d.shape[1] == 1 else d)
 
         # Read the Cluster Groups
-        if (self._ks_dir / 'cluster_groups.csv').exists():
-            df = pd.read_csv(self._ks_dir / 'cluster_groups.csv', delimiter= '\t')
-            self._data['cluster_groups'] = np.array(df['group'].values)
-            self._data['cluster_ids'] = np.array(df['cluster_id'].values)
-        elif (self._ks_dir / 'cluster_KSLabel.tsv').exists():
-            df = pd.read_csv(self._ks_dir / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
-            self._data['cluster_groups'] = np.array(df['KSLabel'].values)
-            self._data['cluster_ids'] = np.array(df['cluster_id'].values)
+        for cluster_pattern, cluster_col_name in zip(['cluster_groups.*', 'cluster_KSLabel.*'],
+                                                     ['group', 'KSLabel']):
+            try:
+                cluster_file = next(self._ks_dir.glob(cluster_pattern))
+                cluster_file_suffix = cluster_file.suffix
+                assert cluster_file_suffix in ('.csv', '.tsv', '.xlsx')
+                break
+            except StopIteration:
+                pass
         else:
-            raise FileNotFoundError('Neither cluster_groups.csv nor cluster_KSLabel.tsv found!')
+            raise FileNotFoundError(
+                'Neither "cluster_groups" nor "cluster_KSLabel" file found!')
+
+        if cluster_file_suffix == '.tsv':
+            df = pd.read_csv(cluster_file, sep='\t', header=0)
+        elif cluster_file_suffix == '.xlsx':
+            df = pd.read_excel(cluster_file, engine='openpyxl')
+        else:
+            df = pd.read_csv(cluster_file, delimiter='\t')
+
+        self._data['cluster_groups'] = np.array(df[cluster_col_name].values)
+        self._data['cluster_ids'] = np.array(df['cluster_id'].values)
 
     def get_best_channel(self, unit):
         template_idx = self.data['spike_templates'][
