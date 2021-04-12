@@ -34,10 +34,6 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                 + get_ephys_root_data_dir() -> str
                     Retrieve the root data directory - e.g. containing the raw ephys recording files for all subject/sessions.
                     :return: a string for full path to the root data directory
-                + get_clustering_root_data_dir() -> str
-                    Retrieve the root data directory containing the clustering results for all subjects/sessions
-                    Note: if not provided, use "get_ephys_root_data_dir()"
-                    :return: a string for full path to the clustering root data directory
                 + get_session_directory(session_key: dict) -> str
                     Retrieve the session directory containing the recorded Neuropixels data for a given Session
                     :param session_key: a dictionary of one Session `key`
