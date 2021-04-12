@@ -8,7 +8,7 @@ import hashlib
 import importlib
 
 from .readers import spikeglx, kilosort, openephys
-from . import probe
+from . import probe, find_valid_full_path
 
 schema = dj.schema()
 
@@ -61,38 +61,21 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 # -------------- Functions required by the elements-ephys  ---------------
 
-def get_ephys_root_data_dir() -> str:
+def get_ephys_root_data_dir() -> list:
     """
     All data paths, directories in DataJoint Elements are recommended to be stored as
     relative paths, with respect to some user-configured "root" directory,
      which varies from machine to machine (e.g. different mounted drive locations)
 
-    get_ephys_root_data_dir() -> str
-        This user-provided function retrieves the root data directory
-         containing ephys data for all subjects/sessions
-         (e.g. acquired SpikeGLX or Open Ephys raw files)
-        :return: a string for full path to the ephys root data directory
+    get_ephys_root_data_dir() -> list
+        This user-provided function retrieves the possible root data directories
+         containing the ephys data for all subjects/sessions
+         (e.g. acquired SpikeGLX or Open Ephys raw files,
+         output files from spike sorting routines, etc.)
+        :return: a string for full path to the ephys root data directory,
+         or list of strings for possible root data directories
     """
     return _linking_module.get_ephys_root_data_dir()
-
-
-def get_clustering_root_data_dir() -> str:
-    """
-    All data paths, directories in DataJoint Elements are recommended to be stored as
-    relative paths, with respect to some user-configured "root" directory,
-     which varies from machine to machine (e.g. different mounted drive locations)
-
-    get_clustering_root_data_dir() -> str
-        This user-provided function retrieves the root data directory
-         containing clustering results for all subjects/sessions
-        (e.g. output files from spike sorting routines)
-        Note: if not provided, use "get_ephys_root_data_dir()"
-        :return: a string for full path to the clustering root data directory
-    """
-    if not hasattr(_linking_module, 'get_clustering_root_data_dir'):
-        return get_ephys_root_data_dir()
-
-    return _linking_module.get_clustering_root_data_dir()
 
 
 def get_session_directory(session_key: dict) -> str:
@@ -159,7 +142,6 @@ class EphysRecording(dj.Imported):
         """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_ephys_root_data_dir())
         sess_dir = pathlib.Path(get_session_directory(key))
 
         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1('probe')
@@ -207,6 +189,8 @@ class EphysRecording(dj.Imported):
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
                           'sampling_rate': spikeglx_meta.meta['imSampRate']})
+
+            _, root_dir = find_valid_full_path(get_ephys_root_data_dir(), meta_filepath)
             self.EphysFile.insert1({
                 **key,
                 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
@@ -240,6 +224,10 @@ class EphysRecording(dj.Imported):
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
                           'sampling_rate': probe_data.ap_meta['sample_rate']})
+
+            _, root_dir = find_valid_full_path(
+                get_ephys_root_data_dir(),
+                probe_data.recording_info['recording_files'][0])
             self.EphysFile.insert([{**key,
                                     'file_path': fp.relative_to(root_dir).as_posix()}
                                    for fp in probe_data.recording_info['recording_files']])
@@ -431,10 +419,9 @@ class Clustering(dj.Imported):
     """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
-        kilosort_dir = root_dir / output_dir
+        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
             kilosort_dataset = kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
@@ -470,10 +457,10 @@ class Curation(dj.Manual):
             raise ValueError(f'No corresponding entry in Clustering available'
                              f' for: {key}; do `Clustering.populate(key)`')
 
-        root_dir = pathlib.Path(get_clustering_root_data_dir())
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
-        kilosort_dir = root_dir / output_dir
+        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+
         creation_time, is_curated, is_qc = kilosort.extract_clustering_info(kilosort_dir)
         # Synthesize curation_id
         curation_id = dj.U().aggr(self & key, n='ifnull(max(curation_id)+1,1)').fetch1('n')
@@ -503,8 +490,9 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_clustering_root_data_dir())
-        kilosort_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
+        output_dir = (Curation & key).fetch1('curation_output_dir')
+        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
         acq_software = (EphysRecording & key).fetch1('acq_software')
 
@@ -521,7 +509,7 @@ class CuratedClustering(dj.Imported):
         # spike_times_sec_adj > spike_times_sec > spike_times
         spike_time_key = ('spike_times_sec_adj' if 'spike_times_sec_adj' in kilosort_dataset.data
                           else 'spike_times_sec' if 'spike_times_sec'
-                                                  in kilosort_dataset.data else 'spike_times')
+                                                    in kilosort_dataset.data else 'spike_times')
         spike_times = kilosort_dataset.data[spike_time_key]
         kilosort_dataset.extract_spike_depths()
 
@@ -576,8 +564,9 @@ class Waveform(dj.Imported):
         """
 
     def make(self, key):
-        root_dir = pathlib.Path(get_clustering_root_data_dir())
-        kilosort_dir = root_dir / (Curation & key).fetch1('curation_output_dir')
+        output_dir = (Curation & key).fetch1('curation_output_dir')
+        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
 
         acq_software, probe_serial_number = (EphysRecording * ProbeInsertion & key).fetch1(
@@ -656,25 +645,28 @@ class Waveform(dj.Imported):
 
 def get_spikeglx_meta_filepath(ephys_recording_key):
     # attempt to retrieve from EphysRecording.EphysFile
-    ephys_root_dir = get_ephys_root_data_dir()
-    spikeglx_meta_filepath = ephys_root_dir / (
-            EphysRecording.EphysFile & ephys_recording_key
-            & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
-    # if not found, search in session_dir again
-    if not spikeglx_meta_filepath.exists():
-        sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
-        inserted_probe_serial_number = (ProbeInsertion * probe.Probe
-                                        & ephys_recording_key).fetch1('probe')
+    spikeglx_meta_filepath = (EphysRecording.EphysFile & ephys_recording_key
+                              & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
 
-        spikeglx_meta_filepaths = [fp for fp in sess_dir.rglob('*.ap.meta')]
-        for meta_filepath in spikeglx_meta_filepaths:
-            spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-            if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
-                spikeglx_meta_filepath = meta_filepath
-                break
-        else:
-            raise FileNotFoundError(
-                'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
+    try:
+        spikeglx_meta_filepath, _ = find_valid_full_path(get_ephys_root_data_dir(),
+                                                         spikeglx_meta_filepath)
+    except FileNotFoundError:
+        # if not found, search in session_dir again
+        if not spikeglx_meta_filepath.exists():
+            sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
+            inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                                            & ephys_recording_key).fetch1('probe')
+
+            spikeglx_meta_filepaths = [fp for fp in sess_dir.rglob('*.ap.meta')]
+            for meta_filepath in spikeglx_meta_filepaths:
+                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+                if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
+                    spikeglx_meta_filepath = meta_filepath
+                    break
+            else:
+                raise FileNotFoundError(
+                    'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
 
     return spikeglx_meta_filepath
 
