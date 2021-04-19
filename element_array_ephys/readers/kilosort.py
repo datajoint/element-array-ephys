@@ -98,10 +98,10 @@ class Kilosort:
                 cluster_file = next(self._kilosort_dir.glob(cluster_pattern))
             except StopIteration:
                 pass
-
-            cluster_file_suffix = cluster_file.suffix
-            assert cluster_file_suffix in ('.csv', '.tsv', '.xlsx')
-            break
+            else:
+                cluster_file_suffix = cluster_file.suffix
+                assert cluster_file_suffix in ('.csv', '.tsv', '.xlsx')
+                break
         else:
             raise FileNotFoundError(
                 'Neither "cluster_groups" nor "cluster_KSLabel" file found!')
