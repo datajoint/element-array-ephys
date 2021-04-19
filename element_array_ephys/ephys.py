@@ -8,7 +8,7 @@ import hashlib
 import importlib
 
 from .readers import spikeglx, kilosort, openephys
-from . import probe, find_valid_full_path
+from . import probe, find_full_path, find_root_directory
 
 schema = dj.schema()
 
@@ -186,7 +186,7 @@ class EphysRecording(dj.Imported):
                           'acq_software': acq_software,
                           'sampling_rate': spikeglx_meta.meta['imSampRate']})
 
-            _, root_dir = find_valid_full_path(get_ephys_root_data_dir(), meta_filepath)
+            root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
             self.EphysFile.insert1({
                 **key,
                 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
@@ -221,7 +221,7 @@ class EphysRecording(dj.Imported):
                           'acq_software': acq_software,
                           'sampling_rate': probe_data.ap_meta['sample_rate']})
 
-            _, root_dir = find_valid_full_path(
+            root_dir = find_root_directory(
                 get_ephys_root_data_dir(),
                 probe_data.recording_info['recording_files'][0])
             self.EphysFile.insert([{**key,
@@ -417,7 +417,7 @@ class Clustering(dj.Imported):
     def make(self, key):
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
-        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
             kilosort_dataset = kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
@@ -455,7 +455,7 @@ class Curation(dj.Manual):
 
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
-        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         creation_time, is_curated, is_qc = kilosort.extract_clustering_info(kilosort_dir)
         # Synthesize curation_id
@@ -487,7 +487,7 @@ class CuratedClustering(dj.Imported):
 
     def make(self, key):
         output_dir = (Curation & key).fetch1('curation_output_dir')
-        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
         acq_software = (EphysRecording & key).fetch1('acq_software')
@@ -561,7 +561,7 @@ class Waveform(dj.Imported):
 
     def make(self, key):
         output_dir = (Curation & key).fetch1('curation_output_dir')
-        kilosort_dir, _ = find_valid_full_path(get_ephys_root_data_dir(), output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
 
@@ -645,8 +645,8 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
                               & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
 
     try:
-        spikeglx_meta_filepath, _ = find_valid_full_path(get_ephys_root_data_dir(),
-                                                         spikeglx_meta_filepath)
+        spikeglx_meta_filepath = find_full_path(get_ephys_root_data_dir(),
+                                                spikeglx_meta_filepath)
     except FileNotFoundError:
         # if not found, search in session_dir again
         if not spikeglx_meta_filepath.exists():

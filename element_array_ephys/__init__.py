@@ -5,29 +5,51 @@ import pathlib
 dj.config['enable_python_native_blobs'] = True
 
 
-def find_valid_full_path(potential_root_directories, path):
+def find_full_path(root_directories, relative_path):
     """
-    Given multiple potential root directories and a single path
-    Search and return one directory that is the parent of the given path
-        :param potential_root_directories: potential root directories
-        :param path: the path to search the root directory
-        :return: (fullpath, root_directory)
+    Given a relative path, search and return the full-path
+     from provided potential root directories (in the given order)
+        :param root_directories: potential root directories
+        :param relative_path: the relative path to find the valid root directory
+        :return: root_directory
     """
-    path = pathlib.Path(path)
+    relative_path = pathlib.Path(relative_path)
+
+    if relative_path.exists():
+        return relative_path
 
     # turn to list if only a single root directory is provided
-    if isinstance(potential_root_directories, (str, pathlib.Path)):
-        potential_root_directories = [potential_root_directories]
+    if isinstance(root_directories, (str, pathlib.Path)):
+        root_directories = [root_directories]
 
-    # search routine
-    for root_dir in potential_root_directories:
-        root_dir = pathlib.Path(root_dir)
-        if path.exists():
-            if root_dir in list(path.parents):
-                return path, root_dir
-        else:
-            if (root_dir / path).exists():
-                return root_dir / path, root_dir
+    for root_dir in root_directories:
+        if (pathlib.Path(root_dir) / relative_path).exists():
+            return pathlib.Path(root_dir) / relative_path
 
-    raise FileNotFoundError('Unable to identify root-directory (from {})'
-                            ' associated with {}'.format(potential_root_directories, path))
+    raise FileNotFoundError('No valid full-path found (from {})'
+                            ' for {}'.format(root_directories, relative_path))
+
+
+def find_root_directory(root_directories, full_path):
+    """
+    Given multiple potential root directories and a full-path,
+    search and return one directory that is the parent of the given path
+        :param root_directories: potential root directories
+        :param full_path: the relative path to search the root directory
+        :return: full-path
+    """
+    full_path = pathlib.Path(full_path)
+
+    if not full_path.exists():
+        raise FileNotFoundError(f'{full_path} does not exist!')
+
+    # turn to list if only a single root directory is provided
+    if isinstance(root_directories, (str, pathlib.Path)):
+        root_directories = [root_directories]
+
+    try:
+        return next(root_dir for root_dir in root_directories
+                    if full_path.is_relative_to(root_dir))
+    except StopIteration:
+        raise FileNotFoundError('No valid root directory found (from {})'
+                                ' for {}'.format(root_directories, full_path))
