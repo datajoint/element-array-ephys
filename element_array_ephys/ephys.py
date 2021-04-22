@@ -175,7 +175,6 @@ class EphysRecording(dj.Imported):
                 electrode_group_members = [
                     probe_electrodes[(shank, shank_col, shank_row)]
                     for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap['data']]
-
             else:
                 raise NotImplementedError(
                     'Processing for neuropixels probe model'
@@ -190,7 +189,6 @@ class EphysRecording(dj.Imported):
             self.EphysFile.insert1({
                 **key,
                 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
-
         elif acq_software == 'Open Ephys':
             dataset = openephys.OpenEphys(sess_dir)
             for serial_number, probe_data in dataset.probes.items():
@@ -210,7 +208,6 @@ class EphysRecording(dj.Imported):
                 electrode_group_members = [
                     probe_electrodes[channel_idx]
                     for channel_idx in probe_data.ap_meta['channels_ids']]
-
             else:
                 raise NotImplementedError(
                     'Processing for neuropixels'
@@ -289,7 +286,6 @@ class LFP(dj.Imported):
             for recorded_site in lfp_channel_ind:
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
-
         elif acq_software == 'Open Ephys':
             sess_dir = pathlib.Path(get_session_directory(key))
             loaded_oe = openephys.OpenEphys(sess_dir)
@@ -315,7 +311,6 @@ class LFP(dj.Imported):
 
             for channel_idx in np.array(oe_probe.lfp_meta['channels_ids'])[lfp_channel_ind]:
                 electrode_keys.append(probe_electrodes[channel_idx])
-
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software'
                                       f' of type {acq_software} is not yet implemented')
@@ -537,12 +532,12 @@ class CuratedClustering(dj.Imported):
 
 
 @schema
-class Waveform(dj.Imported):
+class WaveformSet(dj.Imported):
     definition = """
     -> CuratedClustering
     """
 
-    class Unit(dj.Part):
+    class PeakWaveform(dj.Part):
         definition = """
         -> master
         -> CuratedClustering.Unit
@@ -550,13 +545,14 @@ class Waveform(dj.Imported):
         peak_electrode_waveform: longblob  # (uV) mean waveform for this unit's peak electrode
         """
 
-    class UnitElectrode(dj.Part):
+    class Waveform(dj.Part):
         definition = """
-        -> master.Unit
+        -> master
+        -> CuratedClustering.Unit
         -> probe.ElectrodeConfig.Electrode  
         --- 
-        waveform_mean: longblob   # (uV) mean waveform
-        waveforms=null: longblob  # (uV) (spike x sample) waveform of each spike at each electrode
+        waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
+        waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
 
     def make(self, key):
@@ -598,7 +594,6 @@ class Waveform(dj.Imported):
                                     **units[unit_no],
                                     'peak_electrode_waveform': channel_waveform}
                     yield unit_peak_waveform, unit_electrode_waveforms
-
         else:
             if acq_software == 'SpikeGLX':
                 spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
@@ -633,8 +628,8 @@ class Waveform(dj.Imported):
         # insert waveform on a per-unit basis to mitigate potential memory issue
         self.insert1(key)
         for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
-            self.Unit.insert1(unit_peak_waveform, ignore_extra_fields=True)
-            self.UnitElectrode.insert(unit_electrode_waveforms, ignore_extra_fields=True)
+            self.PeakWaveform.insert1(unit_peak_waveform, ignore_extra_fields=True)
+            self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
 # ---------------- HELPER FUNCTIONS ----------------
@@ -686,7 +681,6 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
             recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
             for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
                 spikeglx_meta.shankmap['data'])}
-
     elif acq_software == 'Open Ephys':
         sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
         openephys_dataset = openephys.OpenEphys(sess_dir)
