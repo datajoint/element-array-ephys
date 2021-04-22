@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class Kilosort:
 
-    ks_files = [
+    kilosort_files = [
         'params.py',
         'amplitudes.npy',
         'channel_map.npy',
@@ -36,21 +36,21 @@ class Kilosort:
     ]
 
     # keys to self.files, .data are file name e.g. self.data['params'], etc.
-    ks_keys = [path.splitext(i)[0] for i in ks_files]
+    kilosort_keys = [path.splitext(kilosort_file)[0] for kilosort_file in kilosort_files]
 
-    def __init__(self, ks_dir):
-        self._ks_dir = pathlib.Path(ks_dir)
+    def __init__(self, kilosort_dir):
+        self._kilosort_dir = pathlib.Path(kilosort_dir)
         self._files = {}
         self._data = None
         self._clusters = None
 
-        params_fp = ks_dir / 'params.py'
+        params_filepath = kilosort_dir / 'params.py'
 
-        if not params_fp.exists():
-            raise FileNotFoundError(f'No Kilosort output found in: {ks_dir}')
+        if not params_filepath.exists():
+            raise FileNotFoundError(f'No Kilosort output found in: {kilosort_dir}')
 
-        self._info = {'time_created': datetime.fromtimestamp(params_fp.stat().st_ctime),
-                      'time_modified': datetime.fromtimestamp(params_fp.stat().st_mtime)}
+        self._info = {'time_created': datetime.fromtimestamp(params_filepath.stat().st_ctime),
+                      'time_modified': datetime.fromtimestamp(params_filepath.stat().st_mtime)}
 
     @property
     def data(self):
@@ -64,52 +64,66 @@ class Kilosort:
 
     def _stat(self):
         self._data = {}
-        for i in Kilosort.ks_files:
-            f = self._ks_dir / i
+        for kilosort_filename in Kilosort.kilosort_files:
+            kilosort_filepath = self._kilosort_dir / kilosort_filename
 
-            if not f.exists():
-                log.debug('skipping {} - doesnt exist'.format(f))
+            if not kilosort_filepath.exists():
+                log.debug('skipping {} - does not exist'.format(kilosort_filepath))
                 continue
 
-            base, ext = path.splitext(i)
-            self._files[base] = f
+            base, ext = path.splitext(kilosort_filename)
+            self._files[base] = kilosort_filepath
 
-            if i == 'params.py':
-                log.debug('loading params.py {}'.format(f))
+            if kilosort_filename == 'params.py':
+                log.debug('loading params.py {}'.format(kilosort_filepath))
                 # params.py is a 'key = val' file
-                prm = {}
-                for line in open(f, 'r').readlines():
+                params = {}
+                for line in open(kilosort_filepath, 'r').readlines():
                     k, v = line.strip('\n').split('=')
-                    prm[k.strip()] = convert_to_number(v.strip())
-                log.debug('prm: {}'.format(prm))
-                self._data[base] = prm
+                    params[k.strip()] = convert_to_number(v.strip())
+                log.debug('params: {}'.format(params))
+                self._data[base] = params
 
             if ext == '.npy':
-                log.debug('loading npy {}'.format(f))
-                d = np.load(f, mmap_mode='r', allow_pickle=False, fix_imports=False)
+                log.debug('loading npy {}'.format(kilosort_filepath))
+                d = np.load(kilosort_filepath, mmap_mode='r',
+                            allow_pickle=False, fix_imports=False)
                 self._data[base] = (np.reshape(d, d.shape[0])
                                     if d.ndim == 2 and d.shape[1] == 1 else d)
 
         # Read the Cluster Groups
-        if (self._ks_dir / 'cluster_groups.csv').exists():
-            df = pd.read_csv(self._ks_dir / 'cluster_groups.csv', delimiter= '\t')
-            self._data['cluster_groups'] = np.array(df['group'].values)
-            self._data['cluster_ids'] = np.array(df['cluster_id'].values)
-        elif (self._ks_dir / 'cluster_KSLabel.tsv').exists():
-            df = pd.read_csv(self._ks_dir / 'cluster_KSLabel.tsv', sep = "\t", header = 0)
-            self._data['cluster_groups'] = np.array(df['KSLabel'].values)
-            self._data['cluster_ids'] = np.array(df['cluster_id'].values)
+        for cluster_pattern, cluster_col_name in zip(['cluster_groups.*', 'cluster_KSLabel.*'],
+                                                     ['group', 'KSLabel']):
+            try:
+                cluster_file = next(self._kilosort_dir.glob(cluster_pattern))
+            except StopIteration:
+                pass
+            else:
+                cluster_file_suffix = cluster_file.suffix
+                assert cluster_file_suffix in ('.csv', '.tsv', '.xlsx')
+                break
         else:
-            raise FileNotFoundError('Neither cluster_groups.csv nor cluster_KSLabel.tsv found!')
+            raise FileNotFoundError(
+                'Neither "cluster_groups" nor "cluster_KSLabel" file found!')
+
+        if cluster_file_suffix == '.tsv':
+            df = pd.read_csv(cluster_file, sep='\t', header=0)
+        elif cluster_file_suffix == '.xlsx':
+            df = pd.read_excel(cluster_file, engine='openpyxl')
+        else:
+            df = pd.read_csv(cluster_file, delimiter='\t')
+
+        self._data['cluster_groups'] = np.array(df[cluster_col_name].values)
+        self._data['cluster_ids'] = np.array(df['cluster_id'].values)
 
     def get_best_channel(self, unit):
         template_idx = self.data['spike_templates'][
             np.where(self.data['spike_clusters'] == unit)[0][0]]
-        chn_templates = self.data['templates'][template_idx, :, :]
-        max_chn_idx = np.abs(np.abs(chn_templates).max(axis=0)).argmax()
-        max_chn = self.data['channel_map'][max_chn_idx]
+        channel_templates = self.data['templates'][template_idx, :, :]
+        max_channel_idx = np.abs(channel_templates).max(axis=0).argmax()
+        max_channel = self.data['channel_map'][max_channel_idx]
 
-        return max_chn, max_chn_idx
+        return max_channel, max_channel_idx
 
     def extract_spike_depths(self):
         """ Reimplemented from https://github.com/cortex-lab/spikes/blob/master/analysis/ksDriftmap.m """
@@ -138,9 +152,9 @@ def extract_clustering_info(cluster_output_dir):
 
     phy_curation_indicators = ['Merge clusters', 'Split cluster', 'Change metadata_group']
     # ---- Manual curation? ----
-    phylog_fp = cluster_output_dir / 'phy.log'
-    if phylog_fp.exists():
-        phylog = pd.read_fwf(phylog_fp, colspecs=[(6, 40), (41, 250)])
+    phylog_filepath = cluster_output_dir / 'phy.log'
+    if phylog_filepath.exists():
+        phylog = pd.read_fwf(phylog_filepath, colspecs=[(6, 40), (41, 250)])
         phylog.columns = ['meta', 'detail']
         curation_row = [bool(re.match('|'.join(phy_curation_indicators), str(s)))
                         for s in phylog.detail]
@@ -151,7 +165,7 @@ def extract_clustering_info(cluster_output_dir):
             if datetime_str:
                 creation_time = datetime.strptime(datetime_str.group(), '%Y-%m-%d %H:%M:%S')
             else:
-                creation_time = datetime.fromtimestamp(phylog_fp.stat().st_ctime)
+                creation_time = datetime.fromtimestamp(phylog_filepath.stat().st_ctime)
                 time_str = re.search('\d{2}:\d{2}:\d{2}', row_meta)
                 if time_str:
                     creation_time = datetime.combine(
@@ -161,16 +175,14 @@ def extract_clustering_info(cluster_output_dir):
         is_curated = False
 
     # ---- Quality control? ----
-    metric_fp = cluster_output_dir / 'metrics.csv'
-    if metric_fp.exists():
-        is_qc = True
+    metric_filepath = cluster_output_dir / 'metrics.csv'
+    is_qc = metric_filepath.exists()
+    if is_qc:
         if creation_time is None:
-            creation_time = datetime.fromtimestamp(metric_fp.stat().st_ctime)
-    else:
-        is_qc = False
+            creation_time = datetime.fromtimestamp(metric_filepath.stat().st_ctime)
 
     if creation_time is None:
-        spk_fp = next(cluster_output_dir.glob('spike_times.npy'))
-        creation_time = datetime.fromtimestamp(spk_fp.stat().st_ctime)
+        spiketimes_filepath = next(cluster_output_dir.glob('spike_times.npy'))
+        creation_time = datetime.fromtimestamp(spiketimes_filepath.stat().st_ctime)
 
     return creation_time, is_curated, is_qc

@@ -93,13 +93,15 @@ class OpenEphys:
                         assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
                         continuous_type = 'lfp'
 
-                    if getattr(probe, continuous_type + '_meta') is None:
-                        continuous_info['channels_ids'] = analog_signal.channel_ids
-                        continuous_info['channels_names'] = analog_signal.channel_names
-                        continuous_info['channels_gains'] = analog_signal.gains
-                        setattr(probe, continuous_type + '_meta', continuous_info)
+                    meta = getattr(probe, continuous_type + '_meta')
+                    if not meta:
+                        meta.update(**continuous_info,
+                                    channels_ids=analog_signal.channel_ids,
+                                    channels_names=analog_signal.channel_names,
+                                    channels_gains=analog_signal.gains)
 
-                    probe.__dict__[f'{continuous_type}_analog_signals'].append(analog_signal)
+                    signal = getattr(probe, continuous_type + '_analog_signals')
+                    signal.append(analog_signal)
 
         return probes
 
@@ -120,8 +122,8 @@ class Probe:
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = self.probe_info['@probe_name']
 
-        self.ap_meta = None
-        self.lfp_meta = None
+        self.ap_meta = {}
+        self.lfp_meta = {}
 
         self.ap_analog_signals = []
         self.lfp_analog_signals = []
