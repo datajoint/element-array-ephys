@@ -32,6 +32,7 @@ jobs:
           TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
           docker save "${IMAGE}:${TAG}" | \
             gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}-${DISTRO}.tar.gz"
+          echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       - name: Add image artifact
         uses: actions/upload-artifact@v2
