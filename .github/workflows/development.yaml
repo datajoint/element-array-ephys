@@ -7,7 +7,6 @@ on:
 jobs:
   publish-release:
     if: github.event_name == 'push'
-    needs: test
     runs-on: ubuntu-latest
     env:
       TWINE_USERNAME: ${{secrets.twine_username}}
