@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Compile image
         run: |
-          export PKG_NAME=$(cat setup.py | awk -F\' '/ name=/ {print $2}')
+          export PKG_NAME=$(cat setup.py | awk -F\' '/pkg_name = / {print $2}')
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           export HOST_UID=$(id -u)
           docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
@@ -61,10 +61,12 @@ jobs:
       - uses: actions/checkout@v2
       - name: Determine package version
         run: |
-          PKG_NAME=$(cat setup.py | awk -F\' '/ name=/ {print $2}')
+          SDIST_PKG_NAME=$(cat setup.py | awk -F\' '/ name=/ {print $2}')
+          PKG_NAME=$(cat setup.py | awk -F\' '/pkg_name = / {print $2}')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          echo "SDIST_PKG_NAME=${SDIST_PKG_NAME}" >> $GITHUB_ENV
       - name: Get changelog entry
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
@@ -101,7 +103,7 @@ jobs:
       - name: Determine pip artifact paths
         run: |
           echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
-          echo "PKG_SDIST_PATH=$(ls dist/${PKG_NAME}-*.tar.gz)" >> $GITHUB_ENV
+          echo "PKG_SDIST_PATH=$(ls dist/${SDIST_PKG_NAME}-*.tar.gz)" >> $GITHUB_ENV
       - name: Upload pip wheel asset to release
         uses: actions/upload-release-asset@v1
         env:
@@ -118,5 +120,5 @@ jobs:
         with:
           upload_url: ${{steps.create_gh_release.outputs.upload_url}}
           asset_path: ${{env.PKG_SDIST_PATH}}
-          asset_name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
+          asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
