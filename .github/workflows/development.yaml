@@ -5,8 +5,51 @@ on:
     tags:
       - '*.*.*'
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - py_ver: 3.8
+            distro: alpine
+            image: djbase
+    env:
+      PY_VER: ${{matrix.py_ver}}
+      DISTRO: ${{matrix.distro}}
+      IMAGE: ${{matrix.image}}
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile image
+        run: |
+          export PKG_NAME=$(cat setup.py | awk -F\' '/pkg_name = / {print $2}')
+          export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
+          export HOST_UID=$(id -u)
+          docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
+          IMAGE=$(docker images --filter "reference=datajoint/${PKG_NAME}*" \
+            --format "{{.Repository}}")
+          TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
+          docker save "${IMAGE}:${TAG}" | \
+            gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}-${DISTRO}.tar.gz"
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+      - name: Add image artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{matrix.py_ver}}-${{matrix.distro}}
+          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{matrix.py_ver}}-\
+            ${{matrix.distro}}.tar.gz"
+          retention-days: 1
+      - if: matrix.py_ver == '3.8' && matrix.distro == 'alpine'
+        name: Add pip artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
+          path: dist
+          retention-days: 1
   publish-release:
     if: github.event_name == 'push'
+    needs: build
     runs-on: ubuntu-latest
     env:
       TWINE_USERNAME: ${{secrets.twine_username}}
