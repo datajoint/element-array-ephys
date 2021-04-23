@@ -22,7 +22,7 @@ setup(
     author='DataJoint NEURO',
     author_email='info@vathes.com',
     license='MIT',
-    url='https://github.com/datajoint/element-array-ephys',
+    url='https://github.com/ttngu207/element-array-ephys',
     keywords='neuroscience electrophysiology science datajoint',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     scripts=[],
