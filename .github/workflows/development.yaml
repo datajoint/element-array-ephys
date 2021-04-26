@@ -28,6 +28,7 @@ jobs:
           echo "PRERELEASE=${PRERELEASE}"
           echo "DRAFT=${DRAFT}"
   build:
+    needs: test-changelog
     runs-on: ubuntu-latest
     strategy:
       matrix:
