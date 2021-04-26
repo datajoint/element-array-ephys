@@ -121,7 +121,7 @@ jobs:
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py3.8-alpine.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
-            sh -lc "pip install twine && python -m twine upload dist/*"
+            sh -lc "pip install twine && python -m twine upload --repository testpypi dist/*"
       - name: Determine pip artifact paths
         run: |
           echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
