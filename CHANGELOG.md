@@ -9,4 +9,4 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Readers for: `SpikeGLX`, `Open Ephys`, `Kilosort`
 + Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
 
-[0.1.0a3]: https://github.com/datajoint/element-array-ephys/releases/tag/HEAD
+[0.1.0a3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0a3
