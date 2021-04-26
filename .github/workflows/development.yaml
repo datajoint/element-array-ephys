@@ -5,6 +5,28 @@ on:
     tags:
       - '*.*.*'
 jobs:
+  test-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+      - name: Verify changelog parsing
+        env:
+          TAG_NAME: ${{steps.changelog_reader.outputs.version}}
+          RELEASE_NAME: Release ${{steps.changelog_reader.outputs.version}}
+          BODY: ${{steps.changelog_reader.outputs.changes}}
+          PRERELEASE: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          DRAFT: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
+        run: |
+          echo "TAG_NAME=${TAG_NAME}"
+          echo "RELEASE_NAME=${RELEASE_NAME}"
+          echo "BODY=${BODY}"
+          echo "PRERELEASE=${PRERELEASE}"
+          echo "DRAFT=${DRAFT}"
   build:
     runs-on: ubuntu-latest
     strategy:
