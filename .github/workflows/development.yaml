@@ -86,7 +86,6 @@ jobs:
         run: |
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
-
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
