@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Compile image
         run: |
-          export PKG_NAME=$(cat setup.py | awk -F\' '/pkg_name = / {print $2}')
+          export PKG_NAME=$(echo ${PWD##*/} | sed 's|-|_|g')
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           export HOST_UID=$(id -u)
           docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
@@ -53,16 +53,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      TWINE_USERNAME: ${{secrets.twine_username}}
-      TWINE_PASSWORD: ${{secrets.twine_password}}
+      TWINE_USERNAME: ${{secrets.twine_test_username}}
+      TWINE_PASSWORD: ${{secrets.twine_test_password}}
     outputs:
       release_upload_url: ${{steps.create_gh_release.outputs.upload_url}}
     steps:
       - uses: actions/checkout@v2
       - name: Determine package version
         run: |
-          SDIST_PKG_NAME=$(cat setup.py | awk -F\' '/ name=/ {print $2}')
-          PKG_NAME=$(cat setup.py | awk -F\' '/pkg_name = / {print $2}')
+          SDIST_PKG_NAME=${PWD##*/}
+          PKG_NAME=$(echo ${PWD##*/} | sed 's|-|_|g')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
