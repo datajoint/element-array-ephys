@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Compile image
         run: |
-          export PKG_NAME=$(echo ${PWD##*/} | sed 's|-|_|g')
+          export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           export HOST_UID=$(id -u)
           docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
@@ -84,8 +84,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Determine package version
         run: |
-          SDIST_PKG_NAME=${PWD##*/}
-          PKG_NAME=$(echo ${PWD##*/} | sed 's|-|_|g')
+          PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
+          SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
+
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
