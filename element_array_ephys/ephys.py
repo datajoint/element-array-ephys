@@ -98,8 +98,9 @@ class AcquisitionSoftware(dj.Lookup):
 
 
 @schema
-class ProbeInsertion(dj.Manual):  # (acute)
+class ProbeInsertion(dj.Manual):
     definition = """
+    # Probe insertion chronically implanted into an animal.
     -> Subject  
     insertion_number: tinyint unsigned
     ---
@@ -111,6 +112,7 @@ class ProbeInsertion(dj.Manual):  # (acute)
 @schema
 class InsertionLocation(dj.Manual):
     definition = """
+    # Brain Location of a given probe insertion.
     -> ProbeInsertion
     ---
     -> SkullReference
@@ -126,6 +128,7 @@ class InsertionLocation(dj.Manual):
 @schema
 class EphysRecording(dj.Imported):
     definition = """
+    # Ephys recording from a probe insertion for a given session.
     -> Session
     -> ProbeInsertion      
     ---
@@ -136,6 +139,7 @@ class EphysRecording(dj.Imported):
 
     class EphysFile(dj.Part):
         definition = """
+        # Paths of files of a given EphysRecording round.
         -> master
         file_path: varchar(255)  # filepath relative to root data directory
         """
@@ -236,6 +240,7 @@ class EphysRecording(dj.Imported):
 @schema
 class LFP(dj.Imported):
     definition = """
+    # Acquired local field potential (LFP) from a given Ephys recording.
     -> EphysRecording
     ---
     lfp_sampling_rate: float   # (Hz)
@@ -328,6 +333,7 @@ class LFP(dj.Imported):
 @schema
 class ClusteringMethod(dj.Lookup):
     definition = """
+    # Method for clustering
     clustering_method: varchar(16)
     ---
     clustering_method_desc: varchar(1000)
@@ -340,6 +346,7 @@ class ClusteringMethod(dj.Lookup):
 @schema
 class ClusteringParamSet(dj.Lookup):
     definition = """
+    # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
     -> ClusteringMethod    
@@ -390,6 +397,7 @@ class ClusterQualityLabel(dj.Lookup):
 @schema
 class ClusteringTask(dj.Manual):
     definition = """
+    # Manual table for defining a clustering task ready to be run
     -> EphysRecording
     -> ClusteringParamSet
     ---
@@ -407,6 +415,7 @@ class Clustering(dj.Imported):
     + If `task_mode == "load"`: verify output
     """
     definition = """
+    # Clustering Procedure
     -> ClusteringTask
     ---
     clustering_time: datetime  # time of generation of this set of clustering results 
@@ -433,6 +442,7 @@ class Clustering(dj.Imported):
 @schema
 class Curation(dj.Manual):
     definition = """
+    # Manual curation procedure
     -> Clustering
     curation_id: int
     ---
@@ -468,12 +478,14 @@ class Curation(dj.Manual):
 @schema
 class CuratedClustering(dj.Imported):
     definition = """
+    # Clustering results of a curation.
     -> Curation    
     """
 
     class Unit(dj.Part):
         definition = """   
         -> master
+        # Properties of a given unit from a round of clustering (and curation)
         unit: int
         ---
         -> probe.ElectrodeConfig.Electrode  # electrode with highest waveform amplitude for this unit
@@ -538,19 +550,22 @@ class CuratedClustering(dj.Imported):
 @schema
 class WaveformSet(dj.Imported):
     definition = """
+    # A set of spike waveforms for units out of a given CuratedClustering
     -> CuratedClustering
     """
 
     class PeakWaveform(dj.Part):
         definition = """
+        # Mean waveform across spikes for a given unit at its representative electrode
         -> master
         -> CuratedClustering.Unit
         ---
-        peak_electrode_waveform: longblob  # (uV) mean waveform for this unit's peak electrode
+        peak_electrode_waveform: longblob  # (uV) mean waveform for a given unit at its representative electrode
         """
 
     class Waveform(dj.Part):
         definition = """
+        # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
         -> probe.ElectrodeConfig.Electrode  
