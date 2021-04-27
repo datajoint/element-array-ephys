@@ -26,6 +26,7 @@ def activate(schema_name, *, create_schema=True, create_tables=True):
 @schema
 class ProbeType(dj.Lookup):
     definition = """
+    # Type of probe, with specific electrodes geometry defined
     probe_type: varchar(32)  # e.g. neuropixels_1.0
     """
 
@@ -136,7 +137,8 @@ class ProbeType(dj.Lookup):
 
 @schema
 class Probe(dj.Lookup):
-    definition = """  # represent a physical probe
+    definition = """
+    # Represent a physical probe with unique identification
     probe: varchar(32)  # unique identifier for this model of probe (e.g. serial number)
     ---
     -> ProbeType
@@ -147,6 +149,7 @@ class Probe(dj.Lookup):
 @schema
 class ElectrodeConfig(dj.Lookup):
     definition = """
+    # The electrode configuration setting on a given probe
     electrode_config_hash: uuid  
     ---
     -> ProbeType
