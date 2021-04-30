@@ -15,7 +15,7 @@ See [Background](Background.md) for the background information and development t
 
 ## The Pipeline Architecture
 
-![element-array-ephys diagram](images/attached_ephys_element.svg)
+![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
 As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
 and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.
