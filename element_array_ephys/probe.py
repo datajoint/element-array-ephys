@@ -8,7 +8,7 @@ import numpy as np
 schema = dj.schema()
 
 
-def activate(schema_name, create_schema=True, create_tables=True):
+def activate(schema_name, *, create_schema=True, create_tables=True):
     """
     activate(schema_name, create_schema=True, create_tables=True)
         :param schema_name: schema name on the database server to activate the `probe` element
@@ -17,10 +17,16 @@ def activate(schema_name, create_schema=True, create_tables=True):
     """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
+    # Add neuropixels probes
+    for probe_type in ('neuropixels 1.0 - 3A', 'neuropixels 1.0 - 3B',
+                       'neuropixels 2.0 - SS', 'neuropixels 2.0 - MS'):
+        ProbeType.create_neuropixels_probe(probe_type)
+
 
 @schema
 class ProbeType(dj.Lookup):
     definition = """
+    # Type of probe, with specific electrodes geometry defined
     probe_type: varchar(32)  # e.g. neuropixels_1.0
     """
 
@@ -131,8 +137,9 @@ class ProbeType(dj.Lookup):
 
 @schema
 class Probe(dj.Lookup):
-    definition = """  # represent a physical probe
-    probe: varchar(32)  # unique identifier for this model of probe (e.g. part number)
+    definition = """
+    # Represent a physical probe with unique identification
+    probe: varchar(32)  # unique identifier for this model of probe (e.g. serial number)
     ---
     -> ProbeType
     probe_comment='' :  varchar(1000)
@@ -142,6 +149,7 @@ class Probe(dj.Lookup):
 @schema
 class ElectrodeConfig(dj.Lookup):
     definition = """
+    # The electrode configuration setting on a given probe
     electrode_config_hash: uuid  
     ---
     -> ProbeType
