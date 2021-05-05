@@ -15,7 +15,7 @@ See [Background](Background.md) for the background information and development t
 
 ## The Pipeline Architecture
 
-![element-array-ephys diagram](images/attached_ephys_element.svg)
+![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
 As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
 and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.
@@ -31,7 +31,7 @@ and also requires some notion of ***Location*** as a dependency for ***Insertion
 
 ### Extracellular ephys recording
 
-+ ***ProbeInsertion*** - a surgical insertion of a probe onto the animal. Every experimental session consists of one or more ***ProbeInsertion***, with corresponding ***InsertionLocation***
++ ***ProbeInsertion*** - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in ***ProbeInsertion*** with a corresponding ***InsertionLocation*** each
 + ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
     
 ### Clusters and spikes
@@ -42,7 +42,7 @@ This ephys element features automatic ingestion for spike sorting results from t
 + ***Curation*** - specify instance(s) of curations performed on the output of a given ***Clustering***
 + ***CuratedClustering*** - set of results from a particular round of clustering/curation
     + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
-    + ***WaveformSet*** - A set of spike waveforms for units out of a given CuratedClustering
+    + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
 
 
 ## Usage
