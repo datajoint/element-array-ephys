@@ -44,6 +44,15 @@ This ephys element features automatic ingestion for spike sorting results from t
     + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
     + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
 
+## Installation
+```
+pip install element-array-ephys
+```
+
+If you already have an older version of ***element-array-ephys*** installed using `pip`, upgrade with
+```
+pip install --upgrade element-array-ephys
+```
 
 ## Usage
 
