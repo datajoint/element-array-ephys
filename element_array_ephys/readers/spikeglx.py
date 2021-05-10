@@ -131,14 +131,15 @@ class SpikeGLX:
 
         spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample
         # ignore spikes at the beginning or end of raw data
-        spikes = spikes[np.logical_and(spikes > -wf_win[0], spikes < data.shape[0] - wf_win[-1])]
+        spikes = spikes[np.logical_and(spikes > -wf_win[0],
+                                       spikes < data.shape[0] - wf_win[-1])]
 
         np.random.shuffle(spikes)
         spikes = spikes[:n_wf]
         if len(spikes) > 0:
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]), channel_ind]
-                                   * channel_bit_volts
+            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]),
+                                   channel_ind] * channel_bit_volts
                                    for spk in spikes])
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
@@ -172,7 +173,8 @@ class SpikeGLXMeta:
             self.probe_model = str(probe_model)
 
         # Get recording time
-        self.recording_time = datetime.strptime(self.meta.get('fileCreateTime_original', self.meta['fileCreateTime']),
+        self.recording_time = datetime.strptime(self.meta.get('fileCreateTime_original',
+                                                              self.meta['fileCreateTime']),
                                                 '%Y-%m-%dT%H:%M:%S')
         self.recording_duration = self.meta['fileTimeSecs']
 
@@ -180,14 +182,19 @@ class SpikeGLXMeta:
         try:
             self.probe_SN = self.meta.get('imProbeSN', self.meta.get('imDatPrb_sn'))
         except KeyError:
-            raise KeyError('Probe Serial Number not found in either "imProbeSN" or "imDatPrb_sn"')
+            raise KeyError('Probe Serial Number not found in'
+                           ' either "imProbeSN" or "imDatPrb_sn"')
 
-        self.chanmap = self._parse_chanmap(self.meta['~snsChanMap']) if '~snsChanMap' in self.meta else None
-        self.shankmap = self._parse_shankmap(self.meta['~snsShankMap']) if '~snsShankMap' in self.meta else None
-        self.imroTbl = self._parse_imrotbl(self.meta['~imroTbl']) if '~imroTbl' in self.meta else None
+        self.chanmap = (self._parse_chanmap(self.meta['~snsChanMap'])
+                        if '~snsChanMap' in self.meta else None)
+        self.shankmap = (self._parse_shankmap(self.meta['~snsShankMap'])
+                         if '~snsShankMap' in self.meta else None)
+        self.imroTbl = (self._parse_imrotbl(self.meta['~imroTbl'])
+                        if '~imroTbl' in self.meta else None)
 
         # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
-        self.recording_channels = np.arange(len(self.imroTbl['data']))[self.get_recording_channels_indices(exclude_sync=True)]
+        self.recording_channels = np.arange(len(self.imroTbl['data']))[
+            self.get_recording_channels_indices(exclude_sync=True)]
 
     @staticmethod
     def _parse_chanmap(raw):
@@ -276,12 +283,15 @@ class SpikeGLXMeta:
 
     def get_recording_channels_indices(self, exclude_sync=False):
         """
-        The indices of recorded channels (in chanmap) with respect to the channels listed in the imro table
+        The indices of recorded channels (in chanmap)
+         with respect to the channels listed in the imro table
         """
         recorded_chns_ind = [int(v[0]) for k, v in self.chanmap.items()
-                             if k != 'shape' and (not k.startswith('SY') if exclude_sync else True)]
+                             if k != 'shape'
+                             and (not k.startswith('SY') if exclude_sync else True)]
         orig_chns_ind = self.get_original_chans()
-        _, _, chns_ind = np.intersect1d(orig_chns_ind, recorded_chns_ind, return_indices=True)
+        _, _, chns_ind = np.intersect1d(orig_chns_ind, recorded_chns_ind,
+                                        return_indices=True)
         return chns_ind
 
     def get_original_chans(self):

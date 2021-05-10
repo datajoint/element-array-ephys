@@ -1,2 +1,3 @@
-datajoint>=0.13.dev5
+datajoint>=0.13
 pyopenephys
+openpyxl
