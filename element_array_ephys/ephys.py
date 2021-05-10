@@ -483,9 +483,9 @@ class CuratedClustering(dj.Imported):
     """
 
     class Unit(dj.Part):
-        definition = """   
-        -> master
+        definition = """
         # Properties of a given unit from a round of clustering (and curation)
+        -> master
         unit: int
         ---
         -> probe.ElectrodeConfig.Electrode  # electrode with highest waveform amplitude for this unit
