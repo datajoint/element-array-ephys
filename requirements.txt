@@ -1,3 +1,4 @@
 datajoint>=0.13
 pyopenephys
 openpyxl
+pynwb==1.4.0
