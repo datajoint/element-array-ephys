@@ -15,7 +15,7 @@ See [Background](Background.md) for the background information and development t
 
 ## The Pipeline Architecture
 
-![ephys pipeline diagram](images/attached_ephys_element.svg)
+![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
 As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
 and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.
@@ -27,32 +27,56 @@ and also requires some notion of ***Location*** as a dependency for ***Insertion
     + An electrode here refers to one recordable electrode site on the Neuropixels probe (e.g. for Neuropixels 1.0, there are 960 sites per shank)
 + ***Probe*** - record of an actual physical probe, identifiable by some unique ID (e.g. probe's serial number)
 + ***ElectrodeConfig*** - particular electrode configuration to be used for ephys recording
-+ ***ElectrodeConfig.Electrode*** - corresponding electrodes in ***ProbeType.Electrode*** that are used for recording in this electrode configuration 
-(e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe)
++ ***ElectrodeConfig.Electrode*** - corresponding electrodes in ***ProbeType.Electrode*** that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe)
 
 ### Extracellular ephys recording
 
-+ ***ProbeInsertion*** - a surgical insertion of a probe onto the animal. 
-Every experimental session consists of one or more ***ProbeInsertion***, with corresponding ***InsertionLocation***
-+ ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, 
-specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
-    + ***get_npx_data_dir*** method - the class ***EphysRecording*** requires user 
-    to supply a method to retrieve the directory containing the recorded neuropixels data (e.g. `*.ap.meta`, `*.ap.bin`, etc.), 
-    where the method's input arguments are the primary attributes identifying one ***EphysRecording***
++ ***ProbeInsertion*** - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in ***ProbeInsertion*** with a corresponding ***InsertionLocation*** each
++ ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
     
 ### Clusters and spikes
 
 This ephys element features automatic ingestion for spike sorting results from the ***kilosort*** method. 
 
 + ***Clustering*** - specify instance(s) of clustering on an ***EphysRecording***, by some ***ClusteringMethod***
-    + ***get_ks_data_dir*** method - the class ***Clustering*** requires user 
-    to supply a method to retrieve the directory containing the kilosort results, 
-    where the method's input arguments are the primary attributes identifying one ***Clustering***
-+ ***Unit*** - Identified unit(s) from one ***Clustering***, with associated ***ClusterQualityLabel***
-    + ***UnitSpikeTimes*** - spike times per unit
-    + ***Waveform*** - mean waveform across spikes per unit per recording electrode
++ ***Curation*** - specify instance(s) of curations performed on the output of a given ***Clustering***
++ ***CuratedClustering*** - set of results from a particular round of clustering/curation
+    + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
+    + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
 
+## Installation
+```
+pip install element-array-ephys
+```
+
+If you already have an older version of ***element-array-ephys*** installed using `pip`, upgrade with
+```
+pip install --upgrade element-array-ephys
+```
 
 ## Usage
+
+### Element activation
+
+To activate the `element-array-ephys`, ones need to provide:
+
+1. Schema names
+    + schema name for the probe module
+    + schema name for the ephys module
+
+2. Upstream tables
+    + Session table
+    + SkullReference table (Reference table for InsertionLocation, specifying the skull reference)
+
+3. Utility functions
+    + get_ephys_root_data_dir()
+    + get_session_directory()
+
+For more detail, check the docstring of the `element-array-ephys`:
+
+    help(probe.activate)
+    help(ephys.activate)
+
+### Example usage
 
 See [this project](https://github.com/datajoint/workflow-array-ephys) for an example usage of this Array Electrophysiology Element.

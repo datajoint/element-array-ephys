@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path
 
-pkg_name = [p for p in find_packages() if '.' not in p][0]
+pkg_name = next(p for p in find_packages() if '.' not in p)
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.md'), 'r') as f:
@@ -18,6 +18,7 @@ setup(
     version=__version__,
     description="DataJoint Element for Extracellular Array Electrophysiology",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='DataJoint NEURO',
     author_email='info@vathes.com',
     license='MIT',
