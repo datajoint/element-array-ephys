@@ -1,5 +1,7 @@
 import datajoint as dj
 import pathlib
+import uuid
+import hashlib
 
 
 dj.config['enable_python_native_blobs'] = True
@@ -54,3 +56,14 @@ def find_root_directory(root_directories, full_path):
     except StopIteration:
         raise FileNotFoundError('No valid root directory found (from {})'
                                 ' for {}'.format(root_directories, full_path))
+
+
+def dict_to_uuid(key):
+    """
+    Given a dictionary `key`, returns a hash string as UUID
+    """
+    hashed = hashlib.md5()
+    for k, v in sorted(key.items()):
+        hashed.update(str(k).encode())
+        hashed.update(str(v).encode())
+    return uuid.UUID(hex=hashed.hexdigest())
