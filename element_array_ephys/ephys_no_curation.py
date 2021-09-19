@@ -427,6 +427,21 @@ class Clustering(dj.Imported):
     def make(self, key):
         task_mode, output_dir = (ClusteringTask & key).fetch1(
             'task_mode', 'clustering_output_dir')
+
+        if not output_dir:
+            # if "clustering_output_dir" is not specified, set output directory to:
+            # session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
+            # e.g.: sub4/sess1/probe_2/kilosort2_0
+            sess_dir = pathlib.Path(get_session_directory(key))
+            output_dir = (sess_dir / f'probe_{key["insertion_number"]}'
+                          / f'{key["clustering_method"].replace(".", "-")}_{key["paramset_idx"]}')
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # update clustering_output_dir
+            root_dir = find_root_directory(get_ephys_root_data_dir(), output_dir)
+            Clustering.update1(
+                {**key, 'clustering_output_dir': output_dir.relative_to(root_dir).as_posix()})
+            
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
