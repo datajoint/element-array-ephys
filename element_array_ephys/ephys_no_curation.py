@@ -403,7 +403,7 @@ class ClusteringTask(dj.Manual):
     -> EphysRecording
     -> ClusteringParamSet
     ---
-    clustering_output_dir: varchar(255)  #  clustering output directory relative to the clustering root data directory
+    clustering_output_dir='': varchar(255)  #  clustering output directory relative to the clustering root data directory
     task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
 
@@ -442,46 +442,10 @@ class Clustering(dj.Imported):
 
 
 @schema
-class Curation(dj.Manual):
-    definition = """
-    # Manual curation procedure
-    -> Clustering
-    curation_id: int
-    ---
-    curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
-    quality_control: bool               # has this clustering result undergone quality control?
-    manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)  
-    """
-
-    def create1_from_clustering_task(self, key, curation_note=''):
-        """
-        A convenient function to create a new corresponding "Curation"
-         for a particular "ClusteringTask"
-        """
-        if key not in Clustering():
-            raise ValueError(f'No corresponding entry in Clustering available'
-                             f' for: {key}; do `Clustering.populate(key)`')
-
-        task_mode, output_dir = (ClusteringTask & key).fetch1(
-            'task_mode', 'clustering_output_dir')
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        creation_time, is_curated, is_qc = kilosort.extract_clustering_info(kilosort_dir)
-        # Synthesize curation_id
-        curation_id = dj.U().aggr(self & key, n='ifnull(max(curation_id)+1,1)').fetch1('n')
-        self.insert1({**key, 'curation_id': curation_id,
-                      'curation_time': creation_time, 'curation_output_dir': output_dir,
-                      'quality_control': is_qc, 'manual_curation': is_curated,
-                      'curation_note': curation_note})
-
-
-@schema
 class CuratedClustering(dj.Imported):
     definition = """
-    # Clustering results of a curation.
-    -> Curation    
+    # Clustering results of the spike sorting step.
+    -> Clustering    
     """
 
     class Unit(dj.Part):
@@ -499,7 +463,7 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        output_dir = (Curation & key).fetch1('curation_output_dir')
+        output_dir = (Clustering & key).fetch1('clustering_output_dir')
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
@@ -577,7 +541,7 @@ class WaveformSet(dj.Imported):
         """
 
     def make(self, key):
-        output_dir = (Curation & key).fetch1('curation_output_dir')
+        output_dir = (Clustering & key).fetch1('clustering_output_dir')
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
@@ -589,7 +553,7 @@ class WaveformSet(dj.Imported):
         recording_key = (EphysRecording & key).fetch1('KEY')
         channel2electrodes = get_neuropixels_channel2electrode_map(recording_key, acq_software)
 
-        is_qc = (Curation & key).fetch1('quality_control')
+        is_qc = (Clustering & key).fetch1('quality_control')
 
         # Get all units
         units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(
