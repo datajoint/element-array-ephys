@@ -25,7 +25,8 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
         :param linking_module: a module name or a module containing the
          required dependencies to activate the `ephys` element:
             Upstream tables:
-                + Session: parent table to ProbeInsertion, typically identifying a recording session
+                + Subject: table referenced by ProbeInsertion, typically identifying the animal undergoing a probe insertion
+                + Session: table referenced by EphysRecording, typically identifying a recording session
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
@@ -97,11 +98,12 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class ProbeInsertion(dj.Manual):
     definition = """
-    # Probe insertion implanted into an animal for a given session.
-    -> Session
+    # Probe insertion chronically implanted into an animal.
+    -> Subject  
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
+    insertion_datetime=null: datetime
     """
 
 
@@ -125,6 +127,7 @@ class InsertionLocation(dj.Manual):
 class EphysRecording(dj.Imported):
     definition = """
     # Ephys recording from a probe insertion for a given session.
+    -> Session
     -> ProbeInsertion      
     ---
     -> probe.ElectrodeConfig
@@ -478,7 +481,7 @@ class CuratedClustering(dj.Imported):
     """
 
     class Unit(dj.Part):
-        definition = """   
+        definition = """
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int
@@ -743,4 +746,3 @@ def generate_electrode_config(probe_type: str, electrodes: list):
                                                for electrode in electrodes)
 
     return electrode_config_key
-
