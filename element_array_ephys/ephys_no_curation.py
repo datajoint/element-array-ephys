@@ -441,7 +441,7 @@ class Clustering(dj.Imported):
             root_dir = find_root_directory(get_ephys_root_data_dir(), output_dir)
             Clustering.update1(
                 {**key, 'clustering_output_dir': output_dir.relative_to(root_dir).as_posix()})
-            
+
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
@@ -568,13 +568,11 @@ class WaveformSet(dj.Imported):
         recording_key = (EphysRecording & key).fetch1('KEY')
         channel2electrodes = get_neuropixels_channel2electrode_map(recording_key, acq_software)
 
-        is_qc = (Clustering & key).fetch1('quality_control')
-
         # Get all units
         units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(
             as_dict=True, order_by='unit')}
 
-        if is_qc:
+        if (kilosort_dir / 'mean_waveforms.npy').exists():
             unit_waveforms = np.load(kilosort_dir / 'mean_waveforms.npy')  # unit x channel x sample
 
             def yield_unit_waveforms():
