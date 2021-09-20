@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class Kilosort:
 
-    kilosort_files = [
+    _kilosort_core_files = [
         'params.py',
         'amplitudes.npy',
         'channel_map.npy',
@@ -22,21 +22,23 @@ class Kilosort:
         'similar_templates.npy',
         'spike_templates.npy',
         'spike_times.npy',
-        'spike_times_sec.npy',
-        'spike_times_sec_adj.npy',
         'template_features.npy',
         'template_feature_ind.npy',
         'templates.npy',
         'templates_ind.npy',
         'whitening_mat.npy',
         'whitening_mat_inv.npy',
-        'spike_clusters.npy',
+        'spike_clusters.npy'
+    ]
+
+    _kilosort_additional_files = [
+        'spike_times_sec.npy',
+        'spike_times_sec_adj.npy',
         'cluster_groups.csv',
         'cluster_KSLabel.tsv'
     ]
 
-    # keys to self.files, .data are file name e.g. self.data['params'], etc.
-    kilosort_keys = [path.splitext(kilosort_file)[0] for kilosort_file in kilosort_files]
+    kilosort_files = _kilosort_core_files + _kilosort_additional_files
 
     def __init__(self, kilosort_dir):
         self._kilosort_dir = pathlib.Path(kilosort_dir)
@@ -44,25 +46,35 @@ class Kilosort:
         self._data = None
         self._clusters = None
 
+        self.validate()
+
         params_filepath = kilosort_dir / 'params.py'
-
-        if not params_filepath.exists():
-            raise FileNotFoundError(f'No Kilosort output found in: {kilosort_dir}')
-
         self._info = {'time_created': datetime.fromtimestamp(params_filepath.stat().st_ctime),
                       'time_modified': datetime.fromtimestamp(params_filepath.stat().st_mtime)}
 
     @property
     def data(self):
         if self._data is None:
-            self._stat()
+            self._load()
         return self._data
 
     @property
     def info(self):
         return self._info
 
-    def _stat(self):
+    def validate(self):
+        """
+        Check if this is a valid set of kilosort outputs - i.e. all crucial files exist
+        """
+        missing_files = []
+        for f in Kilosort._kilosort_core_files:
+            full_path = self._kilosort_dir / f
+            if not full_path.exists():
+                missing_files.append(f)
+        if missing_files:
+            raise FileNotFoundError(f'Kilosort files missing in ({self._kilosort_dir}): {missing_files}')
+
+    def _load(self):
         self._data = {}
         for kilosort_filename in Kilosort.kilosort_files:
             kilosort_filepath = self._kilosort_dir / kilosort_filename
