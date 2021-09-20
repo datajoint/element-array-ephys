@@ -104,6 +104,59 @@ class ProbeInsertion(dj.Manual):
     -> probe.Probe
     """
 
+    @classmethod
+    def auto_generate_entries(cls, session_key):
+        """
+        Method to auto-generate ProbeInsertion entries for a particular session
+        Probe information is inferred from the meta data found in the session data directory
+        """
+        sess_dir = pathlib.Path(get_session_directory(session_key))
+        # search session dir and determine acquisition software
+        for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
+                                                 ['SpikeGLX', 'Open Ephys']):
+            ephys_meta_filepaths = [fp for fp in sess_dir.rglob(ephys_pattern)]
+            if len(ephys_meta_filepaths):
+                acq_software = ephys_acq_type
+                break
+        else:
+            raise FileNotFoundError(
+                f'Ephys recording data not found!'
+                f' Neither SpikeGLX nor OpenEphys recording files found in: {sess_dir}')
+
+        probe_list, probe_insertion_list = [], []
+        if acq_software == 'SpikeGLX':
+            for meta_filepath in ephys_meta_filepaths:
+                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+
+                probe_key = {'probe_type': spikeglx_meta.probe_model,
+                             'probe': spikeglx_meta.probe_SN}
+                if (probe_key['probe'] not in [p['probe'] for p in probe_list]
+                        and probe_key not in probe.Probe()):
+                    probe_list.append(probe_key)
+
+                probe_dir = meta_filepath.parent
+                probe_number = re.search('(imec)?\d{1}$', probe_dir.name).group()
+                probe_number = int(probe_number.replace('imec', ''))
+
+                probe_insertion_list.append({**session_key,
+                                             'probe': spikeglx_meta.probe_SN,
+                                             'insertion_number': int(probe_number)})
+        elif acq_software == 'Open Ephys':
+            loaded_oe = openephys.OpenEphys(sess_dir)
+            for probe_idx, oe_probe in enumerate(loaded_oe.probes.values()):
+                probe_key = {'probe_type': oe_probe.probe_model, 'probe': oe_probe.probe_SN}
+                if (probe_key['probe'] not in [p['probe'] for p in probe_list]
+                        and probe_key not in probe.Probe()):
+                    probe_list.append(probe_key)
+                probe_insertion_list.append({**session_key,
+                                             'probe': oe_probe.probe_SN,
+                                             'insertion_number': probe_idx})
+        else:
+            raise NotImplementedError(f'Unknown acquisition software: {acq_software}')
+
+        probe.Probe.insert(probe_list)
+        cls.insert(probe_insertion_list)
+
 
 @schema
 class InsertionLocation(dj.Manual):
@@ -130,6 +183,7 @@ class EphysRecording(dj.Imported):
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
     sampling_rate: float # (Hz) 
+    recording_datetime: datetime # datetime of the recording from this probe
     recording_duration: float # (seconds) duration of the recording from this probe
     """
 
@@ -187,6 +241,7 @@ class EphysRecording(dj.Imported):
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
                           'sampling_rate': spikeglx_meta.meta['imSampRate'],
+                          'recording_datetime': spikeglx_meta.recording_time,
                           'recording_duration': spikeglx_meta.recording_duration})
 
             root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
@@ -222,6 +277,7 @@ class EphysRecording(dj.Imported):
                 **generate_electrode_config(probe_type, electrode_group_members),
                 'acq_software': acq_software,
                 'sampling_rate': probe_data.ap_meta['sample_rate'],
+                'recording_datetime': probe_data.recording_info['recording_datetimes'][0],
                 'recording_duration': np.sum(probe_data.recording_info['recording_durations'])})
 
             root_dir = find_root_directory(
