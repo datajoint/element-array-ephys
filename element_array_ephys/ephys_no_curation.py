@@ -72,7 +72,14 @@ def get_ephys_root_data_dir() -> list:
         :return: a string for full path to the ephys root data directory,
          or list of strings for possible root data directories
     """
-    return _linking_module.get_ephys_root_data_dir()
+    root_directories = _linking_module.get_ephys_root_data_dir()
+    if isinstance(root_directories, (str, pathlib.Path)):
+        root_directories = [root_directories]
+
+    if hasattr(_linking_module, 'get_processed_root_data_dir'):
+        root_directories.append(_linking_module.get_processed_root_data_dir())
+
+    return root_directories
 
 
 def get_session_directory(session_key: dict) -> str:
@@ -517,7 +524,7 @@ class Clustering(dj.Imported):
 
             # update clustering_output_dir
             Clustering.update1(
-                {**key, 'clustering_output_dir': output_dir.relative_to(root_dir).as_posix()})
+                {**key, 'clustering_output_dir': output_dir.relative_to(processed_dir).as_posix()})
 
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
