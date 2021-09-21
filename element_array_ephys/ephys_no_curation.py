@@ -36,6 +36,9 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                     Retrieve the session directory containing the recorded Neuropixels data for a given Session
                     :param session_key: a dictionary of one Session `key`
                     :return: a string for full path to the session directory
+                + get_processed_root_data_dir() -> str:
+                    Retrieves the root directory for all processed data to be found from or written to
+                    :return: a string for full path to the root directory for processed data
     """
 
     if isinstance(linking_module, str):
@@ -83,6 +86,18 @@ def get_session_directory(session_key: dict) -> str:
     return _linking_module.get_session_directory(session_key)
 
 
+def get_processed_root_data_dir() -> str:
+    """
+    get_processed_root_data_dir() -> str:
+        Retrieves the root directory for all processed data to be found from or written to
+        :return: a string for full path to the root directory for processed data
+    """
+
+    if hasattr(_linking_module, 'get_processed_root_data_dir'):
+        return _linking_module.get_processed_root_data_dir()
+    else:
+        return get_ephys_root_data_dir()[0]
+
 # ----------------------------- Table declarations ----------------------
 
 
@@ -121,7 +136,7 @@ class ProbeInsertion(dj.Manual):
         else:
             raise FileNotFoundError(
                 f'Ephys recording data not found!'
-                f' Neither SpikeGLX nor OpenEphys recording files found in: {sess_dir}')
+                f' Neither SpikeGLX nor Open Ephys recording files found in: {sess_dir}')
 
         probe_list, probe_insertion_list = [], []
         if acq_software == 'SpikeGLX':
@@ -155,7 +170,7 @@ class ProbeInsertion(dj.Manual):
             raise NotImplementedError(f'Unknown acquisition software: {acq_software}')
 
         probe.Probe.insert(probe_list)
-        cls.insert(probe_insertion_list)
+        cls.insert(probe_insertion_list, skip_duplicates=True)
 
 
 @schema
@@ -488,13 +503,16 @@ class Clustering(dj.Imported):
             # if "clustering_output_dir" is not specified, set output directory to:
             # session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
             # e.g.: sub4/sess1/probe_2/kilosort2_0
+            processed_dir = pathlib.Path(get_processed_root_data_dir())
+            root_dir = find_root_directory(get_ephys_root_data_dir(), output_dir)
             sess_dir = pathlib.Path(get_session_directory(key))
-            output_dir = (sess_dir / f'probe_{key["insertion_number"]}'
+            output_dir = (processed_dir
+                          / sess_dir.relative_to(root_dir)
+                          / f'probe_{key["insertion_number"]}'
                           / f'{key["clustering_method"].replace(".", "-")}_{key["paramset_idx"]}')
             output_dir.mkdir(parents=True, exist_ok=True)
 
             # update clustering_output_dir
-            root_dir = find_root_directory(get_ephys_root_data_dir(), output_dir)
             Clustering.update1(
                 {**key, 'clustering_output_dir': output_dir.relative_to(root_dir).as_posix()})
 
@@ -534,7 +552,7 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        output_dir = (Clustering & key).fetch1('clustering_output_dir')
+        output_dir = (ClusteringTask & key).fetch1('clustering_output_dir')
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
@@ -612,7 +630,7 @@ class WaveformSet(dj.Imported):
         """
 
     def make(self, key):
-        output_dir = (Clustering & key).fetch1('clustering_output_dir')
+        output_dir = (ClusteringTask & key).fetch1('clustering_output_dir')
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
