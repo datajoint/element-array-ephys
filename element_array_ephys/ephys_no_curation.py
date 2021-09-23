@@ -418,8 +418,7 @@ class ClusteringMethod(dj.Lookup):
     clustering_method_desc: varchar(1000)
     """
 
-    contents = [('kilosort', 'kilosort clustering method'),
-                ('kilosort2', 'kilosort2 clustering method')]
+    contents = [('kilosort3', 'kilosort3 clustering method')]
 
 
 @schema
@@ -487,6 +486,50 @@ class ClusteringTask(dj.Manual):
     task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
 
+    @classmethod
+    def infer_output_dir(cls, key, relative=False):
+        """
+        Given a 'key' to an entry in this table
+        Return the expected clustering_output_dir based on the following convention:
+            processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
+            e.g.: sub4/sess1/probe_2/kilosort2_0
+        """
+        processed_dir = pathlib.Path(get_processed_root_data_dir())
+        sess_dir = find_full_path(get_ephys_root_data_dir(),
+                                  get_session_directory(key))
+        root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
+
+        output_dir = (processed_dir
+                      / sess_dir.relative_to(root_dir)
+                      / f'probe_{key["insertion_number"]}'
+                      / f'{key["clustering_method"].replace(".", "-")}_{key["paramset_idx"]}')
+        return output_dir.relative_to(processed_dir) if relative else output_dir
+
+    @classmethod
+    def auto_generate_entries(cls, ephys_recording_key):
+        """
+        Method to auto-generate ClusteringTask entries for a particular ephys recording
+            Output directory is auto-generated based on the convention
+             defined in `ClusteringTask.infer_output_dir()`
+            Default parameter set used: paramset_idx = 0
+        """
+        key = {**ephys_recording_key, 'paramset_idx': 0}
+
+        processed_dir = get_processed_root_data_dir()
+        output_dir = ClusteringTask.infer_output_dir(key, relative=False)
+
+        try:
+            kilosort.Kilosort(output_dir)  # check if the directory is a valid Kilosort output
+        except FileNotFoundError:
+            task_mode = 'trigger'
+        else:
+            task_mode = 'load'
+
+        cls.insert1({
+            **key,
+            'clustering_output_dir': output_dir.relative_to(processed_dir).as_posix(),
+            'task_mode': task_mode})
+
 
 @schema
 class Clustering(dj.Imported):
@@ -509,30 +552,17 @@ class Clustering(dj.Imported):
             'task_mode', 'clustering_output_dir')
 
         if not output_dir:
-            # if "clustering_output_dir" is not specified, set output directory to:
-            # session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
-            # e.g.: sub4/sess1/probe_2/kilosort2_0
-            processed_dir = pathlib.Path(get_processed_root_data_dir())
-            sess_dir = find_full_path(get_ephys_root_data_dir(),
-                                      get_session_directory(key))
-            root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
-
-            output_dir = (processed_dir
-                          / sess_dir.relative_to(root_dir)
-                          / f'probe_{key["insertion_number"]}'
-                          / f'{key["clustering_method"].replace(".", "-")}_{key["paramset_idx"]}')
-            output_dir.mkdir(parents=True, exist_ok=True)
-
+            output_dir = ClusteringTask.infer_output_dir(key, relative=True)
             # update clustering_output_dir
-            Clustering.update1(
-                {**key, 'clustering_output_dir': output_dir.relative_to(processed_dir).as_posix()})
+            Clustering.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
 
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
-            kilosort_dataset = kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
+            kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
             creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         elif task_mode == 'trigger':
+            output_dir.mkdir(parents=True, exist_ok=True)
             raise NotImplementedError('Automatic triggering of'
                                       ' clustering analysis is not yet supported')
         else:
