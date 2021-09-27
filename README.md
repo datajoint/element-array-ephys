@@ -1,5 +1,4 @@
 # DataJoint Element - Array Electrophysiology Element
-DataJoint Element for array electrophysiology.
 
 This repository features DataJoint pipeline design for extracellular array electrophysiology, 
 with ***Neuropixels*** probe and ***kilosort*** spike sorting method. 
@@ -45,14 +44,24 @@ This ephys element features automatic ingestion for spike sorting results from t
     + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
 
 ## Installation
-```
-pip install element-array-ephys
-```
 
-If you already have an older version of ***element-array-ephys*** installed using `pip`, upgrade with
-```
-pip install --upgrade element-array-ephys
-```
++ Install `element-array-ephys`
+    ```
+    pip install element-array-ephys
+    ```
+
++ Upgrade `element-array-ephys` previously installed with `pip`
+    ```
+    pip install --upgrade element-array-ephys
+    ```
+
++ Install `element-data-loader`
+
+    + `element-data-loader` is a dependency of `element-array-ephys`, however it is not contained within `requirements.txt`.
+     
+    ```
+    pip install "element-data-loader @ git+https://github.com/datajoint/element-data-loader"
+    ```
 
 ## Usage
 
