@@ -31,13 +31,12 @@ Record Node 102
 class OpenEphys:
 
     def __init__(self, experiment_dir):
-        self.sess_dir = pathlib.Path(experiment_dir)
-        print('Session directory parent', self.sess_dir.parent, self.sess_dir)
-        openephys_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
+        self.session_dir = pathlib.Path(experiment_dir)
+        openephys_file = pyopenephys.File(self.session_dir)  # this is on the Record Node level
 
         # extract the "recordings" for this session
         self.experiment = next(experiment for experiment in openephys_file.experiments
-                               if pathlib.Path(experiment.absolute_foldername) == self.sess_dir)
+                               if pathlib.Path(experiment.absolute_foldername) == self.session_dir)
 
         self.recording_time = self.experiment.datetime
 
