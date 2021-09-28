@@ -57,9 +57,10 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 def get_ephys_root_data_dir() -> list:
     """
-    All data paths, directories in DataJoint Elements are recommended to be stored as
-    relative paths, with respect to some user-configured "root" directory,
-     which varies from machine to machine (e.g. different mounted drive locations)
+    All data paths, directories in DataJoint Elements are recommended to be 
+    stored as relative paths, with respect to some user-configured "root" 
+    directory, which varies from machine to machine (e.g. different mounted 
+    drive locations)
 
     get_ephys_root_data_dir() -> list
         This user-provided function retrieves the possible root data directories
@@ -78,7 +79,7 @@ def get_session_directory(session_key: dict) -> str:
         Retrieve the session directory containing the
          recorded Neuropixels data for a given Session
         :param session_key: a dictionary of one Session `key`
-        :return: a string for full path to the session directory
+        :return: a string for relative or full path to the session directory
     """
     return _linking_module.get_session_directory(session_key)
 
@@ -448,7 +449,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
