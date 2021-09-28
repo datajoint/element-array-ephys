@@ -32,7 +32,7 @@ class OpenEphys:
 
     def __init__(self, experiment_dir):
         self.sess_dir = pathlib.Path(experiment_dir)
-
+        print('Session directory parent', self.sess_dir.parent, self.sess_dir)
         openephys_file = pyopenephys.File(self.sess_dir.parent)  # this is on the Record Node level
 
         # extract the "recordings" for this session
