@@ -13,16 +13,6 @@ class SGLXKilosortTrigger:
     https://github.com/jenniferColonell/ecephys_spike_sorting
     """
 
-    _required_packages_paths = {
-        'ecephys_directory': None,
-        'kilosort_repository': None,
-        'npy_matlab_repository': None,
-        'catGTPath': None,
-        'tPrime_path': None,
-        'cWaves_path': None,
-        'kilosort_output_tmp': None
-    }
-
     _modules = ['kilosort_helper',
                 'kilosort_postprocessing',
                 'noise_templates',
@@ -82,7 +72,6 @@ class SGLXKilosortTrigger:
         catgt_params['catGT_cmd_string'] += ' ' + extract_string
 
         createInputJson(self._catGT_input_json.as_posix(),
-                        **self._required_packages_paths,
                         KS2ver=self._KS2ver,
                         npx_directory=self._npx_input_dir.as_posix(),
                         spikeGLX_data=True,
@@ -129,7 +118,6 @@ class SGLXKilosortTrigger:
                      for k, v in self._params.items()}
 
         createInputJson(self._module_input_json.as_posix(),
-                        **self._required_packages_paths,
                         KS2ver=self._KS2ver,
                         npx_directory=self._npx_input_dir.as_posix(),
                         continuous_file=continuous_file.as_posix(),
