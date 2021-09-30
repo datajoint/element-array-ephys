@@ -4,6 +4,7 @@ import re
 import numpy as np
 import inspect
 import importlib
+from decimal import Decimal
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe, find_full_path, find_root_directory, dict_to_uuid
@@ -562,9 +563,23 @@ class Clustering(dj.Imported):
             kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
             creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         elif task_mode == 'trigger':
-            output_dir.mkdir(parents=True, exist_ok=True)
-            raise NotImplementedError('Automatic triggering of'
-                                      ' clustering analysis is not yet supported')
+            from element_array_ephys.readers import kilosort_trigger
+
+            acq_software, clustering_method, params = (ClusteringTask * EphysRecording
+                                                       * ClusteringParamSet & key).fetch1(
+                'acq_software', 'clustering_method', 'params')
+
+            if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
+                run_kilosort = kilosort_trigger.SGLXKilosortTrigger(
+                    npx_input_dir=get_spikeglx_meta_filepath(key).parent,
+                    ks_output_dir=output_dir,
+                    params=params,
+                    KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
+                    run_CatGT=False)
+                run_kilosort.run_modules()
+            else:
+                raise NotImplementedError('Automatic triggering of'
+                                          ' clustering analysis is not yet supported')
         else:
             raise ValueError(f'Unknown task mode: {task_mode}')
 
