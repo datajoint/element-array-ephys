@@ -4,7 +4,7 @@ import re
 import numpy as np
 import inspect
 import importlib
-import element_data_loader
+import element_data_loader.utils
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe
