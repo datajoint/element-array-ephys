@@ -488,7 +488,7 @@ class ClusteringTask(dj.Manual):
     """
 
     @classmethod
-    def infer_output_dir(cls, key, relative=False):
+    def infer_output_dir(cls, key, relative=False, mkdir=False):
         """
         Given a 'key' to an entry in this table
         Return the expected clustering_output_dir based on the following convention:
@@ -506,6 +506,10 @@ class ClusteringTask(dj.Manual):
                       / sess_dir.relative_to(root_dir)
                       / f'probe_{key["insertion_number"]}'
                       / f'{method}_{key["paramset_idx"]}')
+
+        if mkdir:
+            output_dir.mkdir(parents=True, exist_ok=True)
+
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
     @classmethod
@@ -555,7 +559,7 @@ class Clustering(dj.Imported):
             'task_mode', 'clustering_output_dir')
 
         if not output_dir:
-            output_dir = ClusteringTask.infer_output_dir(key, relative=True)
+            output_dir = ClusteringTask.infer_output_dir(key, relative=True, mkdir=True)
             # update clustering_output_dir
             Clustering.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
 
