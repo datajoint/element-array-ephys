@@ -61,10 +61,14 @@ class SGLXKilosortTrigger:
         return session_str, gate_str, trigger_str, probe_str or '0'
 
     def generate_CatGT_input_json(self):
-        session_str, gate_str, trigger_str, probe_str = self.parse_input_filename()
+        if not self._run_CatGT:
+            print('run_CatGT is set to false, skipping...')
+            return
+
+        session_str, gate_str, _, probe_str = self.parse_input_filename()
 
         first_trig, last_trig = SpikeGLX_utils.ParseTrigStr(
-            trigger_str, probe_str, gate_str, self._npx_input_dir.as_posix())
+            'start,end', probe_str, gate_str, self._npx_input_dir.as_posix())
         trigger_str = repr(first_trig) + ',' + repr(last_trig)
 
         self._catGT_input_json = self._json_directory / f'{session_str}{probe_str}_CatGT-input.json'
@@ -104,7 +108,7 @@ class SGLXKilosortTrigger:
             self._CatGT_finished = True
 
     def generate_modules_input_json(self):
-        session_str, gate_str, trigger_str, probe_str = self.parse_input_filename()
+        session_str, gate_str, _, probe_str = self.parse_input_filename()
         self._module_input_json = self._json_directory / f'{session_str}_imec{probe_str}-input.json'
 
         if self._CatGT_finished:
