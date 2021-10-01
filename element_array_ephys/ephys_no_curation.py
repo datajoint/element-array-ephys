@@ -261,12 +261,14 @@ class EphysRecording(dj.Imported):
                     'Processing for neuropixels probe model'
                     ' {} not yet implemented'.format(spikeglx_meta.probe_model))
 
-            self.insert1({**key,
-                          **generate_electrode_config(probe_type, electrode_group_members),
-                          'acq_software': acq_software,
-                          'sampling_rate': spikeglx_meta.meta['imSampRate'],
-                          'recording_datetime': spikeglx_meta.recording_time,
-                          'recording_duration': spikeglx_meta.recording_duration})
+            self.insert1({
+                **key,
+                **generate_electrode_config(probe_type, electrode_group_members),
+                'acq_software': acq_software,
+                'sampling_rate': spikeglx_meta.meta['imSampRate'],
+                'recording_datetime': spikeglx_meta.recording_time,
+                'recording_duration': (spikeglx_meta.recording_duration
+                                       or spikeglx.retrieve_recording_duration(meta_filepath))})
 
             root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
             self.EphysFile.insert1({

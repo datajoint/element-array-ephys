@@ -176,7 +176,7 @@ class SpikeGLXMeta:
         self.recording_time = datetime.strptime(self.meta.get('fileCreateTime_original',
                                                               self.meta['fileCreateTime']),
                                                 '%Y-%m-%dT%H:%M:%S')
-        self.recording_duration = self.meta['fileTimeSecs']
+        self.recording_duration = self.meta.get('fileTimeSecs')
 
         # Get probe serial number - 'imProbeSN' for 3A and 'imDatPrb_sn' for 3B
         try:
@@ -339,3 +339,10 @@ def _read_meta(meta_filepath):
                 except ValueError:
                     pass
     return res
+
+
+def retrieve_recording_duration(meta_filepath):
+    root_dir = pathlib.Path(meta_filepath).parent
+    spike_glx = SpikeGLX(root_dir)
+    return (spike_glx.apmeta.recording_duration
+            or spike_glx.ap_timeseries.shape[0] / spike_glx.apmeta.meta['imSampRate'])
