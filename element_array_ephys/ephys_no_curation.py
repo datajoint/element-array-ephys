@@ -578,7 +578,7 @@ class Clustering(dj.Imported):
             if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
                 run_kilosort = kilosort_trigger.SGLXKilosortTrigger(
                     npx_input_dir=get_spikeglx_meta_filepath(key).parent,
-                    ks_output_dir=output_dir,
+                    ks_output_dir=kilosort_dir,
                     params=params,
                     KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
                     run_CatGT=False)
