@@ -244,7 +244,7 @@ class EphysRecording(dj.Imported):
                 raise FileNotFoundError(
                     'No SpikeGLX data found for probe insertion: {}'.format(key))
 
-            if re.search('(1.0|2.0)', spikeglx_meta.probe_model):
+            if re.search('(1\.0|2\.0)', spikeglx_meta.probe_model):
                 probe_type = spikeglx_meta.probe_model
                 electrode_query = probe.ProbeType.Electrode & {'probe_type': probe_type}
 
@@ -281,7 +281,7 @@ class EphysRecording(dj.Imported):
                 raise FileNotFoundError(
                     'No Open Ephys data found for probe insertion: {}'.format(key))
 
-            if re.search('(1.0|2.0)', probe_data.probe_model):
+            if re.search('(1|2)\.0', probe_data.probe_model):
                 probe_type = probe_data.probe_model
                 electrode_query = probe.ProbeType.Electrode & {'probe_type': probe_type}
 
