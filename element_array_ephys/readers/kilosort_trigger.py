@@ -5,6 +5,14 @@ import json
 import re
 
 
+# import the spike sorting packages
+try:
+    from ecephys_spike_sorting.scripts.create_input_json import createInputJson
+    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
+except Exception as e:
+    print(f'Error in loading "ecephys_spike_sorting" - {str(e)}')
+
+
 class SGLXKilosortTrigger:
     """
     Triggering kilosort analysis for neuropixels data acquired
@@ -30,9 +38,6 @@ class SGLXKilosortTrigger:
 
     def __init__(self, npx_input_dir: str, ks_output_dir: str,
                  params: dict, KS2ver: str, run_CatGT=False):
-
-        from ecephys_spike_sorting.scripts.create_input_json import createInputJson
-        from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 
         self._npx_input_dir = pathlib.Path(npx_input_dir)
 
