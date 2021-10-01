@@ -500,10 +500,12 @@ class ClusteringTask(dj.Manual):
                                   get_session_directory(key))
         root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
 
+        method = (ClusteringParamSet & key).fetch1('clustering_method').replace(".", "-")
+
         output_dir = (processed_dir
                       / sess_dir.relative_to(root_dir)
                       / f'probe_{key["insertion_number"]}'
-                      / f'{key["clustering_method"].replace(".", "-")}_{key["paramset_idx"]}')
+                      / f'{method}_{key["paramset_idx"]}')
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
     @classmethod
