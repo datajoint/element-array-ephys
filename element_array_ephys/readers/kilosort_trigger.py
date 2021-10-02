@@ -144,7 +144,7 @@ class SGLXKilosortTrigger:
                         extracted_data_directory=self._ks_output_dir.parent.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
                         ks_make_copy=True,
-                        noise_template_use_rf=self._params.get('noise_template_use_rf', True),
+                        noise_template_use_rf=self._params.get('noise_template_use_rf', False),
                         c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
                         qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
                         **{k: v for k, v in ks_params.items() if k in self._input_json_args}
