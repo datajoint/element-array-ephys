@@ -155,7 +155,7 @@ class SGLXKilosortTrigger:
             self.run_CatGT()
 
         print('---- Running Modules ----')
-
+        self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
 
         for module in self._modules:
