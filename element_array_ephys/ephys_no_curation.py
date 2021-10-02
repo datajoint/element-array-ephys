@@ -563,7 +563,7 @@ class Clustering(dj.Imported):
         if not output_dir:
             output_dir = ClusteringTask.infer_output_dir(key, relative=True, mkdir=True)
             # update clustering_output_dir
-            Clustering.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
+            ClusteringTask.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
 
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
