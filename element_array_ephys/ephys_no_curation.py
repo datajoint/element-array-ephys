@@ -588,6 +588,8 @@ class Clustering(dj.Imported):
             else:
                 raise NotImplementedError('Automatic triggering of'
                                           ' clustering analysis is not yet supported')
+
+            creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         else:
             raise ValueError(f'Unknown task mode: {task_mode}')
 

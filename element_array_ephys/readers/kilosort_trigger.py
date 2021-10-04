@@ -32,7 +32,7 @@ class SGLXKilosortTrigger:
         'catGT_car_mode': 'gblcar',
         'catGT_loccar_min_um': 40,
         'catGT_loccar_max_um': 160,
-        'catGT_cmd_string': '-prb_fld -out_prb_fld -aphipass=300 -gfix=0.4,0.10,0.02 -tshift',
+        'catGT_cmd_string': '-prb_fld -out_prb_fld -gfix=0.4,0.10,0.02',
         'ni_present': False,
         'ni_extract_string': '-XA=0,1,3,500 -iXA=1,3,3,0  -XD=-1,1,50 -XD=-1,2,1.7 -XD=-1,3,5 -iXD=-1,3,5'
     }
