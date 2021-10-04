@@ -439,12 +439,12 @@ class ClusteringParamSet(dj.Lookup):
     """
 
     @classmethod
-    def insert_new_params(cls, processing_method: str, paramset_desc: str,
+    def insert_new_params(cls, clustering_method: str, paramset_desc: str,
                           params: dict, paramset_idx: int = None):
         if paramset_idx is None:
             paramset_idx = (dj.U().aggr(cls, n='max(paramset_idx)').fetch1('n') or 0) + 1
 
-        param_dict = {'clustering_method': processing_method,
+        param_dict = {'clustering_method': clustering_method,
                       'paramset_idx': paramset_idx,
                       'paramset_desc': paramset_desc,
                       'params': params,
