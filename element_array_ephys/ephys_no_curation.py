@@ -448,7 +448,9 @@ class ClusteringParamSet(dj.Lookup):
                       'paramset_idx': paramset_idx,
                       'paramset_desc': paramset_desc,
                       'params': params,
-                      'param_set_hash':  dict_to_uuid(params)}
+                      'param_set_hash':  dict_to_uuid(
+                          {**params, 'clustering_method': clustering_method})
+                      }
         param_query = cls & {'param_set_hash': param_dict['param_set_hash']}
 
         if param_query:  # If the specified param-set already exists
