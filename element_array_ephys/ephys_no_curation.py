@@ -421,7 +421,8 @@ class ClusteringMethod(dj.Lookup):
     clustering_method_desc: varchar(1000)
     """
 
-    contents = [('kilosort3', 'kilosort3 clustering method')]
+    contents = [('kilosort2.5', 'kilosort2.5 clustering method'),
+                ('kilosort3', 'kilosort3 clustering method')]
 
 
 @schema
