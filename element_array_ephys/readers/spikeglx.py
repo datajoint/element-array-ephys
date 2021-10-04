@@ -177,7 +177,6 @@ class SpikeGLXMeta:
                                                               self.meta['fileCreateTime']),
                                                 '%Y-%m-%dT%H:%M:%S')
         self.recording_duration = self.meta.get('fileTimeSecs')
-        print(self.recording_duration)
 
         # Get probe serial number - 'imProbeSN' for 3A and 'imDatPrb_sn' for 3B
         try:
