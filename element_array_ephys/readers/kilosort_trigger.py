@@ -201,4 +201,4 @@ class SGLXKilosortTrigger:
         ks_repo = ks_repo.parent / f'Kilosort-{self._KS2ver}'
         assert ks_repo.exists()
 
-        return ks_repo
+        return ks_repo.as_posix()
