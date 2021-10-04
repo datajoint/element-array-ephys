@@ -4,6 +4,7 @@ import pathlib
 import json
 import re
 import inspect
+import os
 
 
 # import the spike sorting packages
@@ -107,6 +108,7 @@ class SGLXKilosortTrigger:
                         input_meta_path=input_meta_fullpath.as_posix(),
                         extracted_data_directory=self._ks_output_dir.parent.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
+                        kilosort_repository=self._get_kilosort_repository(),
                         **{k: v for k, v in catgt_params.items() if k in self._input_json_args}
                         )
 
@@ -147,6 +149,7 @@ class SGLXKilosortTrigger:
                         noise_template_use_rf=self._params.get('noise_template_use_rf', False),
                         c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
                         qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
+                        kilosort_repository=self._get_kilosort_repository(),
                         **{k: v for k, v in ks_params.items() if k in self._input_json_args}
                         )
 
@@ -184,3 +187,18 @@ class SGLXKilosortTrigger:
         bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
 
         return meta_fp, bin_fp
+
+    def _get_kilosort_repository(self):
+        """
+        Get the path to where the kilosort package is installed at, assuming it can be found
+        as environment variable named "kilosort_repository"
+        Modify this path according to the KSVer used
+        """
+        ks_repo = pathlib.Path(os.getenv('kilosort_repository'))
+        assert ks_repo.exists()
+        assert ks_repo.stem.startswith('Kilosort')
+
+        ks_repo = ks_repo.parent / f'Kilosort-{self._KS2ver}'
+        assert ks_repo.exists()
+
+        return ks_repo
