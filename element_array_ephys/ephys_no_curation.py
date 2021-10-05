@@ -515,8 +515,6 @@ class ClusteringTask(dj.Manual):
                       / f'probe_{key["insertion_number"]}'
                       / f'{method}_{key["paramset_idx"]}')
 
-        log.info(f'{mkdir}')
-        print(mkdir)
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
             log.info(f'{output_dir} created!')
@@ -534,7 +532,7 @@ class ClusteringTask(dj.Manual):
         key = {**ephys_recording_key, 'paramset_idx': 0}
 
         processed_dir = get_processed_root_data_dir()
-        output_dir = ClusteringTask.infer_output_dir(key, relative=False)
+        output_dir = ClusteringTask.infer_output_dir(key, relative=False, mkdir=True)
 
         try:
             kilosort.Kilosort(output_dir)  # check if the directory is a valid Kilosort output
