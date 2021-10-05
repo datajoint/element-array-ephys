@@ -5,12 +5,11 @@ import numpy as np
 import inspect
 import importlib
 from decimal import Decimal
-import logging
 
 from .readers import spikeglx, kilosort, openephys
-from . import probe, find_full_path, find_root_directory, dict_to_uuid
+from . import probe, find_full_path, find_root_directory, dict_to_uuid, get_logger
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 schema = dj.schema()
 
@@ -516,6 +515,8 @@ class ClusteringTask(dj.Manual):
                       / f'probe_{key["insertion_number"]}'
                       / f'{method}_{key["paramset_idx"]}')
 
+        log.info(f'{mkdir}')
+        print(mkdir)
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
             log.info(f'{output_dir} created!')
