@@ -5,9 +5,12 @@ import numpy as np
 import inspect
 import importlib
 from decimal import Decimal
+import logging
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe, find_full_path, find_root_directory, dict_to_uuid
+
+log = logging.getLogger(__name__)
 
 schema = dj.schema()
 
@@ -505,7 +508,8 @@ class ClusteringTask(dj.Manual):
                                   get_session_directory(key))
         root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
 
-        method = (ClusteringParamSet * ClusteringMethod & key).fetch1('clustering_method').replace(".", "-")
+        method = (ClusteringParamSet * ClusteringMethod & key).fetch1(
+            'clustering_method').replace(".", "-")
 
         output_dir = (processed_dir
                       / sess_dir.relative_to(root_dir)
@@ -514,6 +518,7 @@ class ClusteringTask(dj.Manual):
 
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
+            log.info(f'{output_dir} created!')
 
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
