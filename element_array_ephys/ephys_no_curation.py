@@ -151,7 +151,7 @@ class ProbeInsertion(dj.Manual):
 
         probe_list, probe_insertion_list = [], []
         if acq_software == 'SpikeGLX':
-            for meta_filepath in ephys_meta_filepaths:
+            for meta_fp_idx, meta_filepath in enumerate(ephys_meta_filepaths):
                 spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
 
                 probe_key = {'probe_type': spikeglx_meta.probe_model,
@@ -161,8 +161,11 @@ class ProbeInsertion(dj.Manual):
                     probe_list.append(probe_key)
 
                 probe_dir = meta_filepath.parent
-                probe_number = re.search('(imec)?\d{1}$', probe_dir.name).group()
-                probe_number = int(probe_number.replace('imec', ''))
+                try:
+                    probe_number = re.search('(imec)?\d{1}$', probe_dir.name).group()
+                    probe_number = int(probe_number.replace('imec', ''))
+                except AttributeError:
+                    probe_number = meta_fp_idx
 
                 probe_insertion_list.append({**session_key,
                                              'probe': spikeglx_meta.probe_SN,
@@ -774,8 +777,10 @@ class WaveformSet(dj.Imported):
         # insert waveform on a per-unit basis to mitigate potential memory issue
         self.insert1(key)
         for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
-            self.PeakWaveform.insert1(unit_peak_waveform, ignore_extra_fields=True)
-            self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
+            if unit_peak_waveform:
+                self.PeakWaveform.insert1(unit_peak_waveform, ignore_extra_fields=True)
+            if unit_electrode_waveforms:
+                self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
 # ---------------- HELPER FUNCTIONS ----------------
