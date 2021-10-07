@@ -167,7 +167,7 @@ class SGLXKilosortTrigger:
         print('---- Running Modules ----')
         self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
-        module_logfile = module_input_json.replace('-input.json', '-log.txt')
+        module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
 
         for module in self._modules:
             module_status = self._get_module_status(module)
@@ -185,8 +185,10 @@ class SGLXKilosortTrigger:
             with open(module_logfile, "a") as f:
                 subprocess.check_call(command.split(' '), stdout=f)
             completion_time = datetime.utcnow()
-            self._update_module_status({module: {'start_time': start_time,
-                                                 'completion_time': completion_time}})
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': completion_time,
+                          'duration': (completion_time - start_time).total_seconds()}})
 
     def _get_raw_data_filepaths(self):
         session_str, gate_str, _, probe_str = self.parse_input_filename()
@@ -230,7 +232,9 @@ class SGLXKilosortTrigger:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
-            modules_status = {module: {'start_time': None, 'completion_time': None}
+            modules_status = {module: {'start_time': None,
+                                       'completion_time': None,
+                                       'duration': None}
                               for module in self._modules}
         with open(self._modules_input_hash_fp, 'w') as f:
             json.dump(modules_status, f, default=str)
@@ -244,4 +248,4 @@ class SGLXKilosortTrigger:
                 modules_status = json.load(f)
             return modules_status[module]
 
-        return {'start_time': None, 'completion_time': None}
+        return {'start_time': None, 'completion_time': None, 'duration': None}
