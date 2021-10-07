@@ -232,7 +232,7 @@ class SGLXKilosortTrigger:
         else:
             modules_status = {module: {'start_time': None, 'completion_time': None}
                               for module in self._modules}
-        with open(self._modules_input_hash_fp) as f:
+        with open(self._modules_input_hash_fp, 'w') as f:
             json.dump(modules_status, f, default=str)
 
     def _get_module_status(self, module):
