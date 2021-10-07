@@ -579,7 +579,6 @@ class Clustering(dj.Imported):
 
         if task_mode == 'load':
             kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
-            creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         elif task_mode == 'trigger':
             from element_array_ephys.readers import kilosort_trigger
 
@@ -599,10 +598,10 @@ class Clustering(dj.Imported):
                 raise NotImplementedError('Automatic triggering of'
                                           ' clustering analysis is not yet supported')
 
-            creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         else:
             raise ValueError(f'Unknown task mode: {task_mode}')
 
+        creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         self.insert1({**key, 'clustering_time': creation_time})
 
 
