@@ -580,13 +580,13 @@ class Clustering(dj.Imported):
         if task_mode == 'load':
             kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
         elif task_mode == 'trigger':
-            from element_array_ephys.readers import kilosort_trigger
-
             acq_software, clustering_method, params = (ClusteringTask * EphysRecording
                                                        * ClusteringParamSet & key).fetch1(
                 'acq_software', 'clustering_method', 'params')
 
             if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
+                from element_array_ephys.readers import kilosort_trigger
+
                 run_kilosort = kilosort_trigger.SGLXKilosortTrigger(
                     npx_input_dir=get_spikeglx_meta_filepath(key).parent,
                     ks_output_dir=kilosort_dir,

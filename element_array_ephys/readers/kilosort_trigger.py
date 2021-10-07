@@ -179,11 +179,11 @@ class SGLXKilosortTrigger:
             command = (sys.executable
                        + " -W ignore -m ecephys_spike_sorting.modules." + module
                        + " --input_json " + module_input_json
-                       + " --output_json " + module_output_json
-                       + f" >> {module_logfile}")
+                       + " --output_json " + module_output_json)
 
             start_time = datetime.utcnow()
-            subprocess.check_call(command.split(' '))
+            with open(module_logfile, "a") as f:
+                subprocess.check_call(command.split(' '), stdout=f)
             completion_time = datetime.utcnow()
             self._update_module_status({module: {'start_time': start_time,
                                                  'completion_time': completion_time}})
