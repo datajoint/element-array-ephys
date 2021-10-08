@@ -58,6 +58,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('ap')
         """
         if self._ap_timeseries is None:
+            self.check_file_validity('ap')
             self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
         return self._ap_timeseries
 
@@ -75,6 +76,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('lf')
         """
         if self._lf_timeseries is None:
+            self.check_file_validity('lf')
             self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
         return self._lf_timeseries
 
@@ -144,6 +146,20 @@ class SpikeGLX:
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
             return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
+
+    def check_file_validity(self, file_type='ap'):
+        file_path = self.root_dir / (self.root_name + f'.{file_type}.bin')
+        file_size = file_path.stat().st_size
+
+        if file_type == 'ap':
+            meta = self.apmeta
+        elif file_type == 'lf':
+            meta = self.lfmeta
+        else:
+            raise ValueError('"file_type" must be either "ap" or "lf"')
+
+        if file_size != meta['fileSizeBytes']:
+            raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
 
 
 class SpikeGLXMeta:

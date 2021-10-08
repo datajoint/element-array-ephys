@@ -585,10 +585,13 @@ class Clustering(dj.Imported):
                 'acq_software', 'clustering_method', 'params')
 
             if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
-                from element_array_ephys.readers import kilosort_trigger
+                spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+                spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
+                spikeglx_recording.check_file_validity('ap')
 
+                from element_array_ephys.readers import kilosort_trigger
                 run_kilosort = kilosort_trigger.SGLXKilosortTrigger(
-                    npx_input_dir=get_spikeglx_meta_filepath(key).parent,
+                    npx_input_dir=spikeglx_meta_filepath.parent,
                     ks_output_dir=kilosort_dir,
                     params=params,
                     KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
