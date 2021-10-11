@@ -151,12 +151,10 @@ class SpikeGLX:
         file_path = self.root_dir / (self.root_name + f'.{file_type}.bin')
         file_size = file_path.stat().st_size
 
-        if file_type == 'ap':
-            meta = self.apmeta
-        elif file_type == 'lf':
-            meta = self.lfmeta
-        else:
-            raise ValueError('"file_type" must be either "ap" or "lf"')
+        meta_mapping = {
+            'ap': self.apmeta,
+            'lf': self.lfmeta}
+        meta = meta_mapping[file_type]
 
         if file_size != meta['fileSizeBytes']:
             raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')

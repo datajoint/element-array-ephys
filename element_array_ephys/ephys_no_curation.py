@@ -386,8 +386,8 @@ class LFP(dj.Imported):
             loaded_oe = openephys.OpenEphys(sess_dir)
             oe_probe = loaded_oe.probes[probe_sn]
 
-            lfp_channel_ind = np.arange(
-                len(oe_probe.lfp_meta['channels_ids']))[-1::-self._skip_channel_counts]
+            lfp_channel_ind = np.r_[
+                len(oe_probe.lfp_meta['channels_ids'])-1:0:-self._skip_channel_counts]
 
             lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]  # (sample x channel)
             lfp = (lfp * np.array(oe_probe.lfp_meta['channels_gains'])[lfp_channel_ind]).T  # (channel x sample)
@@ -404,8 +404,7 @@ class LFP(dj.Imported):
             probe_electrodes = {key['electrode']: key
                                 for key in electrode_query.fetch('KEY')}
 
-            for channel_idx in np.array(oe_probe.lfp_meta['channels_ids'])[lfp_channel_ind]:
-                electrode_keys.append(probe_electrodes[channel_idx])
+            electrode_keys.extend(probe_electrodes[channel_idx] for channel_idx in oe_probe.lfp_meta['channels_ids'])
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software'
                                       f' of type {acq_software} is not yet implemented')

@@ -20,8 +20,9 @@ except Exception as e:
 
 class SGLXKilosortTrigger:
     """
-    Triggering kilosort analysis for neuropixels data acquired
-     from the SpikeGLX acquisition software
+    An object of SGLXKilosortPipeline manages the state of the Kilosort data processing pipeline for one
+    Neuropixels probe in one recording session.
+    
     Primarily calling routines specified from:
     https://github.com/jenniferColonell/ecephys_spike_sorting
     """
@@ -70,7 +71,7 @@ class SGLXKilosortTrigger:
 
     def parse_input_filename(self):
         meta_filename = next(self._npx_input_dir.glob('*.ap.meta')).name
-        match = re.search('(.*)_g(\d{1})_t(\d+|cat)\.imec(\d?)\.ap\.meta', meta_filename)
+        match = re.search('(.*)_g(\d)_t(\d+|cat)\.imec(\d?)\.ap\.meta', meta_filename)
         session_str, gate_str, trigger_str, probe_str = match.groups()
         return session_str, gate_str, trigger_str, probe_str or '0'
 
