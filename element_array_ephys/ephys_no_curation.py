@@ -463,9 +463,13 @@ class ClusteringParamSet(dj.Lookup):
                 return
             else:  # If not same name: human error, trying to add the same paramset with different name
                 raise dj.DataJointError(
-                    'The specified param-set'
-                    ' already exists - paramset_idx: {}'.format(existing_paramset_idx))
+                    f'The specified param-set already exists'
+                    f' - with paramset_idx: {existing_paramset_idx}')
         else:
+            if {'paramset_idx': paramset_idx} in cls.proj():
+                raise dj.DataJointError(
+                    f'The specified paramset_idx {paramset_idx} already exists,'
+                    f' please pick a different one.')
             cls.insert1(param_dict)
 
 
@@ -586,10 +590,10 @@ class Clustering(dj.Imported):
             if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
                 spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                 spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
-                spikeglx_recording.check_file_validity('ap')
+                spikeglx_recording.validate_file('ap')
 
-                from element_array_ephys.readers import kilosort_trigger
-                run_kilosort = kilosort_trigger.SGLXKilosortTrigger(
+                from element_array_ephys.readers import kilosort_triggering
+                run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                     npx_input_dir=spikeglx_meta_filepath.parent,
                     ks_output_dir=kilosort_dir,
                     params=params,

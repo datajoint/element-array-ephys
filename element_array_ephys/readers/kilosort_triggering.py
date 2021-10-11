@@ -18,10 +18,10 @@ except Exception as e:
     print(f'Error in loading "ecephys_spike_sorting" - {str(e)}')
 
 
-class SGLXKilosortTrigger:
+class SGLXKilosortPipeline:
     """
-    An object of SGLXKilosortPipeline manages the state of the Kilosort data processing pipeline for one
-    Neuropixels probe in one recording session.
+    An object of SGLXKilosortPipeline manages the state of the Kilosort data processing pipeline
+     for one Neuropixels probe in one recording session using the Spike GLX acquisition software.
     
     Primarily calling routines specified from:
     https://github.com/jenniferColonell/ecephys_spike_sorting
