@@ -156,7 +156,7 @@ class SpikeGLX:
             'lf': self.lfmeta}
         meta = meta_mapping[file_type]
 
-        if file_size != meta['fileSizeBytes']:
+        if file_size != meta.meta['fileSizeBytes']:
             raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
 
 
