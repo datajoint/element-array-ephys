@@ -545,9 +545,9 @@ class CuratedClustering(dj.Imported):
 
     @classmethod
     def make_nwb(cls, curated_clustering_key):
-        from .export import curated_clustering_to_nwb
+        from .export import curated_clusterings_to_nwb
         nwbfile = _linking_module.Session.make_nwb(curated_clustering_key)
-        return curated_clustering_to_nwb(curated_clustering_key, nwbfile)
+        return curated_clusterings_to_nwb(curated_clustering_key, nwbfile)
 
 
 @schema

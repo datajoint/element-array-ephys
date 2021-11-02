@@ -1,1 +1,1 @@
-from .nwb import curated_clustering_to_nwb 
+from .nwb import curated_clusterings_to_nwb
