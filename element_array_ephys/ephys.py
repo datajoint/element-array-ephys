@@ -380,7 +380,7 @@ class ClusteringParamSet(dj.Lookup):
 class ClusterQualityLabel(dj.Lookup):
     definition = """
     # Quality
-    cluster_quality_label:  varchar(100)
+    cluster_quality_label:  varchar(100)  # cluster quality type - e.g. 'good', 'MUA', 'noise', etc.
     ---
     cluster_quality_description:  varchar(4000)
     """
@@ -543,6 +543,12 @@ class CuratedClustering(dj.Imported):
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
+
+    @classmethod
+    def make_nwb(cls, curated_clustering_key):
+        from .export import curated_clusterings_to_nwb
+        nwbfile = _linking_module.Session.make_nwb(curated_clustering_key)
+        return curated_clusterings_to_nwb(curated_clustering_key, nwbfile)
 
 
 @schema
