@@ -27,8 +27,15 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile):
     ecephys_module = nwbfile.create_processing_module(name='ecephys',
                                                       description='preprocessed ephys data')
 
+    # add additional columns to the electrodes table
+    electrodes_query = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
+    for additional_attribute in ['shank', 'shank_col', 'shank_row']:
+        nwbfile.add_electrode_column(
+            name=electrodes_query.heading.attributes[additional_attribute].name,
+            description=electrodes_query.heading.attributes[additional_attribute].comment)
+
     # add additional columns to the units table
-    units_query = (ephys.EphysRecording * ephys.ClusteringTask @ ephys.CuratedClustering.Unit)
+    units_query = ephys.EphysRecording * ephys.ClusteringTask @ ephys.CuratedClustering.Unit
     for additional_attribute in ['cluster_quality_label', 'spike_count', 'sampling_rate',
                                  'spike_times', 'spike_sites', 'spike_depths']:
         nwbfile.add_unit_column(
@@ -68,11 +75,6 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile):
 
         electrode_query = (probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
                            & electrode_config)
-        for additional_attribute in ['shank', 'shank_col', 'shank_row']:
-            nwbfile.add_electrode_column(
-                name=electrode_query.heading.attributes[additional_attribute].name,
-                description=electrode_query.heading.attributes[additional_attribute].comment)
-
         for electrode in electrode_query.fetch(as_dict=True):
             nwbfile.add_electrode(
                 id=electrode['electrode'], group=electrode_group,
