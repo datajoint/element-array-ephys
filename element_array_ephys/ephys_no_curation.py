@@ -347,8 +347,7 @@ class LFP(dj.Imported):
     _skip_channel_counts = 9
 
     def make(self, key):
-        acq_software, probe_sn = (EphysRecording
-                                  * ProbeInsertion & key).fetch1('acq_software', 'probe')
+        acq_software = (EphysRecording * ProbeInsertion & key).fetch1('acq_software')
 
         electrode_keys, lfp = [], []
 
@@ -381,10 +380,7 @@ class LFP(dj.Imported):
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
         elif acq_software == 'Open Ephys':
-            sess_dir = find_full_path(get_ephys_root_data_dir(),
-                                      get_session_directory(key))
-            loaded_oe = openephys.OpenEphys(sess_dir)
-            oe_probe = loaded_oe.probes[probe_sn]
+            oe_probe = get_openephys_probe_data(key)
 
             lfp_channel_ind = np.r_[
                 len(oe_probe.lfp_meta['channels_ids'])-1:0:-self._skip_channel_counts]
@@ -587,22 +583,35 @@ class Clustering(dj.Imported):
                                                        * ClusteringParamSet & key).fetch1(
                 'acq_software', 'clustering_method', 'params')
 
-            if acq_software == 'SpikeGLX' and clustering_method.startswith('kilosort'):
-                spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
-                spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
-                spikeglx_recording.validate_file('ap')
-
+            if clustering_method.startswith('kilosort'):
                 from element_array_ephys.readers import kilosort_triggering
-                run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
-                    npx_input_dir=spikeglx_meta_filepath.parent,
-                    ks_output_dir=kilosort_dir,
-                    params=params,
-                    KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                    run_CatGT=False)
-                run_kilosort.run_modules()
+
+                if acq_software == 'SpikeGLX':
+                    spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+                    spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
+                    spikeglx_recording.validate_file('ap')
+
+                    run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
+                        npx_input_dir=spikeglx_meta_filepath.parent,
+                        ks_output_dir=kilosort_dir,
+                        params=params,
+                        KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
+                        run_CatGT=False)
+                    run_kilosort.run_modules()
+                elif acq_software == 'Open Ephys':
+                    oe_probe = get_openephys_probe_data(key)
+                    
+                    assert len(oe_probe.recording_info['recording_files']) == 1
+
+                    run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
+                        npx_input_dir=oe_probe.recording_info['recording_files'][0],
+                        ks_output_dir=kilosort_dir,
+                        params=params,
+                        KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
+                    run_kilosort.run_modules()
             else:
-                raise NotImplementedError('Automatic triggering of'
-                                          ' clustering analysis is not yet supported')
+                raise NotImplementedError(f'Automatic triggering of {clustering_method}'
+                                          f' clustering analysis is not yet supported')
 
         else:
             raise ValueError(f'Unknown task mode: {task_mode}')
@@ -687,7 +696,7 @@ class CuratedClustering(dj.Imported):
         from .export import curated_clusterings_to_nwb
         nwbfile = _linking_module.Session.make_nwb(curated_clustering_key)
         return curated_clusterings_to_nwb(curated_clustering_key, nwbfile)
-    
+
 
 @schema
 class WaveformSet(dj.Imported):
@@ -823,6 +832,15 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
                     'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
 
     return spikeglx_meta_filepath
+
+
+def get_openephys_probe_data(ephys_recording_key):
+    inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                                    & ephys_recording_key).fetch1('probe')
+    sess_dir = find_full_path(get_ephys_root_data_dir(),
+                              get_session_directory(ephys_recording_key))
+    loaded_oe = openephys.OpenEphys(sess_dir)
+    return loaded_oe.probes[inserted_probe_serial_number]
 
 
 def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):

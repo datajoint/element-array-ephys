@@ -250,3 +250,155 @@ class SGLXKilosortPipeline:
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
+
+
+class OpenEphysKilosortPipeline:
+    """
+    An object of OpenEphysKilosortPipeline manages the state of the Kilosort data processing pipeline
+     for one Neuropixels probe in one recording session using the Open Ephys acquisition software.
+
+    Primarily calling routines specified from:
+    https://github.com/jenniferColonell/ecephys_spike_sorting
+    Which is based on `ecephys_spike_sorting` routines from Allen Institute
+    https://github.com/AllenInstitute/ecephys_spike_sorting
+    """
+
+    _modules = ['kilosort_helper',
+                'kilosort_postprocessing',
+                'noise_templates',
+                'mean_waveforms',
+                'quality_metrics']
+
+    _input_json_args = list(inspect.signature(createInputJson).parameters)
+
+    def __init__(self, npx_input_dir: str, ks_output_dir: str,
+                 params: dict, KS2ver: str):
+
+        self._npx_input_dir = pathlib.Path(npx_input_dir)
+
+        self._ks_output_dir = pathlib.Path(ks_output_dir)
+        self._ks_output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._params = params
+        self._KS2ver = KS2ver
+
+        self._json_directory = self._ks_output_dir / 'json_configs'
+        self._json_directory.mkdir(parents=True, exist_ok=True)
+
+        self._modules_input_hash = None
+        self._modules_input_hash_fp = None
+
+    def parse_input_filename(self):
+        meta_filename = next(self._npx_input_dir.glob('*.ap.meta')).name
+        match = re.search('(.*)_g(\d)_t(\d+|cat)\.imec(\d?)\.ap\.meta', meta_filename)
+        session_str, gate_str, trigger_str, probe_str = match.groups()
+        return session_str, gate_str, trigger_str, probe_str or '0'
+
+    def generate_modules_input_json(self):
+        session_str, gate_str, _, probe_str = self.parse_input_filename()
+        self._module_input_json = self._json_directory / f'{session_str}_imec{probe_str}-input.json'
+
+        input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
+
+        ks_params = {
+            k if k.startswith('ks_') else f'ks_{k}': str(v) if isinstance(v, list) else v
+            for k, v in self._params.items()}
+
+        input_params = createInputJson(
+            self._module_input_json.as_posix(),
+            KS2ver=self._KS2ver,
+            npx_directory=self._npx_input_dir.as_posix(),
+            spikeGLX_data=True,
+            continuous_file=continuous_file.as_posix(),
+            input_meta_path=input_meta_fullpath.as_posix(),
+            extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+            kilosort_output_directory=self._ks_output_dir.as_posix(),
+            ks_make_copy=True,
+            noise_template_use_rf=self._params.get('noise_template_use_rf', False),
+            c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
+            qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
+            kilosort_repository=self._get_kilosort_repository(),
+            **{k: v for k, v in ks_params.items() if k in self._input_json_args}
+        )
+
+        self._modules_input_hash = dict_to_uuid(input_params)
+
+    def run_modules(self):
+        print('---- Running Modules ----')
+        self.generate_modules_input_json()
+        module_input_json = self._module_input_json.as_posix()
+        module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
+
+        for module in self._modules:
+            module_status = self._get_module_status(module)
+            if module_status['completion_time'] is not None:
+                continue
+
+            module_output_json = module_input_json.replace('-input.json',
+                                                           '-' + module + '-output.json')
+            command = (sys.executable
+                       + " -W ignore -m ecephys_spike_sorting.modules." + module
+                       + " --input_json " + module_input_json
+                       + " --output_json " + module_output_json)
+
+            start_time = datetime.utcnow()
+            with open(module_logfile, "a") as f:
+                subprocess.check_call(command.split(' '), stdout=f)
+            completion_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': completion_time,
+                          'duration': (completion_time - start_time).total_seconds()}})
+
+    def _get_raw_data_filepaths(self):
+        session_str, gate_str, _, probe_str = self.parse_input_filename()
+
+        data_directory = self._npx_input_dir
+
+        meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
+        bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+
+        return meta_fp, bin_fp
+
+    def _get_kilosort_repository(self):
+        """
+        Get the path to where the kilosort package is installed at, assuming it can be found
+        as environment variable named "kilosort_repository"
+        Modify this path according to the KSVer used
+        """
+        ks_repo = pathlib.Path(os.getenv('kilosort_repository'))
+        assert ks_repo.exists()
+        assert ks_repo.stem.startswith('Kilosort')
+
+        ks_repo = ks_repo.parent / f'Kilosort-{self._KS2ver}'
+        assert ks_repo.exists()
+
+        return ks_repo.as_posix()
+
+    def _update_module_status(self, updated_module_status={}):
+        if self._modules_input_hash is None:
+            raise RuntimeError('"generate_modules_input_json()" not yet performed!')
+
+        self._modules_input_hash_fp = self._json_directory / f'.{self._modules_input_hash}.json'
+        if self._modules_input_hash_fp.exists():
+            with open(self._modules_input_hash_fp) as f:
+                modules_status = json.load(f)
+            modules_status = {**modules_status, **updated_module_status}
+        else:
+            modules_status = {module: {'start_time': None,
+                                       'completion_time': None,
+                                       'duration': None}
+                              for module in self._modules}
+        with open(self._modules_input_hash_fp, 'w') as f:
+            json.dump(modules_status, f, default=str)
+
+    def _get_module_status(self, module):
+        if self._modules_input_hash_fp is None:
+            self._update_module_status()
+
+        if self._modules_input_hash_fp.exists():
+            with open(self._modules_input_hash_fp) as f:
+                modules_status = json.load(f)
+            return modules_status[module]
+
+        return {'start_time': None, 'completion_time': None, 'duration': None}
