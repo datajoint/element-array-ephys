@@ -600,7 +600,7 @@ class Clustering(dj.Imported):
                     run_kilosort.run_modules()
                 elif acq_software == 'Open Ephys':
                     oe_probe = get_openephys_probe_data(key)
-                    
+
                     assert len(oe_probe.recording_info['recording_files']) == 1
 
                     run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
