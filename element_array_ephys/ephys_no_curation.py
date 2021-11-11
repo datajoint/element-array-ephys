@@ -603,6 +603,16 @@ class Clustering(dj.Imported):
 
                     assert len(oe_probe.recording_info['recording_files']) == 1
 
+                    # add additional probe-recording settings into `params`
+                    probe_type = (ProbeInsertion * probe.Probe & key).fetch1('probe_type')
+                    params['probe_type'] = {'neuropixels 1.0 - 3A': '3A',
+                                            'neuropixels 1.0 - 3B': 'NP1',
+                                            'neuropixels 2.0 - SS': 'NP21',
+                                            'neuropixels 2.0 - MS': 'NP24'}[probe_type]
+                    params['sample_rate'] = oe_probe.ap_meta['sample_rate']
+                    params['num_channels'] = oe_probe.ap_meta['num_channels']
+                    params['uVPerBit'] = oe_probe.ap_meta['channels_gains'][0]
+
                     run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
                         npx_input_dir=oe_probe.recording_info['recording_files'][0],
                         ks_output_dir=kilosort_dir,

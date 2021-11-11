@@ -139,8 +139,13 @@ class SGLXKilosortPipeline:
 
         input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
 
-        ks_params = {k if k.startswith('ks_') else f'ks_{k}': str(v) if isinstance(v, list) else v
-                     for k, v in self._params.items()}
+        params = {}
+        for k, v in self._params.items():
+            value = str(v) if isinstance(v, list) else v
+            if f'ks_{k}' in self._input_json_args:
+                params[f'ks_{k}'] = value
+            if k in self._input_json_args:
+                params[k] = value
 
         input_params = createInputJson(
             self._module_input_json.as_posix(),
@@ -156,7 +161,7 @@ class SGLXKilosortPipeline:
             c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
             qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
             kilosort_repository=_get_kilosort_repository(self._KS2ver),
-            **{k: v for k, v in ks_params.items() if k in self._input_json_args}
+            **params
         )
 
         self._modules_input_hash = dict_to_uuid(input_params)
@@ -278,9 +283,13 @@ class OpenEphysKilosortPipeline:
 
         continuous_file = self._npx_input_dir / 'continuous.dat'
 
-        ks_params = {
-            k if k.startswith('ks_') else f'ks_{k}': str(v) if isinstance(v, list) else v
-            for k, v in self._params.items()}
+        params = {}
+        for k, v in self._params.items():
+            value = str(v) if isinstance(v, list) else v
+            if f'ks_{k}' in self._input_json_args:
+                params[f'ks_{k}'] = value
+            if k in self._input_json_args:
+                params[k] = value
 
         input_params = createInputJson(
             self._module_input_json.as_posix(),
@@ -295,7 +304,7 @@ class OpenEphysKilosortPipeline:
             c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
             qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
             kilosort_repository=_get_kilosort_repository(self._KS2ver),
-            **{k: v for k, v in ks_params.items() if k in self._input_json_args}
+            **params
         )
 
         self._modules_input_hash = dict_to_uuid(input_params)
