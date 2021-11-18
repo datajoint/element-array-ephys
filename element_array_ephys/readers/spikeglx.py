@@ -179,6 +179,8 @@ class SpikeGLXMeta:
                 self.probe_model = 'neuropixels 1.0 - 3A'
             elif 'typeImEnabled' in self.meta:
                 self.probe_model = 'neuropixels 1.0 - 3B'
+        elif probe_model == 1100:
+            self.probe_model = 'neuropixels UHD'
         elif probe_model == 21:
             self.probe_model = 'neuropixels 2.0 - SS'
         elif probe_model == 24:

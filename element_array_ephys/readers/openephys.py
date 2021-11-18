@@ -96,7 +96,8 @@ class OpenEphys:
                     meta = getattr(probe, continuous_type + '_meta')
                     if not meta:
                         meta.update(**continuous_info,
-                                    channels_ids=analog_signal.channel_ids,
+                                    channels_ids=[c['source_processor_index']
+                                                  for c in continuous_info['channels']],
                                     channels_names=analog_signal.channel_names,
                                     channels_gains=analog_signal.gains)
 
@@ -120,7 +121,14 @@ class Probe:
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
-            self.probe_model = self.probe_info['@probe_name']
+            self.probe_model = {
+                "Neuropixels 1.0": "neuropixels 1.0 - 3B",
+                "Neuropixels Ultra": "neuropixels UHD",
+                "Neuropixels 21": "neuropixels 2.0 - SS",
+                "Neuropixels 24": "neuropixels 2.0 - MS"}[self.probe_info['@probe_name']]
+
+        self.channel_status = {int(k.replace('@E', '')): int(v)
+                               for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
 
         self.ap_meta = {}
         self.lfp_meta = {}

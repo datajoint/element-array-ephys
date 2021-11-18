@@ -607,12 +607,23 @@ class Clustering(dj.Imported):
                     probe_type = (ProbeInsertion * probe.Probe & key).fetch1('probe_type')
                     params['probe_type'] = {'neuropixels 1.0 - 3A': '3A',
                                             'neuropixels 1.0 - 3B': 'NP1',
+                                            'neuropixels UHD': 'NP1100',
                                             'neuropixels 2.0 - SS': 'NP21',
                                             'neuropixels 2.0 - MS': 'NP24'}[probe_type]
                     params['sample_rate'] = oe_probe.ap_meta['sample_rate']
                     params['num_channels'] = oe_probe.ap_meta['num_channels']
                     params['uVPerBit'] = oe_probe.ap_meta['channels_gains'][0]
 
+                    # add additional electrodes information into `params`
+                    electrode_config_key = (probe.ElectrodeConfig * EphysRecording & key).fetch1('KEY')
+                    params['channel_ind'], params['x_coords'], params['y_coords'], params['shank_ind'] = (
+                            probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                            & electrode_config_key).fetch('electrode', 'x_coord', 'y_coord', 'shank')
+                    params['connected'] = np.array([int(v == 1)
+                                                    for c, v in oe_probe.channel_status.items()
+                                                    if c in params['channel_ind']])
+
+                    # run kilosort
                     run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
                         npx_input_dir=oe_probe.recording_info['recording_files'][0],
                         ks_output_dir=kilosort_dir,
@@ -873,11 +884,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
             for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
                 spikeglx_meta.shankmap['data'])}
     elif acq_software == 'Open Ephys':
-        sess_dir = find_full_path(get_ephys_root_data_dir(),
-                                  get_session_directory(ephys_recording_key))
-        openephys_dataset = openephys.OpenEphys(sess_dir)
-        probe_serial_number = (ProbeInsertion & ephys_recording_key).fetch1('probe')
-        probe_dataset = openephys_dataset.probes[probe_serial_number]
+        probe_dataset = get_openephys_probe_data(ephys_recording_key)
 
         electrode_query = (probe.ProbeType.Electrode
                            * probe.ElectrodeConfig.Electrode

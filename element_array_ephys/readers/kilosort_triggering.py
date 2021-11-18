@@ -5,6 +5,8 @@ import json
 import re
 import inspect
 import os
+import scipy.io
+import numpy as np
 from datetime import datetime
 
 from ..import dict_to_uuid
@@ -14,8 +16,9 @@ from ..import dict_to_uuid
 try:
     from ecephys_spike_sorting.scripts.create_input_json import createInputJson
     from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils, log_from_json
+    from ecephys_spike_sorting.modules.kilosort_helper.__main__ import get_noise_channels
 except Exception as e:
-    print(f'Error in loading "ecephys_spike_sorting" - {str(e)}')
+    print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
 
 
 class SGLXKilosortPipeline:
@@ -66,6 +69,7 @@ class SGLXKilosortPipeline:
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
         self._CatGT_finished = False
+        self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
 
@@ -147,7 +151,7 @@ class SGLXKilosortPipeline:
             if k in self._input_json_args:
                 params[k] = value
 
-        input_params = createInputJson(
+        self.ks_input_params = createInputJson(
             self._module_input_json.as_posix(),
             KS2ver=self._KS2ver,
             npx_directory=self._npx_input_dir.as_posix(),
@@ -156,6 +160,7 @@ class SGLXKilosortPipeline:
             input_meta_path=input_meta_fullpath.as_posix(),
             extracted_data_directory=self._ks_output_dir.parent.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
+            kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
             noise_template_use_rf=self._params.get('noise_template_use_rf', False),
             c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
@@ -164,7 +169,7 @@ class SGLXKilosortPipeline:
             **params
         )
 
-        self._modules_input_hash = dict_to_uuid(input_params)
+        self._modules_input_hash = dict_to_uuid(self.ks_input_params)
 
     def run_modules(self):
         if self._run_CatGT and not self._CatGT_finished:
@@ -275,10 +280,29 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / 'json_configs'
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
+        self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
 
+    def make_chanmap_file(self):
+        continuous_file = self._npx_input_dir / 'continuous.dat'
+        self._chanmap_filepath = self._ks_output_dir / 'chanMap.mat'
+
+        _write_channel_map_file(channel_ind=self._params['channel_ind'],
+                                x_coords=self._params['x_coords'],
+                                y_coords=self._params['y_coords'],
+                                shank_ind=self._params['shank_ind'],
+                                connected=self._params['connected'],
+                                probe_name=self._params['probe_type'],
+                                ap_band_file=continuous_file.as_posix(),
+                                bit_volts=self._params['uVPerBit'],
+                                sample_rate=self._params['sample_rate'],
+                                save_path=self._chanmap_filepath.as_posix(),
+                                is_0_based=True)
+
     def generate_modules_input_json(self):
+        self.make_chanmap_file()
+
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
 
         continuous_file = self._npx_input_dir / 'continuous.dat'
@@ -291,7 +315,7 @@ class OpenEphysKilosortPipeline:
             if k in self._input_json_args:
                 params[k] = value
 
-        input_params = createInputJson(
+        self.ks_input_params = createInputJson(
             self._module_input_json.as_posix(),
             KS2ver=self._KS2ver,
             npx_directory=self._npx_input_dir.as_posix(),
@@ -299,15 +323,17 @@ class OpenEphysKilosortPipeline:
             continuous_file=continuous_file.as_posix(),
             extracted_data_directory=self._ks_output_dir.parent.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
+            kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
             noise_template_use_rf=self._params.get('noise_template_use_rf', False),
             c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
             qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
             kilosort_repository=_get_kilosort_repository(self._KS2ver),
+            chanMap_path=self._chanmap_filepath.as_posix(),
             **params
         )
 
-        self._modules_input_hash = dict_to_uuid(input_params)
+        self._modules_input_hash = dict_to_uuid(self.ks_input_params)
 
     def run_modules(self):
         print('---- Running Modules ----')
@@ -379,3 +405,44 @@ def _get_kilosort_repository(KS2ver):
     assert ks_repo.exists()
 
     return ks_repo.as_posix()
+
+
+def _write_channel_map_file(*, channel_ind, x_coords, y_coords, shank_ind, connected,
+                            probe_name, ap_band_file, bit_volts, sample_rate,
+                            save_path, is_0_based=True):
+    """
+    Write channel map into .mat file in 1-based indexing format (MATLAB style)
+    """
+
+    assert len(channel_ind) == len(x_coords) == len(y_coords) == len(shank_ind) == len(connected)
+
+    if is_0_based:
+        channel_ind += 1
+        shank_ind += 1
+
+    channel_count = len(channel_ind)
+    chanMap0ind = np.arange(0, channel_count, dtype='float64')
+    chanMap0ind = chanMap0ind.reshape((channel_count, 1))
+    chanMap = chanMap0ind + 1
+
+    # channels to exclude
+    mask = get_noise_channels(ap_band_file,
+                              channel_count,
+                              sample_rate,
+                              bit_volts)
+    bad_channel_ind = np.where(mask is False)[0]
+    connected[bad_channel_ind] = 0
+
+    mdict = {
+        'chanMap': chanMap,
+        'chanMap0ind': chanMap0ind,
+        'connected': connected,
+        'name': probe_name,
+        'xcoords': x_coords,
+        'ycoords': y_coords,
+        'shankInd': shank_ind,
+        'kcoords': shank_ind,
+        'fs': sample_rate
+    }
+
+    scipy.io.savemat(save_path, mdict)
