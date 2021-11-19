@@ -20,6 +20,12 @@ try:
 except Exception as e:
     print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
 
+# import pykilosort package
+try:
+    import pykilosort
+except Exception as e:
+    print(f'Error in loading "pykilosort" package - {str(e)}')
+
 
 class SGLXKilosortPipeline:
     """
@@ -389,6 +395,26 @@ class OpenEphysKilosortPipeline:
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
+
+
+def run_pykilosort(continuous_file, kilosort_output_directory, params,
+                    channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
+    dat_path = pathlib.Path(continuous_file)
+
+    probe = pykilosort.Bunch()
+    channel_count = len(channel_ind)
+    probe.Nchan = channel_count
+    probe.chanMap = np.arange(0, channel_count, dtype='float64')
+    probe.xc = x_coords
+    probe.yc = y_coords
+    probe.kcoords = shank_ind
+
+    pykilosort.run(dat_path=continuous_file,
+                   dir_path=dat_path.parent,
+                   output_dir=kilosort_output_directory,
+                   probe=probe,
+                   params=params,
+                   n_channels=385, dtype=np.int16, sample_rate=sample_rate)
 
 
 def _get_kilosort_repository(KS2ver):

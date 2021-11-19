@@ -583,53 +583,61 @@ class Clustering(dj.Imported):
                                                        * ClusteringParamSet & key).fetch1(
                 'acq_software', 'clustering_method', 'params')
 
-            if clustering_method.startswith('kilosort'):
+            if 'kilosort' in clustering_method:
                 from element_array_ephys.readers import kilosort_triggering
+
+                # add additional probe-recording and channels details into `params`
+                params = {**params, **get_recording_channels_details(key)}
 
                 if acq_software == 'SpikeGLX':
                     spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                     spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
                     spikeglx_recording.validate_file('ap')
 
-                    run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
-                        npx_input_dir=spikeglx_meta_filepath.parent,
-                        ks_output_dir=kilosort_dir,
-                        params=params,
-                        KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                        run_CatGT=False)
-                    run_kilosort.run_modules()
+                    if clustering_method.startswith('pykilosort'):
+                        kilosort_triggering.run_pykilosort(
+                            continuous_file=spikeglx_recording.root_dir / (
+                                        spikeglx_recording.root_name + '.ap.bin'),
+                            kilosort_output_directory=kilosort_dir,
+                            channel_ind=params.pop('channel_ind'),
+                            x_coords=params.pop('x_coords'),
+                            y_coords=params.pop('y_coords'),
+                            shank_ind=params.pop('shank_ind'),
+                            connected=params.pop('connected'),
+                            sample_rate=params.pop('sample_rate'),
+                            params=params)
+                    else:
+                        run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
+                            npx_input_dir=spikeglx_meta_filepath.parent,
+                            ks_output_dir=kilosort_dir,
+                            params=params,
+                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
+                            run_CatGT=False)
+                        run_kilosort.run_modules()
                 elif acq_software == 'Open Ephys':
                     oe_probe = get_openephys_probe_data(key)
 
                     assert len(oe_probe.recording_info['recording_files']) == 1
 
-                    # add additional probe-recording settings into `params`
-                    probe_type = (ProbeInsertion * probe.Probe & key).fetch1('probe_type')
-                    params['probe_type'] = {'neuropixels 1.0 - 3A': '3A',
-                                            'neuropixels 1.0 - 3B': 'NP1',
-                                            'neuropixels UHD': 'NP1100',
-                                            'neuropixels 2.0 - SS': 'NP21',
-                                            'neuropixels 2.0 - MS': 'NP24'}[probe_type]
-                    params['sample_rate'] = oe_probe.ap_meta['sample_rate']
-                    params['num_channels'] = oe_probe.ap_meta['num_channels']
-                    params['uVPerBit'] = oe_probe.ap_meta['channels_gains'][0]
-
-                    # add additional electrodes information into `params`
-                    electrode_config_key = (probe.ElectrodeConfig * EphysRecording & key).fetch1('KEY')
-                    params['channel_ind'], params['x_coords'], params['y_coords'], params['shank_ind'] = (
-                            probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                            & electrode_config_key).fetch('electrode', 'x_coord', 'y_coord', 'shank')
-                    params['connected'] = np.array([int(v == 1)
-                                                    for c, v in oe_probe.channel_status.items()
-                                                    if c in params['channel_ind']])
-
                     # run kilosort
-                    run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
-                        npx_input_dir=oe_probe.recording_info['recording_files'][0],
-                        ks_output_dir=kilosort_dir,
-                        params=params,
-                        KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
-                    run_kilosort.run_modules()
+                    if clustering_method.startswith('pykilosort'):
+                        kilosort_triggering.run_pykilosort(
+                            continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
+                            kilosort_output_directory=kilosort_dir,
+                            channel_ind=params.pop('channel_ind'),
+                            x_coords=params.pop('x_coords'),
+                            y_coords=params.pop('y_coords'),
+                            shank_ind=params.pop('shank_ind'),
+                            connected=params.pop('connected'),
+                            sample_rate=params.pop('sample_rate'),
+                            params=params)
+                    else:
+                        run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
+                            npx_input_dir=oe_probe.recording_info['recording_files'][0],
+                            ks_output_dir=kilosort_dir,
+                            params=params,
+                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
+                        run_kilosort.run_modules()
             else:
                 raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
@@ -929,3 +937,40 @@ def generate_electrode_config(probe_type: str, electrodes: list):
 
     return electrode_config_key
 
+
+def get_recording_channels_details(ephys_recording_key):
+    channels_details = {}
+
+    acq_software, sample_rate = (EphysRecording & ephys_recording_key).fetch1('acq_software',
+                                                              'sampling_rate')
+
+    probe_type = (ProbeInsertion * probe.Probe & ephys_recording_key).fetch1('probe_type')
+    channels_details['probe_type'] = {'neuropixels 1.0 - 3A': '3A',
+                                      'neuropixels 1.0 - 3B': 'NP1',
+                                      'neuropixels UHD': 'NP1100',
+                                      'neuropixels 2.0 - SS': 'NP21',
+                                      'neuropixels 2.0 - MS': 'NP24'}[probe_type]
+
+    electrode_config_key = (probe.ElectrodeConfig * EphysRecording & ephys_recording_key).fetch1('KEY')
+    channels_details['channel_ind'], channels_details['x_coords'], channels_details[
+        'y_coords'], channels_details['shank_ind'] = (
+            probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+            & electrode_config_key).fetch('electrode', 'x_coord', 'y_coord', 'shank')
+    channels_details['sample_rate'] = sample_rate
+    channels_details['num_channels'] = len(channels_details['channel_ind'])
+
+    if acq_software == 'SpikeGLX':
+        spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
+        spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
+        channels_details['uVPerBit'] = spikeglx_recording.get_channel_bit_volts('ap')[0]
+        channels_details['connected'] = np.array(
+            [v for *_, v in spikeglx_recording.apmeta.shankmap['data']])
+    elif acq_software == 'Open Ephys':
+        oe_probe = get_openephys_probe_data(ephys_recording_key)
+        channels_details['uVPerBit'] = oe_probe.ap_meta['channels_gains'][0]
+        channels_details['connected'] = np.array([int(v == 1)
+                                                  for c, v in
+                                                  oe_probe.channel_status.items()
+                                                  if c in channels_details['channel_ind']])
+
+    return channels_details
