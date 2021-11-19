@@ -332,6 +332,7 @@ class OpenEphysKilosortPipeline:
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
             noise_template_use_rf=self._params.get('noise_template_use_rf', False),
+            use_C_Waves=False,
             c_Waves_snr_um=self._params.get('c_Waves_snr_um', 160),
             qm_isi_thresh=self._params.get('refPerMS', 2.0) / 1000,
             kilosort_repository=_get_kilosort_repository(self._KS2ver),
