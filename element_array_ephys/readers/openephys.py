@@ -1,6 +1,7 @@
 import pathlib
 import pyopenephys
 import numpy as np
+import re
 
 
 """
@@ -129,7 +130,7 @@ class Probe:
                 "Neuropixels 24": "neuropixels 2.0 - MS"}[self.probe_info['@probe_name']]
             channel_status_str = 'CHANNELS'
 
-        self.channel_status = {int(k.replace('@E', '')): int(v)
+        self.channel_status = {int(re.search(r'\d+$', k).group()): int(v)
                                for k, v in self.probe_info.pop(channel_status_str).items()}
 
         self.ap_meta = {}
