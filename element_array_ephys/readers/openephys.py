@@ -118,6 +118,7 @@ class Probe:
             self.probe_model = {
                 "Neuropix-PXI": "neuropixels 1.0 - 3B",
                 "Neuropix-3a": "neuropixels 1.0 - 3A"}[processor['@pluginName']]
+            channel_status_str = 'CHANNELSTATUS'
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
@@ -126,9 +127,10 @@ class Probe:
                 "Neuropixels Ultra": "neuropixels UHD",
                 "Neuropixels 21": "neuropixels 2.0 - SS",
                 "Neuropixels 24": "neuropixels 2.0 - MS"}[self.probe_info['@probe_name']]
+            channel_status_str = 'CHANNELS'
 
         self.channel_status = {int(k.replace('@E', '')): int(v)
-                               for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
+                               for k, v in self.probe_info.pop(channel_status_str).items()}
 
         self.ap_meta = {}
         self.lfp_meta = {}
