@@ -405,7 +405,7 @@ def run_pykilosort(continuous_file, kilosort_output_directory, params,
     probe = pykilosort.Bunch()
     channel_count = len(channel_ind)
     probe.Nchan = channel_count
-    probe.chanMap = np.arange(0, channel_count, dtype='float64')
+    probe.chanMap = np.arange(0, channel_count, dtype='int')
     probe.xc = x_coords
     probe.yc = y_coords
     probe.kcoords = shank_ind
@@ -415,7 +415,9 @@ def run_pykilosort(continuous_file, kilosort_output_directory, params,
                    output_dir=kilosort_output_directory,
                    probe=probe,
                    params=params,
-                   n_channels=385, dtype=np.int16, sample_rate=sample_rate)
+                   n_channels=probe.Nchan,
+                   dtype=np.int16,
+                   sample_rate=sample_rate)
 
 
 def _get_kilosort_repository(KS2ver):
