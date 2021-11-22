@@ -8,7 +8,7 @@ The Open Ephys Record Node saves Neuropixels data in binary format according to 
 (https://open-ephys.github.io/gui-docs/User-Manual/Recording-data/Binary-format.html)
 
 Record Node 102
--- experiment1 (equivalent to a Session)
+-- experiment1 (equivalent to one experimental session - multi probes, multi recordings per probe)
    -- recording1
    -- recording2
       -- continuous

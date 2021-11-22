@@ -1,4 +1,4 @@
 datajoint>=0.13
-pyopenephys
+pyopenephys @ https://github.com/ttngu207/pyopenephys.git
 openpyxl
 pynwb==1.4.0
