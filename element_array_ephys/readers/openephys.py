@@ -102,7 +102,7 @@ class OpenEphys:
 
                         meta.update(**continuous_info,
                                     channels_indices=channels_indices,
-                                    channels_ids=analog_signal.channels_ids,
+                                    channels_ids=analog_signal.channel_ids,
                                     channels_names=analog_signal.channel_names,
                                     channels_gains=analog_signal.gains)
 
