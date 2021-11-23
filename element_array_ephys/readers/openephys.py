@@ -96,9 +96,13 @@ class OpenEphys:
 
                     meta = getattr(probe, continuous_type + '_meta')
                     if not meta:
+                        # channel indices - 0-based indexing
+                        channels_indices = [int(re.search(r'\d+$', chn_name).group()) - 1
+                                            for chn_name in analog_signal.channel_names]
+
                         meta.update(**continuous_info,
-                                    channels_ids=[c['source_processor_index']
-                                                  for c in continuous_info['channels']],
+                                    channels_indices=channels_indices,
+                                    channels_ids=analog_signal.channels_ids,
                                     channels_names=analog_signal.channel_names,
                                     channels_gains=analog_signal.gains)
 

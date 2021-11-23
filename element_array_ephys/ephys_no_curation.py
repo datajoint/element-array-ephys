@@ -299,7 +299,7 @@ class EphysRecording(dj.Imported):
 
                 electrode_group_members = [
                     probe_electrodes[channel_idx]
-                    for channel_idx in probe_data.ap_meta['channels_ids']]
+                    for channel_idx in probe_data.ap_meta['channels_indices']]
             else:
                 raise NotImplementedError(
                     'Processing for neuropixels'
@@ -905,7 +905,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
 
         channel2electrode_map = {
             channel_idx: probe_electrodes[channel_idx]
-            for channel_idx in probe_dataset.ap_meta['channels_ids']}
+            for channel_idx in probe_dataset.ap_meta['channels_indices']}
 
     return channel2electrode_map
 
