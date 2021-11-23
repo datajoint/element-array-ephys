@@ -89,14 +89,15 @@ class ProbeType(dj.Lookup):
             :return:
             """
             row_count = int(site_count / col_count)
-            x_coords = np.tile([0, 0 + col_spacing], row_count)
-            x_white_spaces = np.tile([white_spacing, white_spacing, 0, 0], int(row_count / 2))
+            x_coords = np.tile(np.arange(0, col_spacing * col_count, col_spacing), row_count)
+            y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count)
 
-            x_coords = x_coords + x_white_spaces
-            y_coords = np.repeat(np.arange(row_count) * row_spacing, 2)
+            if white_spacing:
+                x_white_spaces = np.tile([white_spacing, white_spacing, 0, 0], int(row_count / 2))
+                x_coords = x_coords + x_white_spaces
 
-            shank_cols = np.tile([0, 1], row_count)
-            shank_rows = np.repeat(range(row_count), 2)
+            shank_cols = np.tile(range(col_count), row_count)
+            shank_rows = np.repeat(range(row_count), col_count)
 
             npx_electrodes = []
             for shank_no in range(shank_count):
