@@ -95,7 +95,7 @@ class OpenEphys:
 
                         probe.recording_info['recording_count'] += 1
                         probe.recording_info['recording_datetimes'].append(
-                            rec.datetime + datetime.timedelta(float(rec.start_time)))
+                            rec.datetime + datetime.timedelta(seconds=float(rec.start_time)))
                         probe.recording_info['recording_durations'].append(
                             float(rec.duration))
                         probe.recording_info['recording_files'].append(
