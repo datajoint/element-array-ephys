@@ -971,9 +971,8 @@ def get_recording_channels_details(ephys_recording_key):
     elif acq_software == 'Open Ephys':
         oe_probe = get_openephys_probe_data(ephys_recording_key)
         channels_details['uVPerBit'] = oe_probe.ap_meta['channels_gains'][0]
-        channels_details['connected'] = np.array([int(v == 1)
-                                                  for c, v in
-                                                  oe_probe.channel_status.items()
-                                                  if c in channels_details['channel_ind']])
+        channels_details['connected'] = np.array([
+            int(v == 1) for c, v in oe_probe.channels_connected.items()
+            if c in channels_details['channel_ind']])
 
     return channels_details

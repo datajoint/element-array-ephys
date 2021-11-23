@@ -134,7 +134,9 @@ class Probe:
             self.probe_model = {
                 "Neuropix-PXI": "neuropixels 1.0 - 3B",
                 "Neuropix-3a": "neuropixels 1.0 - 3A"}[processor['@pluginName']]
-            channel_status_str = 'CHANNELSTATUS'
+            self._channels_connected = {int(re.search(r'\d+$', k).group()): int(v)
+                                        for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
+
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
@@ -143,10 +145,8 @@ class Probe:
                 "Neuropixels Ultra": "neuropixels UHD",
                 "Neuropixels 21": "neuropixels 2.0 - SS",
                 "Neuropixels 24": "neuropixels 2.0 - MS"}[self.probe_info['@probe_name']]
-            channel_status_str = 'CHANNELS'
-
-        self.channel_status = {int(re.search(r'\d+$', k).group()): int(v)
-                               for k, v in self.probe_info.pop(channel_status_str).items()}
+            self._channels_connected = {int(re.search(r'\d+$', k).group()): 1
+                                        for k in self.probe_info.pop('CHANNELS')}
 
         self.ap_meta = {}
         self.lfp_meta = {}
@@ -163,6 +163,11 @@ class Probe:
         self._ap_timestamps = None
         self._lfp_timeseries = None
         self._lfp_timestamps = None
+
+    @property
+    def channels_connected(self):
+        return {chn_idx: self._channels_connected.get(chn_idx, 0)
+                for chn_idx in self.ap_meta['channels_indices']}
 
     @property
     def ap_timeseries(self):
