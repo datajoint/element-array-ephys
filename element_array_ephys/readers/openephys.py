@@ -2,6 +2,7 @@ import pathlib
 import pyopenephys
 import numpy as np
 import re
+import datetime
 
 
 """
@@ -40,10 +41,20 @@ class OpenEphys:
         self.experiment = next(experiment for experiment in openephys_file.experiments
                                if pathlib.Path(experiment.absolute_foldername) == self.sess_dir)
 
-        self.recording_time = self.experiment.datetime
-
         # extract probe data
         self.probes = self.load_probe_data()
+
+        #
+        self._recording_time = None
+
+    @property
+    def recording_time(self):
+        if self._recording_time is None:
+            recording_datetimes = []
+            for probe in self.probes.values():
+                recording_datetimes.extend(probe.recording_info['recording_datetimes'])
+            self._recording_time = sorted(recording_datetimes)[0]
+        return self._recording_time
 
     def load_probe_data(self):
         """
@@ -84,7 +95,7 @@ class OpenEphys:
 
                         probe.recording_info['recording_count'] += 1
                         probe.recording_info['recording_datetimes'].append(
-                            rec.datetime)
+                            rec.datetime + datetime.timedelta(float(rec.start_time)))
                         probe.recording_info['recording_durations'].append(
                             float(rec.duration))
                         probe.recording_info['recording_files'].append(
