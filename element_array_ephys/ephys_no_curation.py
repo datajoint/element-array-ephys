@@ -679,7 +679,10 @@ class CuratedClustering(dj.Imported):
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
-        acq_software = (EphysRecording & key).fetch1('acq_software')
+        acq_software, sample_rate = (EphysRecording & key).fetch1(
+            'acq_software', 'sampling_rate')
+
+        sample_rate = kilosort_dataset.data['params'].get('sample_rate', sample_rate)
 
         # ---------- Unit ----------
         # -- Remove 0-spike units
@@ -709,7 +712,7 @@ class CuratedClustering(dj.Imported):
             if (kilosort_dataset.data['spike_clusters'] == unit).any():
                 unit_channel, _ = kilosort_dataset.get_best_channel(unit)
                 unit_spike_times = (spike_times[kilosort_dataset.data['spike_clusters'] == unit]
-                                    / kilosort_dataset.data['params']['sample_rate'])
+                                    / sample_rate)
                 spike_count = len(unit_spike_times)
 
                 units.append({
