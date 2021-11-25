@@ -107,7 +107,7 @@ class Kilosort:
         self._data['channel_map'] = self._data['channel_map'].flatten()
 
         # Read the Cluster Groups
-        for cluster_pattern, cluster_col_name in zip(['cluster_groups.*', 'cluster_KSLabel.*'],
+        for cluster_pattern, cluster_col_name in zip(['cluster_group.*', 'cluster_KSLabel.*'],
                                                      ['group', 'KSLabel']):
             try:
                 cluster_file = next(self._kilosort_dir.glob(cluster_pattern))
@@ -115,7 +115,7 @@ class Kilosort:
                 pass
             else:
                 cluster_file_suffix = cluster_file.suffix
-                assert cluster_file_suffix in ('.csv', '.tsv', '.xlsx')
+                assert cluster_file_suffix in ('.tsv', '.xlsx')
                 break
         else:
             raise FileNotFoundError(
