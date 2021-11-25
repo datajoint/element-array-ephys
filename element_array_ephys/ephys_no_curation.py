@@ -591,6 +591,7 @@ class Clustering(dj.Imported):
 
                 # add additional probe-recording and channels details into `params`
                 params = {**params, **get_recording_channels_details(key)}
+                params['fs'] = params['sample_rate']
 
                 if acq_software == 'SpikeGLX':
                     spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
