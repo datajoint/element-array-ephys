@@ -58,7 +58,7 @@ class OpenEphys:
 
     def load_probe_data(self):
         """
-        Loop through all Open Ephys "processors", identify the processor for
+        Loop through all Open Ephys "signalchains/processors", identify the processor for
          the Neuropixels probe(s), extract probe info
             Loop through all recordings, associate recordings to
             the matching probes, extract recording info
@@ -68,16 +68,23 @@ class OpenEphys:
         """
 
         probes = {}
-        for processor in self.experiment.settings['SIGNALCHAIN']['PROCESSOR']:
-            if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
-                if (processor['@pluginName'] == 'Neuropix-3a'
-                        or 'NP_PROBE' not in processor['EDITOR']):
-                    probe = Probe(processor)
-                    probes[probe.probe_SN] = probe
-                else:
-                    for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
-                        probe = Probe(processor, probe_index)
+        sigchain_iter = (self.experiment.settings['SIGNALCHAIN']
+                         if isinstance(self.experiment.settings['SIGNALCHAIN'], list)
+                         else [self.experiment.settings['SIGNALCHAIN']])
+        for sigchain in sigchain_iter:
+            processor_iter = (sigchain['PROCESSOR']
+                              if isinstance(sigchain['PROCESSOR'], list)
+                              else [sigchain['PROCESSOR']])
+            for processor in processor_iter:
+                if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
+                    if (processor['@pluginName'] == 'Neuropix-3a'
+                            or 'NP_PROBE' not in processor['EDITOR']):
+                        probe = Probe(processor)
                         probes[probe.probe_SN] = probe
+                    else:
+                        for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
+                            probe = Probe(processor, probe_index)
+                            probes[probe.probe_SN] = probe
                         
         for probe_index, probe_SN in enumerate(probes):
             
