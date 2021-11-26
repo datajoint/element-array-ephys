@@ -79,8 +79,9 @@ class OpenEphys:
                 if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
                     if (processor['@pluginName'] == 'Neuropix-3a'
                             or 'NP_PROBE' not in processor['EDITOR']):
-                        probe = Probe(processor)
-                        probes[probe.probe_SN] = probe
+                        for probe_index in range(len(processor['EDITOR']['PROBE'])):
+                            probe = Probe(processor, probe_index)
+                            probes[probe.probe_SN] = probe
                     else:
                         for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
                             probe = Probe(processor, probe_index)
@@ -136,14 +137,13 @@ class Probe:
         self.processor_id = int(processor['@NodeId'])
         
         if processor['@pluginName'] == 'Neuropix-3a' or 'NP_PROBE' not in processor['EDITOR']:
-            self.probe_info = processor['EDITOR']['PROBE']
+            self.probe_info = processor['EDITOR']['PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = {
                 "Neuropix-PXI": "neuropixels 1.0 - 3B",
                 "Neuropix-3a": "neuropixels 1.0 - 3A"}[processor['@pluginName']]
             self._channels_connected = {int(re.search(r'\d+$', k).group()): int(v)
                                         for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
-
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
