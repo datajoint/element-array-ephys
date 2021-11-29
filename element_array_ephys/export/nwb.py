@@ -3,18 +3,31 @@ import numpy as np
 import json
 import pynwb
 
-from element_array_ephys import ephys, probe
+from element_array_ephys import ephys as ephys_acute
+from element_array_ephys import ephys_chronic, ephys_no_curation, probe
 
 
-def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile):
+def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile, ephys_module=None):
     """
     Generate one NWBFile object representing all ephys data
      coming from the specified "curated_clustering_keys"
     Note: the specified "curated_clustering_keys" must be all from one session
 
     :param curated_clustering_keys: entries of CuratedClustering table
+    :param nwbfile: nwbfile object containing session meta information
+    :param ephys_module: the activated ephys module calling this function
     :return: NWBFile object
     """
+    if ephys_module is None:
+        for ephys_module in (ephys_acute, ephys_chronic, ephys_no_curation):
+            if ephys_module.schema.is_activated():
+                ephys = ephys_module
+                break
+        else:
+            raise ValueError(f'No activated ephys module found!')
+    else:
+        ephys = ephys_module
+
     # validate input
     if isinstance(curated_clustering_keys, dj.expression.QueryExpression):
         curated_clustering_keys = (ephys.CuratedClustering & curated_clustering_keys).fetch('KEY')
