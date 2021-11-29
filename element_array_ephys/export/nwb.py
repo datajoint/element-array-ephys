@@ -81,7 +81,7 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile, ephys_module=No
                         else nwbfile.create_device(name=ephys_device_name))
 
         electrode_group = nwbfile.create_electrode_group(
-            name=electrode_config['electrode_config_name'],
+            name=f'{electrode_config["probe"]} {electrode_config["electrode_config_name"]}',
             description=json.dumps(electrode_config, default=str),
             device=ephys_device,
             location=insert_location)
