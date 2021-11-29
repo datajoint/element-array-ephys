@@ -100,16 +100,17 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile, ephys_module=No
         # ---- Units ----
         unit_query = clustering_query @ ephys.CuratedClustering.Unit
         for unit in unit_query.fetch(as_dict=True):
+            waveform_mean = waveform_std = np.full(1, np.nan)
             if ephys.WaveformSet & curated_clustering_key & {'unit': unit['unit']}:
                 waveform_mean = (ephys.WaveformSet.PeakWaveform
                                  & curated_clustering_key
                                  & {'unit': unit['unit']}).fetch1('peak_electrode_waveform')
                 # compute waveform's STD across spikes from the peak electrode
-                waveform_std = np.std((ephys.WaveformSet.Waveform & curated_clustering_key
+                electrode_waveforms = (ephys.WaveformSet.Waveform & curated_clustering_key
                                        & {'unit': unit['unit']}
-                                       & {'electrode': unit['electrode']}).fetch1('waveforms'), axis=0)
-            else:
-                waveform_mean = waveform_std = np.full(1, np.nan)
+                                       & {'electrode': unit['electrode']}).fetch1('waveforms')
+                if electrode_waveforms is not None:
+                    waveform_std = np.std(electrode_waveforms, axis=0)
 
             nwbfile.add_unit(id=unit['unit'],
                              electrodes=np.where(nwbfile.electrodes.id.data == int(unit['electrode']))[0],
