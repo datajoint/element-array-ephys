@@ -85,6 +85,9 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile):
                 location=electrode_group.location)
 
         # ---- Units ----
+        electrode_df = nwbfile.electrodes.to_dataframe()
+        electrode_ind = electrode_df.index[electrode_df.group_name == electrode_group.name]
+
         unit_query = clustering_query @ ephys.CuratedClustering.Unit
         for unit in unit_query.fetch(as_dict=True):
             if ephys.WaveformSet & curated_clustering_key & {'unit': unit['unit']}:
@@ -99,7 +102,7 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile):
                 waveform_mean = waveform_std = np.full(1, np.nan)
 
             nwbfile.add_unit(id=unit['unit'],
-                             electrodes=np.where(nwbfile.electrodes.id.data == int(unit['electrode']))[0],
+                             electrodes=np.where(electrode_ind == unit['electrode'])[0],
                              electrode_group=electrode_group,
                              sampling_rate=unit['sampling_rate'],
                              cluster_quality_label=unit['cluster_quality_label'],
