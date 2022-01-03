@@ -89,7 +89,7 @@ def get_session_directory(session_key: dict) -> str:
 
 @schema
 class AcquisitionSoftware(dj.Lookup):
-    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
+    definition = """  # Software used for recording of neuropixels probes
     acq_software: varchar(24)    
     """
     contents = zip(['SpikeGLX', 'Open Ephys'])
@@ -158,7 +158,8 @@ class EphysRecording(dj.Imported):
         else:
             raise FileNotFoundError(
                 f'Ephys recording data not found!'
-                f' Neither SpikeGLX nor Open Ephys recording files found')
+                f' Neither SpikeGLX nor Open Ephys recording files found'
+                f' in {session_dir}')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:

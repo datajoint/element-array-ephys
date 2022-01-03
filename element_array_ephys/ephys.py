@@ -157,7 +157,8 @@ class EphysRecording(dj.Imported):
         else:
             raise FileNotFoundError(
                 f'Ephys recording data not found!'
-                f' Neither SpikeGLX nor Open Ephys recording files found')
+                f' Neither SpikeGLX nor Open Ephys recording files found'
+                f' in {session_dir}')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
