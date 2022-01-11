@@ -4,7 +4,7 @@ import re
 import numpy as np
 import inspect
 import importlib
-from element_data_loader.utils import find_root_directory, find_full_path, dict_to_uuid
+from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe

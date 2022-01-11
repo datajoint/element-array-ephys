@@ -12,7 +12,7 @@ ephys pipeline.
 
 See [Background](Background.md) for the background information and development timeline.
 
-## The Pipeline Architecture
+## Element architecture
 
 ![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
@@ -59,12 +59,12 @@ This ephys element features automatic ingestion for spike sorting results from t
     pip install --upgrade element-array-ephys
     ```
 
-+ Install `element-data-loader`
++ Install `element-interface`
 
-    + `element-data-loader` is a dependency of `element-array-ephys`, however it is not contained within `requirements.txt`.
+    + `element-interface` is a dependency of `element-array-ephys`, however it is not contained within `requirements.txt`.
      
     ```
-    pip install "element-data-loader @ git+https://github.com/datajoint/element-data-loader"
+    pip install "element-interface @ git+https://github.com/datajoint/element-interface"
     ```
 
 ## Usage
