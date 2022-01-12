@@ -175,7 +175,7 @@ def create_units_table(
         units_table.add_column(
             name=units_query.heading.attributes[additional_attribute].name,
             description=units_query.heading.attributes[additional_attribute].comment,
-            index=True if additional_attribute == "spike_depths" else False,
+            index=additional_attribute == "spike_depths",
         )
 
     clustering_query = (
