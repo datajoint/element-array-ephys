@@ -103,8 +103,9 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     ):
         insertion_record = (ephys.InsertionLocation & this_probe).fetch1()
         if insertion_record:
-            [insertion_record.pop(k) for k in ephys.InsertionLocation.heading.primary_key]
-            insert_location = json.dumps(insertion_record, cls=DecimalEncoder)
+            insert_location = json.dumps(
+                    {k, v: for insertion_record.items() 
+                          if k not in ephys.InsertionLocation.primary_key}, cls=DecimalEncoder)
         else:
             insert_location = "unknown"
 
