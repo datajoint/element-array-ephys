@@ -113,7 +113,7 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
             description=this_probe.get("probe_comment", None),
             manufacturer=this_probe.get("probe_type", None),
         )
-        shank_ids = np.unique((probe.ProbeType.Electrode & this_probe).fetch("shank"))
+        shank_ids = set((probe.ProbeType.Electrode & this_probe).fetch("shank"))
         for shank_id in shank_ids:
             electrode_group = nwbfile.create_electrode_group(
                 name=f"probe{this_probe['probe']}_shank{shank_id}",
