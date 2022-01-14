@@ -74,6 +74,19 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     Add electrodes table to NWBFile. This is needed for any ElectricalSeries, including
     raw source data and LFP.
 
+    ephys.InsertionLocation -> ElectrodeGroup.location
+
+    probe.Probe::probe -> device.name
+    probe.Probe::probe_comment -> device.description
+    probe.Probe::probe_type -> device.manufacturer
+
+    probe.ProbeType.Electrode::electrode -> electrodes["id_in_probe"]
+    probe.ProbeType.Electrode::y_coord -> electrodes["rel_y"]
+    probe.ProbeType.Electrode::x_coord -> electrodes["rel_x"]
+    probe.ProbeType.Electrode::shank -> electrodes["shank"]
+    probe.ProbeType.Electrode::shank_col -> electrodes["shank_col"]
+    probe.ProbeType.Electrode::shank_row -> electrodes["shank_row"]
+
     Parameters
     ----------
     session_key: dict
@@ -81,10 +94,6 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     """
 
     electrodes_query = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-
-    session_electrodes = (
-            probe.ElectrodeConfig.Electrode & (ephys.EphysRecording & session_key)
-    ).fetch()
 
     for additional_attribute in ["shank_col", "shank_row", "shank"]:
         nwbfile.add_electrode_column(
@@ -148,18 +157,25 @@ def create_units_table(
         session_key: dict,
         nwbfile: pynwb.NWBFile,
         units_query: ephys.CuratedClustering.Unit,
-        paramset_record,
+        paramset_record: dict,
         name="units",
         desc="data on spiking units",
 ):
     """
+
+    ephys.CuratedClustering.Unit::unit -> units.id
+    ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
+    ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
+    ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
+
+    ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
 
     Parameters
     ----------
     session_key: dict
     nwbfile: pynwb.NWBFile
     units_query: ephys.CuratedClustering.Unit
-    paramset_record: int
+    paramset_record: dict
     name: str, optional
         default="units"
     desc: str, optional
@@ -223,8 +239,6 @@ def add_ephys_units_to_nwb(
     session_key: dict
     nwbfile: pynwb.NWBFile
     primary_clustering_paramset_idx: int, optional
-
-
     """
 
     if not ephys.ClusteringTask & session_key:
@@ -252,6 +266,7 @@ def add_ephys_units_to_nwb(
             name = f"units_{paramset_record['clustering_method']}"
             units_table = create_units_table(
                 session_key,
+                nwbfile,
                 units_query,
                 paramset_record,
                 name=name,
@@ -294,9 +309,6 @@ def add_ephys_recording_to_nwb(
     end_frame: int, optional
         Used for small test conversions
     """
-
-    if not ephys.EphysRecording & session_key:
-        return
 
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
@@ -360,14 +372,14 @@ def add_ephys_lfp_from_dj_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     """
     Read LFP data from the data in element-aray-ephys
 
+    ephys.LFP::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
+    ephys.LFP::lfp_time_stamps -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].timestamps
+
     Parameters
     ----------
     session_key: dict
     nwbfile: NWBFile
     """
-
-    if not ephys.LFP & session_key:
-        return
 
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
@@ -407,7 +419,9 @@ def add_ephys_lfp_from_source_to_nwb(
         session_key: dict, nwbfile: pynwb.NWBFile, end_frame=None
 ):
     """
-    Read the LFP data directly from the source file. Currently only works for SpikeGLX data.
+    Read the LFP data directly from the source file. Currently, only works for SpikeGLX data.
+
+    ephys.EphysRecording::recording_datetime -> acquisition
 
     Parameters
     ----------
