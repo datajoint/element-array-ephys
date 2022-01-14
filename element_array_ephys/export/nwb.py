@@ -109,11 +109,10 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     ):
         insertion_record = (ephys.InsertionLocation & this_probe).fetch1()
         if insertion_record:
-            [
-                insertion_record.pop(k)
-                for k in ephys.InsertionLocation.heading.primary_key
-            ]
-            insert_location = json.dumps(insertion_record, cls=DecimalEncoder)
+            insert_location = json.dumps(
+                {k: v for k, v in insertion_record.items() if k not in ephys.InsertionLocation.primary_key},
+                cls=DecimalEncoder
+            )
         else:
             insert_location = "unknown"
 
@@ -122,7 +121,7 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
             description=this_probe.get("probe_comment", None),
             manufacturer=this_probe.get("probe_type", None),
         )
-        shank_ids = np.unique((probe.ProbeType.Electrode & this_probe).fetch("shank"))
+        shank_ids = set((probe.ProbeType.Electrode & this_probe).fetch("shank"))
         for shank_id in shank_ids:
             electrode_group = nwbfile.create_electrode_group(
                 name=f"probe{this_probe['probe']}_shank{shank_id}",
@@ -190,7 +189,7 @@ def create_units_table(
         units_table.add_column(
             name=units_query.heading.attributes[additional_attribute].name,
             description=units_query.heading.attributes[additional_attribute].comment,
-            index=True if additional_attribute == "spike_depths" else False,
+            index=additional_attribute == "spike_depths",
         )
 
     clustering_query = (
