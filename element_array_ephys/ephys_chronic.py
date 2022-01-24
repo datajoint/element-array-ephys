@@ -131,63 +131,6 @@ class ProbeInsertion(dj.Manual):
     insertion_datetime=null: datetime
     """
 
-    @classmethod
-    def auto_generate_entries(cls, session_key):
-        """
-        Method to auto-generate ProbeInsertion entries for a particular session
-        Probe information is inferred from the meta data found in the session data directory
-        """
-        sess_dir = find_full_path(get_ephys_root_data_dir(),
-                                  get_session_directory(session_key))
-        # search session dir and determine acquisition software
-        for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
-                                                 ['SpikeGLX', 'Open Ephys']):
-            ephys_meta_filepaths = list(sess_dir.rglob(ephys_pattern))
-            if ephys_meta_filepaths:
-                acq_software = ephys_acq_type
-                break
-        else:
-            raise FileNotFoundError(
-                f'Ephys recording data not found!'
-                f' Neither SpikeGLX nor Open Ephys recording files found in: {sess_dir}')
-
-        probe_list, probe_insertion_list = [], []
-        if acq_software == 'SpikeGLX':
-            for meta_fp_idx, meta_filepath in enumerate(ephys_meta_filepaths):
-                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-
-                probe_key = {'probe_type': spikeglx_meta.probe_model,
-                             'probe': spikeglx_meta.probe_SN}
-                if (probe_key['probe'] not in [p['probe'] for p in probe_list]
-                        and probe_key not in probe.Probe()):
-                    probe_list.append(probe_key)
-
-                probe_dir = meta_filepath.parent
-                try:
-                    probe_number = re.search('(imec)?\d{1}$', probe_dir.name).group()
-                    probe_number = int(probe_number.replace('imec', ''))
-                except AttributeError:
-                    probe_number = meta_fp_idx
-
-                probe_insertion_list.append({**session_key,
-                                             'probe': spikeglx_meta.probe_SN,
-                                             'insertion_number': int(probe_number)})
-        elif acq_software == 'Open Ephys':
-            loaded_oe = openephys.OpenEphys(sess_dir)
-            for probe_idx, oe_probe in enumerate(loaded_oe.probes.values()):
-                probe_key = {'probe_type': oe_probe.probe_model, 'probe': oe_probe.probe_SN}
-                if (probe_key['probe'] not in [p['probe'] for p in probe_list]
-                        and probe_key not in probe.Probe()):
-                    probe_list.append(probe_key)
-                probe_insertion_list.append({**session_key,
-                                             'probe': oe_probe.probe_SN,
-                                             'insertion_number': probe_idx})
-        else:
-            raise NotImplementedError(f'Unknown acquisition software: {acq_software}')
-
-        probe.Probe.insert(probe_list)
-        cls.insert(probe_insertion_list, skip_duplicates=True)
-
 
 @schema
 class InsertionLocation(dj.Manual):
