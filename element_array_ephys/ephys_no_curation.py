@@ -28,7 +28,8 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
         :param linking_module: a module name or a module containing the
          required dependencies to activate the `ephys` element:
             Upstream tables:
-                + Session: parent table to ProbeInsertion, typically identifying a recording session
+                + Subject: table referenced by ProbeInsertion, typically identifying the animal undergoing a probe insertion
+                + Session: table referenced by EphysRecording, typically identifying a recording session
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
@@ -476,7 +477,7 @@ class ClusteringParamSet(dj.Lookup):
 class ClusterQualityLabel(dj.Lookup):
     definition = """
     # Quality
-    cluster_quality_label:  varchar(100)
+    cluster_quality_label:  varchar(100)  # cluster quality type - e.g. 'good', 'MUA', 'noise', etc.
     ---
     cluster_quality_description:  varchar(4000)
     """
@@ -731,7 +732,7 @@ class CuratedClustering(dj.Imported):
     def make_nwb(cls, curated_clustering_key):
         from .export import curated_clusterings_to_nwb
         nwbfile = _linking_module.Session.make_nwb(curated_clustering_key)
-        return curated_clusterings_to_nwb(curated_clustering_key, nwbfile)
+        return curated_clusterings_to_nwb(curated_clustering_key, nwbfile, ephys_module=__name__)
 
 
 @schema
