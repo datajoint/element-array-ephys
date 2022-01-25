@@ -233,6 +233,13 @@ def add_ephys_units_to_nwb(
     """
     Add spiking data to NWBFile.
 
+    ephys.CuratedClustering.Unit::unit -> units.id
+    ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
+    ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
+    ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
+
+    ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
+
     Parameters
     ----------
     session_key: dict
@@ -299,7 +306,11 @@ def get_electrodes_mapping(electrodes):
 def add_ephys_recording_to_nwb(
     session_key: dict, nwbfile: pynwb.NWBFile, end_frame: int = None
 ):
-    """
+    """Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
+    applies lossless compression to the data, to the final file might be smaller than the original, but there is no
+    data loss. Currently supports neuropixel and openephys, and relies on SpikeInterface to read the data.
+
+    source data -> acquisition["ElectricalSeries"]
 
     Parameters
     ----------
