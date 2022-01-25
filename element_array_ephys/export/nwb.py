@@ -265,6 +265,7 @@ def add_ephys_units_to_nwb(
             name = f"units_{paramset_record['clustering_method']}"
             units_table = create_units_table(
                 session_key,
+                nwbfile,
                 units_query,
                 paramset_record,
                 name=name,
