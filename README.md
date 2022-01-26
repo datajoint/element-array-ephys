@@ -1,5 +1,4 @@
 # DataJoint Element - Array Electrophysiology Element
-DataJoint Element for array electrophysiology.
 
 This repository features DataJoint pipeline design for extracellular array electrophysiology, 
 with ***Neuropixels*** probe and ***kilosort*** spike sorting method. 
@@ -13,12 +12,16 @@ ephys pipeline.
 
 See [Background](Background.md) for the background information and development timeline.
 
-## The Pipeline Architecture
+## Element architecture
 
 ![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
 As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
-and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***.
+and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***. We 
+provide an [example workflow](https://github.com/datajoint/workflow-array-ephys/) with a 
+[pipeline script](https://github.com/datajoint/workflow-array-ephys/blob/main/workflow_array_ephys/pipeline.py)
+that models (a) combining this Element with the corresponding [Element-Session](https://github.com/datajoint/element-session)
+, and (b) declaring a ***SkullReference*** table to provide Location.
 
 ### The design of probe
 
@@ -45,14 +48,24 @@ This ephys element features automatic ingestion for spike sorting results from t
     + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
 
 ## Installation
-```
-pip install element-array-ephys
-```
 
-If you already have an older version of ***element-array-ephys*** installed using `pip`, upgrade with
-```
-pip install --upgrade element-array-ephys
-```
++ Install `element-array-ephys`
+    ```
+    pip install element-array-ephys
+    ```
+
++ Upgrade `element-array-ephys` previously installed with `pip`
+    ```
+    pip install --upgrade element-array-ephys
+    ```
+
++ Install `element-interface`
+
+    + `element-interface` is a dependency of `element-array-ephys`, however it is not contained within `requirements.txt`.
+     
+    ```
+    pip install "element-interface @ git+https://github.com/datajoint/element-interface"
+    ```
 
 ## Usage
 
@@ -65,12 +78,12 @@ To activate the `element-array-ephys`, ones need to provide:
     + schema name for the ephys module
 
 2. Upstream tables
-    + Session table
-    + SkullReference table (Reference table for InsertionLocation, specifying the skull reference)
+    + Session table: A set of keys identifying a recording session (see [Element-Session](https://github.com/datajoint/element-session)).
+    + SkullReference table: A reference table for InsertionLocation, specifying the skull reference (see [example pipeline](https://github.com/datajoint/workflow-array-ephys/blob/main/workflow_array_ephys/pipeline.py)).
 
-3. Utility functions
-    + get_ephys_root_data_dir()
-    + get_session_directory()
+3. Utility functions. See [example definitions here](https://github.com/datajoint/workflow-array-ephys/blob/main/workflow_array_ephys/paths.py)
+    + get_ephys_root_data_dir(): Returns your root data directory.
+    + get_session_directory(): Returns the path of the session data relative to the root.
 
 For more detail, check the docstring of the `element-array-ephys`:
 
