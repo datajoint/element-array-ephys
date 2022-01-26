@@ -763,12 +763,6 @@ class CuratedClustering(dj.Imported):
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
 
-    @classmethod
-    def make_nwb(cls, curated_clustering_key):
-        from .export import curated_clusterings_to_nwb
-        nwbfile = _linking_module.Session.make_nwb(curated_clustering_key)
-        return curated_clusterings_to_nwb(curated_clustering_key, nwbfile, ephys_module=__name__)
-
 
 @schema
 class WaveformSet(dj.Imported):

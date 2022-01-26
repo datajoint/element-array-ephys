@@ -1,3 +1,5 @@
+# THIS IS DEPRECATED - TO BE REMOVED
+
 import datajoint as dj
 import numpy as np
 import json
