@@ -137,7 +137,7 @@ def curated_clusterings_to_nwb(curated_clustering_keys, nwbfile, ephys_module=No
             lfp_time_stamps = (ephys.LFP & curated_clustering_key).fetch1('lfp_time_stamps')
 
             electrode_ind, lfp_data = [], []
-            for chn in np.unique(lfp_channels):
+            for chn in set(lfp_channels):
                 lfp_data.append((ephys.LFP.Electrode
                                  & curated_clustering_key & {'electrode': chn}).fetch1('lfp'))
                 electrode_ind.append(np.where(nwbfile.electrodes.id.data == chn)[0][0])
