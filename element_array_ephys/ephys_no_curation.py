@@ -6,8 +6,11 @@ import inspect
 import importlib
 from decimal import Decimal
 
+from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
+
 from .readers import spikeglx, kilosort, openephys
-from . import probe, find_full_path, find_root_directory, dict_to_uuid, get_logger
+from . import probe, get_logger
+
 
 log = get_logger(__name__)
 
