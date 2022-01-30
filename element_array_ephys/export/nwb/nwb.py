@@ -15,9 +15,9 @@ from spikeinterface import extractors
 from tqdm import tqdm
 from uuid import uuid4
 
-from ... import ephys
+#from ... import ephys
 
-# from workflow.pipeline import ephys
+from workflow.pipeline import ephys
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -112,8 +112,12 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
         insertion_record = (ephys.InsertionLocation & this_probe).fetch1()
         if insertion_record:
             insert_location = json.dumps(
-                {k: v for k, v in insertion_record.items() if k not in ephys.InsertionLocation.primary_key},
-                cls=DecimalEncoder
+                {
+                    k: v
+                    for k, v in insertion_record.items()
+                    if k not in ephys.InsertionLocation.primary_key
+                },
+                cls=DecimalEncoder,
             )
         else:
             insert_location = "unknown"
@@ -332,7 +336,9 @@ def add_ephys_recording_to_nwb(
     ):
         probe_id = (ephys.ProbeInsertion() & ephys_recording_record).fetch1("probe")
 
-        relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
+        relative_path = (
+            ephys.EphysRecording.EphysFile & ephys_recording_record
+        ).fetch1("file_path")
         file_path = ephys.find_full_path(get_ephys_root_data_dir(), relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
@@ -457,7 +463,9 @@ def add_ephys_lfp_from_source_to_nwb(
     ):
         probe_id = (ephys.ProbeInsertion() & ephys_recording_record).fetch1("probe")
 
-        relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
+        relative_path = (
+            ephys.EphysRecording.EphysFile & ephys_recording_record
+        ).fetch1("file_path")
         file_path = find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
