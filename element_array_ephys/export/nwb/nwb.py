@@ -17,7 +17,7 @@ from uuid import uuid4
 
 #from ... import ephys
 
-from workflow_array_ephys.pipeline import ephys
+from workflow_array_ephys.pipeline import ephys, probe
 
 
 class DecimalEncoder(json.JSONEncoder):
