@@ -469,7 +469,7 @@ def add_ephys_lfp_from_source_to_nwb(
             ephys.EphysRecording.EphysFile & ephys_recording_record
         ).fetch1("file_path")
         relative_path = relative_path.replace("\\","/")
-        file_path = find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
+        file_path = ephys.find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
             extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.lf")
