@@ -14,8 +14,7 @@ from spikeinterface import extractors
 from tqdm import tqdm
 from uuid import uuid4
 
-
-# from element_data_loader.utils import find_full_path
+from workflow.pipeline import ephys
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -155,7 +154,7 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
 def create_units_table(
     session_key: dict,
     nwbfile: pynwb.NWBFile,
-    units_query: ephys.CuratedClustering.Unit,
+    units_query,
     paramset_record,
     name="units",
     desc="data on spiking units",
@@ -330,16 +329,11 @@ def add_ephys_recording_to_nwb(
     ):
         probe_id = (ephys.ProbeInsertion() & ephys_recording_record).fetch1("probe")
 
-        # relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
-        # file_path = find_full_path(get_ephys_root_data_dir(), relative_path)
-
-        # ephys_recording_record["acq_software"] = "OpenEphys"
-        # file_path = "../sciopsdemo-inbox/allen/SixProbesExperiments"
-
-        file_path = "../inbox/subject5/session1/probe_1/"
+        relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
+        file_path = ephys.find_full_path(get_ephys_root_data_dir(), relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(file_path, "imec.ap")
+            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.ap")
         elif ephys_recording_record["acq_software"] == "OpenEphys":
             extractor = extractors.read_openephys(file_path, stream_id="0")
         else:
@@ -460,12 +454,11 @@ def add_ephys_lfp_from_source_to_nwb(
     ):
         probe_id = (ephys.ProbeInsertion() & ephys_recording_record).fetch1("probe")
 
-        # relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
-        # file_path = find_full_path(get_ephys_root_data_dir(), relative_path)
-        file_path = "../inbox/subject5/session1/probe_1/"
+        relative_path = (ephys.EphysRecording.EphysFile & ephys_recording_record).fetch1("file_path")
+        file_path = find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(file_path, "imec.lf")
+            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.lf")
         else:
             raise ValueError(
                 f"unsupported acq_software type: {ephys_recording_record['acq_software']}"

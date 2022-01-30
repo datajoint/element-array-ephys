@@ -1,6 +1,6 @@
 # Exporting data to NWB
 
-The export/nwb.py module maps from the element-array-ephys data structure to NWB.
+The `export/nwb/nwb.py` module maps from the element-array-ephys data structure to NWB.
 The main function is `ecephys_session_to_nwb`, which contains flags to control calling the following functions, 
 which can be called independently:
 
