@@ -16,7 +16,8 @@ from tqdm import tqdm
 from uuid import uuid4
 
 from ... import ephys
-#from workflow.pipeline import ephys
+
+# from workflow.pipeline import ephys
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -500,16 +501,16 @@ def add_ephys_lfp_from_source_to_nwb(
 
 
 def ecephys_session_to_nwb(
-        session_key,
-        subject_id=None,
-        raw=True,
-        spikes=True,
-        lfp="source",
-        end_frame=None,
-        lab_key=None,
-        project_key=None,
-        protocol_key=None,
-        nwbfile_kwargs=None,
+    session_key,
+    subject_id=None,
+    raw=True,
+    spikes=True,
+    lfp="source",
+    end_frame=None,
+    lab_key=None,
+    project_key=None,
+    protocol_key=None,
+    nwbfile_kwargs=None,
 ):
     """
     Main function for converting ephys data to NWB
@@ -548,7 +549,11 @@ def ecephys_session_to_nwb(
             additional_nwbfile_kwargs=nwbfile_kwargs,
         )
     else:
-        if not isinstance(nwbfile_kwargs, dict) and {'session_description', 'identifier', 'session_start_time'}.issubset(nwbfile_kwargs):
+        if isinstance(nwbfile_kwargs, dict) and not {
+            "session_description",
+            "identifier",
+            "session_start_time",
+        }.issubset(nwbfile_kwargs):
             raise ValueError(
                 "If element-session is not activated, you must include nwbfile_kwargs as a dictionary."
                 "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)"
@@ -568,7 +573,6 @@ def ecephys_session_to_nwb(
         add_ephys_lfp_from_source_to_nwb(session_key, nwbfile, end_frame=end_frame)
 
     return nwbfile
-
 
 
 def write_nwb(nwbfile, fname, check_read=True):
