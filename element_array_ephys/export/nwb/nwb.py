@@ -500,14 +500,16 @@ def add_ephys_lfp_from_source_to_nwb(
 
 
 def ecephys_session_to_nwb(
-    session_key,
-    session_identifier=str(uuid4()),
-    session_start_time=datetime.datetime.now(),
-    subject_id=None,
-    raw=True,
-    spikes=True,
-    lfp="source",
-    end_frame=None,
+        session_key,
+        subject_id=None,
+        raw=True,
+        spikes=True,
+        lfp="source",
+        end_frame=None,
+        lab_key=None,
+        project_key=None,
+        protocol_key=None,
+        nwbfile_kwargs=None,
 ):
     """
     Main function for converting ephys data to NWB
@@ -515,8 +517,6 @@ def ecephys_session_to_nwb(
     Parameters
     ----------
     session_key: dict
-    session_identifier: str, optional
-    session_start_time: datetime.datetime, optional
     subject_id: str
         subject_id, used if it cannot be automatically inferred
     raw: bool
@@ -529,15 +529,31 @@ def ecephys_session_to_nwb(
         False - do not convert LFP
     end_frame: int, optional
         Used to create small test conversions where large datasets are truncated.
+    lab_key, project_key, and protocol_key: dictionaries used to look up optional additional metadata
+    nwbfile_kwargs: dict, optional
+        - If element-session is not being used, this argument is required and must be a dictionary containing
+          'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime),
+          the minimal data for instantiating an NWBFile object.
+
+        - If element-session is being used, this argument can optionally be used to add over overwrite NWBFile fields.
     """
 
     if session.schema.is_activated():
-        nwbfile = session.export.nwb.session_to_nwb(session_key, subject_id=subject_id)
-    else:
-        nwbfile = pynwb.NWBFile(
-            "automatically generated", session_identifier, session_start_time
+        nwbfile = session_to_nwb(
+            session_key,
+            subject_id=subject_id,
+            lab_key=lab_key,
+            project_key=project_key,
+            protocol_key=protocol_key,
+            additional_nwbfile_kwargs=nwbfile_kwargs,
         )
-        nwbfile.subject = pynwb.file.Subject(subject_id=subject_id)
+    else:
+        if not isinstance(nwbfile_kwargs, dict) and {'session_description', 'identifier', 'session_start_time'}.issubset(nwbfile_kwargs):
+            raise ValueError(
+                "If element-session is not activated, you must include nwbfile_kwargs as a dictionary."
+                "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)"
+            )
+        nwbfile = pynwb.NWBFile(**nwbfile_kwargs)
 
     if raw:
         add_ephys_recording_to_nwb(session_key, nwbfile, end_frame=end_frame)
@@ -552,6 +568,7 @@ def ecephys_session_to_nwb(
         add_ephys_lfp_from_source_to_nwb(session_key, nwbfile, end_frame=end_frame)
 
     return nwbfile
+
 
 
 def write_nwb(nwbfile, fname, check_read=True):
