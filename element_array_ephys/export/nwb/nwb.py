@@ -549,11 +549,10 @@ def ecephys_session_to_nwb(
             additional_nwbfile_kwargs=nwbfile_kwargs,
         )
     else:
-        if isinstance(nwbfile_kwargs, dict) and not {
-            "session_description",
-            "identifier",
-            "session_start_time",
-        }.issubset(nwbfile_kwargs):
+        if not (
+            isinstance(nwbfile_kwargs, dict)
+            and {"session_description", "identifier", "session_start_time"}.issubset(nwbfile_kwargs)
+        ):
             raise ValueError(
                 "If element-session is not activated, you must include nwbfile_kwargs as a dictionary."
                 "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)"
