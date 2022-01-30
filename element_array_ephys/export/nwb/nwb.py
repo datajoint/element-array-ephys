@@ -548,6 +548,7 @@ def ecephys_session_to_nwb(
     """
 
     if session.schema.is_activated():
+        from element_session.export.nwb import session_to_nwb
         nwbfile = session_to_nwb(
             session_key,
             subject_id=subject_id,
