@@ -14,7 +14,8 @@ from spikeinterface import extractors
 from tqdm import tqdm
 from uuid import uuid4
 
-from workflow.pipeline import ephys
+from ... import ephys
+#from workflow.pipeline import ephys
 
 
 class DecimalEncoder(json.JSONEncoder):
