@@ -485,10 +485,14 @@ def add_ephys_lfp_from_source_to_nwb(
             probe.ElectrodeConfig.Electrode() & ephys_recording_record
         ).fetch("electrode")
 
-        if all(extractor.get_channel_gains() == 1):
-            channel_conversion = None
-        else:
-            channel_conversion = extractor.get_channel_gains()
+        conversion = 1e-6
+        channel_conversion = None
+        if any(extractor.get_channel_gains() != 1):
+            gains = extractor.get_channel_gains()
+            if all(x == gains[0] for x in gains):
+                conversion *= gains[0]
+            else:
+                channel_conversion = gains
 
         lfp.add_electrical_series(
             pynwb.ecephys.ElectricalSeries(
@@ -505,7 +509,7 @@ def add_ephys_lfp_from_source_to_nwb(
                     name="electrodes",
                     description="recorded electrodes",
                 ),
-                conversion=1e-6,
+                conversion=conversion,
                 channel_conversion=channel_conversion,
             )
         )
