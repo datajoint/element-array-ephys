@@ -310,6 +310,14 @@ def get_electrodes_mapping(electrodes):
     }
 
 
+def gains_helper(gains):
+    if all(x == 1 for x in gains):
+        return dict(conversion=1e-6, channel_conversion=None)
+    if all(x == gains[0] for x in gains):
+        return dict(conversion=1e-6 * gains[0], channel_conversion=None)
+    return dict(conversion=1e-6, channel_conversion=gains)
+
+
 def add_ephys_recording_to_nwb(
     session_key: dict, nwbfile: pynwb.NWBFile, end_frame: int = None
 ):
@@ -352,10 +360,7 @@ def add_ephys_recording_to_nwb(
                 f"unsupported acq_software type: {ephys_recording_record['acq_software']}"
             )
 
-        if all(extractor.get_channel_gains() == 1):
-            channel_conversion = None
-        else:
-            channel_conversion = extractor.get_channel_gains()
+        conversion_kwargs = gains_helper(extractor.get_channel_gains())
 
         if end_frame is not None:
             extractor = extractor.frame_slice(0, end_frame)
@@ -379,8 +384,7 @@ def add_ephys_recording_to_nwb(
                     name="electrodes",
                     description="recorded electrodes",
                 ),
-                conversion=1e-6,
-                channel_conversion=channel_conversion,
+                **conversion_kwargs
             )
         )
 
@@ -485,14 +489,7 @@ def add_ephys_lfp_from_source_to_nwb(
             probe.ElectrodeConfig.Electrode() & ephys_recording_record
         ).fetch("electrode")
 
-        conversion = 1e-6
-        channel_conversion = None
-        if any(extractor.get_channel_gains() != 1):
-            gains = extractor.get_channel_gains()
-            if all(x == gains[0] for x in gains):
-                conversion *= gains[0]
-            else:
-                channel_conversion = gains
+        conversion_kwargs = gains_helper(extractor.get_channel_gains())
 
         lfp.add_electrical_series(
             pynwb.ecephys.ElectricalSeries(
@@ -509,8 +506,7 @@ def add_ephys_lfp_from_source_to_nwb(
                     name="electrodes",
                     description="recorded electrodes",
                 ),
-                conversion=conversion,
-                channel_conversion=channel_conversion,
+                **conversion_kwargs
             )
         )
 
