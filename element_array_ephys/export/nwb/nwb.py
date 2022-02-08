@@ -16,7 +16,6 @@ from spikeinterface import extractors
 from tqdm import tqdm
 from uuid import uuid4
 
-#from ... import ephys
 
 from workflow_array_ephys.pipeline import ephys, probe
 
