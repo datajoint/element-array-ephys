@@ -7,7 +7,7 @@ import numpy as np
 import pynwb
 from element_session import session
 from hdmf.backends.hdf5 import H5DataIO
-from nwb_conversion_tools.utils.conversion_tools import get_module
+from nwb_conversion_tools.utils.nwbfile_tools import get_module
 from nwb_conversion_tools.utils.genericdatachunkiterator import GenericDataChunkIterator
 from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import (
     SpikeInterfaceRecordingDataChunkIterator,
