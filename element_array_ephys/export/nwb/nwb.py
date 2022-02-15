@@ -13,6 +13,10 @@ from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import 
 from spikeinterface import extractors
 from tqdm import tqdm
 
+from .. import probe, ephys
+
+assert probe.schema.is_activated() and ephys.schema.is_activated()
+
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -502,7 +506,6 @@ def add_ephys_lfp_from_source_to_nwb(
 
 def ecephys_session_to_nwb(
     session_key,
-    subject_id=None,
     raw=True,
     spikes=True,
     lfp="source",
@@ -510,15 +513,7 @@ def ecephys_session_to_nwb(
     lab_key=None,
     project_key=None,
     protocol_key=None,
-    nwbfile_kwargs=None,
-    # workflow_module='workflow_array_ephys.pipeline',
-    # skull_reference='',
-    lab_schema_name=(dj.config['custom']['database.prefix']+'lab'),
-    subject_schema_name=(dj.config['custom']['database.prefix']+'subject'),
-    session_schema_name=(dj.config['custom']['database.prefix']+'session'),
-    ephys_schema_name=(dj.config['custom']['database.prefix']+'ephys'),
-    probe_schema_name=(dj.config['custom']['database.prefix']+'probe'),
-    ephys_root_data_dir=(dj.config.get('custom', {}).get('ephys_root_data_dir', None))):
+    nwbfile_kwargs=None):
     """
         Main function for converting ephys data to NWB
 
@@ -546,43 +541,28 @@ def ecephys_session_to_nwb(
             - If element-session is being used, this argument can optionally be used to add over overwrite NWBFile fields.
     """
 
-    global ephys, probe
-    ephys = dj.create_virtual_module('ephys',ephys_schema_name)
-    probe = dj.create_virtual_module('probe',probe_schema_name)
-
     try:
-        import element_session
-        from element_session import session
-        from element_session.export.nwb import session_to_nwb
-        if not element_session.session.schema.is_activated():
-            session = dj.create_virtual_module('session', session_schema_name)
-        HAVE_ELEMENT_SESSION = True
-    except ModuleNotFoundError:
-        HAVE_ELEMENT_SESSION = False
-
-    if HAVE_ELEMENT_SESSION:
+        session_to_nwb = getattr(ephys._linking_module, 'session_to_nwb')
+    except AttributeError:
+        if not (
+            isinstance(nwbfile_kwargs, dict)
+            and {"session_description", "identifier", "session_start_time"}.issubset(nwbfile_kwargs)):
+            raise ValueError(
+                "If session_to_nwb is not provided, you must include nwbfile_kwargs as a dictionary."
+                "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)")
+        nwbfile = pynwb.NWBFile(**nwbfile_kwargs)
+    else:
         nwbfile = session_to_nwb(
             session_key,
-            lab_schema_name=lab_schema_name,
-            subject_schema_name=subject_schema_name,
-            session_schema_name=session_schema_name,
-            subject_id=subject_id,
             lab_key=lab_key,
             project_key=project_key,
             protocol_key=protocol_key,
             additional_nwbfile_kwargs=nwbfile_kwargs,
         )
-    else:
-        if not (
-            isinstance(nwbfile_kwargs, dict)
-            and {"session_description", "identifier", "session_start_time"}.issubset(nwbfile_kwargs)):
-            raise ValueError(
-                "If element-session is not activated, you must include nwbfile_kwargs as a dictionary."
-                "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)")
-        nwbfile = pynwb.NWBFile(**nwbfile_kwargs)
+
+    ephys_root_data_dir = ephys.get_ephys_root_data_dir()
 
     if raw:
-        assert ephys_root_data_dir, 'Need to supply root directory for retrieving raw files'
         add_ephys_recording_to_nwb(session_key, ephys_root_data_dir=ephys_root_data_dir,
                                    nwbfile=nwbfile, end_frame=end_frame)
 
@@ -593,7 +573,6 @@ def ecephys_session_to_nwb(
         add_ephys_lfp_from_dj_to_nwb(session_key, nwbfile)
 
     if lfp == "source":
-        assert ephys_root_data_dir, 'Need to supply root directory for retrieving raw files'
         add_ephys_lfp_from_source_to_nwb(session_key, ephys_root_data_dir=ephys_root_data_dir,
                                          nwbfile=nwbfile, end_frame=end_frame)
 
