@@ -13,9 +13,15 @@ from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import 
 from spikeinterface import extractors
 from tqdm import tqdm
 
-from .. import probe, ephys
+from .. import probe, ephys_acute, ephys_chronic, ephys_no_curation
 
-assert probe.schema.is_activated() and ephys.schema.is_activated()
+assert probe.schema.is_activated(), 'probe not yet activated'
+
+for ephys in (ephys_acute, ephys_chronic, ephys_no_curation):
+    if ephys.schema.is_activated():
+        break
+else:
+    raise AssertionError('ephys not yet activated')
 
 
 class DecimalEncoder(json.JSONEncoder):
