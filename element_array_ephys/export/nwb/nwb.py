@@ -13,7 +13,7 @@ from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import 
 from spikeinterface import extractors
 from tqdm import tqdm
 
-from .. import probe, ephys_acute, ephys_chronic, ephys_no_curation
+from ... import probe, ephys_acute, ephys_chronic, ephys_no_curation
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 

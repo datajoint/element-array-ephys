@@ -13,4 +13,4 @@ def get_logger(name):
 
 
 # ephys_acute as default
-import ephys_acute as ephys
+import element_array_ephys.ephys_acute as ephys
