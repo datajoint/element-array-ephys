@@ -15,6 +15,8 @@ IMAX = {'neuropixels 1.0 - 3A': 512,
 
 class SpikeGLX:
 
+    required_files = ('*.ap.meta', '*.ap.bin')
+
     def __init__(self, root_dir):
         '''
         create neuropixels reader from 'root name' - e.g. the recording:

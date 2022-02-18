@@ -79,9 +79,13 @@ class OpenEphys:
                 if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
                     if (processor['@pluginName'] == 'Neuropix-3a'
                             or 'NP_PROBE' not in processor['EDITOR']):
-                        for probe_index in range(len(processor['EDITOR']['PROBE'])):
-                            probe = Probe(processor, probe_index)
+                        if isinstance(processor['EDITOR']['PROBE'], dict):
+                            probe = Probe(processor, 0)
                             probes[probe.probe_SN] = probe
+                        else:
+                            for probe_index in range(len(processor['EDITOR']['PROBE'])):
+                                probe = Probe(processor, probe_index)
+                                probes[probe.probe_SN] = probe
                     else:
                         for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
                             probe = Probe(processor, probe_index)
@@ -137,7 +141,7 @@ class Probe:
         self.processor_id = int(processor['@NodeId'])
         
         if processor['@pluginName'] == 'Neuropix-3a' or 'NP_PROBE' not in processor['EDITOR']:
-            self.probe_info = processor['EDITOR']['PROBE'][probe_index]
+            self.probe_info = processor['EDITOR']['PROBE'] if isinstance(processor['EDITOR']['PROBE'], dict) else processor['EDITOR']['PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = {
                 "Neuropix-PXI": "neuropixels 1.0 - 3B",
