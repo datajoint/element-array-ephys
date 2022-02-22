@@ -1,5 +1,6 @@
 from element_array_ephys.export.nwb.nwb import ecephys_session_to_nwb, write_nwb
 
+import numpy as np
 from pynwb.ecephys import ElectricalSeries
 
 
@@ -35,3 +36,18 @@ def test_convert_to_nwb():
         assert isinstance(es, ElectricalSeries)
         assert es.conversion == 4.6875e-06
         assert es.rate == 2500.0
+
+
+def test_convert_to_nwb_with_dj_lfp():
+    nwbfile = ecephys_session_to_nwb(
+        dict(subject="subject5", session_datetime="2020-05-12 04:13:07"),
+        lfp="dj",
+        spikes=False,
+    )
+
+    for es_name in ("ElectricalSeries1", "ElectricalSeries2"):
+        es = nwbfile.processing["ecephys"].data_interfaces["LFP"][es_name]
+        assert isinstance(es, ElectricalSeries)
+        assert es.conversion == 1.0
+        assert isinstance(es.timestamps, np.ndarray)
+
