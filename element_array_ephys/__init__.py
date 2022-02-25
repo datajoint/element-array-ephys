@@ -10,3 +10,5 @@ def get_logger(name):
     log = logging.getLogger(name)
     log.setLevel(os.getenv('LOGLEVEL', 'INFO'))
     return log
+
+import ephys_acute as ephys
