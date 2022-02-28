@@ -512,7 +512,6 @@ def add_ephys_lfp_from_source_to_nwb(
 
 def ecephys_session_to_nwb(
     session_key,
-    subject_id=None,
     raw=True,
     spikes=True,
     lfp="source",
@@ -528,8 +527,6 @@ def ecephys_session_to_nwb(
     Parameters
     ----------
     session_key: dict
-    subject_id: str
-        subject_id, used if it cannot be automatically inferred
     raw: bool
         Whether to include the raw data from source. SpikeGLX and OpenEphys are supported
     spikes: bool
@@ -553,7 +550,6 @@ def ecephys_session_to_nwb(
         from element_session.export.nwb import session_to_nwb
         nwbfile = session_to_nwb(
             session_key,
-            subject_id=subject_id,
             lab_key=lab_key,
             project_key=project_key,
             protocol_key=protocol_key,
