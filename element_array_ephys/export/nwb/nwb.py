@@ -1,23 +1,27 @@
 import os
-import datetime
 import decimal
-import importlib
 import json
 import numpy as np
 import pynwb
-from element_session import session
+import datajoint as dj
+from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
 from nwb_conversion_tools.utils.nwbfile_tools import get_module
 from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import (
-    SpikeInterfaceRecordingDataChunkIterator,
-)
+    SpikeInterfaceRecordingDataChunkIterator)
 from spikeinterface import extractors
 from tqdm import tqdm
-from uuid import uuid4
 
+from ... import probe, ephys_acute, ephys_chronic, ephys_no_curation
 
-from workflow_array_ephys.pipeline import ephys, probe
+assert probe.schema.is_activated(), 'probe not yet activated'
+
+for ephys in (ephys_acute, ephys_chronic, ephys_no_curation):
+    if ephys.schema.is_activated():
+        break
+else:
+    raise AssertionError('ephys not yet activated')
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -91,7 +95,6 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     session_key: dict
     nwbfile: pynwb.NWBFile
     """
-
     electrodes_query = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
 
     for additional_attribute in ["shank_col", "shank_row", "shank"]:
@@ -164,8 +167,7 @@ def create_units_table(
     units_query,
     paramset_record,
     name="units",
-    desc="data on spiking units",
-):
+    desc="data on spiking units"):
     """
 
     ephys.CuratedClustering.Unit::unit -> units.id
@@ -318,8 +320,8 @@ def gains_helper(gains):
 
 
 def add_ephys_recording_to_nwb(
-    session_key: dict, nwbfile: pynwb.NWBFile, end_frame: int = None
-):
+    session_key: dict, ephys_root_data_dir,
+    nwbfile: pynwb.NWBFile, end_frame: int = None):
     """Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
     applies lossless compression to the data, to the final file might be smaller than the original, but there is no
     data loss. Currently supports neuropixel and openephys, and relies on SpikeInterface to read the data.
@@ -348,7 +350,7 @@ def add_ephys_recording_to_nwb(
             ephys.EphysRecording.EphysFile & ephys_recording_record
         ).fetch1("file_path")
         relative_path = relative_path.replace("\\","/")
-        file_path = ephys.find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
+        file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
             extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.ap")
@@ -436,8 +438,7 @@ def add_ephys_lfp_from_dj_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
 
 
 def add_ephys_lfp_from_source_to_nwb(
-    session_key: dict, nwbfile: pynwb.NWBFile, end_frame=None
-):
+    session_key: dict, ephys_root_data_dir, nwbfile: pynwb.NWBFile, end_frame=None):
     """
     Read the LFP data directly from the source file. Currently, only works for SpikeGLX data.
 
@@ -472,7 +473,7 @@ def add_ephys_lfp_from_source_to_nwb(
             ephys.EphysRecording.EphysFile & ephys_recording_record
         ).fetch1("file_path")
         relative_path = relative_path.replace("\\","/")
-        file_path = ephys.find_full_path(ephys.get_ephys_root_data_dir(), relative_path)
+        file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
             extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.lf")
@@ -546,8 +547,9 @@ def ecephys_session_to_nwb(
         - If element-session is being used, this argument can optionally be used to add over overwrite NWBFile fields.
     """
 
-    if session.schema.is_activated():
-        from element_session.export.nwb import session_to_nwb
+    session_to_nwb = getattr(ephys._linking_module, 'session_to_nwb', False)
+
+    if session_to_nwb:
         nwbfile = session_to_nwb(
             session_key,
             lab_key=lab_key,
@@ -556,18 +558,13 @@ def ecephys_session_to_nwb(
             additional_nwbfile_kwargs=nwbfile_kwargs,
         )
     else:
-        if not (
-            isinstance(nwbfile_kwargs, dict)
-            and {"session_description", "identifier", "session_start_time"}.issubset(nwbfile_kwargs)
-        ):
-            raise ValueError(
-                "If element-session is not activated, you must include nwbfile_kwargs as a dictionary."
-                "Required fields are 'session_description' (str), 'identifier' (str), and 'session_start_time' (datetime)"
-            )
         nwbfile = pynwb.NWBFile(**nwbfile_kwargs)
 
+    ephys_root_data_dir = ephys.get_ephys_root_data_dir()
+
     if raw:
-        add_ephys_recording_to_nwb(session_key, nwbfile, end_frame=end_frame)
+        add_ephys_recording_to_nwb(session_key, ephys_root_data_dir=ephys_root_data_dir,
+                                   nwbfile=nwbfile, end_frame=end_frame)
 
     if spikes:
         add_ephys_units_to_nwb(session_key, nwbfile)
@@ -576,7 +573,8 @@ def ecephys_session_to_nwb(
         add_ephys_lfp_from_dj_to_nwb(session_key, nwbfile)
 
     if lfp == "source":
-        add_ephys_lfp_from_source_to_nwb(session_key, nwbfile, end_frame=end_frame)
+        add_ephys_lfp_from_source_to_nwb(session_key, ephys_root_data_dir=ephys_root_data_dir,
+                                         nwbfile=nwbfile, end_frame=end_frame)
 
     return nwbfile
 
