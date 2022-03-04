@@ -7,9 +7,10 @@ import datajoint as dj
 from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
-from nwb_conversion_tools.utils.nwbfile_tools import get_module
-from nwb_conversion_tools.utils.spikeinterfacerecordingdatachunkiterator import (
-    SpikeInterfaceRecordingDataChunkIterator)
+from nwb_conversion_tools.tools.nwb_helpers import get_module
+from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunkiterator import (
+    SpikeInterfaceRecordingDataChunkIterator
+)
 from spikeinterface import extractors
 from tqdm import tqdm
 
