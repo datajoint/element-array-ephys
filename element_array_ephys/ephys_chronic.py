@@ -132,7 +132,9 @@ class EphysRecording(dj.Imported):
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
-    sampling_rate: float # (Hz) 
+    sampling_rate: float # (Hz)
+    recording_datetime: datetime # datetime of the recording from this probe
+    recording_duration: float # (seconds) duration of the recording from this probe
     """
 
     class EphysFile(dj.Part):
@@ -168,7 +170,8 @@ class EphysRecording(dj.Imported):
                     break
             else:
                 raise FileNotFoundError(
-                    'No SpikeGLX data found for probe insertion: {}'.format(key))
+                    'No SpikeGLX data found for probe insertion: {}'.format(key)
+                    ' The probe serial number does not match.')
 
             if re.search('(1.0|2.0)', spikeglx_meta.probe_model):
                 probe_type = spikeglx_meta.probe_model
@@ -190,7 +193,10 @@ class EphysRecording(dj.Imported):
             self.insert1({**key,
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
-                          'sampling_rate': spikeglx_meta.meta['imSampRate']})
+                          'sampling_rate': spikeglx_meta.meta['imSampRate'],
+                          'recording_datetime': spikeglx_meta.recording_time,
+                          'recording_duration': (spikeglx_meta.recording_duration
+                                        or spikeglx.retrieve_recording_duration(meta_filepath))})
 
             root_dir = find_root_directory(get_ephys_root_data_dir(), 
                                            meta_filepath)
@@ -224,7 +230,9 @@ class EphysRecording(dj.Imported):
             self.insert1({**key,
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
-                          'sampling_rate': probe_data.ap_meta['sample_rate']})
+                          'sampling_rate': probe_data.ap_meta['sample_rate'],
+                          'recording_datetime': probe_data.recording_info['recording_datetimes'][0],
+                          'recording_duration': np.sum(probe_data.recording_info['recording_durations'])})
 
             root_dir = find_root_directory(get_ephys_root_data_dir(),
                                 probe_data.recording_info['recording_files'][0])
