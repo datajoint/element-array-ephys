@@ -9,7 +9,7 @@ import scipy.io
 import numpy as np
 from datetime import datetime
 
-from ..import dict_to_uuid
+from element_interface.utils import dict_to_uuid
 
 
 # import the spike sorting packages
