@@ -170,7 +170,7 @@ class EphysRecording(dj.Imported):
                     break
             else:
                 raise FileNotFoundError(
-                    'No SpikeGLX data found for probe insertion: {}'.format(key)
+                    f'No SpikeGLX data found for probe insertion: {key}' + 
                     ' The probe serial number does not match.')
 
             if re.search('(1.0|2.0)', spikeglx_meta.probe_model):
