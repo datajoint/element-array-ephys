@@ -1,4 +1,4 @@
 dandi
-git+https://github.com/catalystneuro/nwb-conversion-tools.git
-git+https://github.com/SpikeInterface/spikeinterface.git
-git+https://github.com/bendichter/python-neo.git@2d0ba5213f6e2add29dd13b2131650e3325edb23
+nwb-conversion-tools==0.11.1
+spikeinterface==0.93.0
+neo==0.10.2
