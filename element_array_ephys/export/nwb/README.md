@@ -25,7 +25,7 @@ which can be called independently:
     probe.ProbeType.Electrode::shank_row -> electrodes["shank_row"]
 
 3. `add_ephys_recording_to_nwb`: Read voltage data directly from source files and iteratively transfer them to the 
-   NWB file. Automatically applies lossless compression to the data, to the final file might be smaller than the original, but there is no
+   NWB file. Automatically applies lossless compression to the data, so the final file might be smaller than the original, but there is no
    data loss. Currently supports neuropixel and openephys, and relies on SpikeInterface to read the data.
 
 
