@@ -18,7 +18,7 @@ from ... import probe, ephys_acute
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
-for ephys in (ephys_acute):
+for ephys in (ephys_acute,):
     if ephys.schema.is_activated():
         break
 else:
