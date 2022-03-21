@@ -395,7 +395,7 @@ def add_ephys_lfp_from_dj_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     """
     Read LFP data from the data in element-aray-ephys
 
-    ephys.LFP::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
+    ephys.LFP.Electrode::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
     ephys.LFP::lfp_time_stamps -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].timestamps
 
     Parameters
