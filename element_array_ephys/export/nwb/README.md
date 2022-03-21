@@ -26,7 +26,7 @@ which can be called independently:
 
 3. `add_ephys_recording_to_nwb`: Read voltage data directly from source files and iteratively transfer them to the 
    NWB file. Automatically applies lossless compression to the data, so the final file might be smaller than the original, but there is no
-   data loss. Currently supports neuropixel and openephys, and relies on SpikeInterface to read the data.
+   data loss. Currently supports Neuropixels data acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the data.
 
 
     source data -> acquisition["ElectricalSeries"]
