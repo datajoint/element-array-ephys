@@ -587,7 +587,7 @@ def write_nwb(nwbfile, fname, check_read=True):
     Parameters
     ----------
     nwbfile: pynwb.NWBFile
-    fname: str
+    fname: str Absolute path including `*.nwb` extension.
     check_read: bool
         If True, PyNWB will try to read the produced NWB file and ensure that it can be
         read.
