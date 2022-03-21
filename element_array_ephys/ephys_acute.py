@@ -457,14 +457,9 @@ class Curation(dj.Manual):
 
     def create1_from_clustering_task(self, key, curation_note=''):
         """
-<<<<<<< HEAD
-        A function to create a new corresponding "Curation" for a particular
-        "ClusteringTask"
-=======
         A function to create a new corresponding "Curation" for a particular
         "ClusteringTask", which assumes that no curation was performed on the
         dataset
->>>>>>> dee1c29 (Rebase, squashed. See Details)
         """
         if key not in Clustering():
             raise ValueError(f'No corresponding entry in Clustering available'
