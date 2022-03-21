@@ -113,8 +113,8 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     for this_probe in (ephys.ProbeInsertion * probe.Probe & session_key).fetch(
         as_dict=True
     ):
-        insertion_record = (ephys.InsertionLocation & this_probe).fetch1()
-        if insertion_record:
+        insertion_record = (ephys.InsertionLocation & this_probe).fetch()
+        if len(insertion_record)==1:
             insert_location = json.dumps(
                 {
                     k: v
@@ -123,8 +123,10 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
                 },
                 cls=DecimalEncoder,
             )
-        else:
+        elif len(insertion_record)==0:
             insert_location = "unknown"
+        else:
+            raise DataJointError(f'Found multiple insertion locations for {this_probe}')
 
         device = nwbfile.create_device(
             name=this_probe["probe"],
