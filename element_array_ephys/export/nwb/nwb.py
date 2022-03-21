@@ -18,7 +18,7 @@ from ... import probe, ephys_acute, ephys_chronic, ephys_no_curation
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
-for ephys in (ephys_acute, ephys_chronic, ephys_no_curation):
+for ephys in (ephys_acute):
     if ephys.schema.is_activated():
         break
 else:
@@ -517,7 +517,7 @@ def add_ephys_lfp_from_source_to_nwb(
         lfp.add_electrical_series(
             pynwb.ecephys.ElectricalSeries(
                 name=f"ElectricalSeries{ephys_recording_record['insertion_number']}",
-                description=str(ephys_recording_record),
+                description=f"LFP from probe {probe_id}",
                 data=SpikeInterfaceRecordingDataChunkIterator(extractor),
                 rate=extractor.get_sampling_frequency(),
                 starting_time=(
