@@ -293,7 +293,7 @@ def add_ephys_units_to_nwb(
 
 def get_electrodes_mapping(electrodes):
     """
-    Create a mapping from the group (shank) and electrode id within that group to the row number of the electrodes
+    Create a mapping from the probe and electrode id to the row number of the electrodes
     table. This is used in the construction of the DynamicTableRegion that indicates what rows of the electrodes
     table correspond to the data in an ElectricalSeries.
 
@@ -342,8 +342,11 @@ def gains_helper(gains):
 
 
 def add_ephys_recording_to_nwb(
-    session_key: dict, ephys_root_data_dir,
-    nwbfile: pynwb.NWBFile, end_frame: int = None):
+    session_key: dict,
+    ephys_root_data_dir: str,
+    nwbfile: pynwb.NWBFile,
+    end_frame: int = None,
+):
     """
     Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
     applies lossless compression to the data, so the final file might be smaller than the original, without
@@ -354,6 +357,7 @@ def add_ephys_recording_to_nwb(
     Parameters
     ----------
     session_key: dict
+    ephys_root_data_dir: str
     nwbfile: NWBFile
     end_frame: int, optional
         Used for small test conversions
