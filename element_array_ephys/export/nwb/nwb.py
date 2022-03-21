@@ -313,6 +313,27 @@ def get_electrodes_mapping(electrodes):
 
 
 def gains_helper(gains):
+    """
+    This handles three different cases for gains:
+    1. gains are all 1. In this case, return conversion=1e-6, which applies to all
+    channels and converts from microvolts to volts.
+    2. Gains are all equal, but not 1. In this case, multiply this by 1e-6 to apply this
+    gain to all channels and convert units to volts.
+    3. Gains are different for different channels. In this case use the
+    `channel_conversion` field in addition to the `conversion` field so that each
+    channel can be converted to volts using its own individual gain.
+
+    Parameters
+    ----------
+    gains: np.ndarray
+
+    Returns
+    -------
+    dict
+        conversion : float
+        channel_conversion : np.ndarray
+
+    """
     if all(x == 1 for x in gains):
         return dict(conversion=1e-6, channel_conversion=None)
     if all(x == gains[0] for x in gains):
@@ -323,7 +344,8 @@ def gains_helper(gains):
 def add_ephys_recording_to_nwb(
     session_key: dict, ephys_root_data_dir,
     nwbfile: pynwb.NWBFile, end_frame: int = None):
-    """Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
+    """
+    Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
     applies lossless compression to the data, so the final file might be smaller than the original, without
     data loss. Currently supports Neuropixels data acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the data.
 
