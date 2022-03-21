@@ -324,7 +324,7 @@ def add_ephys_recording_to_nwb(
     session_key: dict, ephys_root_data_dir,
     nwbfile: pynwb.NWBFile, end_frame: int = None):
     """Read voltage data directly from source files and iteratively transfer them to the NWB file. Automatically
-    applies lossless compression to the data, to the final file might be smaller than the original, but there is no
+    applies lossless compression to the data, so the final file might be smaller than the original, without
     data loss. Currently supports neuropixel and openephys, and relies on SpikeInterface to read the data.
 
     source data -> acquisition["ElectricalSeries"]
