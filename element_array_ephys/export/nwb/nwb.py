@@ -517,7 +517,7 @@ def add_ephys_lfp_from_source_to_nwb(
         lfp.add_electrical_series(
             pynwb.ecephys.ElectricalSeries(
                 name=f"ElectricalSeries{ephys_recording_record['insertion_number']}",
-                description=str(ephys_recording_record),
+                description=f"LFP from probe {probe_id}",
                 data=SpikeInterfaceRecordingDataChunkIterator(extractor),
                 rate=extractor.get_sampling_frequency(),
                 starting_time=(
