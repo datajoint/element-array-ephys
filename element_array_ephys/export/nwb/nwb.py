@@ -14,11 +14,11 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 from spikeinterface import extractors
 from tqdm import tqdm
 
-from ... import probe, ephys_acute, ephys_chronic, ephys_no_curation
+from ... import probe, ephys_acute
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
-for ephys in (ephys_acute):
+for ephys in (ephys_acute,):
     if ephys.schema.is_activated():
         break
 else:
@@ -206,7 +206,7 @@ def create_units_table(
     )
 
     for unit in tqdm(
-        (clustering_query @ ephys.CuratedClustering.Unit).fetch(as_dict=True),
+        (ephys.CuratedClustering.Unit & clustering_query).fetch(as_dict=True),
         desc=f"creating units table for paramset {paramset_record['paramset_idx']}",
     ):
 
