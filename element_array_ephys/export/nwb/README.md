@@ -44,7 +44,7 @@ which can be called independently:
 5. `add_ephys_lfp_from_dj_to_nwb`: Read LFP data from the data in element-array-ephys and convert to NWB.
 
 
-    ephys.LFP::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
+    ephys.LFP.Electrode::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
     ephys.LFP::lfp_time_stamps -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].timestamps
 
 6. `add_ephys_lfp_from_source_to_nwb`: Read the LFP data directly from the source file. Currently, only works for 
