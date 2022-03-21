@@ -148,7 +148,7 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
                     group=electrode_group,
                     filtering="unknown",
                     imp=-1.0,
-                    x=np.nan,  # to do: populate these values once the CCF element is ready
+                    x=np.nan,
                     y=np.nan,
                     z=np.nan,
                     rel_x=electrode["x_coord"],
