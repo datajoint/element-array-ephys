@@ -210,7 +210,7 @@ def create_units_table(
     )
 
     for unit in tqdm(
-        (ephys.CuratedClustering.Unit & clustering_query).fetch(as_dict=True),
+        (ephys.CuratedClustering.Unit & clustering_query.proj()).fetch(as_dict=True),
         desc=f"creating units table for paramset {paramset_record['paramset_idx']}",
     ):
 
