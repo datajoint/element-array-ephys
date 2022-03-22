@@ -113,17 +113,17 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     for this_probe in (ephys.ProbeInsertion * probe.Probe & session_key).fetch(
         as_dict=True
     ):
-        insertion_record = (ephys.InsertionLocation & this_probe).fetch()
-        if len(insertion_record)==1:
+        insertion_record = (ephys.InsertionLocation & this_probe).fetch(as_dict=True)
+        if len(insertion_record) == 1:
             insert_location = json.dumps(
                 {
                     k: v
-                    for k, v in insertion_record.items()
+                    for k, v in insertion_record[0].items()
                     if k not in ephys.InsertionLocation.primary_key
                 },
                 cls=DecimalEncoder,
             )
-        elif len(insertion_record)==0:
+        elif len(insertion_record) == 0:
             insert_location = "unknown"
         else:
             raise DataJointError(f'Found multiple insertion locations for {this_probe}')
