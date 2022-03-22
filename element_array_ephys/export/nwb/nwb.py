@@ -265,7 +265,6 @@ def add_ephys_units_to_nwb(
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
 
-    # add additional columns to the units table
     units_query = ephys.CuratedClustering.Unit() & session_key
 
     for paramset_record in (
