@@ -51,7 +51,7 @@ class LFPDataChunkIterator(GenericDataChunkIterator):
 
         first_record = (
             self.lfp_electrodes_query & dict(electrode=self.electrodes[0])
-        ).fetch(as_dict=True)[0]
+        ).fetch1(as_dict=True)
 
         self.n_channels = len(lfp_electrodes_query)
         self.n_tt = len(first_record["lfp"])
