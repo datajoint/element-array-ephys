@@ -42,7 +42,7 @@ class LFPDataChunkIterator(GenericDataChunkIterator):
         """
         Parameters
         ----------
-        lfp_electrodes_query: element_array_ephys.ephys_no_curation.LFP
+        lfp_electrodes_query: element_array_ephys.ephys.LFP.Electrode
         chunk_length: int, optional
             Chunks are blocks of disk space where data are stored contiguously and compressed
         """
