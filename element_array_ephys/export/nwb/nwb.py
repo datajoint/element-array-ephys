@@ -259,6 +259,7 @@ def add_ephys_units_to_nwb(
     """
 
     if not ephys.ClusteringTask & session_key:
+        warnings.warn(f'No unit data exists for session:{session_key}')
         return
 
     if nwbfile.electrodes is None:
