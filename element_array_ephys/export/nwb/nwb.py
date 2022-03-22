@@ -242,6 +242,17 @@ def add_ephys_units_to_nwb(
     """
     Add spiking data to NWBFile.
 
+    In NWB, spiking data is stored in a Units table. The primary Units table is
+    stored at /units. The spiking data in /units is generally the data used in
+    downstream analysis. Only a single Units table can be stored at /units. Other Units
+    tables can be stored in a ProcessingModule at /processing/ecephys/. Any number of
+    Units tables can be stored in this ProcessingModule as long as they have different
+    names, and these Units tables can store intermediate processing steps or
+    alternative curations.
+
+    Use `primary_clustering_paramset_idx` to indicate which clustering is primary. All
+    others will be stored in /processing/ecephys/.
+
     ephys.CuratedClustering.Unit::unit -> units.id
     ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
     ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
