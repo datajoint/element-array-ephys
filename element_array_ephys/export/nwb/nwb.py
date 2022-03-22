@@ -196,6 +196,7 @@ def create_units_table(
     mapping = get_electrodes_mapping(nwbfile.electrodes)
 
     units_table = pynwb.misc.Units(name=name, description=desc)
+    # add additional columns to the units table
     for additional_attribute in ["cluster_quality_label", "spike_depths"]:
         units_table.add_column(
             name=units_query.heading.attributes[additional_attribute].name,
