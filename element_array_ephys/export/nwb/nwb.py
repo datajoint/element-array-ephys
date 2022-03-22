@@ -167,7 +167,6 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
 def create_units_table(
     session_key: dict,
     nwbfile: pynwb.NWBFile,
-    units_query,
     paramset_record,
     name="units",
     desc="data on spiking units"):
@@ -184,7 +183,6 @@ def create_units_table(
     ----------
     session_key: dict
     nwbfile: pynwb.NWBFile
-    units_query: ephys.CuratedClustering.Unit
     paramset_record: int
     name: str, optional
         default="units"
@@ -197,14 +195,13 @@ def create_units_table(
 
     units_table = pynwb.misc.Units(name=name, description=desc)
     # add additional columns to the units table
-    units_query = ephys.CuratedClustering.Unit() & session_key
     for additional_attribute in ["cluster_quality_label", "spike_depths"]:
         # The `index` parameter indicates whether the column is a "ragged array," i.e.
         # whether each row of this column is a vector with potentially different lengths
         # for each row.
         units_table.add_column(
-            name=units_query.heading.attributes[additional_attribute].name,
-            description=units_query.heading.attributes[additional_attribute].comment,
+            name=additional_attribute,
+            description=ephys.CuratedClustering.Unit.heading.attributes[additional_attribute].comment,
             index=additional_attribute == "spike_depths",
         )
 
@@ -281,7 +278,6 @@ def add_ephys_units_to_nwb(
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
 
-
     for paramset_record in (
         ephys.ClusteringParamSet & ephys.CuratedClustering & session_key
     ).fetch("paramset_idx", "clustering_method", "paramset_desc", as_dict=True):
@@ -289,7 +285,6 @@ def add_ephys_units_to_nwb(
             units_table = create_units_table(
                 session_key,
                 nwbfile,
-                units_query,
                 paramset_record,
                 desc=paramset_record["paramset_desc"],
             )
@@ -299,7 +294,6 @@ def add_ephys_units_to_nwb(
             units_table = create_units_table(
                 session_key,
                 nwbfile,
-                units_query,
                 paramset_record,
                 name=name,
                 desc=paramset_record["paramset_desc"],
