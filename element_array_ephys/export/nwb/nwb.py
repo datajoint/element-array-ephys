@@ -13,7 +13,7 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 )
 from spikeinterface import extractors
 from tqdm import tqdm
-
+import warnings
 from ... import probe, ephys_acute
 
 assert probe.schema.is_activated(), 'probe not yet activated'
@@ -113,8 +113,8 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
     for this_probe in (ephys.ProbeInsertion * probe.Probe & session_key).fetch(
         as_dict=True
     ):
-        insertion_record = (ephys.InsertionLocation & this_probe).fetch1()
-        if insertion_record:
+        insertion_record = (ephys.InsertionLocation & this_probe).fetch()
+        if len(insertion_record)==1:
             insert_location = json.dumps(
                 {
                     k: v
@@ -123,8 +123,10 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
                 },
                 cls=DecimalEncoder,
             )
-        else:
+        elif len(insertion_record)==0:
             insert_location = "unknown"
+        else:
+            raise DataJointError(f'Found multiple insertion locations for {this_probe}')
 
         device = nwbfile.create_device(
             name=this_probe["probe"],
@@ -194,6 +196,8 @@ def create_units_table(
     mapping = get_electrodes_mapping(nwbfile.electrodes)
 
     units_table = pynwb.misc.Units(name=name, description=desc)
+    # add additional columns to the units table
+    units_query = ephys.CuratedClustering.Unit() & session_key
     for additional_attribute in ["cluster_quality_label", "spike_depths"]:
         units_table.add_column(
             name=units_query.heading.attributes[additional_attribute].name,
@@ -268,13 +272,12 @@ def add_ephys_units_to_nwb(
     """
 
     if not ephys.ClusteringTask & session_key:
+        warnings.warn(f'No unit data exists for session:{session_key}')
         return
 
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
 
-    # add additional columns to the units table
-    units_query = ephys.CuratedClustering.Unit() & session_key
 
     for paramset_record in (
         ephys.ClusteringParamSet & ephys.CuratedClustering & session_key
