@@ -199,6 +199,9 @@ def create_units_table(
     # add additional columns to the units table
     units_query = ephys.CuratedClustering.Unit() & session_key
     for additional_attribute in ["cluster_quality_label", "spike_depths"]:
+        # The `index` parameter indicates whether the column is a "ragged array," i.e.
+        # whether each row of this column is a vector with potentially different lengths
+        # for each row.
         units_table.add_column(
             name=units_query.heading.attributes[additional_attribute].name,
             description=units_query.heading.attributes[additional_attribute].comment,
