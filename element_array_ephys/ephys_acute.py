@@ -531,14 +531,14 @@ class ClusteringTask(dj.Manual):
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
     @classmethod
-    def auto_generate_entries(cls, ephys_recording_key):
+    def auto_generate_entries(cls, ephys_recording_key, paramset_idx=0):
         """
         Method to auto-generate ClusteringTask entries for a particular ephys recording
             Output directory is auto-generated based on the convention
              defined in `ClusteringTask.infer_output_dir()`
             Default parameter set used: paramset_idx = 0
         """
-        key = {**ephys_recording_key, 'paramset_idx': 0}
+        key = {**ephys_recording_key, 'paramset_idx': paramset_idx}
 
         processed_dir = get_processed_root_data_dir()
         output_dir = ClusteringTask.infer_output_dir(key, relative=False, mkdir=True)
