@@ -10,7 +10,7 @@ This modular pipeline element can be flexibly attached downstream
 to any particular design of experiment session, thus assembling a fully functional 
 ephys pipeline.
 
-See [here](https://elements.datajoint.org/description/array_ephys/) for the background information and development timeline.
+See [here](https://elements.datajoint.org/description/array_ephys/) for the background information and development timeline.  For more information on the DataJoint Elements project, please visit https://elements.datajoint.org.
 
 ## Element architecture
 
