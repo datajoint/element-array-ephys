@@ -25,8 +25,11 @@ provide an [example workflow](https://github.com/datajoint/workflow-array-ephys/
 that models (a) combining this Element with the corresponding [Element-Session](https://github.com/datajoint/element-session)
 , and (b) declaring a ***SkullReference*** table to provide Location.
 
-### The design of probe
+## Table descriptions
+<details>
+<summary>Click to expand details</summary>
 
+### The design of probe
 + ***ProbeType*** - a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank")
 + ***ProbeType.Electrode*** - all electrode and their properties for a particular probe type
     + An electrode here refers to one recordable electrode site on the Neuropixels probe (e.g. for Neuropixels 1.0, there are 960 sites per shank)
@@ -48,6 +51,7 @@ This ephys element features automatic ingestion for spike sorting results from t
 + ***CuratedClustering*** - set of results from a particular round of clustering/curation
     + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
     + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
+</details>
 
 ## Installation
 
