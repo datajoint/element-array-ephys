@@ -1,12 +1,12 @@
 # DataJoint Element - Array Electrophysiology Element
 
-This repository features DataJoint pipeline design for extracellular array electrophysiology, 
++ This repository features DataJoint pipeline design for extracellular array electrophysiology, 
 with Neuropixels probe and Kilosort spike sorting method. 
 
-The pipeline presented here is not a complete pipeline by itself, but rather a modular 
++ The pipeline presented here is not a complete pipeline by itself, but rather a modular 
 design of tables and dependencies specific to the extracellular electrophysiology workflow. 
 
-This modular pipeline element can be flexibly attached downstream 
++ This modular pipeline element can be flexibly attached downstream 
 to any particular design of experiment session, thus assembling a fully functional 
 ephys pipeline.
 
