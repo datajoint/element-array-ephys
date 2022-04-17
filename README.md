@@ -54,6 +54,8 @@ This ephys element features automatic ingestion for spike sorting results from t
 </details>
 
 ## Installation
+<details>
+<summary>Click to expand details</summary>
 
 + Install `element-array-ephys`
     ```
@@ -72,8 +74,11 @@ This ephys element features automatic ingestion for spike sorting results from t
     ```
     pip install "element-interface @ git+https://github.com/datajoint/element-interface"
     ```
+</details>
 
 ## Usage
+<details>
+<summary>Click to expand details</summary>
 
 ### Element activation
 
@@ -99,6 +104,8 @@ For more detail, check the docstring of the `element-array-ephys`:
 ### Example usage
 
 See [this project](https://github.com/datajoint/workflow-array-ephys) for an example usage of this Array Electrophysiology Element.
+
+</details>
 
 ## Citation
 
