@@ -14,7 +14,7 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 from spikeinterface import extractors
 from tqdm import tqdm
 import warnings
-from ... import probe, ephys_acute
+from ... import probe, ephys_no_curation
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
