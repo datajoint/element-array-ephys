@@ -215,10 +215,10 @@ def create_units_table(
     ):
 
         probe_id, shank_num = (
-            probe.ProbeType.Electrode
-            * ephys.ProbeInsertion
+            ephys.ProbeInsertion
             * ephys.CuratedClustering.Unit
-            & {"unit": unit["unit"], "insertion_number": unit["insertion_number"]}
+            * probe.ProbeType.Electrode
+            & unit
         ).fetch1("probe", "shank")
 
         waveform_mean = (
