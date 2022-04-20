@@ -62,13 +62,19 @@ The `ephys` schema stores information regarding the recording from a probe for a
 
 ### Clusters and spikes
 
-This ephys element features automatic ingestion for spike sorting results from the ***kilosort*** method. 
+The `ephys` schema features automatic ingestion of spike sorting results from the `Kilosort` analysis method. 
+
+<details>
+<summary>Click to expand details</summary>
 
 + ***Clustering*** - specify instance(s) of clustering on an ***EphysRecording***, by some ***ClusteringMethod***
+
 + ***Curation*** - specify instance(s) of curations performed on the output of a given ***Clustering***
+
 + ***CuratedClustering*** - set of results from a particular round of clustering/curation
     + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
     + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
+
 </details>
 
 ## Installation
@@ -86,12 +92,11 @@ This ephys element features automatic ingestion for spike sorting results from t
     ```
 
 + Install `element-interface`
-
     + `element-interface` is a dependency of `element-array-ephys`, however it is not contained within `requirements.txt`.
-     
     ```
     pip install "element-interface @ git+https://github.com/datajoint/element-interface"
     ```
+
 </details>
 
 ## Usage
