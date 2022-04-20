@@ -18,8 +18,8 @@ ephys pipeline.
 
 ![element-array-ephys diagram](images/attached_array_ephys_element.svg)
 
-As the diagram depicts, the array ephys element starts immediately downstream from ***Session***, 
-and also requires some notion of ***Location*** as a dependency for ***InsertionLocation***. We 
+As the diagram depicts, the array ephys element starts immediately downstream from `Session`, 
+and also requires some notion of `Location` as a dependency for `InsertionLocation`. We 
 provide an [example workflow](https://github.com/datajoint/workflow-array-ephys/) with a 
 [pipeline script](https://github.com/datajoint/workflow-array-ephys/blob/main/workflow_array_ephys/pipeline.py)
 that models (a) combining this Element with the corresponding [Element-Session](https://github.com/datajoint/element-session)
