@@ -95,10 +95,13 @@ This ephys element features automatic ingestion for spike sorting results from t
 </details>
 
 ## Usage
-<details>
-<summary>Click to expand details</summary>
 
 ### Element activation
+
+When using this Element, one needs to run `ephys.activate` to declare the schemas and tables on the database.
+
+<details>
+<summary>Click to expand details</summary>
 
 To activate the `element-array-ephys`, ones need to provide:
 
@@ -119,11 +122,11 @@ For more detail, check the docstring of the `element-array-ephys`:
     help(probe.activate)
     help(ephys.activate)
 
+</details>
+
 ### Example usage
 
 See [this project](https://github.com/datajoint/workflow-array-ephys) for an example usage of this Array Electrophysiology Element.
-
-</details>
 
 ## Citation
 
