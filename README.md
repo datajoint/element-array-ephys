@@ -26,18 +26,26 @@ that models (a) combining this Element with the corresponding [Element-Session](
 , and (b) declaring a ***SkullReference*** table to provide Location.
 
 ## Table descriptions
+
+### Probe & electrodes
+
+The `probe` schema contains information regarding the Neuropixels probe and electrode configuration.
+
 <details>
 <summary>Click to expand details</summary>
 
-### The design of probe
 + ***ProbeType*** - a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank")
+
 + ***ProbeType.Electrode*** - all electrode and their properties for a particular probe type
     + An electrode here refers to one recordable electrode site on the Neuropixels probe (e.g. for Neuropixels 1.0, there are 960 sites per shank)
+
 + ***Probe*** - record of an actual physical probe, identifiable by some unique ID (e.g. probe's serial number)
+
 + ***ElectrodeConfig*** - particular electrode configuration to be used for ephys recording
+
 + ***ElectrodeConfig.Electrode*** - corresponding electrodes in ***ProbeType.Electrode*** that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe)
 
-### Extracellular ephys recording
+</details>
 
 + ***ProbeInsertion*** - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in ***ProbeInsertion*** with a corresponding ***InsertionLocation*** each
 + ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
