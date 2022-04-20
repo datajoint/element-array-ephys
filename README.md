@@ -47,9 +47,19 @@ The `probe` schema contains information regarding the Neuropixels probe and elec
 
 </details>
 
+### Extracellular electrophysiology recording
+
+The `ephys` schema stores information regarding the recording from a probe for a given session.
+
+<details>
+<summary>Click to expand details</summary>
+
 + ***ProbeInsertion*** - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in ***ProbeInsertion*** with a corresponding ***InsertionLocation*** each
+
 + ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
-    
+
+</details>
+
 ### Clusters and spikes
 
 This ephys element features automatic ingestion for spike sorting results from the ***kilosort*** method. 
