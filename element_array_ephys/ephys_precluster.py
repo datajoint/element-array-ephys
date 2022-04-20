@@ -244,10 +244,132 @@ class EphysRecording(dj.Imported):
 
 
 @schema
+class PreClusterMethod(dj.Lookup):
+    definition = """
+    # Method for pre-clustering
+    precluster_method: varchar(16)
+    ---
+    precluster_method_desc: varchar(1000)
+    """
+
+    contents = [('catgt', 'Time shift, Common average referencing, Zeroing')]
+
+
+@schema
+class PreClusterParamSet(dj.Lookup):
+    definition = """
+    # Parameter set to be used in a clustering procedure
+    paramset_idx:  smallint
+    ---
+    -> PreClusterMethod    
+    paramset_desc: varchar(128)
+    param_set_hash: uuid
+    unique index (param_set_hash)
+    params: longblob  # dictionary of all applicable parameters
+    """
+
+    @classmethod
+    def insert_new_params(cls, precluster_method: str, paramset_idx: int,
+                          paramset_desc: str, params: dict):
+        param_dict = {'precluster_method': precluster_method,
+                      'paramset_idx': paramset_idx,
+                      'paramset_desc': paramset_desc,
+                      'params': params,
+                      'param_set_hash':  dict_to_uuid(params)}
+        param_query = cls & {'param_set_hash': param_dict['param_set_hash']}
+
+        if param_query:  # If the specified param-set already exists
+            existing_paramset_idx = param_query.fetch1('paramset_idx')
+            if existing_paramset_idx == paramset_idx:  # If the existing set has the same paramset_idx: job done
+                return
+            else:  # If not same name: human error, trying to add the same paramset with different name
+                raise dj.DataJointError(
+                    'The specified param-set'
+                    ' already exists - paramset_idx: {}'.format(existing_paramset_idx))
+        else:
+            cls.insert1(param_dict)
+
+
+@schema
+class PreClusterParamList(dj.Lookup):
+    definition = """
+    precluster_param_list_id: smallint  # unique id for each ordered list of paramset_idx that are to be run
+    ---
+    order_id=null: smallint              # order of operations
+    -> [nullable] PreClusterParamSet
+    """
+    contents = [(0,0,None)] # Allow nullable secondary attributes for the case where preclustering is not performed.
+
+
+@schema
+class PreClusterTask(dj.Manual):
+    definition = """
+    # Manual table for defining a clustering task ready to be run
+    -> EphysRecording
+    -> PreClusterParamList
+    ---
+    precluster_output_dir: varchar(255)  #  pre-clustering output directory relative to the root data directory
+    task_mode='none': enum('none','load', 'trigger') # 'none': no pre-clustering analysis
+                                                     # 'load': load analysis results
+                                                     # 'trigger': trigger computation
+    """
+
+
+@schema
+class PreCluster(dj.Imported):
+    """
+    A processing table to handle each PreClusterTask:
+    + If `task_mode == "none"`: no pre-clustering performed
+    + If `task_mode == "trigger"`: trigger pre-clustering analysis according to the      
+                                    PreClusterParamSet
+    + If `task_mode == "load"`: verify output
+    """
+    definition = """
+    # Pre-clustering Procedure
+    -> PreClusterTask
+    ---
+    precluster_time: datetime  # time of generation of this set of pre-clustering results 
+    package_version='': varchar(16)
+    """
+
+    def make(self, key):
+        task_mode, output_dir = (PreClusterTask & key).fetch1('task_mode', 
+                                                              'precluster_output_dir')
+        precluster_output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+
+        if task_mode == 'none':
+            creation_time = (EphysRecording & key).fetch1('recording_datetime')
+        elif task_mode == 'load':
+            acq_software = (EphysRecording & key).fetch1('acq_software')
+            inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1('probe')
+
+            if acq_software == 'SpikeGLX':
+                for meta_filepath in precluster_output_dir.rglob('*.ap.meta'):
+                    spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+
+                    if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
+                        creation_time=spikeglx_meta.recording_time
+                        break
+                else:
+                    raise FileNotFoundError(
+                        'No SpikeGLX data found for probe insertion: {}'.format(key))
+            else:
+                raise NotImplementedError(f'Pre-clustering analysis of {acq_software}'
+                                          'is not yet supported.')
+        elif task_mode == 'trigger':
+            raise NotImplementedError('Automatic triggering of'
+                                      ' pre-clustering analysis is not yet supported.')
+        else:
+            raise ValueError(f'Unknown task mode: {task_mode}')
+
+        self.insert1({**key, 'precluster_time': creation_time})
+
+
+@schema
 class LFP(dj.Imported):
     definition = """
     # Acquired local field potential (LFP) from a given Ephys recording.
-    -> EphysRecording
+    -> PreCluster
     ---
     lfp_sampling_rate: float   # (Hz)
     lfp_time_stamps: longblob  # (s) timestamps with respect to the start of the recording (recording_timestamp)
@@ -407,7 +529,7 @@ class ClusterQualityLabel(dj.Lookup):
 class ClusteringTask(dj.Manual):
     definition = """
     # Manual table for defining a clustering task ready to be run
-    -> EphysRecording
+    -> PreCluster
     -> ClusteringParamSet
     ---
     clustering_output_dir: varchar(255)  #  clustering output directory relative to the clustering root data directory
