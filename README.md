@@ -23,7 +23,7 @@ and also requires some notion of ***Location*** as a dependency for ***Insertion
 provide an [example workflow](https://github.com/datajoint/workflow-array-ephys/) with a 
 [pipeline script](https://github.com/datajoint/workflow-array-ephys/blob/main/workflow_array_ephys/pipeline.py)
 that models (a) combining this Element with the corresponding [Element-Session](https://github.com/datajoint/element-session)
-, and (b) declaring a ***SkullReference*** table to provide Location.
+, and (b) declaring a `SkullReference` table to provide Location.
 
 ## Table descriptions
 
@@ -34,16 +34,16 @@ The `probe` schema contains information regarding the Neuropixels probe and elec
 <details>
 <summary>Click to expand details</summary>
 
-+ ***ProbeType*** - a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank")
++ `ProbeType` - a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank")
 
-+ ***ProbeType.Electrode*** - all electrode and their properties for a particular probe type
++ `ProbeType.Electrode` - all electrode and their properties for a particular probe type
     + An electrode here refers to one recordable electrode site on the Neuropixels probe (e.g. for Neuropixels 1.0, there are 960 sites per shank)
 
-+ ***Probe*** - record of an actual physical probe, identifiable by some unique ID (e.g. probe's serial number)
++ `Probe` - record of an actual physical probe, identifiable by some unique ID (e.g. probe's serial number)
 
-+ ***ElectrodeConfig*** - particular electrode configuration to be used for ephys recording
++ `ElectrodeConfig` - particular electrode configuration to be used for ephys recording
 
-+ ***ElectrodeConfig.Electrode*** - corresponding electrodes in ***ProbeType.Electrode*** that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe)
++ `ElectrodeConfig.Electrode` - corresponding electrodes in `ProbeType.Electrode` that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe)
 
 </details>
 
@@ -54,9 +54,9 @@ The `ephys` schema stores information regarding the recording from a probe for a
 <details>
 <summary>Click to expand details</summary>
 
-+ ***ProbeInsertion*** - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in ***ProbeInsertion*** with a corresponding ***InsertionLocation*** each
++ `ProbeInsertion` - a surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in `ProbeInsertion` with a corresponding `InsertionLocation` each
 
-+ ***EphysRecording*** - each ***ProbeInsertion*** is accompanied by a corresponding ***EphysRecording***, specifying the ***ElectrodeConfig*** used for the recording from the ***Probe*** defined in such ***ProbeInsertion***
++ `EphysRecording` - each `ProbeInsertion` is accompanied by a corresponding `EphysRecording`, specifying the `ElectrodeConfig` used for the recording from the `Probe` defined in such `ProbeInsertion`
 
 </details>
 
@@ -67,13 +67,13 @@ The `ephys` schema features automatic ingestion of spike sorting results from th
 <details>
 <summary>Click to expand details</summary>
 
-+ ***Clustering*** - specify instance(s) of clustering on an ***EphysRecording***, by some ***ClusteringMethod***
++ `Clustering` - specify instance(s) of clustering on an `EphysRecording`, by some `ClusteringMethod`
 
-+ ***Curation*** - specify instance(s) of curations performed on the output of a given ***Clustering***
++ `Curation` - specify instance(s) of curations performed on the output of a given `Clustering`
 
-+ ***CuratedClustering*** - set of results from a particular round of clustering/curation
-    + ***CuratedClustering.Unit*** - Identified unit(s) from one ***Curation***, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
-    + ***WaveformSet*** - A set of spike waveforms for units from a given CuratedClustering
++ `CuratedClustering` - set of results from a particular round of clustering/curation
+    + `CuratedClustering.Unit` - Identified unit(s) from one `Curation`, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.)
+    + `WaveformSet` - A set of spike waveforms for units from a given CuratedClustering
 
 </details>
 
