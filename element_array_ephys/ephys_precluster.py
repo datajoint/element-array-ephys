@@ -291,14 +291,19 @@ class PreClusterParamSet(dj.Lookup):
 
 
 @schema
-class PreClusterParamList(dj.Lookup):
+class PreClusterParamList(dj.Manual):
     definition = """
-    precluster_param_list_id: smallint  # unique id for each ordered list of paramset_idx that are to be run
-    ---
-    order_id=null: smallint              # order of operations
-    -> [nullable] PreClusterParamSet
+    # Ordered list of paramset_idx that are to be run
+    precluster_param_list_id: smallint
     """
-    contents = [(0,0,None)] # Allow nullable secondary attributes for the case where preclustering is not performed.
+
+    class ParamOrder(dj.Part):
+        definition = """
+        -> master
+        order_id: smallint                  # Order of operations
+        ---
+        -> [nullable] PreClusterParamSet    # Nullable for when pre-clustering is not performed.
+        """
 
 
 @schema
@@ -325,7 +330,6 @@ class PreCluster(dj.Imported):
     + If `task_mode == "load"`: verify output
     """
     definition = """
-    # Pre-clustering Procedure
     -> PreClusterTask
     ---
     precluster_time: datetime  # time of generation of this set of pre-clustering results 
