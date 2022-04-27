@@ -14,11 +14,11 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 from spikeinterface import extractors
 from tqdm import tqdm
 import warnings
-from ... import probe, ephys_acute
+from ... import probe, ephys_no_curation
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
-for ephys in (ephys_acute,):
+for ephys in (ephys_no_curation,):
     if ephys.schema.is_activated():
         break
 else:
@@ -215,10 +215,10 @@ def create_units_table(
     ):
 
         probe_id, shank_num = (
-            probe.ProbeType.Electrode
-            * ephys.ProbeInsertion
+            ephys.ProbeInsertion
             * ephys.CuratedClustering.Unit
-            & {"unit": unit["unit"], "insertion_number": unit["insertion_number"]}
+            * probe.ProbeType.Electrode
+            & unit
         ).fetch1("probe", "shank")
 
         waveform_mean = (
