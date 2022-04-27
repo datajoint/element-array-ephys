@@ -18,11 +18,8 @@ from ... import probe, ephys_no_curation
 
 assert probe.schema.is_activated(), 'probe not yet activated'
 
-for ephys in (ephys_no_curation,):
-    if ephys.schema.is_activated():
-        break
-else:
-    raise AssertionError('ephys not yet activated')
+assert ephys_no_curation.schema.is_activated,  \
+        "The ephys module must be activated before export."
 
 
 class DecimalEncoder(json.JSONEncoder):
