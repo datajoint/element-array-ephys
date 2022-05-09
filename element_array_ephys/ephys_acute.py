@@ -301,7 +301,6 @@ class LFP(dj.Imported):
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
         elif acq_software == 'Open Ephys':
-            
             session_dir = find_full_path(get_ephys_root_data_dir(), 
                                          get_session_directory(key))
 
