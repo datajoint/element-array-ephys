@@ -101,10 +101,19 @@ class OpenEphys:
                     if continuous_info['source_processor_id'] != probe.processor_id:
                         continue
 
-                    if continuous_info['source_processor_sub_idx'] == probe_index * 2:  # ap data
-                        assert continuous_info['sample_rate'] == analog_signal.sample_rate == 30000
-                        continuous_type = 'ap'
+                    # determine if this is continuous data for AP or LFP
+                    if 'source_processor_sub_idx' in continuous_info:
+                        if continuous_info['source_processor_sub_idx'] == probe_index * 2:  # ap data
+                            assert continuous_info['sample_rate'] == analog_signal.sample_rate == 30000
+                            continuous_type = 'ap'
+                        elif continuous_info['source_processor_sub_idx'] == probe_index * 2 + 1:  # lfp data
+                            assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
+                            continuous_type = 'lfp'
+                    else:
+                        match = re.search('\.?-?(AP|LFP)$', continuous_info['folder_name'].strip('/'))
+                        continuous_type = match.groups()[0].lower()
 
+                    if continuous_type == 'ap':
                         probe.recording_info['recording_count'] += 1
                         probe.recording_info['recording_datetimes'].append(
                             rec.datetime + datetime.timedelta(seconds=float(rec.start_time)))
@@ -112,10 +121,6 @@ class OpenEphys:
                             float(rec.duration))
                         probe.recording_info['recording_files'].append(
                             rec.absolute_foldername / 'continuous' / continuous_info['folder_name'])
-
-                    elif continuous_info['source_processor_sub_idx'] == probe_index * 2 + 1:  # lfp data
-                        assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
-                        continuous_type = 'lfp'
 
                     meta = getattr(probe, continuous_type + '_meta')
                     if not meta:
