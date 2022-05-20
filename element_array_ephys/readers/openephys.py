@@ -110,7 +110,7 @@ class OpenEphys:
                             assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
                             continuous_type = 'lfp'
                     else:
-                        match = re.search('\.?-?(AP|LFP)$', continuous_info['folder_name'].strip('/'))
+                        match = re.search('-(AP|LFP)$', continuous_info['folder_name'].strip('/'))
                         continuous_type = match.groups()[0].lower()
 
                     if continuous_type == 'ap':
@@ -143,7 +143,11 @@ class OpenEphys:
 class Probe:
 
     def __init__(self, processor, probe_index=0):
-        self.processor_id = int(processor['@NodeId'])
+        processor_node_id = processor.get("@nodeId", processor.get("@NodeId"))
+        if processor_node_id is None:
+            raise KeyError('Neither "@nodeId" nor "@NodeId" key found')
+
+        self.processor_id = int(processor_node_id)
         
         if processor['@pluginName'] == 'Neuropix-3a' or 'NP_PROBE' not in processor['EDITOR']:
             self.probe_info = processor['EDITOR']['PROBE'] if isinstance(processor['EDITOR']['PROBE'], dict) else processor['EDITOR']['PROBE'][probe_index]
