@@ -86,7 +86,7 @@ class OpenEphys:
                             for probe_index in range(len(processor['EDITOR']['PROBE'])):
                                 probe = Probe(processor, probe_index)
                                 probes[probe.probe_SN] = probe
-                    else:
+                    else:  # Neuropix-PXI
                         for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
                             probe = Probe(processor, probe_index)
                             probes[probe.probe_SN] = probe
@@ -96,6 +96,11 @@ class OpenEphys:
             probe = probes[probe_SN]
                     
             for rec in self.experiment.recordings:
+                assert len(rec._oebin['continuous']) == len(rec.analog_signals), \
+                    f'Mismatch in the number of continuous data' \
+                    f' - expecting {len(rec._oebin["continuous"])} (from structure.oebin file),' \
+                    f' found {len(rec.analog_signals)} (in continuous folder)'
+
                 for continuous_info, analog_signal in zip(rec._oebin['continuous'],
                                                           rec.analog_signals):
                     if continuous_info['source_processor_id'] != probe.processor_id:
@@ -170,7 +175,7 @@ class Probe:
             self.probe_model = _probe_model_name_mapper[processor['@pluginName']]
             self._channels_connected = {int(re.search(r'\d+$', k).group()): int(v)
                                         for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
-        else:
+        else:  # Neuropix-PXI
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = _probe_model_name_mapper[self.probe_info['@probe_name']]
