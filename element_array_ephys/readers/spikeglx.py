@@ -58,6 +58,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('ap')
         """
         if self._ap_timeseries is None:
+            self.validate_file('ap')
             self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
         return self._ap_timeseries
 
@@ -75,6 +76,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('lf')
         """
         if self._lf_timeseries is None:
+            self.validate_file('lf')
             self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
         return self._lf_timeseries
 
@@ -145,6 +147,18 @@ class SpikeGLX:
         else:  # if no spike found, return NaN of size (sample x channel x 1)
             return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
 
+    def validate_file(self, file_type='ap'):
+        file_path = self.root_dir / (self.root_name + f'.{file_type}.bin')
+        file_size = file_path.stat().st_size
+
+        meta_mapping = {
+            'ap': self.apmeta,
+            'lf': self.lfmeta}
+        meta = meta_mapping[file_type]
+
+        if file_size != meta.meta['fileSizeBytes']:
+            raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
+
 
 class SpikeGLXMeta:
 
@@ -165,6 +179,8 @@ class SpikeGLXMeta:
                 self.probe_model = 'neuropixels 1.0 - 3A'
             elif 'typeImEnabled' in self.meta:
                 self.probe_model = 'neuropixels 1.0 - 3B'
+        elif probe_model == 1100:
+            self.probe_model = 'neuropixels UHD'
         elif probe_model == 21:
             self.probe_model = 'neuropixels 2.0 - SS'
         elif probe_model == 24:
@@ -339,3 +355,10 @@ def _read_meta(meta_filepath):
                 except ValueError:
                     pass
     return res
+
+
+def retrieve_recording_duration(meta_filepath):
+    root_dir = pathlib.Path(meta_filepath).parent
+    spike_glx = SpikeGLX(root_dir)
+    return (spike_glx.apmeta.recording_duration
+            or spike_glx.ap_timeseries.shape[0] / spike_glx.apmeta.meta['imSampRate'])
