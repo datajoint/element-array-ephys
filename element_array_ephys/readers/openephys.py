@@ -142,7 +142,7 @@ class OpenEphys:
 
 # For more details on supported probes,
 # see: https://open-ephys.github.io/gui-docs/User-Manual/Plugins/Neuropixels-PXI.html
-_probe_model_name_mapper = {
+_probe_model_name_mapping = {
     "Neuropix-PXI": "neuropixels 1.0 - 3B",
     "Neuropix-3a": "neuropixels 1.0 - 3A",
     "Neuropixels 1.0": "neuropixels 1.0 - 3B",
@@ -167,13 +167,13 @@ class Probe:
         if processor['@pluginName'] == 'Neuropix-3a' or 'NP_PROBE' not in processor['EDITOR']:
             self.probe_info = processor['EDITOR']['PROBE'] if isinstance(processor['EDITOR']['PROBE'], dict) else processor['EDITOR']['PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
-            self.probe_model = _probe_model_name_mapper[processor['@pluginName']]
+            self.probe_model = _probe_model_name_mapping[processor['@pluginName']]
             self._channels_connected = {int(re.search(r'\d+$', k).group()): int(v)
                                         for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
         else:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
-            self.probe_model = _probe_model_name_mapper[self.probe_info['@probe_name']]
+            self.probe_model = _probe_model_name_mapping[self.probe_info['@probe_name']]
             self._channels_connected = {int(re.search(r'\d+$', k).group()): 1
                                         for k in self.probe_info.pop('CHANNELS')}
 
