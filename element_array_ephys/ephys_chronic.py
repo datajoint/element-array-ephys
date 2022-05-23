@@ -4,11 +4,15 @@ import re
 import numpy as np
 import inspect
 import importlib
+from decimal import Decimal
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
 from .readers import spikeglx, kilosort, openephys
-from . import probe
+from . import probe, get_logger
+
+
+log = get_logger(__name__)
 
 schema = dj.schema()
 
@@ -371,7 +375,8 @@ class ClusteringMethod(dj.Lookup):
     clustering_method_desc: varchar(1000)
     """
 
-    contents = [('kilosort2.5', 'kilosort2.5 clustering method'),
+    contents = [('kilosort2', 'kilosort2 clustering method'),
+                ('kilosort2.5', 'kilosort2.5 clustering method'),
                 ('kilosort3', 'kilosort3 clustering method')]
 
 
