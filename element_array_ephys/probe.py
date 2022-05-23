@@ -138,7 +138,7 @@ class ElectrodeConfig(dj.Lookup):
     electrode_config_hash: uuid  
     ---
     -> ProbeType
-    electrode_config_name: varchar(64)  # user friendly name
+    electrode_config_name: varchar(4000)  # user friendly name
     """
 
     class Electrode(dj.Part):

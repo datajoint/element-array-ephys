@@ -1,0 +1,4 @@
+dandi
+nwb-conversion-tools==0.11.1
+spikeinterface==0.93.0
+neo==0.10.2

@@ -155,7 +155,7 @@ class EphysRecording(dj.Imported):
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
-    sampling_rate: float # (Hz) 
+    sampling_rate: float # (Hz)
     recording_datetime: datetime # datetime of the recording from this probe
     recording_duration: float # (seconds) duration of the recording from this probe
     """
@@ -195,7 +195,8 @@ class EphysRecording(dj.Imported):
                     break
             else:
                 raise FileNotFoundError(
-                    'No SpikeGLX data found for probe insertion: {}'.format(key))
+                    f'No SpikeGLX data found for probe insertion: {key}' + 
+                    ' The probe serial number does not match.')
 
             if spikeglx_meta.probe_model in supported_probe_types:
                 probe_type = spikeglx_meta.probe_model
