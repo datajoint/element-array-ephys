@@ -406,7 +406,7 @@ class LFP(dj.Imported):
                                 for key in electrode_query.fetch('KEY')}
 
             electrode_keys.extend(probe_electrodes[channel_idx]
-                                  for channel_idx in oe_probe.lfp_meta['channels_indices'])
+                                  for channel_idx in lfp_channel_ind)
         else:
             raise NotImplementedError(f'LFP extraction from acquisition software'
                                       f' of type {acq_software} is not yet implemented')
