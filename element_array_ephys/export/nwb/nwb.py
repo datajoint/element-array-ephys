@@ -3,7 +3,7 @@ import decimal
 import json
 import numpy as np
 import pynwb
-import datajoint as dj
+# import datajoint as dj
 from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
@@ -14,12 +14,13 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 from spikeinterface import extractors
 from tqdm import tqdm
 import warnings
-from ... import probe, ephys_no_curation
+from ... import probe
+from ... import ephys_no_curation as ephys
 
-assert probe.schema.is_activated(), 'probe not yet activated'
+# assert probe.schema.is_activated(), 'probe not yet activated'
 
-assert ephys_no_curation.schema.is_activated,  \
-        "The ephys module must be activated before export."
+# assert ephys.schema.is_activated,  \
+#         "The ephys module must be activated before export."
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -48,7 +49,7 @@ class LFPDataChunkIterator(GenericDataChunkIterator):
 
         first_record = (
             self.lfp_electrodes_query & dict(electrode=self.electrodes[0])
-        ).fetch1(as_dict=True)
+        ).fetch1()
 
         self.n_channels = len(self.electrodes)
         self.n_tt = len(first_record["lfp"])
@@ -166,7 +167,8 @@ def create_units_table(
     nwbfile: pynwb.NWBFile,
     paramset_record,
     name="units",
-    desc="data on spiking units"):
+    desc="data on spiking units"
+):
     """
 
     ephys.CuratedClustering.Unit::unit -> units.id
