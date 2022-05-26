@@ -291,7 +291,7 @@ class PreClusterParamSet(dj.Lookup):
 
 
 @schema
-class PreClusterParamList(dj.Manual):
+class PreClusterParamSteps(dj.Manual):
     definition = """
     # Ordered list of paramset_idx that are to be run
     precluster_param_list_id: smallint
