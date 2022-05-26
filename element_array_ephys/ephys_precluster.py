@@ -291,18 +291,18 @@ class PreClusterParamSet(dj.Lookup):
 
 
 @schema
-class PreClusterParamList(dj.Manual):
+class PreClusterParamSteps(dj.Manual):
     definition = """
     # Ordered list of paramset_idx that are to be run
     precluster_param_list_id: smallint
     """
 
-    class ParamOrder(dj.Part):
+    class Step(dj.Part):
         definition = """
         -> master
-        order_id: smallint                  # Order of operations
+        step_number: smallint                  # Order of operations
         ---
-        -> [nullable] PreClusterParamSet    # Nullable for when pre-clustering is not performed.
+        -> PreClusterParamSet
         """
 
 
