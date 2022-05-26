@@ -297,7 +297,7 @@ class PreClusterParamSteps(dj.Manual):
     precluster_param_list_id: smallint
     """
 
-    class ParamOrder(dj.Part):
+    class Step(dj.Part):
         definition = """
         -> master
         order_id: smallint                  # Order of operations
