@@ -76,21 +76,31 @@ class OpenEphys:
                               if isinstance(sigchain['PROCESSOR'], list)
                               else [sigchain['PROCESSOR']])
             for processor in processor_iter:
-                if processor['@pluginName'] in ('Neuropix-PXI', 'Neuropix-3a'):
+                if processor['@pluginName'] in ('Neuropix-3a', 'Neuropix-PXI'):
+                    if 'STREAM' in processor:  # only on version >= 0.6.0
+                        ap_streams = [stream for stream in processor['STREAM'] if not stream['@name'].endswith('LFP')]
+                    else:
+                        ap_streams = None
+
                     if (processor['@pluginName'] == 'Neuropix-3a'
                             or 'NP_PROBE' not in processor['EDITOR']):
                         if isinstance(processor['EDITOR']['PROBE'], dict):
-                            probe = Probe(processor, 0)
-                            probes[probe.probe_SN] = probe
+                            probe_indices = (0,)
                         else:
-                            for probe_index in range(len(processor['EDITOR']['PROBE'])):
-                                probe = Probe(processor, probe_index)
-                                probes[probe.probe_SN] = probe
-                    else:  # Neuropix-PXI
-                        for probe_index in range(len(processor['EDITOR']['NP_PROBE'])):
-                            probe = Probe(processor, probe_index)
-                            probes[probe.probe_SN] = probe
-                        
+                            probe_indices = range(len(processor['EDITOR']['PROBE']))
+                    elif processor['@pluginName'] == 'Neuropix-PXI':
+                        probe_indices = range(len(processor['EDITOR']['NP_PROBE']))
+                    else:
+                        raise NotImplementedError
+                else:  # not a processor for Neuropixels probe
+                    continue
+
+                for probe_index in probe_indices:
+                    probe = Probe(processor, probe_index)
+                    if ap_streams:
+                        probe.probe_info['ap_stream'] = ap_streams[probe_index]
+                    probes[probe.probe_SN] = probe
+
         for probe_index, probe_SN in enumerate(probes):
             
             probe = probes[probe_SN]
@@ -106,17 +116,26 @@ class OpenEphys:
                     if continuous_info['source_processor_id'] != probe.processor_id:
                         continue
 
-                    # determine if this is continuous data for AP or LFP
-                    if 'source_processor_sub_idx' in continuous_info:
+                    # determine if this is continuous data for AP or LFP for the current probe
+                    if 'ap_stream' in probe.probe_info:
+                        if probe.probe_info['ap_stream']['@name'].split('-')[0] != continuous_info['stream_name'].split('-')[0]:
+                            continue  # not continuous data for the current probe
+                        match = re.search('-(AP|LFP)$', continuous_info['stream_name'])
+                        if match:
+                            continuous_type = match.groups()[0].lower()
+                        else:
+                            continuous_type = 'ap'
+                    elif 'source_processor_sub_idx' in continuous_info:
                         if continuous_info['source_processor_sub_idx'] == probe_index * 2:  # ap data
                             assert continuous_info['sample_rate'] == analog_signal.sample_rate == 30000
                             continuous_type = 'ap'
                         elif continuous_info['source_processor_sub_idx'] == probe_index * 2 + 1:  # lfp data
                             assert continuous_info['sample_rate'] == analog_signal.sample_rate == 2500
                             continuous_type = 'lfp'
+                        else:
+                            continue  # not continuous data for the current probe
                     else:
-                        match = re.search('-(AP|LFP)$', continuous_info['folder_name'].strip('/'))
-                        continuous_type = match.groups()[0].lower()
+                        raise ValueError(f'Unable to infer type (AP or LFP) for the continuous data from:\n\t{continuous_info}')
 
                     if continuous_type == 'ap':
                         probe.recording_info['recording_count'] += 1
