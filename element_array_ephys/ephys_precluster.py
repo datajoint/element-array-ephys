@@ -302,7 +302,7 @@ class PreClusterParamSteps(dj.Manual):
         -> master
         step_number: smallint                  # Order of operations
         ---
-        -> [nullable] PreClusterParamSet    # Nullable for when pre-clustering is not performed.
+        -> PreClusterParamSet
         """
 
 
