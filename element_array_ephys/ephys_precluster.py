@@ -294,7 +294,7 @@ class PreClusterParamSet(dj.Lookup):
 class PreClusterParamSteps(dj.Manual):
     definition = """
     # Ordered list of paramset_idx that are to be run
-    precluster_param_list_id: smallint
+    precluster_param_steps_id: smallint
     """
 
     class Step(dj.Part):
@@ -311,7 +311,7 @@ class PreClusterTask(dj.Manual):
     definition = """
     # Manual table for defining a clustering task ready to be run
     -> EphysRecording
-    -> PreClusterParamList
+    -> PreClusterParamSteps
     ---
     precluster_output_dir: varchar(255)  #  pre-clustering output directory relative to the root data directory
     task_mode='none': enum('none','load', 'trigger') # 'none': no pre-clustering analysis
