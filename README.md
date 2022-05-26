@@ -32,6 +32,10 @@ to Kilosort analysis.
 ### `ephys_acute` module
 ![element-array-ephys acute diagram](images/attached_array_ephys_element_acute.svg)
 
+
+### `ephys_chronic` module
+![element-array-ephys chronic diagram](images/attached_array_ephys_element_chronic.svg)
+
 ### `ephys_precluster` module
 ![element-array-ephys precluster diagram](
     images/attached_array_ephys_element_precluster.svg)
