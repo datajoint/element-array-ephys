@@ -300,7 +300,7 @@ class PreClusterParamSteps(dj.Manual):
     class Step(dj.Part):
         definition = """
         -> master
-        order_id: smallint                  # Order of operations
+        step_number: smallint                  # Order of operations
         ---
         -> [nullable] PreClusterParamSet    # Nullable for when pre-clustering is not performed.
         """
