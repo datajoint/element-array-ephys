@@ -343,6 +343,9 @@ class PreCluster(dj.Imported):
         precluster_output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'none':
+            if len((PreClusterParamSteps.Step & key).fetch()) > 0:
+                raise ValueError('There are entries in the PreClusterParamSteps.Step '
+                                 'table and task_mode=none')
             creation_time = (EphysRecording & key).fetch1('recording_datetime')
         elif task_mode == 'load':
             acq_software = (EphysRecording & key).fetch1('acq_software')
