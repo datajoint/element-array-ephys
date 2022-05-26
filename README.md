@@ -16,7 +16,26 @@ ephys pipeline.
 
 ## Element architecture
 
-![element-array-ephys diagram](images/attached_array_ephys_element.svg)
+`element-array-ephys` is comprised of two schemas, `probe` and `ephys`.  To handle 
+several use cases of this pipeline, we have designed several `ephys` schemas, including 
+`ephys_acute`, `ephys_chronic`, and `ephys_precluster`.
+
++ `ephys_acute` - A probe(s) is inserted into a new location during each session.
+
++ `ephys_chronic` - A probe(s) is inserted once and used to record across multiple 
+sessions.
+
++ `ephys_precluster` - A probe(s) is inserted into a new location during each session.  
+And pre-clustering steps (e.g. CatGT) are performed on the data from each probe prior 
+to Kilosort analysis.
+
+### `ephys_acute` module
+![element-array-ephys acute diagram](images/attached_array_ephys_element_acute.svg)
+
+### `ephys_precluster` module
+![element-array-ephys precluster diagram](
+    images/attached_array_ephys_element_precluster.svg)
+
 
 As the diagram depicts, the array ephys element starts immediately downstream from `Session`, 
 and also requires some notion of `Location` as a dependency for `InsertionLocation`. We 
