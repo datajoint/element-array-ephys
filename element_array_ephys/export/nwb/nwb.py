@@ -217,7 +217,8 @@ def create_units_table(
             ephys.ProbeInsertion
             * ephys.CuratedClustering.Unit
             * probe.ProbeType.Electrode
-            & unit
+            & dict((k, unit[k]) for k in unit.keys()  # excess keys caused errs
+                    if k not in ['spike_times', 'spike_sites', 'spike_depths'])
         ).fetch1("probe", "shank")
 
         waveform_mean = (
