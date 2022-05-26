@@ -294,6 +294,7 @@ class PreClusterParamSet(dj.Lookup):
 class PreClusterParamSteps(dj.Manual):
     definition = """
     # Ordered list of paramset_idx that are to be run
+    # When pre-clustering is not performed, do not create an entry in `Step` Part table
     precluster_param_list_id: smallint
     """
 
