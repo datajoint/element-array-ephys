@@ -3,12 +3,18 @@
 + This repository features DataJoint pipeline design for extracellular array electrophysiology, 
 with Neuropixels probe and Kilosort spike sorting method. 
 
-+ The pipeline presented here is not a complete pipeline by itself, but rather a modular 
-design of tables and dependencies specific to the extracellular electrophysiology workflow. 
++ The pipeline presented here is not a complete pipeline by itself, but rather a modular
+design of tables and dependencies specific to the extracellular electrophysiology
+workflow
 
 + This modular pipeline element can be flexibly attached downstream 
 to any particular design of experiment session, thus assembling a fully functional 
 ephys pipeline.
+
++ This Element provides three schema options, selected via the DataJoint config file, with `dj.config['custom']['ephys_mode']`
+  + `acute` probe insertion, with curated clustering
+  + `chronic` probe insertion, with curated clustering
+  + `no-curation`, with kilosort triggered clustering
 
 + See the [Element Array Electrophysiology documentation](https://elements.datajoint.org/description/array_ephys/) for the background information and development timeline.
 
