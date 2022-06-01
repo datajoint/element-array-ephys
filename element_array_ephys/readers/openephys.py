@@ -198,6 +198,15 @@ class Probe:
             self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = _probe_model_name_mapping[self.probe_info['@probe_name']]
+
+            if 'ELECTRODE_XPOS' in self.probe_info:
+                self.probe_info['ELECTRODE_XPOS'] = {int(re.search(r'\d+$', k).group()): int(v)
+                                                     for k, v in self.probe_info.pop('ELECTRODE_XPOS').items()}
+                self.probe_info['ELECTRODE_YPOS'] = {int(re.search(r'\d+$', k).group()): int(v)
+                                                     for k, v in self.probe_info.pop('ELECTRODE_YPOS').items()}
+                self.probe_info['ELECTRODE_SHANK'] = {int(re.search(r'\d+$', k).group()): int(v)
+                                                      for k, v in self.probe_info['CHANNELS'].items()}
+
             self._channels_connected = {int(re.search(r'\d+$', k).group()): 1
                                         for k in self.probe_info.pop('CHANNELS')}
 
