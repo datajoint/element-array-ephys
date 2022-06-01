@@ -297,7 +297,7 @@ class PreClusterParamSteps(dj.Manual):
     # When pre-clustering is not performed, do not create an entry in `Step` Part table
     precluster_param_steps_id: smallint
     ---
-    precluster_param_steps_desc: varchar(256)
+    precluster_param_steps_desc: varchar(128)
     """
 
     class Step(dj.Part):
