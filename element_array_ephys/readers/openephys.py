@@ -35,11 +35,18 @@ class OpenEphys:
     def __init__(self, experiment_dir):
         self.session_dir = pathlib.Path(experiment_dir)
 
-        openephys_file = pyopenephys.File(self.session_dir.parent)  # this is on the Record Node level
+        if self.session_dir.name.startswith('recording'):
+            openephys_file = pyopenephys.File(self.session_dir.parent.parent)  # this is on the Record Node level
+            self._is_recording_folder = True
+        else:
+            openephys_file = pyopenephys.File(self.session_dir.parent)  # this is on the Record Node level
+            self._is_recording_folder = False
 
         # extract the "recordings" for this session
         self.experiment = next(experiment for experiment in openephys_file.experiments
-                               if pathlib.Path(experiment.absolute_foldername) == self.session_dir)
+                               if pathlib.Path(experiment.absolute_foldername) == (
+                                   self.session_dir.parent if self._is_recording_folder else self.session_dir)
+                               )
 
         # extract probe data
         self.probes = self.load_probe_data()
@@ -106,6 +113,9 @@ class OpenEphys:
             probe = probes[probe_SN]
                     
             for rec in self.experiment.recordings:
+                if self._is_recording_folder and rec.absolute_foldername != self.session_dir:
+                    continue
+
                 assert len(rec._oebin['continuous']) == len(rec.analog_signals), \
                     f'Mismatch in the number of continuous data' \
                     f' - expecting {len(rec._oebin["continuous"])} (from structure.oebin file),' \
