@@ -7,7 +7,7 @@ import inspect
 import os
 import scipy.io
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from element_interface.utils import dict_to_uuid
 
@@ -191,8 +191,7 @@ class SGLXKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = module_input_json.replace('-input.json',
-                                                           '-' + module + '-output.json')
+            module_output_json = self._get_module_output_json_filename(module)
             command = (sys.executable
                        + " -W ignore -m ecephys_spike_sorting.modules." + module
                        + " --input_json " + module_input_json
@@ -233,11 +232,19 @@ class SGLXKilosortPipeline:
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
+            modules_status['cumulative_execution_duration'] = sum(
+                v['duration'] or 0 for k, v in modules_status.items()
+                if k not in ('cumulative_execution_duration', 'total_duration'))
+            modules_status['total_duration'] = (
+                    modules_status[self._modules[-1]]['completion_time']
+                    - modules_status[self._modules[0]]['start_time']).total_seconds()
         else:
             modules_status = {module: {'start_time': None,
                                        'completion_time': None,
                                        'duration': None}
                               for module in self._modules}
+            modules_status['cumulative_execution_duration'] = 0
+            modules_status['total_duration'] = 0
         with open(self._modules_input_hash_fp, 'w') as f:
             json.dump(modules_status, f, default=str)
 
@@ -248,9 +255,29 @@ class SGLXKilosortPipeline:
         if self._modules_input_hash_fp.exists():
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
+            if modules_status[module]['completion_time'] is None:
+                # additional logic to read from the "-output.json" file for this module as well
+                # handle cases where the module has finished successfully,
+                # but the "_modules_input_hash_fp" is not updated (for whatever reason),
+                # resulting in this module not registered as completed in the "_modules_input_hash_fp"
+                modules_module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if modules_module_output_json_fp.exists():
+                    with open(modules_module_output_json_fp) as f:
+                        module_run_output = json.load(f)
+                    modules_status[module]['duration'] = module_run_output['execution_time']
+                    modules_status[module]['completion_time'] = (
+                            modules_status[module]['start_time']
+                            + timedelta(seconds=module_run_output['execution_time']))
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
+
+    def _get_module_output_json_filename(self, module):
+        module_input_json = self._module_input_json.as_posix()
+        module_output_json = module_input_json.replace(
+            '-input.json',
+            '-' + module + '-' + self._modules_input_hash + '-output.json')
+        return module_output_json
 
 
 class OpenEphysKilosortPipeline:
