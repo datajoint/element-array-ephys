@@ -198,6 +198,10 @@ class SGLXKilosortPipeline:
                        + " --output_json " + module_output_json)
 
             start_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': None,
+                          'duration': None}})
             with open(module_logfile, "a") as f:
                 subprocess.check_call(command.split(' '), stdout=f)
             completion_time = datetime.utcnow()
@@ -205,6 +209,8 @@ class SGLXKilosortPipeline:
                 {module: {'start_time': start_time,
                           'completion_time': completion_time,
                           'duration': (completion_time - start_time).total_seconds()}})
+
+        self._update_total_duration()
 
     def _get_raw_data_filepaths(self):
         session_str, gate_str, _, probe_str = self.parse_input_filename()
@@ -232,19 +238,11 @@ class SGLXKilosortPipeline:
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
-            modules_status['cumulative_execution_duration'] = sum(
-                v['duration'] or 0 for k, v in modules_status.items()
-                if k not in ('cumulative_execution_duration', 'total_duration'))
-            modules_status['total_duration'] = (
-                    modules_status[self._modules[-1]]['completion_time']
-                    - modules_status[self._modules[0]]['start_time']).total_seconds()
         else:
             modules_status = {module: {'start_time': None,
                                        'completion_time': None,
                                        'duration': None}
                               for module in self._modules}
-            modules_status['cumulative_execution_duration'] = 0
-            modules_status['total_duration'] = 0
         with open(self._modules_input_hash_fp, 'w') as f:
             json.dump(modules_status, f, default=str)
 
@@ -260,13 +258,13 @@ class SGLXKilosortPipeline:
                 # handle cases where the module has finished successfully,
                 # but the "_modules_input_hash_fp" is not updated (for whatever reason),
                 # resulting in this module not registered as completed in the "_modules_input_hash_fp"
-                modules_module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
-                if modules_module_output_json_fp.exists():
-                    with open(modules_module_output_json_fp) as f:
+                module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if module_output_json_fp.exists():
+                    with open(module_output_json_fp) as f:
                         module_run_output = json.load(f)
                     modules_status[module]['duration'] = module_run_output['execution_time']
                     modules_status[module]['completion_time'] = (
-                            modules_status[module]['start_time']
+                            datetime.strptime(modules_status[module]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
                             + timedelta(seconds=module_run_output['execution_time']))
             return modules_status[module]
 
@@ -276,8 +274,22 @@ class SGLXKilosortPipeline:
         module_input_json = self._module_input_json.as_posix()
         module_output_json = module_input_json.replace(
             '-input.json',
-            '-' + module + '-' + self._modules_input_hash + '-output.json')
+            '-' + module + '-' + str(self._modules_input_hash) + '-output.json')
         return module_output_json
+
+    def _update_total_duration(self):
+        with open(self._modules_input_hash_fp) as f:
+            modules_status = json.load(f)
+        cumulative_execution_duration = sum(
+            v['duration'] or 0 for k, v in modules_status.items()
+            if k not in ('cumulative_execution_duration', 'total_duration'))
+        total_duration = (
+                datetime.strptime(modules_status[self._modules[-1]]['completion_time'], '%Y-%m-%d %H:%M:%S.%f')
+                - datetime.strptime(modules_status[self._modules[0]]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+        ).total_seconds()
+        self._update_module_status(
+            {'cumulative_execution_duration': cumulative_execution_duration,
+             'total_duration': total_duration})
 
 
 class OpenEphysKilosortPipeline:
@@ -388,6 +400,10 @@ class OpenEphysKilosortPipeline:
                        + " --output_json " + module_output_json)
 
             start_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': None,
+                          'duration': None}})
             with open(module_logfile, "a") as f:
                 subprocess.check_call(command.split(' '), stdout=f)
             completion_time = datetime.utcnow()
@@ -395,6 +411,8 @@ class OpenEphysKilosortPipeline:
                 {module: {'start_time': start_time,
                           'completion_time': completion_time,
                           'duration': (completion_time - start_time).total_seconds()}})
+
+        self._update_total_duration()
 
     def _update_module_status(self, updated_module_status={}):
         if self._modules_input_hash is None:
@@ -420,9 +438,43 @@ class OpenEphysKilosortPipeline:
         if self._modules_input_hash_fp.exists():
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
+            if modules_status[module]['completion_time'] is None:
+                # additional logic to read from the "-output.json" file for this module as well
+                # handle cases where the module has finished successfully,
+                # but the "_modules_input_hash_fp" is not updated (for whatever reason),
+                # resulting in this module not registered as completed in the "_modules_input_hash_fp"
+                module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if module_output_json_fp.exists():
+                    with open(module_output_json_fp) as f:
+                        module_run_output = json.load(f)
+                    modules_status[module]['duration'] = module_run_output['execution_time']
+                    modules_status[module]['completion_time'] = (
+                            datetime.strptime(modules_status[module]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                            + timedelta(seconds=module_run_output['execution_time']))
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
+
+    def _get_module_output_json_filename(self, module):
+        module_input_json = self._module_input_json.as_posix()
+        module_output_json = module_input_json.replace(
+            '-input.json',
+            '-' + module + '-' + str(self._modules_input_hash) + '-output.json')
+        return module_output_json
+
+    def _update_total_duration(self):
+        with open(self._modules_input_hash_fp) as f:
+            modules_status = json.load(f)
+        cumulative_execution_duration = sum(
+            v['duration'] or 0 for k, v in modules_status.items()
+            if k not in ('cumulative_execution_duration', 'total_duration'))
+        total_duration = (
+                datetime.strptime(modules_status[self._modules[-1]]['completion_time'], '%Y-%m-%d %H:%M:%S.%f')
+                - datetime.strptime(modules_status[self._modules[0]]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+        ).total_seconds()
+        self._update_module_status(
+            {'cumulative_execution_duration': cumulative_execution_duration,
+             'total_duration': total_duration})
 
 
 def run_pykilosort(continuous_file, kilosort_output_directory, params,
