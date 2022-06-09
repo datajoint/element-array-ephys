@@ -636,7 +636,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
         """
 
     def make(self, key):
