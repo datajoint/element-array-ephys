@@ -502,7 +502,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
         """
 
     def make(self, key):
@@ -550,7 +550,7 @@ class CuratedClustering(dj.Imported):
                     'spike_times': unit_spike_times,
                     'spike_count': spike_count,
                     'spike_sites': spike_sites[kilosort_dataset.data['spike_clusters'] == unit],
-                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit]})
+                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit] if spike_depths else None})
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
