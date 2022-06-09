@@ -91,6 +91,8 @@ class Kilosort:
                 self._data[base] = (np.reshape(d, d.shape[0])
                                     if d.ndim == 2 and d.shape[1] == 1 else d)
 
+        self._data['channel_map'] = self._data['channel_map'].flatten()
+
         # Read the Cluster Groups
         for cluster_pattern, cluster_col_name in zip(['cluster_groups.*', 'cluster_KSLabel.*'],
                                                      ['group', 'KSLabel']):
