@@ -143,7 +143,8 @@ class Kilosort:
             # center of mass is sum(coords.*features)/sum(features)
             self._data['spike_depths'] = (np.sum(spk_feature_ycoord * pc_features**2, axis=1)
                                         / np.sum(pc_features**2, axis=1))
-
+else:
+    self._data['spike_depths'] = None
         # ---- extract spike sites ----
         max_site_ind = np.argmax(np.abs(self.data['templates']).max(axis=1), axis=1)
         spike_site_ind = max_site_ind[self.data['spike_templates']]
