@@ -533,7 +533,8 @@ class CuratedClustering(dj.Imported):
         # -- Spike-sites and Spike-depths --
         spike_sites = np.array([channel2electrodes[s]['electrode']
                                 for s in kilosort_dataset.data['spike_sites']])
-        spike_depths = kilosort_dataset.data['spike_depths']
+        spike_depths = kilosort_dataset.data['spike_depths'] \
+                        if 'pc_features' in kilosort_dataset.data else None
 
         # -- Insert unit, label, peak-chn
         units = []
@@ -551,7 +552,7 @@ class CuratedClustering(dj.Imported):
                     'spike_times': unit_spike_times,
                     'spike_count': spike_count,
                     'spike_sites': spike_sites[kilosort_dataset.data['spike_clusters'] == unit],
-                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit]})
+                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit] if spike_depths else None})
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
