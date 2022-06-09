@@ -667,8 +667,7 @@ class CuratedClustering(dj.Imported):
         # -- Spike-sites and Spike-depths --
         spike_sites = np.array([channel2electrodes[s]['electrode']
                                 for s in kilosort_dataset.data['spike_sites']])
-        spike_depths = kilosort_dataset.data['spike_depths'] \
-                        if 'pc_features' in kilosort_dataset.data else None
+        spike_depths = kilosort_dataset.data['spike_depths']
 
         # -- Insert unit, label, peak-chn
         units = []
