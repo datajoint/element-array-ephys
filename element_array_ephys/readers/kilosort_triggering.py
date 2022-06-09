@@ -392,8 +392,7 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = module_input_json.replace('-input.json',
-                                                           '-' + module + '-output.json')
+            module_output_json = self._get_module_output_json_filename(module)
             command = (sys.executable
                        + " -W ignore -m ecephys_spike_sorting.modules." + module
                        + " --input_json " + module_input_json
