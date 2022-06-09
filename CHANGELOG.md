@@ -5,7 +5,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## [0.1.1] - 2022-06-01
 
-+ Add - Secondary attribute to `PreClusterParamSteps` table
++ Add - Secondary attributes to `PreClusterParamSteps` table
 
 ## [0.1.0] - 2022-05-26
 
