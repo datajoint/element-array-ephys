@@ -3,7 +3,7 @@ import decimal
 import json
 import numpy as np
 import pynwb
-# import datajoint as dj
+import datajoint as dj
 from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
@@ -17,10 +17,11 @@ import warnings
 from ... import probe
 from ... import ephys_no_curation as ephys
 
-# assert probe.schema.is_activated(), 'probe not yet activated'
 
-# assert ephys.schema.is_activated,  \
-#         "The ephys module must be activated before export."
+ephys_mode = os.getenv('EPHYS_MODE', dj.config['custom'].get('ephys_mode', 'acute'))
+if ephys_mode != 'no-curation':
+    raise NotImplementedError('This export function is designed for the no_curation '
+                              +'schema')
 
 
 class DecimalEncoder(json.JSONEncoder):
