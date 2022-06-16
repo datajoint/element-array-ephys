@@ -317,7 +317,7 @@ class PreClusterTask(dj.Manual):
     -> EphysRecording
     -> PreClusterParamSteps
     ---
-    precluster_output_dir: varchar(255)  #  pre-clustering output directory relative to the root data directory
+    precluster_output_dir='': varchar(255)  #  pre-clustering output directory relative to the root data directory
     task_mode='none': enum('none','load', 'trigger') # 'none': no pre-clustering analysis
                                                      # 'load': load analysis results
                                                      # 'trigger': trigger computation

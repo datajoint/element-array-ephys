@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.1.3] - 2022-06-16
+
++ Update - Allow for the `precluster_output_dir` attribute to be nullable when no pre-clustering is performed.
+
 ## [0.1.2] - 2022-06-09
 
 + Bugfix - Handle case where `pc_features.npy` does not exist.
