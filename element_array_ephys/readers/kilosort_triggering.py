@@ -395,8 +395,8 @@ class OpenEphysKilosortPipeline:
             module_output_json = self._get_module_output_json_filename(module)           
             command = [sys.executable,
                     '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
-                    '--input_json', module_input_json.replace(' ', '\ '),
-                    '--output_json', module_output_json.replace(' ', '\ ')]
+                    '--input_json', module_input_json,
+                    '--output_json', module_output_json]
 
             start_time = datetime.utcnow()
             self._update_module_status(
