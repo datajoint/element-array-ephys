@@ -5,7 +5,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## [0.1.4] - 2022-07-05
 
-+ Bugfix - Save values of `spike_depths` if data is present.
++ Bugfix - Handle case where `spike_depths` data is present.
 
 ## [0.1.3] - 2022-06-16
 
