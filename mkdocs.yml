@@ -1,0 +1,43 @@
+site_name: Element Array Ephys
+repo_url: https://github.com/A-Baji/element-array-ephys
+repo_name: A-Baji/element-array-ephys
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+  palette:
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: datajoint-light
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: datajoint-dark
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Getting Started: 
+    - GS2: getting_started/index.md
+    - GS1: getting_started/getting_started.md
+  - Tutorials: tutorials.md
+  - Concepts: concepts.md
+  - API: api.md
+
+plugins:
+  - search
+  - redirects:
+        redirect_maps:
+            'index.md': 'getting_started/index.md'
+
+extra:
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
