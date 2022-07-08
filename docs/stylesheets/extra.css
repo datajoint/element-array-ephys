@@ -20,11 +20,17 @@
 
   --md-primary-fg-color: #fcb954;
   --md-primary-bg-color: #000000;
-  
+
   --md-accent-fg-color: #fcb954;
 
   --md-code-fg-color: #87aeb2;
   --md-code-bg-color: #3c3c3c;
+  --md-code-hl-name-color: #17b2ff;
+  --md-code-hl-operator-color: #87aeb2;
+  --md-code-hl-punctuation-color: #87aeb2;
+  --md-code-hl-comment-color: #ffd28d;
+  --md-code-hl-generic-color: #87aeb2;
+  --md-code-hl-variable-color: #87aeb2;
 
   --md-footer-bg-color: #0f4d58;
   --md-footer-fg-color: #fcb954;
