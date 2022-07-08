@@ -32,9 +32,10 @@ nav:
 
 plugins:
   - search
-  - redirects:
+  - redirects: # mkdocs-redirects
       redirect_maps:
         "index.md": "getting_started/index.md"
+  - mkdocstrings # mkdocstrings, mkdocstrings-python
 
 extra:
   generator: false
