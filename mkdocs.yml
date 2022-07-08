@@ -4,17 +4,17 @@ repo_name: A-Baji/element-array-ephys
 
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
   features:
     - navigation.tabs
   palette:
-
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: datajoint-light
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: datajoint-dark
@@ -23,9 +23,9 @@ theme:
         name: Switch to light mode
 
 nav:
-  - Getting Started: 
-    - GS2: getting_started/index.md
-    - GS1: getting_started/getting_started.md
+  - Getting Started:
+      - GS2: getting_started/index.md
+      - GS1: getting_started/getting_started.md
   - Tutorials: tutorials.md
   - Concepts: concepts.md
   - API: api.md
@@ -33,11 +33,14 @@ nav:
 plugins:
   - search
   - redirects:
-        redirect_maps:
-            'index.md': 'getting_started/index.md'
+      redirect_maps:
+        "index.md": "getting_started/index.md"
 
 extra:
   generator: false
 
 extra_css:
   - stylesheets/extra.css
+
+markdown_extensions:
+  - attr_list
