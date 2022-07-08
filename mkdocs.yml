@@ -9,13 +9,11 @@ theme:
   features:
     - navigation.tabs
   palette:
-    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: datajoint-light
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: datajoint-dark
       toggle:
@@ -37,11 +35,12 @@ plugins:
         "index.md": "getting_started/installation.md"
   - mkdocstrings # mkdocstrings, mkdocstrings-python
 
+markdown_extensions:
+  - attr_list
+
+# Disable watermark
 extra:
   generator: false
 
 extra_css:
   - stylesheets/extra.css
-
-markdown_extensions:
-  - attr_list
