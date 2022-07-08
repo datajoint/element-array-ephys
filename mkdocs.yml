@@ -24,8 +24,8 @@ theme:
 
 nav:
   - Getting Started:
-      - GS2: getting_started/index.md
-      - GS1: getting_started/getting_started.md
+      - Installation: getting_started/installation.md
+      - Set Up: getting_started/setup.md
   - Tutorials: tutorials.md
   - Concepts: concepts.md
   - API: api.md
@@ -34,7 +34,7 @@ plugins:
   - search
   - redirects: # mkdocs-redirects
       redirect_maps:
-        "index.md": "getting_started/index.md"
+        "index.md": "getting_started/installation.md"
   - mkdocstrings # mkdocstrings, mkdocstrings-python
 
 extra:

@@ -13,10 +13,12 @@
 
 [data-md-color-scheme="datajoint-dark"] {
 
-  --md-typeset-color: #ffffff;
+  --md-typeset-color: #eeeeee;
 
   --md-default-bg-color: #172c34;
   --md-default-fg-color--light: #fab85d;
+  --md-default-fg-color--lighter: #87aeb2;
+  --md-default-fg-color--lightest: #87aeb2;
 
   --md-primary-fg-color: #fcb954;
   --md-primary-bg-color: #000000;
@@ -31,6 +33,8 @@
   --md-code-hl-comment-color: #ffd28d;
   --md-code-hl-generic-color: #87aeb2;
   --md-code-hl-variable-color: #87aeb2;
+
+  --md-typeset-table-color: #87aeb2;
 
   --md-footer-bg-color: #0f4d58;
   --md-footer-fg-color: #fcb954;
