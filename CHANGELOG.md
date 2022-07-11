@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.1.4] - 2022-07-11
+
++ Bugfix - Handle case where `spike_depths` data is present.
+
 ## [0.1.3] - 2022-06-16
 
 + Update - Allow for the `precluster_output_dir` attribute to be nullable when no pre-clustering is performed.
@@ -35,7 +39,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Readers for: `SpikeGLX`, `Open Ephys`, `Kilosort`
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
 
-[0.1.1]: https://github.com/datajoint/element-array-ephys/compare/0.1.0...0.1.1
+[0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
+[0.1.3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.3
+[0.1.2]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.2
+[0.1.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.1
 [0.1.0]: https://github.com/datajoint/element-array-ephys/compare/0.1.0b0...0.1.0
-[0.1.0b0]: https://github.com/datajoint/element-array-ephys/compare/0.1.0a5...0.1.0b0
+[0.1.0b0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0b0
 [0.1.0a5]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0a5
