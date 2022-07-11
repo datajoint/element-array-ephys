@@ -685,7 +685,7 @@ class CuratedClustering(dj.Imported):
                     'spike_times': unit_spike_times,
                     'spike_count': spike_count,
                     'spike_sites': spike_sites[kilosort_dataset.data['spike_clusters'] == unit],
-                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit] if spike_depths.any() else None})
+                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit] if spike_depths is not None else None})
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
