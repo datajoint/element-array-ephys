@@ -154,3 +154,14 @@ jobs:
           python-version: 3.x
       - run: pip install mkdocs-material mkdocs-redirects mkdocstrings mkdocstrings-python mike
       - run: mkdocs gh-deploy --force --config-file ./docs/mkdocs.yml
+      # Mike workflow
+      # - run: |
+      #     git fetch origin gh-pages --depth=1
+      #     git config user.name {GITHUB USER}
+      #     git config user.email {GITHUB EMAIL}
+
+      #     # Only run the first time:
+      #     mike delete --all
+
+      #     mike deploy --push --force --update-aliases {VERSION} latest
+      #     mike set-default --push latest
