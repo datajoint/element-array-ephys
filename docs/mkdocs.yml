@@ -31,10 +31,10 @@ nav:
 
 plugins:
   - search
-  - redirects: # mkdocs-redirects
+  - redirects:
       redirect_maps:
         "index.md": "getting_started/installation.md"
-  - mkdocstrings # mkdocstrings, mkdocstrings-python
+  - mkdocstrings
 
 markdown_extensions:
   - attr_list
