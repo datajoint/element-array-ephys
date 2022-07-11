@@ -2,6 +2,7 @@ site_name: Element Array Ephys
 repo_url: https://github.com/A-Baji/element-array-ephys
 repo_name: A-Baji/element-array-ephys
 docs_dir: ./src/
+
 theme:
   name: material
   logo: assets/logo.png
