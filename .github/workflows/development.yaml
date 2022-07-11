@@ -145,3 +145,12 @@ jobs:
           asset_path: ${{env.PKG_SDIST_PATH}}
           asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - run: mkdocs gh-deploy --force
