@@ -152,7 +152,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - run: pip install mkdocs-material mkdocs-redirects mkdocstrings mkdocstrings-python mike
+      - run: pip install mkdocs-material mkdocs-redirects mkdocstrings mkdocstrings-python # mike
       - run: mkdocs gh-deploy --force --config-file ./docs/mkdocs.yml
       # Mike workflow
       # - run: |
