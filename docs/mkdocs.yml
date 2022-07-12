@@ -23,7 +23,7 @@ theme:
 
 nav:
   - Getting Started:
-      - Installation: getting_started/installation.md
+      - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md
   - Tutorials: tutorials.md
   - Concepts: concepts.md
@@ -33,7 +33,7 @@ plugins:
   - search
   - redirects:
       redirect_maps:
-        "index.md": "getting_started/installation.md"
+        "index.md": "getting_started/index.md"
   - mkdocstrings
 
 markdown_extensions:

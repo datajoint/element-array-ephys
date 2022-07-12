@@ -1,14 +1,14 @@
-# docker-compose -f ./docker-compose-docs-serve.yaml up --build
+# docker-compose -f docs/docker-compose-docs-serve.yaml up --build
 version: "2.4"
 services:
   docs:
     build:
-      context: ./
-      dockerfile: docs.dockerfile
+      context: ../
+      dockerfile: docs/docs.dockerfile
     environment:
       - THEME_DIR=material
     volumes:
-      - .:/main
+      - ..:/main
     ports:
       - 8080:8080
     command:
