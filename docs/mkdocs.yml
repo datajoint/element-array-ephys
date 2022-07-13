@@ -8,7 +8,8 @@ theme:
   logo: assets/logo.png
   favicon: assets/logo.png
   features:
-    - navigation.tabs
+   - toc.integrate
+  #  - navigation.tabs
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: datajoint-light
@@ -22,11 +23,13 @@ theme:
         name: Switch to light mode
 
 nav:
+  - ⬅ Home: https://www.datajoint.org/
   - Getting Started:
       - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md
   - Tutorials: tutorials.md
   - Concepts: concepts.md
+  - About : about.md
   - API: api.md
 
 plugins:
