@@ -5,19 +5,19 @@ docs_dir: ./src/
 
 theme:
   name: material
-  logo: assets/logo.png
+  logo: assets/logo-black.png
   favicon: assets/logo.png
   features:
     - toc.integrate
   #  - navigation.tabs
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: datajoint-light
+      scheme: datajoint
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: datajoint-dark
+      scheme: slate
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
