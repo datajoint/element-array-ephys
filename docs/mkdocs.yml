@@ -8,7 +8,7 @@ theme:
   logo: assets/logo.png
   favicon: assets/logo.png
   features:
-   - toc.integrate
+    - toc.integrate
   #  - navigation.tabs
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -24,12 +24,13 @@ theme:
 
 nav:
   - ⬅ Home: https://www.datajoint.org/
+  - Element Array Ephys: /
   - Getting Started:
       - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md
   - Tutorials: tutorials.md
   - Concepts: concepts.md
-  - About : about.md
+  - About: about.md
   - API: api.md
 
 plugins:
