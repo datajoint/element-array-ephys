@@ -26,7 +26,7 @@
   --md-accent-fg-color: #fcb954;
 
   --md-code-fg-color: #87aeb2;
-  --md-code-bg-color: #3c3c3c86;
+  --md-code-bg-color: #2b3539;
   --md-code-hl-name-color: #17b2ff;
   --md-code-hl-operator-color: #87aeb2;
   --md-code-hl-punctuation-color: #87aeb2;
@@ -34,6 +34,8 @@
   --md-code-hl-generic-color: #87aeb2;
   --md-code-hl-variable-color: #87aeb2;
   --md-code-hl-number-color: #f5771e;
+  --md-admonition-fg-color: #eeeeee;
+  --md-admonition-bg-color: #2b3539;
 
   --md-typeset-table-color: #87aeb2;
 
