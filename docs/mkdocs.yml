@@ -43,9 +43,21 @@ plugins:
 markdown_extensions:
   - attr_list
 
-# Disable watermark
 extra:
-  generator: false
+  generator: false # Disable watermark
+  social:
+    - icon: fontawesome/brands/slack
+      link: https://datajoint.slack.com
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/datajoint
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/DataJointIO
+    - icon: fontawesome/brands/github
+      link: https://github.com/datajoint
+    - icon: fontawesome/brands/stack-overflow
+      link: https://stackoverflow.com/questions/tagged/datajoint
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/channel/UCdeCuFOTCXlVMRzh6Wk-lGg
 
 extra_css:
   - stylesheets/extra.css
