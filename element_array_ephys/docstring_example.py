@@ -1,6 +1,6 @@
 # element_array_ephys/docstring_example.py
 
-"""Provide several sample math calculations.
+"""--Module-level docstring--
 
 This module allows the user to make mathematical calculations.
 
@@ -25,7 +25,9 @@ The module contains the following functions:
 from typing import Union
 
 def add(a: Union[float, int], b: Union[float, int]) -> float:
-    """Compute and return the sum of two numbers.
+    """--Function-level docstring--
+
+    Compute and return the sum of two numbers.
 
     Examples:
         >>> add(4.0, 2.0)
@@ -41,3 +43,18 @@ def add(a: Union[float, int], b: Union[float, int]) -> float:
         A number representing the artihmetic sum of `a` and `b`.
     """
     return float(a + b)
+
+class MyClass:
+    """--Class-level docstring--"""
+
+    def method_a(self):
+        """Print A!"""
+        print("A!")
+
+    def method_b(self):
+        """Print B!"""
+        print("B!")
+
+    def method_c(self):
+        """Print C!"""
+        print("C!")

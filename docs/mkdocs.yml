@@ -38,8 +38,8 @@ plugins:
   - redirects:
       redirect_maps:
         "index.md": "getting_started/index.md"
-  - mkdocstrings
-
+  - mkdocstrings:
+      default_handler: python
 markdown_extensions:
   - attr_list
 
