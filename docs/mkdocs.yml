@@ -10,7 +10,6 @@ theme:
   favicon: assets/logo.png
   features:
     - toc.integrate
-  #  - navigation.tabs
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: datajoint
