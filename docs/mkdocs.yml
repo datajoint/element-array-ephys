@@ -5,6 +5,7 @@ docs_dir: ./src/
 
 theme:
   name: material
+  custom_dir: overrides
   logo: assets/logo-black.png
   favicon: assets/logo.png
   features:
@@ -24,7 +25,7 @@ theme:
 
 nav:
   - ⬅ Home: https://www.datajoint.org/
-  - Element Array Ephys: /
+  - Element Array Ephys: /getting_started/
   - Getting Started:
       - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md
@@ -40,12 +41,19 @@ plugins:
         "index.md": "getting_started/index.md"
   - mkdocstrings:
       default_handler: python
+
 markdown_extensions:
   - attr_list
+  - pymdownx.emoji:
+      options:
+        custom_icons:
+          - overrides/.icons
 
 extra:
   generator: false # Disable watermark
   social:
+    - icon: datajoint/dj-logo-white
+      link: https://www.datajoint.com/
     - icon: fontawesome/brands/slack
       link: https://datajoint.slack.com
     - icon: fontawesome/brands/linkedin
