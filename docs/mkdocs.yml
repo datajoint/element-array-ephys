@@ -24,7 +24,6 @@ theme:
         name: Switch to light mode
 
 nav:
-  - ⬅ Home: https://www.datajoint.org/
   - Element Array Ephys: /getting_started/
   - Getting Started:
       - Installation: getting_started/index.md

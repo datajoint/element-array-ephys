@@ -1,4 +1,4 @@
-[Docstrings guide](https://realpython.com/python-project-documentation-with-mkdocs/#step-3-write-and-format-your-docstrings)
+[Mkdocstrings Documentation](https://mkdocstrings.github.io/usage/)
 
 [Google-Style format](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
 
