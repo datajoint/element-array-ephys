@@ -392,11 +392,11 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = self._get_module_output_json_filename(module)
-            command = (sys.executable
-                       + " -W ignore -m ecephys_spike_sorting.modules." + module
-                       + " --input_json " + module_input_json
-                       + " --output_json " + module_output_json)
+            module_output_json = self._get_module_output_json_filename(module)           
+            command = [sys.executable,
+                    '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
+                    '--input_json', module_input_json,
+                    '--output_json', module_output_json]
 
             start_time = datetime.utcnow()
             self._update_module_status(
@@ -404,7 +404,7 @@ class OpenEphysKilosortPipeline:
                           'completion_time': None,
                           'duration': None}})
             with open(module_logfile, "a") as f:
-                subprocess.check_call(command.split(' '), stdout=f)
+                subprocess.check_call(command, stdout=f)
             completion_time = datetime.utcnow()
             self._update_module_status(
                 {module: {'start_time': start_time,
