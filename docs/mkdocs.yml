@@ -23,7 +23,7 @@ theme:
         name: Switch to light mode
 
 nav:
-  - Element Array Ephys: /getting_started/
+  - Element Array Ephys: index.md
   - Getting Started:
       - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md
