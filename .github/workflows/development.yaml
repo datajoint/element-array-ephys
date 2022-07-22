@@ -147,6 +147,8 @@ jobs:
           asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
   deploy-docs:
+    if: github.event_name == 'push'
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
