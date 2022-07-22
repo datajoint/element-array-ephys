@@ -6,8 +6,10 @@ import inspect
 import importlib
 import pandas as pd
 
+from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
+
 from .readers import spikeglx, kilosort, openephys
-from . import probe, find_full_path, find_root_directory, dict_to_uuid
+from . import probe
 
 schema = dj.schema()
 
@@ -47,7 +49,6 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
     global _linking_module
     _linking_module = linking_module
 
-    # activate
     probe.activate(probe_schema_name, create_schema=create_schema,
                    create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
@@ -58,9 +59,10 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 def get_ephys_root_data_dir() -> list:
     """
-    All data paths, directories in DataJoint Elements are recommended to be stored as
-    relative paths, with respect to some user-configured "root" directory,
-     which varies from machine to machine (e.g. different mounted drive locations)
+    All data paths, directories in DataJoint Elements are recommended to be 
+    stored as relative paths, with respect to some user-configured "root" 
+    directory, which varies from machine to machine (e.g. different mounted 
+    drive locations)
 
     get_ephys_root_data_dir() -> list
         This user-provided function retrieves the possible root data directories
@@ -79,7 +81,7 @@ def get_session_directory(session_key: dict) -> str:
         Retrieve the session directory containing the
          recorded Neuropixels data for a given Session
         :param session_key: a dictionary of one Session `key`
-        :return: a string for full path to the session directory
+        :return: a string for relative or full path to the session directory
     """
     return _linking_module.get_session_directory(session_key)
 
@@ -130,7 +132,9 @@ class EphysRecording(dj.Imported):
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
-    sampling_rate: float # (Hz) 
+    sampling_rate: float # (Hz)
+    recording_datetime: datetime # datetime of the recording from this probe
+    recording_duration: float # (seconds) duration of the recording from this probe
     """
 
     class EphysFile(dj.Part):
@@ -141,21 +145,24 @@ class EphysRecording(dj.Imported):
         """
 
     def make(self, key):
-        sess_dir = pathlib.Path(get_session_directory(key))
+
+        session_dir = find_full_path(get_ephys_root_data_dir(), 
+                                     get_session_directory(key))
 
         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1('probe')
 
         # search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in zip(['*.ap.meta', '*.oebin'],
                                                  ['SpikeGLX', 'Open Ephys']):
-            ephys_meta_filepaths = [fp for fp in sess_dir.rglob(ephys_pattern)]
+            ephys_meta_filepaths = [fp for fp in session_dir.rglob(ephys_pattern)]
             if ephys_meta_filepaths:
                 acq_software = ephys_acq_type
                 break
         else:
             raise FileNotFoundError(
                 f'Ephys recording data not found!'
-                f' Neither SpikeGLX nor Open Ephys recording files found')
+                f' Neither SpikeGLX nor Open Ephys recording files found'
+                f' in {session_dir}')
 
         if acq_software == 'SpikeGLX':
             for meta_filepath in ephys_meta_filepaths:
@@ -186,14 +193,18 @@ class EphysRecording(dj.Imported):
             self.insert1({**key,
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
-                          'sampling_rate': spikeglx_meta.meta['imSampRate']})
+                          'sampling_rate': spikeglx_meta.meta['imSampRate'],
+                          'recording_datetime': spikeglx_meta.recording_time,
+                          'recording_duration': (spikeglx_meta.recording_duration
+                                        or spikeglx.retrieve_recording_duration(meta_filepath))})
 
-            root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
+            root_dir = find_root_directory(get_ephys_root_data_dir(), 
+                                           meta_filepath)
             self.EphysFile.insert1({
                 **key,
                 'file_path': meta_filepath.relative_to(root_dir).as_posix()})
         elif acq_software == 'Open Ephys':
-            dataset = openephys.OpenEphys(sess_dir)
+            dataset = openephys.OpenEphys(session_dir)
             for serial_number, probe_data in dataset.probes.items():
                 if str(serial_number) == inserted_probe_serial_number:
                     break
@@ -219,10 +230,11 @@ class EphysRecording(dj.Imported):
             self.insert1({**key,
                           **generate_electrode_config(probe_type, electrode_group_members),
                           'acq_software': acq_software,
-                          'sampling_rate': probe_data.ap_meta['sample_rate']})
+                          'sampling_rate': probe_data.ap_meta['sample_rate'],
+                          'recording_datetime': probe_data.recording_info['recording_datetimes'][0],
+                          'recording_duration': np.sum(probe_data.recording_info['recording_durations'])})
 
-            root_dir = find_root_directory(
-                get_ephys_root_data_dir(),
+            root_dir = find_root_directory(get_ephys_root_data_dir(),
                 probe_data.recording_info['recording_files'][0])
             self.EphysFile.insert([{**key,
                                     'file_path': fp.relative_to(root_dir).as_posix()}
@@ -291,8 +303,10 @@ class LFP(dj.Imported):
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
         elif acq_software == 'Open Ephys':
-            sess_dir = pathlib.Path(get_session_directory(key))
-            loaded_oe = openephys.OpenEphys(sess_dir)
+            session_dir = find_full_path(get_ephys_root_data_dir(), 
+                                         get_session_directory(key))
+
+            loaded_oe = openephys.OpenEphys(session_dir)
             oe_probe = loaded_oe.probes[probe_sn]
 
             lfp_channel_ind = np.arange(
@@ -443,7 +457,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
@@ -451,8 +465,8 @@ class Curation(dj.Manual):
 
     def create1_from_clustering_task(self, key, curation_note=''):
         """
-        A convenient function to create a new corresponding "Curation"
-         for a particular "ClusteringTask"
+        A function to create a new corresponding "Curation" for a particular 
+        "ClusteringTask"
         """
         if key not in Clustering():
             raise ValueError(f'No corresponding entry in Clustering available'
@@ -466,8 +480,10 @@ class Curation(dj.Manual):
         # Synthesize curation_id
         curation_id = dj.U().aggr(self & key, n='ifnull(max(curation_id)+1,1)').fetch1('n')
         self.insert1({**key, 'curation_id': curation_id,
-                      'curation_time': creation_time, 'curation_output_dir': output_dir,
-                      'quality_control': is_qc, 'manual_curation': is_curated,
+                      'curation_time': creation_time, 
+                      'curation_output_dir': output_dir,
+                      'quality_control': is_qc, 
+                      'manual_curation': is_curated,
                       'curation_note': curation_note})
 
 
@@ -489,7 +505,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
         """
 
     def make(self, key):
@@ -537,7 +553,7 @@ class CuratedClustering(dj.Imported):
                     'spike_times': unit_spike_times,
                     'spike_count': spike_count,
                     'spike_sites': spike_sites[kilosort_dataset.data['spike_clusters'] == unit],
-                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit]})
+                    'spike_depths': spike_depths[kilosort_dataset.data['spike_clusters'] == unit] if spike_depths is not None else None})
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
@@ -614,8 +630,9 @@ class WaveformSet(dj.Imported):
                 spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                 neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             elif acq_software == 'Open Ephys':
-                sess_dir = pathlib.Path(get_session_directory(key))
-                openephys_dataset = openephys.OpenEphys(sess_dir)
+                session_dir = find_full_path(get_ephys_root_data_dir(), 
+                                             get_session_directory(key))
+                openephys_dataset = openephys.OpenEphys(session_dir)
                 neuropixels_recording = openephys_dataset.probes[probe_serial_number]
 
             def yield_unit_waveforms():
@@ -732,11 +749,13 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
     except FileNotFoundError:
         # if not found, search in session_dir again
         if not spikeglx_meta_filepath.exists():
-            sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
+            session_dir = find_full_path(get_ephys_root_data_dir(), 
+                                         get_session_directory(
+                                             ephys_recording_key))
             inserted_probe_serial_number = (ProbeInsertion * probe.Probe
                                             & ephys_recording_key).fetch1('probe')
 
-            spikeglx_meta_filepaths = [fp for fp in sess_dir.rglob('*.ap.meta')]
+            spikeglx_meta_filepaths = [fp for fp in session_dir.rglob('*.ap.meta')]
             for meta_filepath in spikeglx_meta_filepaths:
                 spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
                 if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
@@ -769,8 +788,9 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
             for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
                 spikeglx_meta.shankmap['data'])}
     elif acq_software == 'Open Ephys':
-        sess_dir = pathlib.Path(get_session_directory(ephys_recording_key))
-        openephys_dataset = openephys.OpenEphys(sess_dir)
+        session_dir = find_full_path(get_ephys_root_data_dir(), 
+                                     get_session_directory(ephys_recording_key))
+        openephys_dataset = openephys.OpenEphys(session_dir)
         probe_serial_number = (ProbeInsertion & ephys_recording_key).fetch1('probe')
         probe_dataset = openephys_dataset.probes[probe_serial_number]
 

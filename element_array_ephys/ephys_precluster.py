@@ -4,8 +4,6 @@ import re
 import numpy as np
 import inspect
 import importlib
-import pandas as pd
-
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
 from .readers import spikeglx, kilosort, openephys
@@ -28,8 +26,7 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
         :param linking_module: a module name or a module containing the
          required dependencies to activate the `ephys` element:
             Upstream tables:
-                + Subject: table referenced by ProbeInsertion, typically identifying the animal undergoing a probe insertion
-                + Session: table referenced by EphysRecording, typically identifying a recording session
+                + Session: parent table to ProbeInsertion, typically identifying a recording session
                 + SkullReference: Reference table for InsertionLocation, specifying the skull reference
                  used for probe insertion location (e.g. Bregma, Lambda)
             Functions:
@@ -60,9 +57,10 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 
 def get_ephys_root_data_dir() -> list:
     """
-    All data paths, directories in DataJoint Elements are recommended to be stored as
-    relative paths, with respect to some user-configured "root" directory,
-     which varies from machine to machine (e.g. different mounted drive locations)
+    All data paths, directories in DataJoint Elements are recommended to be 
+    stored as relative paths, with respect to some user-configured "root" 
+    directory, which varies from machine to machine (e.g. different mounted 
+    drive locations)
 
     get_ephys_root_data_dir() -> list
         This user-provided function retrieves the possible root data directories
@@ -81,7 +79,7 @@ def get_session_directory(session_key: dict) -> str:
         Retrieve the session directory containing the
          recorded Neuropixels data for a given Session
         :param session_key: a dictionary of one Session `key`
-        :return: a string for full path to the session directory
+        :return: a string for relative or full path to the session directory
     """
     return _linking_module.get_session_directory(session_key)
 
@@ -91,7 +89,7 @@ def get_session_directory(session_key: dict) -> str:
 
 @schema
 class AcquisitionSoftware(dj.Lookup):
-    definition = """  # Software used for recording of neuropixels probes
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)    
     """
     contents = zip(['SpikeGLX', 'Open Ephys'])
@@ -100,12 +98,11 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class ProbeInsertion(dj.Manual):
     definition = """
-    # Probe insertion chronically implanted into an animal.
-    -> Subject  
+    # Probe insertion implanted into an animal for a given session.
+    -> Session
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
-    insertion_datetime=null: datetime
     """
 
 
@@ -129,7 +126,6 @@ class InsertionLocation(dj.Manual):
 class EphysRecording(dj.Imported):
     definition = """
     # Ephys recording from a probe insertion for a given session.
-    -> Session
     -> ProbeInsertion      
     ---
     -> probe.ElectrodeConfig
@@ -147,6 +143,7 @@ class EphysRecording(dj.Imported):
         """
 
     def make(self, key):
+
         session_dir = find_full_path(get_ephys_root_data_dir(), 
                                      get_session_directory(key))
 
@@ -172,8 +169,7 @@ class EphysRecording(dj.Imported):
                     break
             else:
                 raise FileNotFoundError(
-                    f'No SpikeGLX data found for probe insertion: {key}' + 
-                    ' The probe serial number does not match.')
+                    'No SpikeGLX data found for probe insertion: {}'.format(key))
 
             if re.search('(1.0|2.0)', spikeglx_meta.probe_model):
                 probe_type = spikeglx_meta.probe_model
@@ -237,7 +233,7 @@ class EphysRecording(dj.Imported):
                           'recording_duration': np.sum(probe_data.recording_info['recording_durations'])})
 
             root_dir = find_root_directory(get_ephys_root_data_dir(),
-                                probe_data.recording_info['recording_files'][0])
+                probe_data.recording_info['recording_files'][0])
             self.EphysFile.insert([{**key,
                                     'file_path': fp.relative_to(root_dir).as_posix()}
                                    for fp in probe_data.recording_info['recording_files']])
@@ -248,10 +244,143 @@ class EphysRecording(dj.Imported):
 
 
 @schema
+class PreClusterMethod(dj.Lookup):
+    definition = """
+    # Method for pre-clustering
+    precluster_method: varchar(16)
+    ---
+    precluster_method_desc: varchar(1000)
+    """
+
+    contents = [('catgt', 'Time shift, Common average referencing, Zeroing')]
+
+
+@schema
+class PreClusterParamSet(dj.Lookup):
+    definition = """
+    # Parameter set to be used in a clustering procedure
+    paramset_idx:  smallint
+    ---
+    -> PreClusterMethod    
+    paramset_desc: varchar(128)
+    param_set_hash: uuid
+    unique index (param_set_hash)
+    params: longblob  # dictionary of all applicable parameters
+    """
+
+    @classmethod
+    def insert_new_params(cls, precluster_method: str, paramset_idx: int,
+                          paramset_desc: str, params: dict):
+        param_dict = {'precluster_method': precluster_method,
+                      'paramset_idx': paramset_idx,
+                      'paramset_desc': paramset_desc,
+                      'params': params,
+                      'param_set_hash':  dict_to_uuid(params)}
+        param_query = cls & {'param_set_hash': param_dict['param_set_hash']}
+
+        if param_query:  # If the specified param-set already exists
+            existing_paramset_idx = param_query.fetch1('paramset_idx')
+            if existing_paramset_idx == paramset_idx:  # If the existing set has the same paramset_idx: job done
+                return
+            else:  # If not same name: human error, trying to add the same paramset with different name
+                raise dj.DataJointError(
+                    'The specified param-set'
+                    ' already exists - paramset_idx: {}'.format(existing_paramset_idx))
+        else:
+            cls.insert1(param_dict)
+
+
+@schema
+class PreClusterParamSteps(dj.Manual):
+    definition = """
+    # Ordered list of paramset_idx that are to be run
+    # When pre-clustering is not performed, do not create an entry in `Step` Part table
+    precluster_param_steps_id: smallint
+    ---
+    precluster_param_steps_name: varchar(32)
+    precluster_param_steps_desc: varchar(128)
+    """
+
+    class Step(dj.Part):
+        definition = """
+        -> master
+        step_number: smallint                  # Order of operations
+        ---
+        -> PreClusterParamSet
+        """
+
+
+@schema
+class PreClusterTask(dj.Manual):
+    definition = """
+    # Manual table for defining a clustering task ready to be run
+    -> EphysRecording
+    -> PreClusterParamSteps
+    ---
+    precluster_output_dir='': varchar(255)  #  pre-clustering output directory relative to the root data directory
+    task_mode='none': enum('none','load', 'trigger') # 'none': no pre-clustering analysis
+                                                     # 'load': load analysis results
+                                                     # 'trigger': trigger computation
+    """
+
+
+@schema
+class PreCluster(dj.Imported):
+    """
+    A processing table to handle each PreClusterTask:
+    + If `task_mode == "none"`: no pre-clustering performed
+    + If `task_mode == "trigger"`: trigger pre-clustering analysis according to the      
+                                    PreClusterParamSet
+    + If `task_mode == "load"`: verify output
+    """
+    definition = """
+    -> PreClusterTask
+    ---
+    precluster_time: datetime  # time of generation of this set of pre-clustering results 
+    package_version='': varchar(16)
+    """
+
+    def make(self, key):
+        task_mode, output_dir = (PreClusterTask & key).fetch1('task_mode', 
+                                                              'precluster_output_dir')
+        precluster_output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+
+        if task_mode == 'none':
+            if len((PreClusterParamSteps.Step & key).fetch()) > 0:
+                raise ValueError('There are entries in the PreClusterParamSteps.Step '
+                                 'table and task_mode=none')
+            creation_time = (EphysRecording & key).fetch1('recording_datetime')
+        elif task_mode == 'load':
+            acq_software = (EphysRecording & key).fetch1('acq_software')
+            inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1('probe')
+
+            if acq_software == 'SpikeGLX':
+                for meta_filepath in precluster_output_dir.rglob('*.ap.meta'):
+                    spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+
+                    if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
+                        creation_time=spikeglx_meta.recording_time
+                        break
+                else:
+                    raise FileNotFoundError(
+                        'No SpikeGLX data found for probe insertion: {}'.format(key))
+            else:
+                raise NotImplementedError(f'Pre-clustering analysis of {acq_software}'
+                                          'is not yet supported.')
+        elif task_mode == 'trigger':
+            raise NotImplementedError('Automatic triggering of'
+                                      ' pre-clustering analysis is not yet supported.')
+        else:
+            raise ValueError(f'Unknown task mode: {task_mode}')
+
+        self.insert1({**key, 'precluster_time': creation_time})
+
+
+@schema
 class LFP(dj.Imported):
     definition = """
     # Acquired local field potential (LFP) from a given Ephys recording.
-    -> EphysRecording
+    -> PreCluster
     ---
     lfp_sampling_rate: float   # (Hz)
     lfp_time_stamps: longblob  # (s) timestamps with respect to the start of the recording (recording_timestamp)
@@ -305,8 +434,10 @@ class LFP(dj.Imported):
                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap['data'][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
         elif acq_software == 'Open Ephys':
+            
             session_dir = find_full_path(get_ephys_root_data_dir(), 
                                          get_session_directory(key))
+
             loaded_oe = openephys.OpenEphys(session_dir)
             oe_probe = loaded_oe.probes[probe_sn]
 
@@ -409,7 +540,7 @@ class ClusterQualityLabel(dj.Lookup):
 class ClusteringTask(dj.Manual):
     definition = """
     # Manual table for defining a clustering task ready to be run
-    -> EphysRecording
+    -> PreCluster
     -> ClusteringParamSet
     ---
     clustering_output_dir: varchar(255)  #  clustering output directory relative to the clustering root data directory
@@ -458,7 +589,7 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
@@ -466,8 +597,8 @@ class Curation(dj.Manual):
 
     def create1_from_clustering_task(self, key, curation_note=''):
         """
-        A convenient function to create a new corresponding "Curation"
-         for a particular "ClusteringTask"
+        A function to create a new corresponding "Curation" for a particular 
+        "ClusteringTask"
         """
         if key not in Clustering():
             raise ValueError(f'No corresponding entry in Clustering available'
@@ -481,8 +612,10 @@ class Curation(dj.Manual):
         # Synthesize curation_id
         curation_id = dj.U().aggr(self & key, n='ifnull(max(curation_id)+1,1)').fetch1('n')
         self.insert1({**key, 'curation_id': curation_id,
-                      'curation_time': creation_time, 'curation_output_dir': output_dir,
-                      'quality_control': is_qc, 'manual_curation': is_curated,
+                      'curation_time': creation_time, 
+                      'curation_output_dir': output_dir,
+                      'quality_control': is_qc, 
+                      'manual_curation': is_curated,
                       'curation_note': curation_note})
 
 
@@ -494,7 +627,7 @@ class CuratedClustering(dj.Imported):
     """
 
     class Unit(dj.Part):
-        definition = """
+        definition = """   
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int
@@ -663,78 +796,6 @@ class WaveformSet(dj.Imported):
             self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
-@schema
-class QualityMetric(dj.Imported):
-    definition = """
-    # Clusters and waveforms metrics
-    -> CuratedClustering    
-    """
-
-    class Cluster(dj.Part):
-        definition = """   
-        # Cluster metrics for a particular unit
-        -> master
-        -> CuratedClustering.Unit
-        ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
-        snr=null: float  # signal-to-noise ratio for a unit
-        presence_ratio=null: float  # fraction of time in which spikes are present
-        isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
-        number_violation=null: int  # total number of ISI violations
-        amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
-        isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
-        d_prime=null: float  # Classification accuracy based on LDA
-        nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
-        nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
-        silhouette_score=null: float  # Standard metric for cluster overlap
-        max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
-        """
-
-    class Waveform(dj.Part):
-        definition = """   
-        # Waveform metrics for a particular unit
-        -> master
-        -> CuratedClustering.Unit
-        ---
-        amplitude: float  # (uV) absolute difference between waveform peak and trough
-        duration: float  # (ms) time between waveform peak and trough
-        halfwidth=null: float  # (ms) spike width at half max amplitude
-        pt_ratio=null: float  # absolute amplitude of peak divided by absolute amplitude of trough relative to 0
-        repolarization_slope=null: float  # the repolarization slope was defined by fitting a regression line to the first 30us from trough to peak
-        recovery_slope=null: float  # the recovery slope was defined by fitting a regression line to the first 30us from peak to tail
-        spread=null: float  # (um) the range with amplitude above 12% of the maximum amplitude along the probe
-        velocity_above=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the top of the probe
-        velocity_below=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the bottom of the probe
-        """
-
-    def make(self, key):
-        output_dir = (ClusteringTask & key).fetch1('clustering_output_dir')
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        metric_fp = kilosort_dir / 'metrics.csv'
-
-        if not metric_fp.exists():
-            raise FileNotFoundError(f'QC metrics file not found: {metric_fp}')
-
-        metrics_df = pd.read_csv(metric_fp)
-        metrics_df.set_index('cluster_id', inplace=True)
-
-        # Get all units
-        units = {u['unit']: u for u in (CuratedClustering.Unit & key).fetch(
-            'KEY', order_by='unit')}
-
-        metrics_list = []
-        for unit, unit_key in units.items():
-            metrics_list.append({**unit_key, **dict(metrics_df.loc[unit])})
-
-        self.insert1(key)
-        self.Cluster.insert(metrics_list, ignore_extra_fields=True)
-        self.Waveform.insert(metrics_list, ignore_extra_fields=True)
-
-
 # ---------------- HELPER FUNCTIONS ----------------
 
 def get_spikeglx_meta_filepath(ephys_recording_key):
@@ -762,8 +823,7 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
                     break
             else:
                 raise FileNotFoundError(
-                    'No SpikeGLX data found for probe insertion: {}'.format(
-                                                        ephys_recording_key))
+                    'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
 
     return spikeglx_meta_filepath
 
@@ -836,3 +896,4 @@ def generate_electrode_config(probe_type: str, electrodes: list):
                                                for electrode in electrodes)
 
     return electrode_config_key
+
