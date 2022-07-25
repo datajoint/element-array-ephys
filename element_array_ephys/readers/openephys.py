@@ -145,7 +145,7 @@ class OpenEphys:
                         else:
                             continue  # not continuous data for the current probe
                     else:
-                        raise ValueError(f'Unable to infer type (AP or LFP) for the continuous data from:\n\t{continuous_info}')
+                        raise ValueError(f'Unable to infer type (AP or LFP) for the continuous data from:\n\t{continuous_info["folder_name"]}')
 
                     if continuous_type == 'ap':
                         probe.recording_info['recording_count'] += 1

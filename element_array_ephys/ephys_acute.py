@@ -295,6 +295,9 @@ class EphysRecording(dj.Imported):
                 raise FileNotFoundError(
                     'No Open Ephys data found for probe insertion: {}'.format(key))
 
+            if not probe_data.ap_meta:
+                raise IOError('No analog signals found - check "structure.oebin" file or "continuous" directory')
+
             if probe_data.probe_model in supported_probe_types:
                 probe_type = probe_data.probe_model
                 electrode_query = probe.ProbeType.Electrode & {'probe_type': probe_type}
