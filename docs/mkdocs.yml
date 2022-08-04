@@ -1,6 +1,6 @@
 site_name: Element Array Ephys
-repo_url: https://github.com/A-Baji/element-array-ephys
-repo_name: A-Baji/element-array-ephys
+repo_url: https://github.com/datajoint/element-array-ephys
+repo_name: datajoint/element-array-ephys
 docs_dir: ./src/
 
 theme:
@@ -23,7 +23,7 @@ theme:
         name: Switch to light mode
 
 nav:
-  - Element Array Ephys: index.md
+  - Element Array Ephys: getting_started/index.md
   - Getting Started:
       - Installation: getting_started/index.md
       - Set Up: getting_started/setup.md

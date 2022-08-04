@@ -1,4 +1,5 @@
 # docker-compose -f docs/docker-compose-docs-serve.yaml up --build
+# navigate to http://localhost/
 version: "2.4"
 services:
   docs:
@@ -10,12 +11,12 @@ services:
     volumes:
       - ..:/main
     ports:
-      - 8080:8080
+      - 80:80
     command:
       - bash
       - -c
       - |
         pwd
         mkdocs --version
-        mkdocs serve --config-file ./docs/mkdocs.yml -a 0.0.0.0:8080
+        mkdocs serve --config-file ./docs/mkdocs.yml -a 0.0.0.0:80
         # tail -f /dev/null
