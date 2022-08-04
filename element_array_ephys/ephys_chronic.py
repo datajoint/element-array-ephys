@@ -664,7 +664,7 @@ class WaveformSet(dj.Imported):
 
 
 @schema
-class QualityMetric(dj.Imported):
+class QualityMetrics(dj.Imported):
     definition = """
     # Clusters and waveforms metrics
     -> CuratedClustering    
