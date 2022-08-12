@@ -4,6 +4,7 @@ import re
 import numpy as np
 import inspect
 import importlib
+import gc
 from decimal import Decimal
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
@@ -325,6 +326,10 @@ class EphysRecording(dj.Imported):
             self.EphysFile.insert([{**key,
                                     'file_path': fp.relative_to(root_dir).as_posix()}
                                    for fp in probe_data.recording_info['recording_files']])
+            # explicitly garbage collect "dataset"
+            # as these may have large memory footprint and may not be cleared fast enough
+            del probe_data, dataset
+            gc.collect()
         else:
             raise NotImplementedError(f'Processing ephys files from'
                                       f' acquisition software of type {acq_software} is'
