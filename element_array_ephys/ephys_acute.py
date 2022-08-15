@@ -924,7 +924,14 @@ def get_openephys_probe_data(ephys_recording_key):
     session_dir = find_full_path(get_ephys_root_data_dir(),
                               get_session_directory(ephys_recording_key))
     loaded_oe = openephys.OpenEphys(session_dir)
-    return loaded_oe.probes[inserted_probe_serial_number]
+    probe_data = loaded_oe.probes[inserted_probe_serial_number]
+
+    # explicitly garbage collect "loaded_oe"
+    # as these may have large memory footprint and may not be cleared fast enough
+    del loaded_oe
+    gc.collect()
+
+    return probe_data
 
 
 def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):
