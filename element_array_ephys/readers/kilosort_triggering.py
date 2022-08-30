@@ -303,7 +303,9 @@ class OpenEphysKilosortPipeline:
     https://github.com/AllenInstitute/ecephys_spike_sorting
     """
 
-    _modules = ['kilosort_helper',
+    _modules = ['depth_estimation',
+                'median_subtraction',
+                'kilosort_helper',
                 'kilosort_postprocessing',
                 'noise_templates',
                 'mean_waveforms',
@@ -477,7 +479,7 @@ class OpenEphysKilosortPipeline:
 
 
 def run_pykilosort(continuous_file, kilosort_output_directory, params,
-                    channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
+                   channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
     dat_path = pathlib.Path(continuous_file)
 
     probe = pykilosort.Bunch()
