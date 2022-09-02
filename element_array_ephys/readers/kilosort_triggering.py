@@ -116,13 +116,13 @@ class SGLXKilosortPipeline:
                                    / f'{session_str}_g{gate_str}_imec{probe_str}'
                                    / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.bin')
         continuous_file_symlink.parent.mkdir(parents=True, exist_ok=True)
-        continuous_file_symlink.unlink(missing_ok=False)
+        continuous_file_symlink.unlink(missing_ok=True)
         continuous_file_symlink.symlink_to(continuous_file)
         input_meta_fullpath_symlink = (input_meta_fullpath.parent / f'{session_str}_g{gate_str}'
                                        / f'{session_str}_g{gate_str}_imec{probe_str}'
                                        / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.meta')
         input_meta_fullpath_symlink.parent.mkdir(parents=True, exist_ok=True)
-        input_meta_fullpath_symlink.unlink(missing_ok=False)
+        input_meta_fullpath_symlink.unlink(missing_ok=True)
         input_meta_fullpath_symlink.symlink_to(input_meta_fullpath)
 
         createInputJson(self._catGT_input_json.as_posix(),
