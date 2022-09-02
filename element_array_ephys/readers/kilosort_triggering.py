@@ -239,9 +239,11 @@ class SGLXKilosortPipeline:
             data_directory = catGT_dest / run_folder / prb_folder
         else:
             data_directory = self._npx_input_dir
-
-        meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
-        bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        try:
+            meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
+            bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        except StopIteration:
+            raise RuntimeError(f'No ap meta/bin files found in {data_directory} - CatGT error?')
 
         return meta_fp, bin_fp
 
