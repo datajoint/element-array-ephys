@@ -90,7 +90,7 @@ class SGLXKilosortPipeline:
             print('run_CatGT is set to False, skipping...')
             return
 
-        session_str, gate_str, _, probe_str = self.parse_input_filename()
+        session_str, gate_str, trig_str, probe_str = self.parse_input_filename()
 
         first_trig, last_trig = SpikeGLX_utils.ParseTrigStr(
             'start,end', probe_str, gate_str, self._npx_input_dir.as_posix())
@@ -111,6 +111,18 @@ class SGLXKilosortPipeline:
 
         input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
 
+        # create symbolic link to the actual data files - as CatGT expects files to follow a certain naming convention
+        continuous_file_symlink = (continuous_file.parent / f'{session_str}_g{gate_str}'
+                                   / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                   / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.bin')
+        continuous_file_symlink.parent.mkdir(parents=True, exist_ok=True)
+        continuous_file_symlink.symlink_to(continuous_file)
+        input_meta_fullpath_symlink = (input_meta_fullpath.parent / f'{session_str}_g{gate_str}'
+                                       / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                       / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.meta')
+        input_meta_fullpath_symlink.parent.mkdir(parents=True, exist_ok=True)
+        input_meta_fullpath_symlink.symlink_to(input_meta_fullpath)
+
         createInputJson(self._catGT_input_json.as_posix(),
                         KS2ver=self._KS2ver,
                         npx_directory=self._npx_input_dir.as_posix(),
@@ -121,7 +133,7 @@ class SGLXKilosortPipeline:
                         probe_string=probe_str,
                         continuous_file=continuous_file.as_posix(),
                         input_meta_path=input_meta_fullpath.as_posix(),
-                        extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+                        extracted_data_directory=self._ks_output_dir.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
                         kilosort_repository=_get_kilosort_repository(self._KS2ver),
                         **{k: v for k, v in catgt_params.items() if k in self._input_json_args}
