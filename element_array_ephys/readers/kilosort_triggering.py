@@ -232,7 +232,7 @@ class SGLXKilosortPipeline:
         session_str, gate_str, _, probe_str = self.parse_input_filename()
 
         if self._CatGT_finished:
-            catGT_dest = self._ks_output_dir.parent
+            catGT_dest = self._ks_output_dir
             run_str = session_str + '_g' + gate_str
             run_folder = 'catgt_' + run_str
             prb_folder = run_str + '_imec' + probe_str
