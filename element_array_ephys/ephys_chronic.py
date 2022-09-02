@@ -576,7 +576,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=False)
+                            run_CatGT=True)
                         run_kilosort.run_modules()
                 elif acq_software == 'Open Ephys':
                     oe_probe = get_openephys_probe_data(key)

@@ -90,7 +90,7 @@ class SGLXKilosortPipeline:
             print('run_CatGT is set to False, skipping...')
             return
 
-        session_str, gate_str, _, probe_str = self.parse_input_filename()
+        session_str, gate_str, trig_str, probe_str = self.parse_input_filename()
 
         first_trig, last_trig = SpikeGLX_utils.ParseTrigStr(
             'start,end', probe_str, gate_str, self._npx_input_dir.as_posix())
@@ -111,6 +111,22 @@ class SGLXKilosortPipeline:
 
         input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
 
+        # create symbolic link to the actual data files - as CatGT expects files to follow a certain naming convention
+        continuous_file_symlink = (continuous_file.parent / f'{session_str}_g{gate_str}'
+                                   / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                   / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.bin')
+        continuous_file_symlink.parent.mkdir(parents=True, exist_ok=True)
+        if continuous_file_symlink.exists():
+            continuous_file_symlink.unlink()
+        continuous_file_symlink.symlink_to(continuous_file)
+        input_meta_fullpath_symlink = (input_meta_fullpath.parent / f'{session_str}_g{gate_str}'
+                                       / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                       / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.meta')
+        input_meta_fullpath_symlink.parent.mkdir(parents=True, exist_ok=True)
+        if input_meta_fullpath_symlink.exists():
+            input_meta_fullpath_symlink.unlink()
+        input_meta_fullpath_symlink.symlink_to(input_meta_fullpath)
+
         createInputJson(self._catGT_input_json.as_posix(),
                         KS2ver=self._KS2ver,
                         npx_directory=self._npx_input_dir.as_posix(),
@@ -121,7 +137,7 @@ class SGLXKilosortPipeline:
                         probe_string=probe_str,
                         continuous_file=continuous_file.as_posix(),
                         input_meta_path=input_meta_fullpath.as_posix(),
-                        extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+                        extracted_data_directory=self._ks_output_dir.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
                         kilosort_repository=_get_kilosort_repository(self._KS2ver),
                         **{k: v for k, v in catgt_params.items() if k in self._input_json_args}
@@ -216,16 +232,18 @@ class SGLXKilosortPipeline:
         session_str, gate_str, _, probe_str = self.parse_input_filename()
 
         if self._CatGT_finished:
-            catGT_dest = self._ks_output_dir.parent
+            catGT_dest = self._ks_output_dir
             run_str = session_str + '_g' + gate_str
             run_folder = 'catgt_' + run_str
             prb_folder = run_str + '_imec' + probe_str
             data_directory = catGT_dest / run_folder / prb_folder
         else:
             data_directory = self._npx_input_dir
-
-        meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
-        bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        try:
+            meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
+            bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        except StopIteration:
+            raise RuntimeError(f'No ap meta/bin files found in {data_directory} - CatGT error?')
 
         return meta_fp, bin_fp
 
@@ -303,7 +321,9 @@ class OpenEphysKilosortPipeline:
     https://github.com/AllenInstitute/ecephys_spike_sorting
     """
 
-    _modules = ['kilosort_helper',
+    _modules = ['depth_estimation',
+                'median_subtraction',
+                'kilosort_helper',
                 'kilosort_postprocessing',
                 'noise_templates',
                 'mean_waveforms',
@@ -477,7 +497,7 @@ class OpenEphysKilosortPipeline:
 
 
 def run_pykilosort(continuous_file, kilosort_output_directory, params,
-                    channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
+                   channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
     dat_path = pathlib.Path(continuous_file)
 
     probe = pykilosort.Bunch()
