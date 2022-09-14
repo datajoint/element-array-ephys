@@ -139,6 +139,7 @@ class SGLXKilosortPipeline:
                         input_meta_path=input_meta_fullpath.as_posix(),
                         extracted_data_directory=self._ks_output_dir.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
+                        kilosort_output_tmp=self._ks_output_dir.as_posix(),
                         kilosort_repository=_get_kilosort_repository(self._KS2ver),
                         **{k: v for k, v in catgt_params.items() if k in self._input_json_args}
                         )
