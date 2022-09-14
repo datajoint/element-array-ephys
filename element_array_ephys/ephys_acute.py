@@ -723,9 +723,9 @@ class QualityMetrics(dj.Imported):
         metrics_df = pd.read_csv(metric_fp)
         metrics_df.set_index('cluster_id', inplace=True)
 
-        metrics_list = []
-        for unit_key in (CuratedClustering.Unit & key).fetch('KEY', order_by='unit'):
-            metrics_list.append({**unit_key, **dict(metrics_df.loc[unit_key['unit']])})
+        metrics_list = [
+            {**unit_key, **dict(metrics_df.loc[unit_key['unit']])}
+            for unit_key in (CuratedClustering.Unit & key).fetch('KEY')]
 
         self.insert1(key)
         self.Cluster.insert(metrics_list, ignore_extra_fields=True)
