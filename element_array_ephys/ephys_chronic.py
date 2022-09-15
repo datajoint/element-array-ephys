@@ -723,7 +723,7 @@ class QualityMetrics(dj.Imported):
         metrics_df.set_index('cluster_id', inplace=True)
 
         metrics_list = [
-            {**unit_key, **dict(metrics_df.loc[unit_key['unit']])}
+            dict(metrics_df.loc[unit_key['unit']], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch('KEY')]
 
         self.insert1(key)
