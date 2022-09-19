@@ -28,6 +28,11 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Update - Move common functions to `element-interface` package.
 + Add - NWB export function
 
+## [0.1.0b4] - 2021-11-29
+### Added
++ Processing with Kilosort and pyKilosort for Open Ephys and SpikeGLX
+
+
 ## [0.1.0b0] - 2021-05-07
 
 + Update - First beta release

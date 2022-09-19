@@ -1,2 +1,14 @@
-# ephys_acute as default
-import element_array_ephys.ephys_acute as ephys
+import datajoint as dj
+import logging
+import os
+
+
+dj.config['enable_python_native_blobs'] = True
+
+
+def get_logger(name):
+    log = logging.getLogger(name)
+    log.setLevel(os.getenv('LOGLEVEL', 'INFO'))
+    return log
+
+from . import ephys_acute as ephys
