@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.1.5] - 2022-07-11
+
++ Add - New `QualityMetrics` table to store clusters' and waveforms' metrics after the spike sorting analysis.
+
 ## [0.1.4] - 2022-07-11
 
 + Bugfix - Handle case where `spike_depths` data is present.
