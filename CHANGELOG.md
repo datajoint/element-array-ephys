@@ -5,7 +5,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## [0.1.5] - 2022-07-11
 
-+ Add - New `ClusterMetrics` table to store clusters' and waveforms' metrics after the spike sorting analysis.
++ Add - New `QualityMetrics` table to store clusters' and waveforms' metrics after the spike sorting analysis.
 
 ## [0.1.4] - 2022-07-11
 
