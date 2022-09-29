@@ -142,19 +142,23 @@ class Kilosort:
 
     def extract_spike_depths(self):
         """ Reimplemented from https://github.com/cortex-lab/spikes/blob/master/analysis/ksDriftmap.m """
-        ycoords = self.data['channel_positions'][:, 1]
-        pc_features = self.data['pc_features'][:, 0, :]  # 1st PC only
-        pc_features = np.where(pc_features < 0, 0, pc_features)
+        
+        if 'pc_features' in self.data:
+            ycoords = self.data['channel_positions'][:, 1]
+            pc_features = self.data['pc_features'][:, 0, :]  # 1st PC only
+            pc_features = np.where(pc_features < 0, 0, pc_features)
 
-        # ---- compute center of mass of these features (spike depths) ----
+            # ---- compute center of mass of these features (spike depths) ----
 
-        # which channels for each spike?
-        spk_feature_ind = self.data['pc_feature_ind'][self.data['spike_templates'], :]
-        # ycoords of those channels?
-        spk_feature_ycoord = ycoords[spk_feature_ind]
-        # center of mass is sum(coords.*features)/sum(features)
-        self._data['spike_depths'] = (np.sum(spk_feature_ycoord * pc_features**2, axis=1)
-                                      / np.sum(pc_features**2, axis=1))
+            # which channels for each spike?
+            spk_feature_ind = self.data['pc_feature_ind'][self.data['spike_templates'], :]
+            # ycoords of those channels?
+            spk_feature_ycoord = ycoords[spk_feature_ind]
+            # center of mass is sum(coords.*features)/sum(features)
+            self._data['spike_depths'] = (np.sum(spk_feature_ycoord * pc_features**2, axis=1)
+                                        / np.sum(pc_features**2, axis=1))
+        else:
+            self._data['spike_depths'] = None
 
         # ---- extract spike sites ----
         max_site_ind = np.argmax(np.abs(self.data['templates']).max(axis=1), axis=1)
