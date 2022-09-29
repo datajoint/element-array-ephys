@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 import sys
 import pathlib
 import json
@@ -371,7 +372,15 @@ class OpenEphysKilosortPipeline:
 
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
 
-        continuous_file = self._npx_input_dir / 'continuous.dat'
+        if 'median_subtraction' in self._modules:
+            # median subtraction step will overwrite original continuous.dat file with the corrected version
+            # to preserve the original raw data - make a copy here and work on the copied version
+            assert 'depth_estimation' in self._modules
+            raw_ap_fp = self._npx_input_dir / 'continuous.dat'
+            continuous_file = self._npx_input_dir / 'preproc_continuous.dat'
+            shutil.copy2(raw_ap_fp, continuous_file)
+        else:
+            continuous_file = self._npx_input_dir / 'continuous.dat'
 
         params = {}
         for k, v in self._params.items():
