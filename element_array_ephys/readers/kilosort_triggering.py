@@ -347,6 +347,7 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / 'json_configs'
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
+        self._median_subtraction_finished = False
         self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
@@ -372,15 +373,7 @@ class OpenEphysKilosortPipeline:
 
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
 
-        if 'median_subtraction' in self._modules:
-            # median subtraction step will overwrite original continuous.dat file with the corrected version
-            # to preserve the original raw data - make a copy here and work on the copied version
-            assert 'depth_estimation' in self._modules
-            raw_ap_fp = self._npx_input_dir / 'continuous.dat'
-            continuous_file = self._npx_input_dir / 'preproc_continuous.dat'
-            shutil.copy2(raw_ap_fp, continuous_file)
-        else:
-            continuous_file = self._npx_input_dir / 'continuous.dat'
+        continuous_file = self._get_raw_data_filepaths()
 
         params = {}
         for k, v in self._params.items():
@@ -422,7 +415,14 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = self._get_module_output_json_filename(module)           
+            if module == 'median_subtraction' and self._median_subtraction_finished:
+                self._update_module_status(
+                    {module: {'start_time': datetime.utcnow(),
+                              'completion_time': datetime.utcnow(),
+                              'duration': 0}})
+                continue
+
+            module_output_json = self._get_module_output_json_filename(module)
             command = [sys.executable,
                     '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
                     '--input_json', module_input_json,
@@ -442,6 +442,33 @@ class OpenEphysKilosortPipeline:
                           'duration': (completion_time - start_time).total_seconds()}})
 
         self._update_total_duration()
+
+    def _get_raw_data_filepaths(self):
+        if 'median_subtraction' not in self._modules:
+            return self._npx_input_dir / 'continuous.dat'
+
+        # median subtraction step will overwrite original continuous.dat file with the corrected version
+        # to preserve the original raw data - make a copy here and work on the copied version
+        assert 'depth_estimation' in self._modules
+        raw_ap_fp = self._npx_input_dir / 'continuous.dat'
+        continuous_file = self._ks_output_dir / 'continuous.dat'
+        if continuous_file.exists():
+            if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
+                # if the copied continuous.dat was actually modified,
+                # median_subtraction may have been completed - let's check
+                module_input_json = self._module_input_json.as_posix()
+                module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
+                with open(module_logfile, 'r') as f:
+                    previous_line = ''
+                    for line in f.readlines():
+                        if (line.startswith('ecephys spike sorting: median subtraction module')
+                                and previous_line.startswith('Total processing time:')):
+                            self._median_subtraction_finished = True
+                            return continuous_file
+                        previous_line = line
+
+        shutil.copy2(raw_ap_fp, continuous_file)
+        return continuous_file
 
     def _update_module_status(self, updated_module_status={}):
         if self._modules_input_hash is None:
