@@ -929,7 +929,7 @@ class QualityMetrics(dj.Imported):
         pt_ratio=null: float  # absolute amplitude of peak divided by absolute amplitude of trough relative to 0
         repolarization_slope=null: float  # the repolarization slope was defined by fitting a regression line to the first 30us from trough to peak
         recovery_slope=null: float  # the recovery slope was defined by fitting a regression line to the first 30us from peak to tail
-        spread=null: float  # (um) the range with amplitude above 12% of the maximum amplitude along the probe
+        spread=null: float  # (um) the range with amplitude above 12-percent of the maximum amplitude along the probe
         velocity_above=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the top of the probe
         velocity_below=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the bottom of the probe
         """
