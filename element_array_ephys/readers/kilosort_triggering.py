@@ -375,6 +375,18 @@ class OpenEphysKilosortPipeline:
 
         continuous_file = self._get_raw_data_filepaths()
 
+        lf_dir = self._npx_input_dir.as_posix()
+        try:
+            # old probe folder convention with 100.0, 100.1, 100.2, 100.3, etc.
+            name, num = re.search(r"(.+\.)(\d)+$", lf_dir).groups()
+        except AttributeError:
+            # new probe folder convention with -AP or -LFP
+            assert lf_dir.endswith("AP")
+            lf_dir = re.sub("-AP$", "-LFP", lf_dir)
+        else:
+            lf_dir = f"{name}{int(num) + 1}"
+        lf_file = pathlib.Path(lf_dir) / 'continuous.dat'
+
         params = {}
         for k, v in self._params.items():
             value = str(v) if isinstance(v, list) else v
@@ -389,6 +401,7 @@ class OpenEphysKilosortPipeline:
             npx_directory=self._npx_input_dir.as_posix(),
             spikeGLX_data=False,
             continuous_file=continuous_file.as_posix(),
+            lf_file=lf_file.as_posix(),
             extracted_data_directory=self._ks_output_dir.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
@@ -444,13 +457,14 @@ class OpenEphysKilosortPipeline:
         self._update_total_duration()
 
     def _get_raw_data_filepaths(self):
+        raw_ap_fp = self._npx_input_dir / 'continuous.dat'
+
         if 'median_subtraction' not in self._modules:
-            return self._npx_input_dir / 'continuous.dat'
+            return raw_ap_fp
 
         # median subtraction step will overwrite original continuous.dat file with the corrected version
         # to preserve the original raw data - make a copy here and work on the copied version
         assert 'depth_estimation' in self._modules
-        raw_ap_fp = self._npx_input_dir / 'continuous.dat'
         continuous_file = self._ks_output_dir / 'continuous.dat'
         if continuous_file.exists():
             if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
