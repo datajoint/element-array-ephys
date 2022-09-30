@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 import sys
 import pathlib
 import json
@@ -181,7 +182,7 @@ class SGLXKilosortPipeline:
             spikeGLX_data=True,
             continuous_file=continuous_file.as_posix(),
             input_meta_path=input_meta_fullpath.as_posix(),
-            extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+            extracted_data_directory=self._ks_output_dir.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
@@ -346,6 +347,7 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / 'json_configs'
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
+        self._median_subtraction_finished = False
         self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
@@ -371,7 +373,19 @@ class OpenEphysKilosortPipeline:
 
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
 
-        continuous_file = self._npx_input_dir / 'continuous.dat'
+        continuous_file = self._get_raw_data_filepaths()
+
+        lf_dir = self._npx_input_dir.as_posix()
+        try:
+            # old probe folder convention with 100.0, 100.1, 100.2, 100.3, etc.
+            name, num = re.search(r"(.+\.)(\d)+$", lf_dir).groups()
+        except AttributeError:
+            # new probe folder convention with -AP or -LFP
+            assert lf_dir.endswith("AP")
+            lf_dir = re.sub("-AP$", "-LFP", lf_dir)
+        else:
+            lf_dir = f"{name}{int(num) + 1}"
+        lf_file = pathlib.Path(lf_dir) / 'continuous.dat'
 
         params = {}
         for k, v in self._params.items():
@@ -387,7 +401,8 @@ class OpenEphysKilosortPipeline:
             npx_directory=self._npx_input_dir.as_posix(),
             spikeGLX_data=False,
             continuous_file=continuous_file.as_posix(),
-            extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+            lf_file=lf_file.as_posix(),
+            extracted_data_directory=self._ks_output_dir.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
@@ -413,7 +428,14 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = self._get_module_output_json_filename(module)           
+            if module == 'median_subtraction' and self._median_subtraction_finished:
+                self._update_module_status(
+                    {module: {'start_time': datetime.utcnow(),
+                              'completion_time': datetime.utcnow(),
+                              'duration': 0}})
+                continue
+
+            module_output_json = self._get_module_output_json_filename(module)
             command = [sys.executable,
                     '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
                     '--input_json', module_input_json,
@@ -433,6 +455,34 @@ class OpenEphysKilosortPipeline:
                           'duration': (completion_time - start_time).total_seconds()}})
 
         self._update_total_duration()
+
+    def _get_raw_data_filepaths(self):
+        raw_ap_fp = self._npx_input_dir / 'continuous.dat'
+
+        if 'median_subtraction' not in self._modules:
+            return raw_ap_fp
+
+        # median subtraction step will overwrite original continuous.dat file with the corrected version
+        # to preserve the original raw data - make a copy here and work on the copied version
+        assert 'depth_estimation' in self._modules
+        continuous_file = self._ks_output_dir / 'continuous.dat'
+        if continuous_file.exists():
+            if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
+                # if the copied continuous.dat was actually modified,
+                # median_subtraction may have been completed - let's check
+                module_input_json = self._module_input_json.as_posix()
+                module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
+                with open(module_logfile, 'r') as f:
+                    previous_line = ''
+                    for line in f.readlines():
+                        if (line.startswith('ecephys spike sorting: median subtraction module')
+                                and previous_line.startswith('Total processing time:')):
+                            self._median_subtraction_finished = True
+                            return continuous_file
+                        previous_line = line
+
+        shutil.copy2(raw_ap_fp, continuous_file)
+        return continuous_file
 
     def _update_module_status(self, updated_module_status={}):
         if self._modules_input_hash is None:
