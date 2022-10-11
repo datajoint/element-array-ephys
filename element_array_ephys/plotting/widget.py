@@ -1,21 +1,38 @@
 from ipywidgets import widgets as wg
 import element_array_ephys.ephys_acute as ephys
-from element_array_ephys import probe, report
+from element_array_ephys import report
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import pathlib
 
 
-probe_dropdown = wg.Dropdown(
-    options=report.ProbeLevelReport.fetch("KEY", as_dict=True),
-    description="Select Probe Insertion : ",
-    disabled=False,
-    layout=wg.Layout(
-        width="60%",
-        display="flex",
-        flex_flow="row",
-        justify_content="space-between",
-        grid_area="processed_dropdown",
-    ),
-    style={"description_width": "150px"},
-)
+def probe_widget(func):
+
+    probe_dropdown = wg.Dropdown(
+        options=report.ProbeLevelReport.fetch("KEY", as_dict=True),
+        description="Select Probe Insertion : ",
+        disabled=False,
+        layout=wg.Layout(
+            width="85%",
+            display="flex",
+            flex_flow="row",
+            justify_content="space-between",
+            grid_area="processed_dropdown",
+        ),
+        style={"description_width": "150px"},
+    )
+
+    return wg.interact(func, key=probe_dropdown)
+
+
+def plot_probe_level_report(key: dict):
+    fig_name = (report.ProbeLevelReport & key).fetch1("drift_map_plot")
+    fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+    img = mpimg.imread(fig_name)
+    ax.imshow(img)
+    ax.axis("off")
+    plt.show()
+    pathlib.Path(fig_name).unlink()
 
 
 unit_dropdown = wg.Dropdown(
