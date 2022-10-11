@@ -10,45 +10,11 @@ from .plotting.probe_level import plot_driftmap
 
 schema = dj.schema()
 
-_linking_module = None
-
-
-def activate(
-    schema_name, *, create_schema=True, create_tables=True, linking_module=None
-):
-    """
-    activate(schema_name, *, create_schema=True, create_tables=True,
-             linking_module=None)
-        :param schema_name: schema name on the database server to activate the
-                            `subject` element
-        :param create_schema: when True (default), create schema in the
-                              database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the
-                              database if they do not yet exist.
-        :param linking_module: a module name or a module containing the
-         required dependencies
-    """
-    if isinstance(linking_module, str):
-        linking_module = importlib.import_module(linking_module)
-    assert inspect.ismodule(linking_module), (
-        "The argument 'dependency' must " + "be a module's name or a module"
-    )
-
-    global _linking_module
-    _linking_module = linking_module
-
-    schema.activate(
-        schema_name,
-        create_schema=create_schema,
-        create_tables=create_tables,
-        add_objects=linking_module.__dict__,
-    )
-
 
 @schema
 class ProbeLevelReport(dj.Computed):
     definition = """
-    -> ephys.CuratedClustering
+    -> CuratedClustering
     ---
     drift_map_plot: attach
     """
@@ -56,9 +22,7 @@ class ProbeLevelReport(dj.Computed):
     def make(self, key):
 
         spike_times, spike_depths = (
-            _linking_module.ephys.CuratedClustering.Unit
-            & key
-            & "cluster_quality_label='good'"
+            CuratedClustering.Unit & key & "cluster_quality_label='good'"
         ).fetch("spike_times", "spike_depths", order_by="unit")
 
         # Get the figure
@@ -133,7 +97,7 @@ class UnitLevelReport(dj.Computed):
 def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
     if root_dir is None:
         root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "figures"
+    save_dir = root_dir / "ephys_figures"
     save_dir.mkdir(parents=True, exist_ok=True)
     return save_dir
 

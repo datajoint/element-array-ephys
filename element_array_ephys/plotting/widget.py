@@ -1,6 +1,6 @@
 from ipywidgets import widgets as wg
 import element_array_ephys.ephys_acute as ephys
-from element_array_ephys import report
+from element_array_ephys import ephys_report
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import pathlib
@@ -9,7 +9,7 @@ import pathlib
 def probe_widget(func):
 
     probe_dropdown = wg.Dropdown(
-        options=report.ProbeLevelReport.fetch("KEY", as_dict=True),
+        options=ephys_report.ProbeLevelReport.fetch("KEY", as_dict=True),
         description="Select Probe Insertion : ",
         disabled=False,
         layout=wg.Layout(
@@ -26,7 +26,7 @@ def probe_widget(func):
 
 
 def plot_probe_level_report(key: dict):
-    fig_name = (report.ProbeLevelReport & key).fetch1("drift_map_plot")
+    fig_name = (ephys_report.ProbeLevelReport & key).fetch1("drift_map_plot")
     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
     img = mpimg.imread(fig_name)
     ax.imshow(img)

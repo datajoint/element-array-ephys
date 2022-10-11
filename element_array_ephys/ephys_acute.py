@@ -10,6 +10,7 @@ from element_interface.utils import find_root_directory, find_full_path, dict_to
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe
+from .ephys_report import *
 
 schema = dj.schema()
 
