@@ -371,7 +371,10 @@ def add_ephys_recording_to_nwb(
 
     Parameters
     ----------
-    session_key: dict ephys_root_data_dir: str nwbfile: NWBFile end_frame: int, optional
+    session_key: dict
+    ephys_root_data_dir: str
+    nwbfile: NWBFile
+    end_frame: int, optional
         Used for small test conversions
     """
 
