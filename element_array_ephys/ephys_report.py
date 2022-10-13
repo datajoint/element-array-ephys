@@ -10,19 +10,35 @@ from .plotting.probe_level import plot_driftmap
 
 schema = dj.schema()
 
+ephys = None
+
+
+def _activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None):
+    """
+    activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
+        :param schema_name: schema name on the database server to activate the `probe` element
+        :param create_schema: when True (default), create schema in the database if it does not yet exist.
+        :param create_tables: when True (default), create tables in the database if they do not yet exist.
+        :param activated_ephys: ephys module with the schema already activated
+    (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
+    """
+    global ephys
+    ephys = activated_ephys
+
+    schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
+
 
 @schema
 class ProbeLevelReport(dj.Computed):
     definition = """
-    -> CuratedClustering
+    -> ephys.CuratedClustering
     ---
     drift_map_plot: attach
     """
 
     def make(self, key):
-
         spike_times, spike_depths = (
-            CuratedClustering.Unit & key & "cluster_quality_label='good'"
+            ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
         ).fetch("spike_times", "spike_depths", order_by="unit")
 
         # Get the figure
@@ -61,14 +77,13 @@ class UnitLevelReport(dj.Computed):
     """
 
     def make(self, key):
-
-        sampling_rate = (_linking_module.ephys.EphysRecording & key).fetch1(
+        sampling_rate = (ephys.EphysRecording & key).fetch1(
             "sampling_rate"
         ) / 1e3  # in kHz
 
         peak_electrode_waveform, spike_times, cluster_quality_label = (
-            (_linking_module.ephys.CuratedClustering.Unit & key)
-            * _linking_module.ephys.WaveformSet.PeakWaveform
+            (ephys.CuratedClustering.Unit & key)
+            * ephys.WaveformSet.PeakWaveform
         ).fetch1("peak_electrode_waveform", "spike_times", "cluster_quality_label")
 
         # Get the figure
@@ -80,7 +95,7 @@ class UnitLevelReport(dj.Computed):
         fig = plot_correlogram(spike_times=spike_times, bin_size=0.001, window_size=1)
         fig_correlogram = json.loads(fig.to_json())
 
-        fig = plot_depth_waveforms(unit_key=key, y_range=50)
+        fig = plot_depth_waveforms(ephys, unit_key=key, y_range=50)
         fig_depth_waveform = json.loads(fig.to_json())
 
         self.insert1(
