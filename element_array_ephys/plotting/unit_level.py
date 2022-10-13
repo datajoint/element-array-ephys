@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import element_array_ephys.ephys_chronic as ephys
 from element_array_ephys import probe
 import plotly.graph_objs as go
 
@@ -74,6 +73,7 @@ def plot_correlogram(
 
 
 def plot_depth_waveforms(
+    ephys,
     probe_type: str,
     unit_key: dict,
     y_range: float = 50,
@@ -99,13 +99,13 @@ def plot_depth_waveforms(
         if (peak_coord_y + y_range) >= coord_y.max()
         else peak_coord_y + y_range
     )
-    tbl = (
+    electrode_query = (
         (probe.ProbeType.Electrode)
         & f"probe_type = '{probe_type}'"
         & f"y_coord BETWEEN {coord_ylim_low} AND {coord_ylim_high}"
     )
-    electrodes_to_plot = tbl.fetch("electrode")
-    coords = np.array(tbl.fetch("x_coord", "y_coord")).T  # x, y coordinates
+    electrodes_to_plot = electrode_query.fetch("electrode")
+    coords = np.array(electrode_query.fetch("x_coord", "y_coord")).T  # x, y coordinates
     waveforms = (
         ephys.WaveformSet.Waveform
         & unit_key
