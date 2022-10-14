@@ -2,18 +2,22 @@ import json
 import pathlib
 import datetime
 import datajoint as dj
+import numpy as np
 import importlib
 import inspect
 import typing as T
 from .plotting.unit_level import plot_waveform, plot_correlogram, plot_depth_waveforms
 from .plotting.probe_level import plot_driftmap
+import probe
 
 schema = dj.schema()
 
 ephys = None
 
 
-def _activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None):
+def _activate(
+    schema_name, *, create_schema=True, create_tables=True, activated_ephys=None
+):
     """
     activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
         :param schema_name: schema name on the database server to activate the `probe` element
@@ -25,44 +29,69 @@ def _activate(schema_name, *, create_schema=True, create_tables=True, activated_
     global ephys
     ephys = activated_ephys
 
-    schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
+    schema.activate(
+        schema_name, create_schema=create_schema, create_tables=create_tables
+    )
 
 
 @schema
 class ProbeLevelReport(dj.Computed):
     definition = """
     -> ephys.CuratedClustering
+    shank         : tinyint unsigned
     ---
     drift_map_plot: attach
     """
 
     def make(self, key):
-        spike_times, spike_depths = (
-            ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
-        ).fetch("spike_times", "spike_depths", order_by="unit")
 
-        # Get the figure
-        fig = plot_driftmap(spike_times, spike_depths, colormap="gist_heat_r")
-        fig_prefix = "-".join(
-            [
-                v.strftime("%Y%m%d%H%M%S")
-                if isinstance(v, datetime.datetime)
-                else str(v)
-                for v in key.values()
-            ]
-        )
-
-        # Save fig and insert
         save_dir = _make_save_dir()
-        fig_dict = _save_figs(
-            figs=(fig,),
-            fig_names=("drift_map_plot",),
-            save_dir=save_dir,
-            fig_prefix=fig_prefix,
-            extension=".png",
+
+        units = (
+            ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
+        )  # only the good units to be plotted
+
+        shanks: np.ndarray = np.unique(
+            (probe.ProbeType.Electrode.proj("shank") & units).fetch("shank")
         )
 
-        self.insert1({**key, **fig_dict})
+        for shank_no in shanks:
+
+            table = (
+                units
+                * ephys.ProbeInsertion.proj()
+                * probe.ProbeType.Electrode.proj("shank")
+                & {"shank": shank_no}
+            )
+
+            spike_times, spike_depths = table.fetch(
+                "spike_times", "spike_depths", order_by="unit"
+            )
+
+            # Get the figure
+            fig = plot_driftmap(spike_times, spike_depths, colormap="gist_heat_r")
+            fig_prefix = (
+                "-".join(
+                    [
+                        v.strftime("%Y%m%d%H%M%S")
+                        if isinstance(v, datetime.datetime)
+                        else str(v)
+                        for v in key.values()
+                    ]
+                )
+                + f"-{shank_no}"
+            )
+
+            # Save fig and insert
+            fig_dict = _save_figs(
+                figs=(fig,),
+                fig_names=("drift_map_plot",),
+                save_dir=save_dir,
+                fig_prefix=fig_prefix,
+                extension=".png",
+            )
+
+            self.insert1({**key, **fig_dict, "shank": shank_no})
 
 
 @schema
@@ -82,8 +111,7 @@ class UnitLevelReport(dj.Computed):
         ) / 1e3  # in kHz
 
         peak_electrode_waveform, spike_times, cluster_quality_label = (
-            (ephys.CuratedClustering.Unit & key)
-            * ephys.WaveformSet.PeakWaveform
+            (ephys.CuratedClustering.Unit & key) * ephys.WaveformSet.PeakWaveform
         ).fetch1("peak_electrode_waveform", "spike_times", "cluster_quality_label")
 
         # Get the figure
