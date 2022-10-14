@@ -9,7 +9,7 @@ import pandas as pd
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
 from .readers import spikeglx, kilosort, openephys
-from . import probe
+from . import probe, ephys_report
 
 schema = dj.schema()
 
@@ -53,6 +53,7 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
                    create_tables=create_tables)
     schema.activate(ephys_schema_name, create_schema=create_schema,
                     create_tables=create_tables, add_objects=_linking_module.__dict__)
+    ephys_report._activate(ephys_schema_name, activated_ephys=__name__)
 
 
 # -------------- Functions required by the elements-ephys  ---------------

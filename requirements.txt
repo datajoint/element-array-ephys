@@ -3,3 +3,5 @@ pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
 openpyxl
 pynwb==1.4.0
 element-interface @ git+https://github.com/datajoint/element-interface.git
+
+plotly
