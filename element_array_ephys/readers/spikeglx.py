@@ -1,8 +1,10 @@
 from datetime import datetime
 import numpy as np
 import pathlib
+import logging
 from .utils import convert_to_number
 
+logger = logging.getLogger(__name__)
 
 AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
 
@@ -58,6 +60,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('ap')
         """
         if self._ap_timeseries is None:
+            self.validate_file('ap')
             self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
         return self._ap_timeseries
 
@@ -75,6 +78,7 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('lf')
         """
         if self._lf_timeseries is None:
+            self.validate_file('lf')
             self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
         return self._lf_timeseries
 
@@ -145,6 +149,81 @@ class SpikeGLX:
         else:  # if no spike found, return NaN of size (sample x channel x 1)
             return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
 
+    def validate_file(self, file_type='ap'):
+        file_path = self.root_dir / (self.root_name + f'.{file_type}.bin')
+        file_size = file_path.stat().st_size
+
+        meta_mapping = {
+            'ap': self.apmeta,
+            'lf': self.lfmeta}
+        meta = meta_mapping[file_type]
+
+        if file_size != meta.meta['fileSizeBytes']:
+            raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
+
+    def compress(self):
+        from mtscomp import compress as mts_compress
+
+        ap_file = self.root_dir / (self.root_name + '.ap.bin')
+        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+
+        meta_mapping = {'ap': self.apmeta, 'lfp': self.lfmeta}
+
+        compressed_files = []
+        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+            if not bin_fp.exists():
+                raise FileNotFoundError(f'Compression error - "{bin_fp}" does not exist')
+            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
+            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+
+            if cbin_fp.exists():
+                assert ch_fp.exists()
+                logger.info(f'Compressed file exists ({cbin_fp}), skipping...')
+                continue
+
+            try:
+                mts_compress(bin_fp, cbin_fp, ch_fp,
+                             sample_rate=meta_mapping[band_type]['sample_rate'],
+                             n_channels=meta_mapping[band_type]['num_channels'],
+                             dtype=np.memmap(bin_fp).dtype)
+            except Exception as e:
+                cbin_fp.unlink(missing_ok=True)
+                ch_fp.unlink(missing_ok=True)
+                raise e
+            else:
+                compressed_files.append((cbin_fp, ch_fp))
+
+        return compressed_files
+
+    def decompress(self):
+        from mtscomp import decompress as mts_decompress
+
+        ap_file = self.root_dir / (self.root_name + '.ap.bin')
+        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+
+        decompressed_files = []
+        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+            if bin_fp.exists():
+                logger.info(f'Decompressed file exists ({bin_fp}), skipping...')
+                continue
+
+            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
+            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+
+            if not cbin_fp.exists():
+                raise FileNotFoundError(f'Decompression error - "{cbin_fp}" does not exist')
+
+            try:
+                decomp_arr = mts_decompress(cbin_fp, ch_fp)
+                decomp_arr.tofile(bin_fp)
+            except Exception as e:
+                bin_fp.unlink(missing_ok=True)
+                raise e
+            else:
+                decompressed_files.append(bin_fp)
+
+        return decompressed_files
+
 
 class SpikeGLXMeta:
 
@@ -165,6 +244,8 @@ class SpikeGLXMeta:
                 self.probe_model = 'neuropixels 1.0 - 3A'
             elif 'typeImEnabled' in self.meta:
                 self.probe_model = 'neuropixels 1.0 - 3B'
+        elif probe_model == 1100:
+            self.probe_model = 'neuropixels UHD'
         elif probe_model == 21:
             self.probe_model = 'neuropixels 2.0 - SS'
         elif probe_model == 24:
@@ -339,3 +420,10 @@ def _read_meta(meta_filepath):
                 except ValueError:
                     pass
     return res
+
+
+def retrieve_recording_duration(meta_filepath):
+    root_dir = pathlib.Path(meta_filepath).parent
+    spike_glx = SpikeGLX(root_dir)
+    return (spike_glx.apmeta.recording_duration
+            or spike_glx.ap_timeseries.shape[0] / spike_glx.apmeta.meta['imSampRate'])
