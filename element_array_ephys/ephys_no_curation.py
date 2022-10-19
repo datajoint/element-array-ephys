@@ -1121,9 +1121,13 @@ class QualityMetrics(dj.Imported):
 
 def get_spikeglx_meta_filepath(ephys_recording_key):
     # attempt to retrieve from EphysRecording.EphysFile
-    spikeglx_meta_filepath = (
-        EphysRecording.EphysFile & ephys_recording_key & 'file_path LIKE "%.ap.meta"'
-    ).fetch1("file_path")
+    spikeglx_meta_filepath = pathlib.Path(
+        (
+            EphysRecording.EphysFile
+            & ephys_recording_key
+            & 'file_path LIKE "%.ap.meta"'
+        ).fetch1("file_path")
+    )
 
     try:
         spikeglx_meta_filepath = find_full_path(
