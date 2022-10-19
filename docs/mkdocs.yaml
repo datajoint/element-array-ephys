@@ -1,15 +1,14 @@
-# ---------------------- PROJECT SPECIFIC ---------------------------
+--- # ---------------------- PROJECT SPECIFIC ---------------------------
 
 site_name: Element Array Ephys
 repo_url: https://github.com/datajoint/element-array-ephys
 repo_name: datajoint/element-array-ephys
 nav:
-  - Element Array Ephys: getting_started.md
-  - Getting Started: getting_started.md
+  - Element Array Ephys: index.md
   - Concepts: concepts.md
   - Tutorials: tutorials.md
   - About:
-    - Changelog: about/changelog.md
+      - Changelog: about/changelog.md
   - API: api/ # defer to gen-files + literate-nav
 
 # ---------------------------- STANDARD -----------------------------
@@ -47,7 +46,7 @@ plugins:
       default_handler: python
   - gen-files:
       scripts:
-      - ./src/api/make_pages.py
+        - ./src/api/make_pages.py
   - literate-nav:
       nav_file: navigation.md
   - exclude-search:
