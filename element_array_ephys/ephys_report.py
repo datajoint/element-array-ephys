@@ -6,18 +6,13 @@ import numpy as np
 import importlib
 import inspect
 import typing as T
-from .plotting.unit_level import plot_waveform, plot_correlogram, plot_depth_waveforms
-from .plotting.probe_level import plot_driftmap
-import probe
 
 schema = dj.schema()
 
 ephys = None
 
 
-def _activate(
-    schema_name, *, create_schema=True, create_tables=True, activated_ephys=None
-):
+def _activate(schema_name, *, create_schema=True, create_tables=True):
     """
     activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
         :param schema_name: schema name on the database server to activate the `probe` element
@@ -27,10 +22,12 @@ def _activate(
     (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
     """
     global ephys
-    ephys = activated_ephys
-
+    ephys = dj.create_virtual_module("vm", schema_name)
     schema.activate(
-        schema_name, create_schema=create_schema, create_tables=create_tables
+        schema_name,
+        create_schema=create_schema,
+        create_tables=create_tables,
+        add_objects=ephys.__dict__,
     )
 
 
@@ -44,6 +41,9 @@ class ProbeLevelReport(dj.Computed):
     """
 
     def make(self, key):
+
+        from . import probe
+        from .plotting.probe_level import plot_driftmap
 
         save_dir = _make_save_dir()
 
@@ -106,6 +106,13 @@ class UnitLevelReport(dj.Computed):
     """
 
     def make(self, key):
+
+        from .plotting.unit_level import (
+            plot_waveform,
+            plot_correlogram,
+            plot_depth_waveforms,
+        )
+
         sampling_rate = (ephys.EphysRecording & key).fetch1(
             "sampling_rate"
         ) / 1e3  # in kHz
@@ -123,7 +130,7 @@ class UnitLevelReport(dj.Computed):
         fig = plot_correlogram(spike_times=spike_times, bin_size=0.001, window_size=1)
         fig_correlogram = json.loads(fig.to_json())
 
-        fig = plot_depth_waveforms(ephys, unit_key=key, y_range=50)
+        fig = plot_depth_waveforms(unit_key=key, y_range=50)
         fig_depth_waveform = json.loads(fig.to_json())
 
         self.insert1(
