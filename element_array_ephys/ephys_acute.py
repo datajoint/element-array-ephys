@@ -23,30 +23,14 @@ _linking_module = None
 
 def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
              create_tables=True, linking_module=None):
-    """
-    activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True, create_tables=True, linking_module=None)
-        :param ephys_schema_name: schema name on the database server to activate the `ephys` element
-        :param probe_schema_name: schema name on the database server to activate the `probe` element
-         - may be omitted if the `probe` element is already activated
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-        :param linking_module: a module name or a module containing the
-         required dependencies to activate the `ephys` element:
-            Upstream tables:
-                + Session: table referenced by EphysRecording, typically identifying a recording session
-                + SkullReference: Reference table for InsertionLocation, specifying the skull reference
-                 used for probe insertion location (e.g. Bregma, Lambda)
-            Functions:
-                + get_ephys_root_data_dir() -> list
-                    Retrieve the root data directory - e.g. containing the raw ephys recording files for all subject/sessions.
-                    :return: a string for full path to the root data directory
-                + get_session_directory(session_key: dict) -> str
-                    Retrieve the session directory containing the recorded Neuropixels data for a given Session
-                    :param session_key: a dictionary of one Session `key`
-                    :return: a string for full path to the session directory
-                + get_processed_root_data_dir() -> str:
-                    Retrieves the root directory for all processed data to be found from or written to
-                    :return: a string for full path to the root directory for processed data
+    """Activates the `ephys` and `probe` schemas. 
+
+    Args:
+        ephys_schema_name (str): A string containing the name of the ephys schema.
+        probe_schema_name (str): A string containing the name of the probe scehma.
+        create_schema (bool): If True, schema will be created in the database.
+        create_tables (bool): If True, tables related to the schema will be created in the database.
+        linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
     """
 
     if isinstance(linking_module, str):
@@ -66,19 +50,12 @@ def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
 # -------------- Functions required by the elements-ephys  ---------------
 
 def get_ephys_root_data_dir() -> list:
-    """
-    All data paths, directories in DataJoint Elements are recommended to be 
-    stored as relative paths, with respect to some user-configured "root" 
-    directory, which varies from machine to machine (e.g. different mounted 
-    drive locations)
+    """Fetches absolute data path to ephys data directories.
 
-    get_ephys_root_data_dir() -> list
-        This user-provided function retrieves the possible root data directories
-         containing the ephys data for all subjects/sessions
-         (e.g. acquired SpikeGLX or Open Ephys raw files,
-         output files from spike sorting routines, etc.)
-        :return: a string for full path to the ephys root data directory,
-         or list of strings for possible root data directories
+    The absolute path here is used as a reference for all downstream relative paths used in DataJoint.
+    
+    Returns:
+        A list of the absolute path(s) to ephys data directories. 
     """
     root_directories = _linking_module.get_ephys_root_data_dir()
     if isinstance(root_directories, (str, pathlib.Path)):
@@ -91,21 +68,21 @@ def get_ephys_root_data_dir() -> list:
 
 
 def get_session_directory(session_key: dict) -> str:
-    """
-    get_session_directory(session_key: dict) -> str
-        Retrieve the session directory containing the
-         recorded Neuropixels data for a given Session
-        :param session_key: a dictionary of one Session `key`
-        :return: a string for relative or full path to the session directory
+    """Retrieve the session directory with Neuropixels for the given session.
+
+    Args:
+        session_key (dict): A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database. 
+    Returns: 
+        A string for the path to the session directory. 
     """
     return _linking_module.get_session_directory(session_key)
 
 
 def get_processed_root_data_dir() -> str:
-    """
-    get_processed_root_data_dir() -> str:
-        Retrieves the root directory for all processed data to be found from or written to
-        :return: a string for full path to the root directory for processed data
+    """Retrieve the root directory for all processed data.
+
+    Returns:
+        A string for the full path to the root directory for processed data.
     """
 
     if hasattr(_linking_module, 'get_processed_root_data_dir'):
@@ -118,6 +95,12 @@ def get_processed_root_data_dir() -> str:
 
 @schema
 class AcquisitionSoftware(dj.Lookup):
+    """Name of software used for recording electrophysiological data.
+
+    Atrributes:
+        SpikeGLX (str): Data acquired using spike GLX
+        Open Ephys (str): Data acquired using Open Ephys 
+    """
     definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)    
     """
@@ -126,6 +109,15 @@ class AcquisitionSoftware(dj.Lookup):
 
 @schema
 class ProbeInsertion(dj.Manual):
+    """Information about probe insertion across subjects and sessions.
+
+    Attributes:
+        subject (str, primary key): unique name for the animal subject
+        session_datetime (datetime, primary key): unique datetime entry for the session
+        insertion_number (int, primary key): unique insertion number for each probe insertion for a given session
+        probe (str): probe identifier i.e. serial number
+    """
+
     definition = """
     # Probe insertion implanted into an animal for a given session.
     -> Session
@@ -136,9 +128,10 @@ class ProbeInsertion(dj.Manual):
 
     @classmethod
     def auto_generate_entries(cls, session_key):
-        """
-        Method to auto-generate ProbeInsertion entries for a particular session
-        Probe information is inferred from the meta data found in the session data directory
+        """Automatically populate entries in ProbeInsertion table for a session. 
+
+        Args:
+            session_key: A dict referencing a particular electrophysiology recording session. 
         """
         session_dir = find_full_path(get_ephys_root_data_dir(),
                                   get_session_directory(session_key))
@@ -194,14 +187,7 @@ class ProbeInsertion(dj.Manual):
 
 @schema
 class InsertionLocation(dj.Manual):
-    """Stereotaxic insertion location information for the probe.
-
-     Dependencies: 
-        subject, session_datetime, insertion_number.
-     Primary attributes: 
-        subject, session_datetime, insertion_number.
-     Secondary attributes: 
-        skull_reference, ap_location, ml_location, depth, theta, phi, beta
+    """Stereotaxic location information for each probe insertion.
     """
 
     definition = """
@@ -220,14 +206,11 @@ class InsertionLocation(dj.Manual):
 
 @schema
 class EphysRecording(dj.Imported):
-    """Electrophysiology recording information for one insertion per entry.
+    """Electrophysiology recording information for each probe inserted during an experimental session.
 
-    Dependencies:
-        subject, session_datetime, insertion_number.
-    Primary attributes:
-        subject, session_datetime, insertion_number.
-    Secondary attributes:
-        subject, session_datetime, insertion_number. 
+    - Finds all files in a session directory.
+    - Determines the acquisition software from these files.
+    - Reads and saves the metadata including the probe serial number, sampling rate, etc. 
     """
 
     definition = """
@@ -242,6 +225,8 @@ class EphysRecording(dj.Imported):
     """
 
     class EphysFile(dj.Part):
+        """Paths of electrophysiology recording files for each insertion.
+        """
         definition = """
         # Paths of files of a given EphysRecording round.
         -> master
@@ -360,6 +345,12 @@ class EphysRecording(dj.Imported):
 
 @schema
 class LFP(dj.Imported):
+    """Extracts local field potentials (LFP) from an electrophysiology recording.
+
+    - Finds LFP metadata such as sampling rate and timestamps. 
+    - Extracts LFP recordings from each electrode and stores mean LFP data for each insertion.  
+    """
+
     definition = """
     # Acquired local field potential (LFP) from a given Ephys recording.
     -> EphysRecording
@@ -370,6 +361,9 @@ class LFP(dj.Imported):
     """
 
     class Electrode(dj.Part):
+        """Saves local field potential data for each electrode.
+        """
+
         definition = """
         -> master
         -> probe.ElectrodeConfig.Electrode  
@@ -450,6 +444,8 @@ class LFP(dj.Imported):
 
 @schema
 class ClusteringMethod(dj.Lookup):
+    """Kilosort clustering method. 
+    """
     definition = """
     # Method for clustering
     clustering_method: varchar(16)
@@ -464,6 +460,8 @@ class ClusteringMethod(dj.Lookup):
 
 @schema
 class ClusteringParamSet(dj.Lookup):
+    """Parameters to be used in clustering procedure for spike sorting.
+    """
     definition = """
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
@@ -508,6 +506,8 @@ class ClusteringParamSet(dj.Lookup):
 
 @schema
 class ClusterQualityLabel(dj.Lookup):
+    """Quality label for each spike sorted cluster.
+    """
     definition = """
     # Quality
     cluster_quality_label:  varchar(100)  # cluster quality type - e.g. 'good', 'MUA', 'noise', etc.
@@ -524,6 +524,11 @@ class ClusterQualityLabel(dj.Lookup):
 
 @schema
 class ClusteringTask(dj.Manual):
+    """A clustering task to spike sort electrophysiology datasets.
+
+    - Requires an electrophysiology recording to spike sort.
+    - Requires clustering parameters inserted into `ClusteringParamSet` table
+    """
     definition = """
     # Manual table for defining a clustering task ready to be run
     -> EphysRecording
@@ -588,11 +593,10 @@ class ClusteringTask(dj.Manual):
 
 @schema
 class Clustering(dj.Imported):
-    """
-    A processing table to handle each ClusteringTask:
-    + If `task_mode == "trigger"`: trigger clustering analysis
-        according to the ClusteringParamSet (e.g. launch a kilosort job)
-    + If `task_mode == "load"`: verify output
+    """A processing table to handle each clustering task.
+    
+    - If task mode is set to "trigger", clustering analysis will be triggered according to the entry in `ClusteringParamSet`. 
+    - If task mode is set to "load", a clustering output will be loaded 
     """
     definition = """
     # Clustering Procedure
