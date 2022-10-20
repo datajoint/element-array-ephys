@@ -194,6 +194,16 @@ class ProbeInsertion(dj.Manual):
 
 @schema
 class InsertionLocation(dj.Manual):
+    """Stereotaxic insertion location information for the probe.
+
+     Dependencies: 
+        subject, session_datetime, insertion_number.
+     Primary attributes: 
+        subject, session_datetime, insertion_number.
+     Secondary attributes: 
+        skull_reference, ap_location, ml_location, depth, theta, phi, beta
+    """
+
     definition = """
     # Brain Location of a given probe insertion.
     -> ProbeInsertion
@@ -210,6 +220,16 @@ class InsertionLocation(dj.Manual):
 
 @schema
 class EphysRecording(dj.Imported):
+    """Electrophysiology recording information for one insertion per entry.
+
+    Dependencies:
+        subject, session_datetime, insertion_number.
+    Primary attributes:
+        subject, session_datetime, insertion_number.
+    Secondary attributes:
+        subject, session_datetime, insertion_number. 
+    """
+
     definition = """
     # Ephys recording from a probe insertion for a given session.
     -> ProbeInsertion      
