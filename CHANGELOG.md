@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.0] - 2022-10-21
+
++ Add - mkdocs deployment with workflow API docs
+
 ## [0.1.5] - 2022-07-11
 
 + Add - New `QualityMetrics` table to store clusters' and waveforms' metrics after the spike sorting analysis.
@@ -48,6 +52,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Readers for: `SpikeGLX`, `Open Ephys`, `Kilosort`
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
 
+[0.2.0]: https://github.com/datajoint/element-array-ephys/compare/0.1.4...0.2.0
 [0.1.4]: https://github.com/datajoint/element-array-ephys/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/datajoint/element-array-ephys/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/datajoint/element-array-ephys/compare/0.1.1...0.1.2
