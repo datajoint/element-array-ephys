@@ -49,7 +49,7 @@ class ProbeLevelReport(dj.Computed):
 
         units = (
             ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
-        )  # only the good units to be plotted
+        )  
 
         shanks: np.ndarray = np.unique(
             (probe.ProbeType.Electrode.proj("shank") & units).fetch("shank")
@@ -122,24 +122,23 @@ class UnitLevelReport(dj.Computed):
         ).fetch1("peak_electrode_waveform", "spike_times", "cluster_quality_label")
 
         # Get the figure
-        fig = plot_waveform(
+        waveform_fig = plot_waveform(
             waveform=peak_electrode_waveform, sampling_rate=sampling_rate
         )
-        fig_waveform = json.loads(fig.to_json())
 
-        fig = plot_correlogram(spike_times=spike_times, bin_size=0.001, window_size=1)
-        fig_correlogram = json.loads(fig.to_json())
+        correlogram_fig = plot_correlogram(
+            spike_times=spike_times, bin_size=0.001, window_size=1
+        )
 
-        fig = plot_depth_waveforms(unit_key=key, y_range=50)
-        fig_depth_waveform = json.loads(fig.to_json())
+        depth_waveform_fig = plot_depth_waveforms(unit_key=key, y_range=50)
 
         self.insert1(
             {
                 **key,
                 "cluster_quality_label": cluster_quality_label,
-                "waveform_plotly": fig_waveform,
-                "autocorrelogram_plotly": fig_correlogram,
-                "depth_waveform_plotly": fig_depth_waveform,
+                "waveform_plotly": waveform_fig.to_json(),
+                "autocorrelogram_plotly": correlogram_fig.to_json(),
+                "depth_waveform_plotly": depth_waveform_fig.to_json(),
             }
         )
 
