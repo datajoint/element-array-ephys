@@ -23,8 +23,8 @@ def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
         xaxis_title="Time (ms)",
         yaxis_title="Voltage (μV)",
         template="simple_white",
-        width=400,
-        height=400,
+        width=350,
+        height=350,
     )
     return fig
 
@@ -47,7 +47,6 @@ def plot_correlogram(
         ),
     )
     df["lags"] = df.index  # in ms
-    ymax = round(correlogram.max() / 10) * 10
 
     fig = go.Figure()
     fig.add_trace(
@@ -64,16 +63,15 @@ def plot_correlogram(
         xaxis_title="Lags (ms)",
         yaxis_title="Count",
         template="simple_white",
-        width=400,
-        height=400,
-        yaxis_range=[0, ymax],
+        width=350,
+        height=350,
     )
     return fig
 
 
 def plot_depth_waveforms(
     unit_key: dict,
-    y_range: float = 50,
+    y_range: float = 60,
 ) -> go.Figure:
 
     from .. import probe
@@ -164,8 +162,8 @@ def plot_depth_waveforms(
             xaxis_title="Electrode position (μm)",
             yaxis_title="Distance from the probe tip (μm)",
             template="simple_white",
-            width=350,
-            height=400,
+            width=400,
+            height=700,
             xaxis_range=[x_min - x_inc / 2, x_max + x_inc * 1.2],
             yaxis_range=[y_min - y_inc * 2, y_max + y_inc * 2],
         )
