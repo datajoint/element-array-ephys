@@ -1,8 +1,10 @@
 from datetime import datetime
 import numpy as np
 import pathlib
+import logging
 from .utils import convert_to_number
 
+logger = logging.getLogger(__name__)
 
 AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
 
@@ -158,6 +160,69 @@ class SpikeGLX:
 
         if file_size != meta.meta['fileSizeBytes']:
             raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
+
+    def compress(self):
+        from mtscomp import compress as mts_compress
+
+        ap_file = self.root_dir / (self.root_name + '.ap.bin')
+        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+
+        meta_mapping = {'ap': self.apmeta, 'lfp': self.lfmeta}
+
+        compressed_files = []
+        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+            if not bin_fp.exists():
+                raise FileNotFoundError(f'Compression error - "{bin_fp}" does not exist')
+            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
+            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+
+            if cbin_fp.exists():
+                assert ch_fp.exists()
+                logger.info(f'Compressed file exists ({cbin_fp}), skipping...')
+                continue
+
+            try:
+                mts_compress(bin_fp, cbin_fp, ch_fp,
+                             sample_rate=meta_mapping[band_type]['sample_rate'],
+                             n_channels=meta_mapping[band_type]['num_channels'],
+                             dtype=np.memmap(bin_fp).dtype)
+            except Exception as e:
+                cbin_fp.unlink(missing_ok=True)
+                ch_fp.unlink(missing_ok=True)
+                raise e
+            else:
+                compressed_files.append((cbin_fp, ch_fp))
+
+        return compressed_files
+
+    def decompress(self):
+        from mtscomp import decompress as mts_decompress
+
+        ap_file = self.root_dir / (self.root_name + '.ap.bin')
+        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+
+        decompressed_files = []
+        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+            if bin_fp.exists():
+                logger.info(f'Decompressed file exists ({bin_fp}), skipping...')
+                continue
+
+            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
+            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+
+            if not cbin_fp.exists():
+                raise FileNotFoundError(f'Decompression error - "{cbin_fp}" does not exist')
+
+            try:
+                decomp_arr = mts_decompress(cbin_fp, ch_fp)
+                decomp_arr.tofile(bin_fp)
+            except Exception as e:
+                bin_fp.unlink(missing_ok=True)
+                raise e
+            else:
+                decompressed_files.append(bin_fp)
+
+        return decompressed_files
 
 
 class SpikeGLXMeta:

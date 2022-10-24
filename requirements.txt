@@ -1,5 +1,5 @@
 datajoint>=0.13
 pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
 openpyxl
-pynwb==1.4.0
+pynwb>=2.0.0
 element-interface @ git+https://github.com/datajoint/element-interface.git

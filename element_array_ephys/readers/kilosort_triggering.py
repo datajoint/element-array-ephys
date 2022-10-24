@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 import sys
 import pathlib
 import json
@@ -7,7 +8,7 @@ import inspect
 import os
 import scipy.io
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from element_interface.utils import dict_to_uuid
 
@@ -90,7 +91,7 @@ class SGLXKilosortPipeline:
             print('run_CatGT is set to False, skipping...')
             return
 
-        session_str, gate_str, _, probe_str = self.parse_input_filename()
+        session_str, gate_str, trig_str, probe_str = self.parse_input_filename()
 
         first_trig, last_trig = SpikeGLX_utils.ParseTrigStr(
             'start,end', probe_str, gate_str, self._npx_input_dir.as_posix())
@@ -111,6 +112,22 @@ class SGLXKilosortPipeline:
 
         input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
 
+        # create symbolic link to the actual data files - as CatGT expects files to follow a certain naming convention
+        continuous_file_symlink = (continuous_file.parent / f'{session_str}_g{gate_str}'
+                                   / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                   / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.bin')
+        continuous_file_symlink.parent.mkdir(parents=True, exist_ok=True)
+        if continuous_file_symlink.exists():
+            continuous_file_symlink.unlink()
+        continuous_file_symlink.symlink_to(continuous_file)
+        input_meta_fullpath_symlink = (input_meta_fullpath.parent / f'{session_str}_g{gate_str}'
+                                       / f'{session_str}_g{gate_str}_imec{probe_str}'
+                                       / f'{session_str}_g{gate_str}_t{trig_str}.imec{probe_str}.ap.meta')
+        input_meta_fullpath_symlink.parent.mkdir(parents=True, exist_ok=True)
+        if input_meta_fullpath_symlink.exists():
+            input_meta_fullpath_symlink.unlink()
+        input_meta_fullpath_symlink.symlink_to(input_meta_fullpath)
+
         createInputJson(self._catGT_input_json.as_posix(),
                         KS2ver=self._KS2ver,
                         npx_directory=self._npx_input_dir.as_posix(),
@@ -121,8 +138,9 @@ class SGLXKilosortPipeline:
                         probe_string=probe_str,
                         continuous_file=continuous_file.as_posix(),
                         input_meta_path=input_meta_fullpath.as_posix(),
-                        extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+                        extracted_data_directory=self._ks_output_dir.as_posix(),
                         kilosort_output_directory=self._ks_output_dir.as_posix(),
+                        kilosort_output_tmp=self._ks_output_dir.as_posix(),
                         kilosort_repository=_get_kilosort_repository(self._KS2ver),
                         **{k: v for k, v in catgt_params.items() if k in self._input_json_args}
                         )
@@ -164,7 +182,7 @@ class SGLXKilosortPipeline:
             spikeGLX_data=True,
             continuous_file=continuous_file.as_posix(),
             input_meta_path=input_meta_fullpath.as_posix(),
-            extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+            extracted_data_directory=self._ks_output_dir.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
@@ -191,14 +209,17 @@ class SGLXKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = module_input_json.replace('-input.json',
-                                                           '-' + module + '-output.json')
+            module_output_json = self._get_module_output_json_filename(module)
             command = (sys.executable
                        + " -W ignore -m ecephys_spike_sorting.modules." + module
                        + " --input_json " + module_input_json
                        + " --output_json " + module_output_json)
 
             start_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': None,
+                          'duration': None}})
             with open(module_logfile, "a") as f:
                 subprocess.check_call(command.split(' '), stdout=f)
             completion_time = datetime.utcnow()
@@ -207,20 +228,24 @@ class SGLXKilosortPipeline:
                           'completion_time': completion_time,
                           'duration': (completion_time - start_time).total_seconds()}})
 
+        self._update_total_duration()
+
     def _get_raw_data_filepaths(self):
         session_str, gate_str, _, probe_str = self.parse_input_filename()
 
         if self._CatGT_finished:
-            catGT_dest = self._ks_output_dir.parent
+            catGT_dest = self._ks_output_dir
             run_str = session_str + '_g' + gate_str
             run_folder = 'catgt_' + run_str
             prb_folder = run_str + '_imec' + probe_str
             data_directory = catGT_dest / run_folder / prb_folder
         else:
             data_directory = self._npx_input_dir
-
-        meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
-        bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        try:
+            meta_fp = next(data_directory.glob(f'{session_str}*.ap.meta'))
+            bin_fp = next(data_directory.glob(f'{session_str}*.ap.bin'))
+        except StopIteration:
+            raise RuntimeError(f'No ap meta/bin files found in {data_directory} - CatGT error?')
 
         return meta_fp, bin_fp
 
@@ -248,9 +273,43 @@ class SGLXKilosortPipeline:
         if self._modules_input_hash_fp.exists():
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
+            if modules_status[module]['completion_time'] is None:
+                # additional logic to read from the "-output.json" file for this module as well
+                # handle cases where the module has finished successfully,
+                # but the "_modules_input_hash_fp" is not updated (for whatever reason),
+                # resulting in this module not registered as completed in the "_modules_input_hash_fp"
+                module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if module_output_json_fp.exists():
+                    with open(module_output_json_fp) as f:
+                        module_run_output = json.load(f)
+                    modules_status[module]['duration'] = module_run_output['execution_time']
+                    modules_status[module]['completion_time'] = (
+                            datetime.strptime(modules_status[module]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                            + timedelta(seconds=module_run_output['execution_time']))
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
+
+    def _get_module_output_json_filename(self, module):
+        module_input_json = self._module_input_json.as_posix()
+        module_output_json = module_input_json.replace(
+            '-input.json',
+            '-' + module + '-' + str(self._modules_input_hash) + '-output.json')
+        return module_output_json
+
+    def _update_total_duration(self):
+        with open(self._modules_input_hash_fp) as f:
+            modules_status = json.load(f)
+        cumulative_execution_duration = sum(
+            v['duration'] or 0 for k, v in modules_status.items()
+            if k not in ('cumulative_execution_duration', 'total_duration'))
+        total_duration = (
+                datetime.strptime(modules_status[self._modules[-1]]['completion_time'], '%Y-%m-%d %H:%M:%S.%f')
+                - datetime.strptime(modules_status[self._modules[0]]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+        ).total_seconds()
+        self._update_module_status(
+            {'cumulative_execution_duration': cumulative_execution_duration,
+             'total_duration': total_duration})
 
 
 class OpenEphysKilosortPipeline:
@@ -264,7 +323,9 @@ class OpenEphysKilosortPipeline:
     https://github.com/AllenInstitute/ecephys_spike_sorting
     """
 
-    _modules = ['kilosort_helper',
+    _modules = ['depth_estimation',
+                'median_subtraction',
+                'kilosort_helper',
                 'kilosort_postprocessing',
                 'noise_templates',
                 'mean_waveforms',
@@ -286,6 +347,7 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / 'json_configs'
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
+        self._median_subtraction_finished = False
         self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
@@ -311,7 +373,19 @@ class OpenEphysKilosortPipeline:
 
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
 
-        continuous_file = self._npx_input_dir / 'continuous.dat'
+        continuous_file = self._get_raw_data_filepaths()
+
+        lf_dir = self._npx_input_dir.as_posix()
+        try:
+            # old probe folder convention with 100.0, 100.1, 100.2, 100.3, etc.
+            name, num = re.search(r"(.+\.)(\d)+$", lf_dir).groups()
+        except AttributeError:
+            # new probe folder convention with -AP or -LFP
+            assert lf_dir.endswith("AP")
+            lf_dir = re.sub("-AP$", "-LFP", lf_dir)
+        else:
+            lf_dir = f"{name}{int(num) + 1}"
+        lf_file = pathlib.Path(lf_dir) / 'continuous.dat'
 
         params = {}
         for k, v in self._params.items():
@@ -327,7 +401,8 @@ class OpenEphysKilosortPipeline:
             npx_directory=self._npx_input_dir.as_posix(),
             spikeGLX_data=False,
             continuous_file=continuous_file.as_posix(),
-            extracted_data_directory=self._ks_output_dir.parent.as_posix(),
+            lf_file=lf_file.as_posix(),
+            extracted_data_directory=self._ks_output_dir.as_posix(),
             kilosort_output_directory=self._ks_output_dir.as_posix(),
             kilosort_output_tmp=self._ks_output_dir.as_posix(),
             ks_make_copy=True,
@@ -353,21 +428,61 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            module_output_json = module_input_json.replace('-input.json',
-                                                           '-' + module + '-output.json')
-            command = (sys.executable
-                       + " -W ignore -m ecephys_spike_sorting.modules." + module
-                       + " --input_json " + module_input_json
-                       + " --output_json " + module_output_json)
+            if module == 'median_subtraction' and self._median_subtraction_finished:
+                self._update_module_status(
+                    {module: {'start_time': datetime.utcnow(),
+                              'completion_time': datetime.utcnow(),
+                              'duration': 0}})
+                continue
+
+            module_output_json = self._get_module_output_json_filename(module)
+            command = [sys.executable,
+                    '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
+                    '--input_json', module_input_json,
+                    '--output_json', module_output_json]
 
             start_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': None,
+                          'duration': None}})
             with open(module_logfile, "a") as f:
-                subprocess.check_call(command.split(' '), stdout=f)
+                subprocess.check_call(command, stdout=f)
             completion_time = datetime.utcnow()
             self._update_module_status(
                 {module: {'start_time': start_time,
                           'completion_time': completion_time,
                           'duration': (completion_time - start_time).total_seconds()}})
+
+        self._update_total_duration()
+
+    def _get_raw_data_filepaths(self):
+        raw_ap_fp = self._npx_input_dir / 'continuous.dat'
+
+        if 'median_subtraction' not in self._modules:
+            return raw_ap_fp
+
+        # median subtraction step will overwrite original continuous.dat file with the corrected version
+        # to preserve the original raw data - make a copy here and work on the copied version
+        assert 'depth_estimation' in self._modules
+        continuous_file = self._ks_output_dir / 'continuous.dat'
+        if continuous_file.exists():
+            if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
+                # if the copied continuous.dat was actually modified,
+                # median_subtraction may have been completed - let's check
+                module_input_json = self._module_input_json.as_posix()
+                module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
+                with open(module_logfile, 'r') as f:
+                    previous_line = ''
+                    for line in f.readlines():
+                        if (line.startswith('ecephys spike sorting: median subtraction module')
+                                and previous_line.startswith('Total processing time:')):
+                            self._median_subtraction_finished = True
+                            return continuous_file
+                        previous_line = line
+
+        shutil.copy2(raw_ap_fp, continuous_file)
+        return continuous_file
 
     def _update_module_status(self, updated_module_status={}):
         if self._modules_input_hash is None:
@@ -393,13 +508,47 @@ class OpenEphysKilosortPipeline:
         if self._modules_input_hash_fp.exists():
             with open(self._modules_input_hash_fp) as f:
                 modules_status = json.load(f)
+            if modules_status[module]['completion_time'] is None:
+                # additional logic to read from the "-output.json" file for this module as well
+                # handle cases where the module has finished successfully,
+                # but the "_modules_input_hash_fp" is not updated (for whatever reason),
+                # resulting in this module not registered as completed in the "_modules_input_hash_fp"
+                module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if module_output_json_fp.exists():
+                    with open(module_output_json_fp) as f:
+                        module_run_output = json.load(f)
+                    modules_status[module]['duration'] = module_run_output['execution_time']
+                    modules_status[module]['completion_time'] = (
+                            datetime.strptime(modules_status[module]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                            + timedelta(seconds=module_run_output['execution_time']))
             return modules_status[module]
 
         return {'start_time': None, 'completion_time': None, 'duration': None}
 
+    def _get_module_output_json_filename(self, module):
+        module_input_json = self._module_input_json.as_posix()
+        module_output_json = module_input_json.replace(
+            '-input.json',
+            '-' + module + '-' + str(self._modules_input_hash) + '-output.json')
+        return module_output_json
+
+    def _update_total_duration(self):
+        with open(self._modules_input_hash_fp) as f:
+            modules_status = json.load(f)
+        cumulative_execution_duration = sum(
+            v['duration'] or 0 for k, v in modules_status.items()
+            if k not in ('cumulative_execution_duration', 'total_duration'))
+        total_duration = (
+                datetime.strptime(modules_status[self._modules[-1]]['completion_time'], '%Y-%m-%d %H:%M:%S.%f')
+                - datetime.strptime(modules_status[self._modules[0]]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+        ).total_seconds()
+        self._update_module_status(
+            {'cumulative_execution_duration': cumulative_execution_duration,
+             'total_duration': total_duration})
+
 
 def run_pykilosort(continuous_file, kilosort_output_directory, params,
-                    channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
+                   channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
     dat_path = pathlib.Path(continuous_file)
 
     probe = pykilosort.Bunch()

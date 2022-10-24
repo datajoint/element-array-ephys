@@ -4,7 +4,9 @@ import re
 import numpy as np
 import inspect
 import importlib
+import gc
 from decimal import Decimal
+import pandas as pd
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
@@ -242,6 +244,9 @@ class EphysRecording(dj.Imported):
                 raise FileNotFoundError(
                     'No Open Ephys data found for probe insertion: {}'.format(key))
 
+            if not probe_data.ap_meta:
+                raise IOError('No analog signals found - check "structure.oebin" file or "continuous" directory')
+
             if probe_data.probe_model in supported_probe_types:
                 probe_type = probe_data.probe_model
                 electrode_query = probe.ProbeType.Electrode & {'probe_type': probe_type}
@@ -270,6 +275,10 @@ class EphysRecording(dj.Imported):
             self.EphysFile.insert([{**key,
                                     'file_path': fp.relative_to(root_dir).as_posix()}
                                    for fp in probe_data.recording_info['recording_files']])
+            # explicitly garbage collect "dataset"
+            # as these may have large memory footprint and may not be cleared fast enough
+            del probe_data, dataset
+            gc.collect()
         else:
             raise NotImplementedError(f'Processing ephys files from'
                                       f' acquisition software of type {acq_software} is'
@@ -568,7 +577,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=False)
+                            run_CatGT=True)
                         run_kilosort.run_modules()
                 elif acq_software == 'Open Ephys':
                     oe_probe = get_openephys_probe_data(key)
@@ -823,12 +832,86 @@ class WaveformSet(dj.Imported):
                 self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
+@schema
+class QualityMetrics(dj.Imported):
+    definition = """
+    # Clusters and waveforms metrics
+    -> CuratedClustering    
+    """
+
+    class Cluster(dj.Part):
+        definition = """   
+        # Cluster metrics for a particular unit
+        -> master
+        -> CuratedClustering.Unit
+        ---
+        firing_rate=null: float # (Hz) firing rate for a unit 
+        snr=null: float  # signal-to-noise ratio for a unit
+        presence_ratio=null: float  # fraction of time in which spikes are present
+        isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
+        number_violation=null: int  # total number of ISI violations
+        amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
+        isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
+        l_ratio=null: float  # 
+        d_prime=null: float  # Classification accuracy based on LDA
+        nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
+        nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
+        silhouette_score=null: float  # Standard metric for cluster overlap
+        max_drift=null: float  # Maximum change in spike depth throughout recording
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
+        contamination_rate=null: float # 
+        """
+
+    class Waveform(dj.Part):
+        definition = """   
+        # Waveform metrics for a particular unit
+        -> master
+        -> CuratedClustering.Unit
+        ---
+        amplitude: float  # (uV) absolute difference between waveform peak and trough
+        duration: float  # (ms) time between waveform peak and trough
+        halfwidth=null: float  # (ms) spike width at half max amplitude
+        pt_ratio=null: float  # absolute amplitude of peak divided by absolute amplitude of trough relative to 0
+        repolarization_slope=null: float  # the repolarization slope was defined by fitting a regression line to the first 30us from trough to peak
+        recovery_slope=null: float  # the recovery slope was defined by fitting a regression line to the first 30us from peak to tail
+        spread=null: float  # (um) the range with amplitude above 12-percent of the maximum amplitude along the probe
+        velocity_above=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the top of the probe
+        velocity_below=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the bottom of the probe
+        """
+
+    def make(self, key):
+        output_dir = (ClusteringTask & key).fetch1('clustering_output_dir')
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+
+        metric_fp = kilosort_dir / 'metrics.csv'
+
+        if not metric_fp.exists():
+            raise FileNotFoundError(f'QC metrics file not found: {metric_fp}')
+
+        metrics_df = pd.read_csv(metric_fp)
+        metrics_df.set_index('cluster_id', inplace=True)
+        metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        metrics_list = [
+            dict(metrics_df.loc[unit_key['unit']], **unit_key)
+            for unit_key in (CuratedClustering.Unit & key).fetch('KEY')]
+
+        self.insert1(key)
+        self.Cluster.insert(metrics_list, ignore_extra_fields=True)
+        self.Waveform.insert(metrics_list, ignore_extra_fields=True)
+
+
 # ---------------- HELPER FUNCTIONS ----------------
 
 def get_spikeglx_meta_filepath(ephys_recording_key):
     # attempt to retrieve from EphysRecording.EphysFile
-    spikeglx_meta_filepath = (EphysRecording.EphysFile & ephys_recording_key
-                              & 'file_path LIKE "%.ap.meta"').fetch1('file_path')
+    spikeglx_meta_filepath = pathlib.Path(
+        (
+            EphysRecording.EphysFile
+            & ephys_recording_key
+            & 'file_path LIKE "%.ap.meta"'
+        ).fetch1("file_path")
+    )
 
     try:
         spikeglx_meta_filepath = find_full_path(get_ephys_root_data_dir(),
@@ -859,10 +942,17 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
 def get_openephys_probe_data(ephys_recording_key):
     inserted_probe_serial_number = (ProbeInsertion * probe.Probe
                                     & ephys_recording_key).fetch1('probe')
-    sess_dir = find_full_path(get_ephys_root_data_dir(),
+    session_dir = find_full_path(get_ephys_root_data_dir(),
                               get_session_directory(ephys_recording_key))
-    loaded_oe = openephys.OpenEphys(sess_dir)
-    return loaded_oe.probes[inserted_probe_serial_number]
+    loaded_oe = openephys.OpenEphys(session_dir)
+    probe_data = loaded_oe.probes[inserted_probe_serial_number]
+
+    # explicitly garbage collect "loaded_oe"
+    # as these may have large memory footprint and may not be cleared fast enough
+    del loaded_oe
+    gc.collect()
+
+    return probe_data
 
 
 def get_neuropixels_channel2electrode_map(ephys_recording_key, acq_software):

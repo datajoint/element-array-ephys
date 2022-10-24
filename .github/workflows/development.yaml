@@ -1,9 +1,17 @@
 name: Development
 on:
-  pull_request:
   push:
+    branches:
+      - '**' # every branch
+      - '!gh-pages' # exclude gh-pages branch
+      - '!stage*' # exclude branches beginning with stage
     tags:
-      - "*.*.*"
+      - '\d+\.\d+\.\d+' # only semver tags
+  pull_request:
+    branches:
+      - '**' # every branch
+      - '!gh-pages' # exclude gh-pages branch
+      - '!stage*' # exclude branches beginning with stage
 jobs:
   test-changelog:
     runs-on: ubuntu-latest
@@ -73,7 +81,9 @@ jobs:
           path: dist
           retention-days: 1
   publish-release:
-    if: github.event_name == 'push'
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags')
     needs: build
     runs-on: ubuntu-latest
     env:
@@ -146,15 +156,22 @@ jobs:
           asset_path: ${{env.PKG_SDIST_PATH}}
           asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
-  # Open Source documentation deploy workflow
-  deploy-docs:
-    if: github.event_name == 'push'
+  publish-docs:
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags')
     needs: build
     runs-on: ubuntu-latest
+    env:
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-      - run: pip install mkdocs-material mkdocs-redirects mkdocstrings mkdocstrings-python
-      - run: mkdocs gh-deploy --force --config-file ./docs/mkdocs.yml
+      - name: Deploy docs
+        run: |
+          export MODE=BUILD
+          export PACKAGE=element_array_ephys
+          export UPSTREAM_REPO=https://github.com/${GITHUB_REPOSITORY}.git
+          export HOST_UID=$(id -u)
+          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
+          git push origin gh-pages
