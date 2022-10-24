@@ -65,6 +65,7 @@ def plot_correlogram(
         template="simple_white",
         width=350,
         height=350,
+        yaxis_range=[0, None]
     )
     return fig
 
