@@ -1,3 +1,5 @@
+from .. import probe
+from modulefinder import Module
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -65,18 +67,16 @@ def plot_correlogram(
         template="simple_white",
         width=350,
         height=350,
-        yaxis_range=[0, None]
+        yaxis_range=[0, None],
     )
     return fig
 
 
 def plot_depth_waveforms(
+    ephys: Module,
     unit_key: dict,
     y_range: float = 60,
 ) -> go.Figure:
-
-    from .. import probe
-    from .. import ephys_no_curation as ephys
 
     sampling_rate = (ephys.EphysRecording & unit_key).fetch1(
         "sampling_rate"
@@ -122,13 +122,13 @@ def plot_depth_waveforms(
     x_min, x_max = np.min(coords[:, 0]), np.max(coords[:, 0])
     y_min, y_max = np.min(coords[:, 1]), np.max(coords[:, 1])
 
-    # Spacing between channels (in um)
-    x_inc = np.abs(np.diff(coords[:, 0])).min()
-    y_inc = (np.abs(np.diff(coords[:, 1]))).max()
+    # Spacing between recording sites (in um)
+    x_inc = np.abs(np.diff(coords[coords[:, 1] == coords[0, 1]][:, 0])).mean() / 2
+    y_inc = np.abs(np.diff(coords[coords[:, 0] == coords[0, 0]][:, 1])).mean() / 2
 
     time = np.arange(waveforms.shape[1]) / sampling_rate
 
-    x_scale_factor = x_inc / (time[-1] + 1 / sampling_rate)
+    x_scale_factor = x_inc / (time[-1] + 1 / sampling_rate)  # correspond to 1 ms
     time_scaled = time * x_scale_factor
 
     wf_amps = waveforms.max(axis=1) - waveforms.min(axis=1)
@@ -152,7 +152,7 @@ def plot_depth_waveforms(
                 x=time_scaled + coord[0],
                 y=wf_scaled + coord[1],
                 mode="lines",
-                line=dict(color=color, width=1),
+                line=dict(color=color, width=1.5),
                 hovertemplate=f"electrode {electrode}<br>"
                 + f"x ={coord[0]: .0f} μm<br>"
                 + f"y ={coord[1]: .0f} μm<extra></extra>",
@@ -164,7 +164,7 @@ def plot_depth_waveforms(
             yaxis_title="Distance from the probe tip (μm)",
             template="simple_white",
             width=400,
-            height=700,
+            height=600,
             xaxis_range=[x_min - x_inc / 2, x_max + x_inc * 1.2],
             yaxis_range=[y_min - y_inc * 2, y_max + y_inc * 2],
         )
@@ -173,12 +173,12 @@ def plot_depth_waveforms(
     fig.update_xaxes(tickvals=xtick_loc, ticktext=xtick_label)
 
     # Add a scale bar
-    x0 = xtick_loc[0] / 6
-    y0 = y_min - y_inc * 1.5
+    x0 = xtick_loc[0] - (x_scale_factor * 1.5)
+    y0 = y_min - (y_inc * 1.5)
 
     fig.add_trace(
         go.Scatter(
-            x=[x0, xtick_loc[0] + x_scale_factor],
+            x=[x0, x0 + x_scale_factor],
             y=[y0, y0],
             mode="lines",
             line=dict(color="black", width=2),
