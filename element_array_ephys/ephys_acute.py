@@ -182,7 +182,6 @@ class ProbeInsertion(dj.Manual):
                 }
                 if (
                     probe_key["probe"] not in [p["probe"] for p in probe_list]
-                    and probe_key not in probe.Probe()
                 ):
                     probe_list.append(probe_key)
 
@@ -209,7 +208,6 @@ class ProbeInsertion(dj.Manual):
                 }
                 if (
                     probe_key["probe"] not in [p["probe"] for p in probe_list]
-                    and probe_key not in probe.Probe()
                 ):
                     probe_list.append(probe_key)
                 probe_insertion_list.append(
@@ -222,7 +220,7 @@ class ProbeInsertion(dj.Manual):
         else:
             raise NotImplementedError(f"Unknown acquisition software: {acq_software}")
 
-        probe.Probe.insert(probe_list)
+        probe.Probe.insert(probe_list, skip_duplicates=True)
         cls.insert(probe_insertion_list, skip_duplicates=True)
 
 
