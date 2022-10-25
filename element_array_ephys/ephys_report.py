@@ -1,10 +1,6 @@
-import json
 import pathlib
 import datetime
 import datajoint as dj
-import numpy as np
-import importlib
-import inspect
 import typing as T
 
 schema = dj.schema()
@@ -47,9 +43,7 @@ class ProbeLevelReport(dj.Computed):
 
         save_dir = _make_save_dir()
 
-        units = (
-            ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
-        )  
+        units = ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
 
         shanks = set((probe.ProbeType.Electrode & units).fetch("shank"))
 
@@ -98,7 +92,7 @@ class UnitLevelReport(dj.Computed):
     -> ephys.CuratedClustering.Unit
     ---
     cluster_quality_label   : varchar(100) 
-    waveform_plotly         : longblob  # dictionary storing the plotly object (from fig.to_plotly_json())
+    waveform_plotly         : longblob  
     autocorrelogram_plotly  : longblob
     depth_waveform_plotly   : longblob
     """
