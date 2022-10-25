@@ -49,20 +49,20 @@ Each of the DataJoint Elements are a set of tables for common neuroinformatics m
 
 ![element-array-ephys diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
 
-### `subject` schema
+### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 - Although not required, most choose to connect the `Session` table to a `Subject` table.
 
 | Table | Description |
 | --- | --- |
 | Subject | Basic information of the research subject |
 
-### `session` schema
+### `session` schema ([API docs](https://datajoint.com/docs/elements/element-session/api/element_session/session_with_datetime))
 
 | Table | Description |
 | --- | --- |
 | Session | Unique experimental session identifier |
 
-### `probe` schema
+### `probe` schema ([API docs](../api/element_array_ephys/probe))
 Tables related to the Neuropixels probe and electrode configuration.
 
 | Table | Description |
@@ -73,7 +73,7 @@ Tables related to the Neuropixels probe and electrode configuration.
 | ElectrodeConfig | particular electrode configuration to be used for ephys recording. |
 | ElectrodeConfig.Electrode | corresponding electrodes in `ProbeType.Electrode` that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe). |
 
-### `ephys` schema
+### `ephys` schema ([API docs](../api/element_array_ephys/ephys))
 Tables related to information about physiological recordings and automatic ingestion of spike sorting results.
 
 | Table | Description |
