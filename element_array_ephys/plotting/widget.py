@@ -1,58 +1,69 @@
 import ipywidgets as widgets
-from .. import ephys_report
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 import pathlib
-import typing as T
-from IPython.display import display, clear_output
+from IPython.display import display
+from .. import ephys_report
 from .. import ephys_no_curation as ephys
+import plotly.graph_objs as go
+import plotly.express as px
 from skimage import io
 
 
-# Build selection widgets
-probe_dropdown_wg = widgets.Dropdown(
-    options=ephys.CuratedClustering & ephys_report.ProbeLevelReport.fetch("KEY"),
-    description="Select Probe Insertion : ",
-    disabled=False,
-    layout=widgets.Layout(
-        width="80%",
-    ),
-    style={"description_width": "150px"},
-)
+def ephys_widget():
 
-shank_dropdown_wg = widgets.Dropdown(
-    options=(ephys_report.ProbeLevelReport & probe_dropdown_wg.value).fetch("shank"),
-    description="Select Shank : ",
-    disabled=False,
-    layout=widgets.Layout(
-        width="15%",
-    ),
-    style={"description_width": "100px"},
-)
+    # Build dropdown widgets
+    probe_dropdown_wg = widgets.Dropdown(
+        options=ephys.CuratedClustering & ephys_report.ProbeLevelReport,
+        description="Select Probe Insertion : ",
+        disabled=False,
+        layout=widgets.Layout(
+            width="80%",
+        ),
+        style={"description_width": "150px"},
+    )
 
-shank_toggle_wg = widgets.ToggleButtons(
-    options=(ephys_report.ProbeLevelReport & probe_dropdown_wg.value).fetch("shank"),
-    description="Select Shank : ",
-    layout=widgets.Layout(width="auto"),
-    style={"button_width": "50px"},
-)
+    shank_dropdown_wg = widgets.Dropdown(
+        options=(ephys_report.ProbeLevelReport & probe_dropdown_wg.value).fetch(
+            "shank"
+        ),
+        description="Select Shank : ",
+        disabled=False,
+        layout=widgets.Layout(
+            width="15%",
+        ),
+        style={"description_width": "100px"},
+    )
 
-unit_dropdown_wg = widgets.Dropdown(
-    options=(
-        (ephys_report.UnitLevelReport & probe_dropdown_wg.value)
-        & "cluster_quality_label='good'"
-    ).fetch("unit"),
-    description="Select Units : ",
-    disabled=False,
-    layout=widgets.Layout(
-        width="15%",
-    ),
-    style={"description_width": "100px"},
-)
+    unit_dropdown_wg = widgets.Dropdown(
+        options=(
+            (ephys_report.UnitLevelReport & probe_dropdown_wg.value)
+            & "cluster_quality_label='good'"
+        ).fetch("unit"),
+        description="Select Units : ",
+        disabled=False,
+        layout=widgets.Layout(
+            width="15%",
+        ),
+        style={"description_width": "100px"},
+    )
 
+    def probe_dropdown_evt(change):
+        """Change in probe dropdown option triggers this function"""
 
-def probe_widget():
-    def plot_probe_figure(probe_key, shank):
+        probe_key = change.new
+
+        shank_dropdown_wg.options = (
+            ephys_report.ProbeLevelReport & probe_key.value
+        ).fetch("shank")
+
+        unit_dropdown_wg.options = (
+            (
+                ephys_report.UnitLevelReport
+                & probe_key.value
+                & "cluster_quality_label='good'"
+            ).fetch("unit"),
+        )
+
+    def plot_probe_widget(probe_key, shank):
 
         fig_name = (
             ephys_report.ProbeLevelReport & probe_key & f"shank={shank}"
@@ -75,46 +86,11 @@ def probe_widget():
             xaxis_visible=False,
             yaxis_visible=False,
         )
-
         pathlib.Path(fig_name).unlink()
-        return go.FigureWidget(probe_fig)
+        display(go.FigureWidget(probe_fig))
 
-    def probe_dropdown_evt(change):
-        probe_key = change.new
-        shank_dropdown_wg.options = (
-            ephys_report.ProbeLevelReport & probe_key.value
-        ).fetch("shank")
-        unit_dropdown_wg.options = (
-            (
-                (ephys_report.UnitLevelReport & probe_key.value)
-                & "cluster_quality_label='good'"
-            ).fetch("unit"),
-        )
-        clear_output()
-        display(
-            widgets.VBox(
-                [
-                    probe_dropdown_wg,
-                    shank_dropdown_wg,
-                    plot_probe_figure(probe_key, shank_dropdown_wg.value),
-                ]
-            )
-        )
+    def plot_unit_widget(unit):
 
-    probe_dropdown_wg.observe(probe_dropdown_evt, "value")
-
-    return widgets.VBox(
-        [
-            probe_dropdown_wg,
-            shank_dropdown_wg,
-            plot_probe_figure(probe_dropdown_wg.value, shank_dropdown_wg.value),
-        ]
-    )
-
-
-def unit_widget():
-    def plot_unit_figure(unit):
-        # Build a unit widgets
         waveform_fig, autocorrelogram_fig, depth_waveform_fig = (
             ephys_report.UnitLevelReport & probe_dropdown_wg.value & f"unit={unit}"
         ).fetch1("waveform_plotly", "autocorrelogram_plotly", "depth_waveform_plotly")
@@ -136,12 +112,14 @@ def unit_widget():
             [widgets.VBox([waveform_fig, autocorrelogram_fig]), depth_waveform_fig],
             layout=widgets.Layout(margin="0 0 0 100px"),
         )
-        return unit_fig_wg
+        display(unit_fig_wg)
 
-    def unit_dropdown_evt(change):
-        unit = change.new
-        clear_output()
-        display(unit_dropdown_wg, plot_unit_figure(unit))
+    probe_dropdown_wg.observe(probe_dropdown_evt, "value")
 
-    unit_dropdown_wg.observe(unit_dropdown_evt, "value")
-    return widgets.VBox([unit_dropdown_wg, plot_unit_figure(unit_dropdown_wg.value)])
+    probe_widget = widgets.interactive(
+        plot_probe_widget, probe_key=probe_dropdown_wg, shank=shank_dropdown_wg
+    )
+
+    unit_widget = widgets.interactive(plot_unit_widget, unit=unit_dropdown_wg)
+
+    return widgets.VBox([probe_widget, unit_widget])
