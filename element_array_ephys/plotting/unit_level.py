@@ -123,9 +123,8 @@ def plot_depth_waveforms(
     y_min, y_max = np.min(coords[:, 1]), np.max(coords[:, 1])
 
     # Spacing between recording sites (in um)
-    x_inc = np.abs(np.diff(coords[coords[:, 1] == coords[0, 1]][:, 0])).mean() / 2
-    y_inc = np.abs(np.diff(coords[coords[:, 0] == coords[0, 0]][:, 1])).mean() / 2
-
+    x_inc = np.diff(np.sort((coords[coords[:, 1] == coords[0, 1]][:, 0]))).mean() / 2
+    y_inc = np.diff(np.sort((coords[coords[:, 0] == coords[0, 0]][:, 1]))).mean() / 2
     time = np.arange(waveforms.shape[1]) / sampling_rate
 
     x_scale_factor = x_inc / (time[-1] + 1 / sampling_rate)  # correspond to 1 ms
