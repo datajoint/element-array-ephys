@@ -158,8 +158,8 @@ class ProbeInsertion(dj.Manual):
             get_ephys_root_data_dir(), get_session_directory(session_key)
         )
         # search session dir and determine acquisition software
-        for ephys_pattern, ephys_acq_type in zip(
-            ["*.ap.meta", "*.oebin"], ["SpikeGLX", "Open Ephys"]
+        for ephys_pattern, ephys_acq_type in (
+            ("*.ap.meta", "SpikeGLX"), ("*.oebin", "Open Ephys")
         ):
             ephys_meta_filepaths = list(session_dir.rglob(ephys_pattern))
             if ephys_meta_filepaths:
@@ -271,8 +271,8 @@ class EphysRecording(dj.Imported):
         )
 
         # search session dir and determine acquisition software
-        for ephys_pattern, ephys_acq_type in zip(
-            ["*.ap.meta", "*.oebin"], ["SpikeGLX", "Open Ephys"]
+        for ephys_pattern, ephys_acq_type in (
+            ("*.ap.meta", "SpikeGLX"), ("*.oebin", "Open Ephys")
         ):
             ephys_meta_filepaths = list(session_dir.rglob(ephys_pattern))
             if ephys_meta_filepaths:

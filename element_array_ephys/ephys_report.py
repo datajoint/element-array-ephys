@@ -51,9 +51,7 @@ class ProbeLevelReport(dj.Computed):
             ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
         )  
 
-        shanks: np.ndarray = np.unique(
-            (probe.ProbeType.Electrode.proj("shank") & units).fetch("shank")
-        )
+        shanks = set((probe.ProbeType.Electrode & units).fetch("shank"))
 
         for shank_no in shanks:
 

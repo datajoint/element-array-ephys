@@ -124,11 +124,11 @@ def plot_depth_waveforms(
 
     # Spacing between channels (in um)
     x_inc = np.abs(np.diff(coords[:, 0])).min()
-    y_inc = np.unique((np.abs(np.diff(coords[:, 1])))).max()
+    y_inc = (np.abs(np.diff(coords[:, 1]))).max()
 
-    time = np.arange(waveforms.shape[1]) * (1 / sampling_rate)
+    time = np.arange(waveforms.shape[1]) / sampling_rate
 
-    x_scale_factor = x_inc / (time + (1 / sampling_rate))[-1]
+    x_scale_factor = x_inc / (time[-1] + 1 / sampling_rate)
     time_scaled = time * x_scale_factor
 
     wf_amps = waveforms.max(axis=1) - waveforms.min(axis=1)
@@ -136,8 +136,8 @@ def plot_depth_waveforms(
     y_scale_factor = y_inc / max_amp
 
     unique_x_loc = np.sort(np.unique(coords[:, 0]))
-    xtick_label = list(map(str, map(int, unique_x_loc)))
-    xtick_loc = time_scaled[int(len(time_scaled) / 2) + 1] + unique_x_loc
+    xtick_label = [str(int(x)) for x in unique_x_loc]
+    xtick_loc = time_scaled[len(time_scaled) // 2 + 1] + unique_x_loc
 
     # Plot figure
     fig = go.Figure()
