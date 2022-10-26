@@ -170,8 +170,8 @@ class EphysRecording(dj.Imported):
 
         # search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in (
-            ("*.ap.meta", "*.oebin"),
-            ("SpikeGLX", "Open Ephys"),
+            ("*.ap.meta", "SpikeGLX"),
+            ("*.oebin", "Open Ephys"),
         ):
             ephys_meta_filepaths = [fp for fp in session_dir.rglob(ephys_pattern)]
             if ephys_meta_filepaths:
