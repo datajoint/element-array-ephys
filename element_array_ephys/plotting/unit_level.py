@@ -90,6 +90,12 @@ def plot_depth_waveforms(
         probe.ProbeType.Electrode & f"probe_type='{probe_type}'"
     ).fetch("electrode", "y_coord")
 
+    peak_electrode_shank = (
+        probe.ProbeType.Electrode
+        & f"probe_type='{probe_type}'"
+        & f"electrode={peak_electrode}"
+    ).fetch1("shank")
+
     peak_coord_y = coord_y[electrodes == peak_electrode][0]
 
     coord_ylim_low = (
@@ -107,10 +113,13 @@ def plot_depth_waveforms(
         (probe.ProbeType.Electrode)
         & f"probe_type = '{probe_type}'"
         & f"y_coord BETWEEN {coord_ylim_low} AND {coord_ylim_high}"
+        & f"shank={peak_electrode_shank}"
     )
-    electrodes_to_plot = tbl.fetch("electrode")
+    electrodes_to_plot, x_coords, y_coords = tbl.fetch(
+        "electrode", "x_coord", "y_coord"
+    )
 
-    coords = np.array(tbl.fetch("x_coord", "y_coord")).T  # x, y coordinates
+    coords = np.array([x_coords, y_coords]).T  # x, y coordinates
 
     waveforms = (
         ephys.WaveformSet.Waveform
