@@ -6,12 +6,19 @@ import inspect
 import importlib
 import gc
 from decimal import Decimal
-import pandas as pd
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
 from .readers import spikeglx, kilosort, openephys
 from . import probe, get_logger
+
+import spikeinterface as si
+import spikeinterface.extractors as se
+import spikeinterface.sorters as ss
+import spikeinterface.comparison as sc
+import spikeinterface.widgets as sw
+import spikeinterface.preprocessing as sip
+import probeinterface as pi
 
 
 log = get_logger(__name__)
@@ -607,54 +614,213 @@ class Clustering(dj.Imported):
                 params['fs'] = params['sample_rate']
 
                 if acq_software == 'SpikeGLX':
+                    
                     spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                     spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
                     spikeglx_recording.validate_file('ap')
 
-                    if clustering_method.startswith('pykilosort'):
-                        kilosort_triggering.run_pykilosort(
-                            continuous_file=spikeglx_recording.root_dir / (
-                                        spikeglx_recording.root_name + '.ap.bin'),
-                            kilosort_output_directory=kilosort_dir,
-                            channel_ind=params.pop('channel_ind'),
-                            x_coords=params.pop('x_coords'),
-                            y_coords=params.pop('y_coords'),
-                            shank_ind=params.pop('shank_ind'),
-                            connected=params.pop('connected'),
-                            sample_rate=params.pop('sample_rate'),
-                            params=params)
+                    sglx_si_recording = se.SpikeGLXRecordingExtractor(spikeglx_meta_filepath,"imec.ap")
+
+                    electrode_query = (probe.ProbeType.Electrode
+                                    * probe.ElectrodeConfig.Electrode
+                                    * EphysRecording & key)
+
+                    xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'), electrode_query.fetch('y_coord'))]
+
+                    channel_details = get_recording_channels_details(key)
+                        
+
+                    probe = pi.Probe(ndim=2, si_units='um')
+                    probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+                    probe.create_auto_shape(probe_type='tip')
+
+
+                    channel_indices = np.arange(channel_details['num_channels'])
+                    probe.set_device_channel_indices(channel_indices)
+                    sglx_si_recording.set_probe(probe=probe)
+ 
+                    # Apply SpikeInterface Preprocessing Steps Before triggering spike sorting
+
+                    # Bandpass filter
+                    sglx_si_recording = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
+                    sglx_si_recording = sip.notch_filter(sglx_si_recording, freq=2000, q=3)
+
+
+
+                    """ Preprocessing Options - Can choose optimal pipeline
+                        'bandpass_filter': <class 'spikeinterface.preprocessing.filter.BandpassFilterRecording'>,
+                        'blank_staturation': <class 'spikeinterface.preprocessing.clip.BlankSaturationRecording'>,
+                        'center': <class 'spikeinterface.preprocessing.normalize_scale.ZScoreRecording'>,
+                        'clip': <class 'spikeinterface.preprocessing.clip.ClipRecording'>,
+                        'common_reference': <class 'spikeinterface.preprocessing.common_reference.CommonReferenceRecording'>,
+                        'deepinterpolate': <class 'spikeinterface.preprocessing.deepinterpolation.deepinterpolation.DeepInterpolatedRecording'>,
+                        'filter': <class 'spikeinterface.preprocessing.filter.FilterRecording'>,
+                        'highpass_filter': <class 'spikeinterface.preprocessing.filter.HighpassFilterRecording'>,
+                        'normalize_by_quantile': <class 'spikeinterface.preprocessing.normalize_scale.NormalizeByQuantileRecording'>,
+                        'notch_filter': <class 'spikeinterface.preprocessing.filter.NotchFilterRecording'>,
+                        'phase_shift': <class 'spikeinterface.preprocessing.phase_shift.PhaseShiftRecording'>,
+                        'rectify': <class 'spikeinterface.preprocessing.rectify.RectifyRecording'>,
+                        'remove_artifacts': <class 'spikeinterface.preprocessing.remove_artifacts.RemoveArtifactsRecording'>,
+                        'remove_bad_channels': <class 'spikeinterface.preprocessing.remove_bad_channels.RemoveBadChannelsRecording'>,
+                        'resample': <class 'spikeinterface.preprocessing.resample.ResampleRecording'>,
+                        'scale': <class 'spikeinterface.preprocessing.normalize_scale.ScaleRecording'>,
+                        'whiten': <class 'spikeinterface.preprocessing.whiten.WhitenRecording'>,
+                        'zero_channel_pad': <class 'spikeinterface.preprocessing.zero_channel_pad.ZeroChannelPaddedRecording
+                    """
+                    #******************** Current Implementation *************************
+                    # if clustering_method.startswith('pykilosort'):
+                    #     kilosort_triggering.run_pykilosort(
+                    #         continuous_file=spikeglx_recording.root_dir / (
+                    #                     spikeglx_recording.root_name + '.ap.bin'),
+                    #         kilosort_output_directory=kilosort_dir,
+                    #         channel_ind=params.pop('channel_ind'),
+                    #         x_coords=params.pop('x_coords'),
+                    #         y_coords=params.pop('y_coords'),
+                    #         shank_ind=params.pop('shank_ind'),
+                    #         connected=params.pop('connected'),
+                    #         sample_rate=params.pop('sample_rate'),
+                    #         params=params)
+                    # elif clustering_method.startswith('kilosort'):
+                    #     run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
+                    #         npx_input_dir=spikeglx_meta_filepath.parent,
+                    #         ks_output_dir=kilosort_dir,
+                    #         params=params,
+                    #         KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
+                    #         run_CatGT=True)
+                    #     run_kilosort.run_modules()
+
+                    # ***************** New SpikeInterface Implementation ************************
+                    
+                    # Check through all types of spike sorters
+                    if clustering_method.startswith('kilosort'):
+                        si.run_sorter(
+                            sorter_name = "kilosort",
+                            recording = sglx_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort2'):
+                        si.run_sorter(
+                            sorter_name = "kilosort2",
+                            recording = sglx_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort2-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort2_5'):
+                        si.run_sorter(
+                            sorter_name = "kilosort2_5",
+                            recording = sglx_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort2_5-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort3'):
+                        si.run_sorter(
+                            sorter_name = "kilosort3",
+                            recording = sglx_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort3-compiled-base:latest",
+                            **params
+                        )
                     else:
-                        run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
-                            npx_input_dir=spikeglx_meta_filepath.parent,
-                            ks_output_dir=kilosort_dir,
-                            params=params,
-                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=True)
-                        run_kilosort.run_modules()
+                        raise NotImplementedError(f'Automatic triggering of {clustering_method}'
+                                          f' clustering analysis is not yet supported')
+                    
                 elif acq_software == 'Open Ephys':
                     oe_probe = get_openephys_probe_data(key)
 
+                    inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                                    & key).fetch1('probe')
+                    oe_file_path = find_full_path(get_ephys_root_data_dir(),
+                                            get_session_directory(key))
+
                     assert len(oe_probe.recording_info['recording_files']) == 1
 
+                    # Clarify how OE views multi probe data
+                    stream_name = 
+                    oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_file_path, stream_name=stream_name) 
+
+                    electrode_query = (probe.ProbeType.Electrode
+                                    * probe.ElectrodeConfig.Electrode
+                                    * EphysRecording & key)
+
+                    xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
+
+                    channel_details = get_recording_channels_details(key)
+                        
+
+                    probe = pi.Probe(ndim=2, si_units='um')
+                    probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+                    probe.create_auto_shape(probe_type='tip')
+
+
+                    channel_indices = np.arange(channel_details['num_channels'])
+                    probe.set_device_channel_indices(channel_indices)
+                    oe_si_recording.set_probe(probe=probe)
+
+
                     # run kilosort
-                    if clustering_method.startswith('pykilosort'):
-                        kilosort_triggering.run_pykilosort(
-                            continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
-                            kilosort_output_directory=kilosort_dir,
-                            channel_ind=params.pop('channel_ind'),
-                            x_coords=params.pop('x_coords'),
-                            y_coords=params.pop('y_coords'),
-                            shank_ind=params.pop('shank_ind'),
-                            connected=params.pop('connected'),
-                            sample_rate=params.pop('sample_rate'),
-                            params=params)
+                    #******************** Current Implementation *************************
+                    # if clustering_method.startswith('pykilosort'):
+                    #     kilosort_triggering.run_pykilosort(
+                    #         continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
+                    #         kilosort_output_directory=kilosort_dir,
+                    #         channel_ind=params.pop('channel_ind'),
+                    #         x_coords=params.pop('x_coords'),
+                    #         y_coords=params.pop('y_coords'),
+                    #         shank_ind=params.pop('shank_ind'),
+                    #         connected=params.pop('connected'),
+                    #         sample_rate=params.pop('sample_rate'),
+                    #         params=params)
+                    # else:
+                    #     run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
+                    #         npx_input_dir=oe_probe.recording_info['recording_files'][0],
+                    #         ks_output_dir=kilosort_dir,
+                    #         params=params,
+                    #         KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
+                    #     run_kilosort.run_modules()
+
+                    #******************** New SI Implementation *************************
+
+                    if clustering_method.startswith('kilosort'):
+                        si.run_sorter(
+                            sorter_name = "kilosort",
+                            recording = oe_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort2'):
+                        si.run_sorter(
+                            sorter_name = "kilosort2",
+                            recording = oe_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort2-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort2_5'):
+                        si.run_sorter(
+                            sorter_name = "kilosort2_5",
+                            recording = oe_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort2_5-compiled-base:latest",
+                            **params
+                        )
+                    elif clustering_method.startswith('kilosort3'):
+                        si.run_sorter(
+                            sorter_name = "kilosort3",
+                            recording = oe_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = "spikeinterface/kilosort3-compiled-base:latest",
+                            **params
+                        )
                     else:
-                        run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
-                            npx_input_dir=oe_probe.recording_info['recording_files'][0],
-                            ks_output_dir=kilosort_dir,
-                            params=params,
-                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
-                        run_kilosort.run_modules()
+                        raise NotImplementedError(f'Automatic triggering of {clustering_method}'
+                                          f' clustering analysis is not yet supported')
+
+
             else:
                 raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
@@ -684,7 +850,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
         """
 
     def make(self, key):
@@ -846,75 +1012,6 @@ class WaveformSet(dj.Imported):
                 self.Waveform.insert(unit_electrode_waveforms, ignore_extra_fields=True)
 
 
-@schema
-class QualityMetrics(dj.Imported):
-    definition = """
-    # Clusters and waveforms metrics
-    -> CuratedClustering    
-    """
-
-    class Cluster(dj.Part):
-        definition = """   
-        # Cluster metrics for a particular unit
-        -> master
-        -> CuratedClustering.Unit
-        ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
-        snr=null: float  # signal-to-noise ratio for a unit
-        presence_ratio=null: float  # fraction of time in which spikes are present
-        isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
-        number_violation=null: int  # total number of ISI violations
-        amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
-        isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
-        d_prime=null: float  # Classification accuracy based on LDA
-        nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
-        nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
-        silhouette_score=null: float  # Standard metric for cluster overlap
-        max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
-        """
-
-    class Waveform(dj.Part):
-        definition = """   
-        # Waveform metrics for a particular unit
-        -> master
-        -> CuratedClustering.Unit
-        ---
-        amplitude: float  # (uV) absolute difference between waveform peak and trough
-        duration: float  # (ms) time between waveform peak and trough
-        halfwidth=null: float  # (ms) spike width at half max amplitude
-        pt_ratio=null: float  # absolute amplitude of peak divided by absolute amplitude of trough relative to 0
-        repolarization_slope=null: float  # the repolarization slope was defined by fitting a regression line to the first 30us from trough to peak
-        recovery_slope=null: float  # the recovery slope was defined by fitting a regression line to the first 30us from peak to tail
-        spread=null: float  # (um) the range with amplitude above 12-percent of the maximum amplitude along the probe
-        velocity_above=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the top of the probe
-        velocity_below=null: float  # (s/m) inverse velocity of waveform propagation from the soma toward the bottom of the probe
-        """
-
-    def make(self, key):
-        output_dir = (ClusteringTask & key).fetch1('clustering_output_dir')
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        metric_fp = kilosort_dir / 'metrics.csv'
-
-        if not metric_fp.exists():
-            raise FileNotFoundError(f'QC metrics file not found: {metric_fp}')
-
-        metrics_df = pd.read_csv(metric_fp)
-        metrics_df.set_index('cluster_id', inplace=True)
-        metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-        metrics_list = [
-            dict(metrics_df.loc[unit_key['unit']], **unit_key)
-            for unit_key in (CuratedClustering.Unit & key).fetch('KEY')]
-
-        self.insert1(key)
-        self.Cluster.insert(metrics_list, ignore_extra_fields=True)
-        self.Waveform.insert(metrics_list, ignore_extra_fields=True)
-
-
 # ---------------- HELPER FUNCTIONS ----------------
 
 def get_spikeglx_meta_filepath(ephys_recording_key):
@@ -958,6 +1055,8 @@ def get_openephys_probe_data(ephys_recording_key):
                               get_session_directory(ephys_recording_key))
     loaded_oe = openephys.OpenEphys(session_dir)
     probe_data = loaded_oe.probes[inserted_probe_serial_number]
+
+    # ASK thinh about 
 
     # explicitly garbage collect "loaded_oe"
     # as these may have large memory footprint and may not be cleared fast enough
