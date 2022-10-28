@@ -145,7 +145,7 @@ class Probe(dj.Lookup):
 
     Attributes:
         probe (foreign key, varchar(32) ): Unique ID for this model of the probe.
-        ProbeType (query): ProbeType entry.
+        ProbeType (dict): ProbeType entry.
         probe_comment (varchar(1000) ): Comment about this model of probe.
     """
 
