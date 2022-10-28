@@ -876,7 +876,7 @@ class WaveformSet(dj.Imported):
         """Mean waveform across spikes for a given unit. 
 
         Attributes:
-            master (foreign key): WaveformSet primary key. 
+            WaveformSet (foreign key): WaveformSet primary key. 
             CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key.
             peak_electrode_waveform (longblob): Mean waveform for a given unit at its representative electrode. 
         """
