@@ -8,22 +8,30 @@ Neuropixels probes were developed by a collaboration between HHMI Janelia, indus
 Neuropixels probes offer 960 electrode sites along a 10mm long shank, with 384 recordable channels per probe that can record hundreds of units spanning multiple brain regions (Neuropixels 2.0 version is a 4-shank probe with 1280 electrode sites per shank). Such large recording capacity has offered tremendous opportunities for the field of neurophysiology research, yet this is accompanied by an equally great challenge in terms of data and computation management.
 
 ### Data Acquisition Tools
-The typical instrumentation used for data acquisition is the Neuropixels probe and headstage interfacing with a [PXIe acquisition module](https://www.neuropixels.org/control-system). Two main acquisition softwares are used for Neuropixels:
+Some commonly used acquisiton tools and systems by the neuroscience research community include:
 
-+ SpikeGLX - developed by Bill Karsh and Tim Harris at HHMI/Janelia
-+ OpenEphys - developed by Joshua Siegle at the Allen Institute.
-
-These save the data into a specific directory structure and file-naming convention with custom binary formats (e.g. “.bin”, “.dat”). Meta data are stored as separate files in xml or text format.
++ [Neuropixels probes](https://www.neuropixels.org)
++ Tetrodes
++ [SpikeGLX](http://billkarsh.github.io/SpikeGLX/)
++ [OpenEphys](https://open-ephys.github.io/gui-docs/User-Manual/Plugins/Neuropixels-PXI.html)
++ [Neuralynx](https://neuralynx.com/)
++ [Axona](http://www.axona.com/)
++ ...
 
 ### Data Preprocessing Tools
 The preprocessing pipeline includes bandpass filtering for LFP extraction, bandpass filtering for spike sorting, spike sorting, manual curation of the spike sorting results, and calculation of quality control metrics. In trial-based experiments, the spike trains are aligned and separated into trials. Standard processing may include PSTH computation aligned to trial onset or other events, and often grouped by different trial types. Neuroscience groups have traditionally developed custom home-made toolchains.
 
 In recent years, several leaders have been emerging as de facto standards with significant community uptake:
 
-+ Kilosort
-+ JRClust
-+ MountainSort
-+ SpyKING CIRCUS
++ [Kilosort](https://github.com/MouseLand/Kilosort)
++ [pyKilosort](https://github.com/MouseLand/pykilosort)
++ [JRClust](https://github.com/JaneliaSciComp/JRCLUST)
++ [KlustaKwik](https://klusta.readthedocs.io/en/latest/)
++ [Mountainsort](https://github.com/flatironinstitute/mountainsort)
++ [spikeinterface (wrapper)](https://github.com/SpikeInterface)
++ [spyking-circus](https://github.com/spyking-circus/spyking-circus)
++ [spikeforest](https://spikeforest.flatironinstitute.org/)
++ ...
 
 Kilosort provides most automation and has gained significant popularity, being adopted as one of the key spike sorting methods in the majority of the teams/collaborations we have worked with. As part of our Year-1 NIH U24 effort, we provide support for data ingestion of spike sorting results from Kilosort. Further effort will be devoted for the ingestion support of other spike sorting methods. On this end, a framework for unifying existing spike sorting methods, named [SpikeInterface](https://github.com/SpikeInterface/spikeinterface), has been developed by Alessio Buccino, et al. SpikeInterface provides a convenient Python-based wrapper to invoke, extract, compare spike sorting results from different sorting algorithms.
 
