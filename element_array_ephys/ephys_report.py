@@ -2,6 +2,7 @@ import pathlib
 import datetime
 import datajoint as dj
 import typing as T
+import json
 
 schema = dj.schema()
 
@@ -122,15 +123,15 @@ class UnitLevelReport(dj.Computed):
             spike_times=spike_times, bin_size=0.001, window_size=1
         )
 
-        depth_waveform_fig = plot_depth_waveforms(unit_key=key, y_range=50)
+        depth_waveform_fig = plot_depth_waveforms(ephys, unit_key=key, y_range=60)
 
         self.insert1(
             {
                 **key,
                 "cluster_quality_label": cluster_quality_label,
-                "waveform_plotly": waveform_fig.to_json(),
-                "autocorrelogram_plotly": correlogram_fig.to_json(),
-                "depth_waveform_plotly": depth_waveform_fig.to_json(),
+                "waveform_plotly": waveform_fig.to_plotly_json(),
+                "autocorrelogram_plotly": correlogram_fig.to_plotly_json(),
+                "depth_waveform_plotly": depth_waveform_fig.to_plotly_json(),
             }
         )
 
