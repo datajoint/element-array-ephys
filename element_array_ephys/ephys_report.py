@@ -8,17 +8,17 @@ schema = dj.schema()
 ephys = None
 
 
-def _activate(schema_name, *, create_schema=True, create_tables=True):
+def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
     """
     activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
-        :param schema_name: schema name on the database server to activate the `probe` element
+        :param schema_name: schema name on the database server to activate the `ephys_report` schema
+        :param ephys_schema_name: schema name of the activated ephys element for which this ephys_report schema will be downstream from
         :param create_schema: when True (default), create schema in the database if it does not yet exist.
         :param create_tables: when True (default), create tables in the database if they do not yet exist.
-        :param activated_ephys: ephys module with the schema already activated
     (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
     """
     global ephys
-    ephys = dj.create_virtual_module("vm", schema_name)
+    ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
         schema_name,
         create_schema=create_schema,

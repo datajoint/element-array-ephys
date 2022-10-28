@@ -73,7 +73,7 @@ def activate(
         create_tables=create_tables,
         add_objects=_linking_module.__dict__,
     )
-    ephys_report._activate(ephys_schema_name)
+    ephys_report.activate(ephys_schema_name + '_report', ephys_schema_name)
 
 
 # -------------- Functions required by the elements-ephys  ---------------
