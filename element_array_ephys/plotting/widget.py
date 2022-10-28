@@ -8,7 +8,7 @@ import plotly.express as px
 from skimage import io
 
 
-def ephys_widget(ephys: Module) -> widgets:
+def main(ephys: Module) -> widgets:
 
     # Build dropdown widgets
     probe_dropdown_wg = widgets.Dropdown(
