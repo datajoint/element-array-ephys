@@ -53,7 +53,7 @@ Over the past few years, several labs have developed DataJoint-based data manage
 
 ## Element Architecture
 
-Each of the DataJoint Elements are a set of tables for common neuroinformatics modalities to organize, preprocess, and analyze data. Each node in the following diagram is either a table in the Element itself or a table that would be connected to the Element.
+Each of the DataJoint Elements creates a set of tables for common neuroscience data modalities to organize, preprocess, and analyze data. Each node in the following diagram is a table within the Element or a table connected to the Element.
 
 ![element-array-ephys diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
 
@@ -62,13 +62,13 @@ Each of the DataJoint Elements are a set of tables for common neuroinformatics m
 
 | Table | Description |
 | --- | --- |
-| Subject | Basic information of the research subject |
+| Subject | Basic information of the research subject. |
 
 ### `session` schema ([API docs](https://datajoint.com/docs/elements/element-session/api/element_session/session_with_datetime))
 
 | Table | Description |
 | --- | --- |
-| Session | Unique experimental session identifier |
+| Session | Unique experimental session identifier. |
 
 ### `probe` schema ([API docs](../api/element_array_ephys/probe))
 Tables related to the Neuropixels probe and electrode configuration.
@@ -76,23 +76,23 @@ Tables related to the Neuropixels probe and electrode configuration.
 | Table | Description |
 | --- | --- |
 | ProbeType | a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank"). |
-| ProbeType.Electrode |  all electrodes and their properties for a particular probe type. |
-| Probe | record of an actual physical probe, identifiable by some unique ID (e.g. probe's serial number). |
-| ElectrodeConfig | particular electrode configuration to be used for ephys recording. |
-| ElectrodeConfig.Electrode | corresponding electrodes in `ProbeType.Electrode` that are used for recording in this electrode configuration (e.g. for Neuropixels 1.0 or 2.0, there can be at most 384 electrodes usable for recording per probe). |
+| ProbeType.Electrode | a table containing electrodes and their properties for a particular probe type. |
+| Probe | a record of an actual physical probe. |
+| ElectrodeConfig | a record of a particular electrode configuration to be used for ephys recording. |
+| ElectrodeConfig.Electrode | a record of electrodes out of those in `ProbeType.Electrode` that are used for recording. |
 
 ### `ephys` schema ([API docs](../api/element_array_ephys/ephys))
 Tables related to information about physiological recordings and automatic ingestion of spike sorting results.
 
 | Table | Description |
 | --- | --- |
-| ProbeInsertion | A surgical insertion of a probe in the brain. Every experimental session consists of one or more entries in `ProbeInsertion` with a corresponding `InsertionLocation` each. |
-| EphysRecording | each `ProbeInsertion` is accompanied by a corresponding `EphysRecording`, specifying the `ElectrodeConfig` used for the recording from the `Probe` defined in `ProbeInsertion`. |
-| Clustering | specify instance(s) of clustering on an `EphysRecording`, by some `ClusteringMethod`. |
-| Curation | specify instance(s) of curations performed on the output of a given `Clustering`. |
-| CuratedClustering | set of results from a particular round of clustering/curation. |
-| CuratedClusting.Unit | Identified unit(s) from one `Curation`, and the associated properties (e.g. cluster quality, spike times, spike depths, etc.). |
-| WaveformSet | A set of spike waveforms for units from a given `CuratedClustering`. |
+| ProbeInsertion | a record of surgical insertions of a probe in the brain. |
+| EphysRecording | a table with metadata about each electrophysiogical recording. |
+| Clustering | a table with clustering data for spike sorting extracellular electrophysiology data. |
+| Curation | a table to declare optional manual curation of spike sorting results. |
+| CuratedClustering | a table with metadata for sorted data generated after each curation. |
+| CuratedClusting.Unit | a part table containing single unit information after spike sorting and optional curation. |
+| WaveformSet | a table containing spike waveforms for single units. |
 
 ## Element Development
 
@@ -113,12 +113,12 @@ Major features of the Array Electrophysiology Element include:
 + Triggering support for workflow integrated Kilosort processing.
 + Sample data and complete test suite for quality assurance.
 
-Incorporation of SpikeInterface into the Array Electrophysiology Element will be on DataJoint Elements development roadmap. Dr. Loren Frank has led a development effort of a DataJoint pipeline with SpikeInterface framework and NeurodataWithoutBorders format integrated (https://github.com/LorenFrankLab/nwb_datajoint).
-
 ## Data Export and Publishing
 
 Element Array Electrophysiology supports exporting of all data into standard Neurodata Without Borders (NWB) files. This makes it easy to share files with collaborators and publish results on [DANDI Archive](https://dandiarchive.org/). [NWB](https://www.nwb.org/), as an organization, is dedicated to standardizing data formats and maximizing interoperability across tools for neurophysiology. For more information on uploading NWB files to DANDI within the DataJoint Elements ecosystem, visit our documentation for the DANDI upload feature of [Element Array Electrophysiology](datajoint.com/docs/elements/element-array-ephys/).
 
 ## Roadmap
+
+Incorporation of SpikeInterface into the Array Electrophysiology Element will be on DataJoint Elements development roadmap. Dr. Loren Frank has led a development effort of a DataJoint pipeline with SpikeInterface framework and NeurodataWithoutBorders format integrated [https://github.com/LorenFrankLab/nwb_datajoint](https://github.com/LorenFrankLab/nwb_datajoint).
 
 Further development of this Element is community driven. Upon user requests we will continue adding features to this Element.
