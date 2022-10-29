@@ -8,13 +8,20 @@ import numpy as np
 schema = dj.schema()
 
 
-def activate(schema_name, *, create_schema=True, create_tables=True):
+def activate(
+    schema_name: str, 
+    *, 
+    create_schema: bool = True,
+    create_tables: bool = True, 
+):
     """Activates the `probe` schemas. 
 
     Args:
         schema_name (str): A string containing the name of the probe scehma.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
+    Dependencies:
+    Functions:
     """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
@@ -40,7 +47,7 @@ class ProbeType(dj.Lookup):
         """Electrode information for a given probe.
 
         Attributes:
-            master (foreign key): ProbeType primary key.
+            ProbeType (foreign key): ProbeType primary key.
             electrode (foreign key, int): Electrode index, starting at 0.
             shank (int): shank index, starting at 0.
             shank_col (int): column index, starting at 0.
@@ -61,7 +68,7 @@ class ProbeType(dj.Lookup):
         """
 
     @staticmethod
-    def create_neuropixels_probe(probe_type='neuropixels 1.0 - 3A'):
+    def create_neuropixels_probe(probe_type: str = 'neuropixels 1.0 - 3A'):
         """
         Create `ProbeType` and `Electrode` for neuropixels probes:
         + neuropixels 1.0 - 3A
@@ -93,9 +100,15 @@ class ProbeType(dj.Lookup):
                                          shank_count=4, shank_spacing=250)
         }
 
-        def build_electrodes(site_count, col_spacing, row_spacing,
-                             white_spacing, col_count,
-                             shank_count, shank_spacing):
+        def build_electrodes(
+            site_count: int, 
+            col_spacing: float, 
+            row_spacing: float,
+            white_spacing: float,
+            col_count: int, 
+            shank_count: int,
+            shank_spacing: float,
+        ) -> dict: 
             """Builds electrode layouts.
 
             Args:
@@ -145,7 +158,7 @@ class Probe(dj.Lookup):
 
     Attributes:
         probe (foreign key, varchar(32) ): Unique ID for this model of the probe.
-        ProbeType (query): ProbeType entry.
+        ProbeType (dict): ProbeType entry.
         probe_comment (varchar(1000) ): Comment about this model of probe.
     """
 
@@ -164,7 +177,7 @@ class ElectrodeConfig(dj.Lookup):
 
     Attributes:
         electrode_config_hash (foreign key, uuid): unique index for electrode configuration.
-        ProbeType (query): ProbeType entry.
+        ProbeType (dict): ProbeType entry.
         electrode_config_name (varchar(4000) ): User-friendly name for this electrode configuration.
     """
 
@@ -180,7 +193,7 @@ class ElectrodeConfig(dj.Lookup):
         """Electrode included in the recording.
 
         Attributes:
-            master (foreign key): ElectrodeConfig primary key.
+            ElectrodeConfig (foreign key): ElectrodeConfig primary key.
             ProbeType.Electrode (foreign key): ProbeType.Electrode primary key.
         """
         
