@@ -39,7 +39,6 @@ def activate(
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
     
     Dependencies:
-
     Upstream tables:
         Session: A parent table to ProbeInsertion
         Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.

@@ -20,7 +20,11 @@ def activate(
         schema_name (str): A string containing the name of the probe scehma.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
+    
     Dependencies:
+    Upstream tables:
+        Session: A parent table to ProbeInsertion.
+    
     Functions:
     """
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)

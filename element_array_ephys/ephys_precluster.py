@@ -37,6 +37,7 @@ def activate(
     Upstream tables:
         Session: A parent table to ProbeInsertion
         Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.
+    
     Functions: 
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
