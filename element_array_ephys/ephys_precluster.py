@@ -394,7 +394,7 @@ class PreClusterTask(dj.Manual):
         EphysRecording (foreign key): EphysRecording primary key.
         PreclusterParamSteps (foreign key): PreClusterParam Steps primary key.
         precluster_output_dir (varchar(255) ): relative path to directory for storing results of pre-clustering.
-        task_mode (enum('none', 'load', 'trigger') ): Pick between no pre-clustering, load results from file, or trigger automated pre-clustering.
+        task_mode (enum ): `none` (no pre-clustering), `load` results from file, or `trigger` automated pre-clustering.
     """
 
     definition = """
