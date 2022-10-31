@@ -3,7 +3,7 @@
 ## Acquisition Tools for Electrophysiology
 
 ### Neuropixels Probes
-Neuropixels probes were developed by a collaboration between HHMI Janelia, industry partners, and others (Jun et al., Nature 2017). Since their initial release in October 2018, 300 labs have ordered 1200 probes. Since the rollout of Neuropixels 2.0 in October 2020, IMEC has been shipping 100+ probes monthly (correspondence with Tim Harris).
+Neuropixels probes were developed by a collaboration between HHMI Janelia, industry partners, and others<sup>[1](#references)</sup>. Since their initial release in October 2018, 300 labs have ordered 1200 probes. Since the rollout of Neuropixels 2.0 in October 2020, IMEC has been shipping 100+ probes monthly (correspondence with Tim Harris).
 
 Neuropixels probes offer 960 electrode sites along a 10mm long shank, with 384 recordable channels per probe that can record hundreds of units spanning multiple brain regions (Neuropixels 2.0 version is a 4-shank probe with 1280 electrode sites per shank). Such large recording capacity has offered tremendous opportunities for the field of neurophysiology research, yet this is accompanied by an equally great challenge in terms of data and computation management.
 
@@ -122,3 +122,7 @@ Element Array Electrophysiology supports exporting of all data into standard Neu
 Incorporation of SpikeInterface into the Array Electrophysiology Element will be on DataJoint Elements development roadmap. Dr. Loren Frank has led a development effort of a DataJoint pipeline with SpikeInterface framework and NeurodataWithoutBorders format integrated [https://github.com/LorenFrankLab/nwb_datajoint](https://github.com/LorenFrankLab/nwb_datajoint).
 
 Further development of this Element is community driven. Upon user requests we will continue adding features to this Element.
+
+## References
+
+[1]: Jun, J., Steinmetz, N., Siegle, J. et al. Fully integrated silicon probes for high-density recording of neural activity. *Nature* 551, 232–236 (2017). [https://doi.org/10.1038/nature24636](https://doi.org/10.1038/nature24636).
