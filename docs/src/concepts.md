@@ -113,4 +113,6 @@ Element Array Electrophysiology supports exporting of all data into standard Neu
 
 ## Roadmap
 
-Further development of this Element is community driven. Upon user requests we will continue adding features to this Element.
+Future additions to this element will add functionality to support large (> 48
+hours) neuropixel recordings via an overlapping segmented processing approach. Further development of this Element is community driven. Upon user
+requests we will continue adding features to this Element.
