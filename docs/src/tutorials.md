@@ -29,7 +29,7 @@ Each of the [notebooks](https://github.com/datajoint/workflow-array-ephys/tree/m
 
 ### Neurodata Without Borders (NWB) Data Standard
 
-An nwb file is a highly-specified version of an H5DF file. [Schema docs](https://nwb-schema.readthedocs.io/) provide the relevant details for packaging neurobiology data into this format in both raw and processed forms. Generally, one nwb equates to one experimental session. 
+NWB is a hierarchical data format with standard schemas for neurophysiology data implemented on top of the HDF5 format. [Schema docs](https://nwb-schema.readthedocs.io/) provide the relevant details for packaging neurobiology data into this format in both raw and processed forms. Generally, one nwb equates to one experimental session. 
 
 While [H5DF has drawbacks](https://cyrille.rossant.net/moving-away-hdf5/), it is standardized across software/modalities. An nwb file can include raw and/or processed data from one experimental session.
 
