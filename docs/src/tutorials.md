@@ -27,6 +27,22 @@ Each of the [notebooks](https://github.com/datajoint/workflow-array-ephys/tree/m
 
 ## Data Export to Neurodata Without Borders (NWB)
 
+### Neurodata Without Borders (NWB) Data Standard
+
+An nwb file is a highly-specified version of an H5DF file. [Schema docs](https://nwb-schema.readthedocs.io/) provide the relevant details for packaging neurobiology data into this format in both raw and processed forms. Generally, one nwb equates to one experimental session. 
+
+While [H5DF has drawbacks](https://cyrille.rossant.net/moving-away-hdf5/), it is standardized across software/modalities. An nwb file can include raw and/or processed data from one experimental session.
+
+DANDIArchive is a data archival service that prioritizes nwb submissions. Generally, one ‘dandiset’ is a series of nwbs that comprise an experiment.
+
+[Ben Dichter](https://www.catalystneuro.com/team/) is closely involved with the development of NWB and DANDI. He has been contracted by DataJoint to write an electrophysiology export function, which DataJoint team members will parallel for other modalities. [Notes from Ben’s visit](https://docs.google.com/document/d/12CYzK8a4IDS6S_sVaImqPYP-fYyFrRQduNQJH5H7wZY/edit)
+
+[NWB YouTube](https://www.youtube.com/c/NeurodataWithoutBorders) provides examples of use and integration with other tools. 
+
+A functional NWB integrated DataJoint pipeline is developed by Loren Frank (FrankLab) at UCSF: [https://github.com/LorenFrankLab/nwb_datajoint](https://github.com/datajoint-company/dj-imaging)
+
+### Tutorial
+
 The [final notebook](https://github.com/datajoint/workflow-array-ephys/blob/main/notebooks/09-NWB-export.ipynb) in the Element Array Electrophysiology tutorials provides a walk-through to export data generated through the Array Electrophysiology workflow to NWB format and upload to DANDI archive. Details on exporting electrophysiology files through NWB are provided below.
 
 + The export/nwb/nwb.py module maps from the `element-array-ephys` data structure to NWB. The main function is `ecephys_session_to_nwb`, which contains flags to control calling the following functions, which can be called independently:
