@@ -683,7 +683,7 @@ class ClusteringTask(dj.Manual):
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
         clustering_outdir_dir (varchar (255) ): Relative path to output clustering results. 
-        task_mode (enum): `Trigger` and `load` either computes clustering or imports existing clustering data, respectively.
+        task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
     definition = """
