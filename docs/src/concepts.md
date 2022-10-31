@@ -62,37 +62,37 @@ Each of the DataJoint Elements creates a set of tables for common neuroscience d
 
 | Table | Description |
 | --- | --- |
-| Subject | Basic information of the research subject. |
+| Subject | A table containing basic information of the research subject. |
 
 ### `session` schema ([API docs](https://datajoint.com/docs/elements/element-session/api/element_session/session_with_datetime))
 
 | Table | Description |
 | --- | --- |
-| Session | Unique experimental session identifier. |
+| Session | A table for unique experimental session identifiers. |
 
 ### `probe` schema ([API docs](../api/element_array_ephys/probe))
 Tables related to the Neuropixels probe and electrode configuration.
 
 | Table | Description |
 | --- | --- |
-| ProbeType | a lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank"). |
-| ProbeType.Electrode | a table containing electrodes and their properties for a particular probe type. |
-| Probe | a record of an actual physical probe. |
-| ElectrodeConfig | a record of a particular electrode configuration to be used for ephys recording. |
-| ElectrodeConfig.Electrode | a record of electrodes out of those in `ProbeType.Electrode` that are used for recording. |
+| ProbeType | A lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank"). |
+| ProbeType.Electrode | A table containing electrodes and their properties for a particular probe type. |
+| Probe | A record of an actual physical probe. |
+| ElectrodeConfig | A record of a particular electrode configuration to be used for ephys recording. |
+| ElectrodeConfig.Electrode | A record of electrodes out of those in `ProbeType.Electrode` that are used for recording. |
 
 ### `ephys` schema ([API docs](../api/element_array_ephys/ephys))
 Tables related to information about physiological recordings and automatic ingestion of spike sorting results.
 
 | Table | Description |
 | --- | --- |
-| ProbeInsertion | a record of surgical insertions of a probe in the brain. |
-| EphysRecording | a table with metadata about each electrophysiogical recording. |
-| Clustering | a table with clustering data for spike sorting extracellular electrophysiology data. |
-| Curation | a table to declare optional manual curation of spike sorting results. |
-| CuratedClustering | a table with metadata for sorted data generated after each curation. |
-| CuratedClusting.Unit | a part table containing single unit information after spike sorting and optional curation. |
-| WaveformSet | a table containing spike waveforms for single units. |
+| ProbeInsertion | A record of surgical insertions of a probe in the brain. |
+| EphysRecording | A table with metadata about each electrophysiogical recording. |
+| Clustering | A table with clustering data for spike sorting extracellular electrophysiology data. |
+| Curation | A table to declare optional manual curation of spike sorting results. |
+| CuratedClustering | A table with metadata for sorted data generated after each curation. |
+| CuratedClusting.Unit | A part table containing single unit information after spike sorting and optional curation. |
+| WaveformSet | A table containing spike waveforms for single units. |
 
 ## Element Development
 
