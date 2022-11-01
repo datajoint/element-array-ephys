@@ -3,15 +3,14 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.2.1] - 2022-11-1
-
-+ Add - mkdocs for Element Documentation
-
 ## [0.2.0] - 2022-10-28
 
 + Add - New schema `ephys_report` to compute and store figures from results
 + Add - Widget to display figures
-+ Add - Add `ephys_no_curation` and routines to trigger spike-sorting analysis using Kilosort (2.0, 2.5)
++ Add - Add `ephys_no_curation` and routines to trigger spike-sorting analysis
+  using Kilosort (2.0, 2.5)
++ Add - mkdocs for Element Documentation
+
 
 ## 0.1.5 - 2022-09-29
 
@@ -58,7 +57,6 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Readers for: `SpikeGLX`, `Open Ephys`, `Kilosort`
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
 
-[0.2.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.1
 [0.2.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.0
 [0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
 [0.1.3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.3
