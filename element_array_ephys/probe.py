@@ -30,8 +30,13 @@ def activate(
     schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
     # Add neuropixels probes
-    for probe_type in ('neuropixels 1.0 - 3A', 'neuropixels 1.0 - 3B', 'neuropixels UHD',
-                       'neuropixels 2.0 - SS', 'neuropixels 2.0 - MS'):
+    for probe_type in (
+        "neuropixels 1.0 - 3A",
+        "neuropixels 1.0 - 3B",
+        "neuropixels UHD",
+        "neuropixels 2.0 - SS",
+        "neuropixels 2.0 - MS",
+    ):
         ProbeType.create_neuropixels_probe(probe_type)
 
 
@@ -72,7 +77,7 @@ class ProbeType(dj.Lookup):
         """
 
     @staticmethod
-    def create_neuropixels_probe(probe_type: str = 'neuropixels 1.0 - 3A'):
+    def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
         """
         Create `ProbeType` and `Electrode` for neuropixels probes:
         + neuropixels 1.0 - 3A
@@ -87,21 +92,51 @@ class ProbeType(dj.Lookup):
         """
 
         neuropixels_probes_config = {
-            'neuropixels 1.0 - 3A': dict(site_count=960, col_spacing=32, row_spacing=20,
-                                         white_spacing=16, col_count=2,
-                                         shank_count=1, shank_spacing=0),
-            'neuropixels 1.0 - 3B': dict(site_count=960, col_spacing=32, row_spacing=20,
-                                         white_spacing=16, col_count=2,
-                                         shank_count=1, shank_spacing=0),
-            'neuropixels UHD': dict(site_count=384, col_spacing=6, row_spacing=6,
-                                    white_spacing=0, col_count=8,
-                                    shank_count=1, shank_spacing=0),
-            'neuropixels 2.0 - SS': dict(site_count=1280, col_spacing=32, row_spacing=15,
-                                         white_spacing=0, col_count=2,
-                                         shank_count=1, shank_spacing=250),
-            'neuropixels 2.0 - MS': dict(site_count=1280, col_spacing=32, row_spacing=15,
-                                         white_spacing=0, col_count=2,
-                                         shank_count=4, shank_spacing=250)
+            "neuropixels 1.0 - 3A": dict(
+                site_count=960,
+                col_spacing=32,
+                row_spacing=20,
+                white_spacing=16,
+                col_count=2,
+                shank_count=1,
+                shank_spacing=0,
+            ),
+            "neuropixels 1.0 - 3B": dict(
+                site_count=960,
+                col_spacing=32,
+                row_spacing=20,
+                white_spacing=16,
+                col_count=2,
+                shank_count=1,
+                shank_spacing=0,
+            ),
+            "neuropixels UHD": dict(
+                site_count=384,
+                col_spacing=6,
+                row_spacing=6,
+                white_spacing=0,
+                col_count=8,
+                shank_count=1,
+                shank_spacing=0,
+            ),
+            "neuropixels 2.0 - SS": dict(
+                site_count=1280,
+                col_spacing=32,
+                row_spacing=15,
+                white_spacing=0,
+                col_count=2,
+                shank_count=1,
+                shank_spacing=250,
+            ),
+            "neuropixels 2.0 - MS": dict(
+                site_count=1280,
+                col_spacing=32,
+                row_spacing=15,
+                white_spacing=0,
+                col_count=2,
+                shank_count=4,
+                shank_spacing=250,
+            ),
         }
 
         def build_electrodes(
@@ -125,11 +160,15 @@ class ProbeType(dj.Lookup):
                 shank_spacing (float): spacing between shanks
             """
             row_count = int(site_count / col_count)
-            x_coords = np.tile(np.arange(0, col_spacing * col_count, col_spacing), row_count)
+            x_coords = np.tile(
+                np.arange(0, col_spacing * col_count, col_spacing), row_count
+            )
             y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count)
 
             if white_spacing:
-                x_white_spaces = np.tile([white_spacing, white_spacing, 0, 0], int(row_count / 2))
+                x_white_spaces = np.tile(
+                    [white_spacing, white_spacing, 0, 0], int(row_count / 2)
+                )
                 x_coords = x_coords + x_white_spaces
 
             shank_cols = np.tile(range(col_count), row_count)
@@ -137,23 +176,31 @@ class ProbeType(dj.Lookup):
 
             npx_electrodes = []
             for shank_no in range(shank_count):
-                npx_electrodes.extend([{'electrode': (site_count * shank_no) + e_id,
-                                        'shank': shank_no,
-                                        'shank_col': c_id,
-                                        'shank_row': r_id,
-                                        'x_coord': x + (shank_no * shank_spacing),
-                                        'y_coord': y}
-                                       for e_id, (c_id, r_id, x, y) in enumerate(
-                    zip(shank_cols, shank_rows, x_coords, y_coords))])
+                npx_electrodes.extend(
+                    [
+                        {
+                            "electrode": (site_count * shank_no) + e_id,
+                            "shank": shank_no,
+                            "shank_col": c_id,
+                            "shank_row": r_id,
+                            "x_coord": x + (shank_no * shank_spacing),
+                            "y_coord": y,
+                        }
+                        for e_id, (c_id, r_id, x, y) in enumerate(
+                            zip(shank_cols, shank_rows, x_coords, y_coords)
+                        )
+                    ]
+                )
 
             return npx_electrodes
 
         electrodes = build_electrodes(**neuropixels_probes_config[probe_type])
-        probe_type = {'probe_type': probe_type}
+        probe_type = {"probe_type": probe_type}
         with ProbeType.connection.transaction:
             ProbeType.insert1(probe_type, skip_duplicates=True)
-            ProbeType.Electrode.insert([{**probe_type, **e} for e in electrodes],
-                                       skip_duplicates=True)
+            ProbeType.Electrode.insert(
+                [{**probe_type, **e} for e in electrodes], skip_duplicates=True
+            )
 
 
 @schema
