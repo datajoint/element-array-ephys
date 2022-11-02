@@ -7,7 +7,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - New schema `ephys_report` to compute and store figures from results
 + Add - Widget to display figures
-+ Add - Add `ephys_no_curation` and routines to trigger spike-sorting analysis using Kilosort (2.0, 2.5)
++ Add - Add `ephys_no_curation` and routines to trigger spike-sorting analysis
+  using Kilosort (2.0, 2.5)
++ Add - mkdocs for Element Documentation
+
 
 ## 0.1.5 - 2022-09-29
 
@@ -55,10 +58,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
 
 [0.2.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.0
-[0.1.4]: https://github.com/datajoint/element-array-ephys/compare/0.1.3...0.1.4
-[0.1.3]: https://github.com/datajoint/element-array-ephys/compare/0.1.2...0.1.3
-[0.1.2]: https://github.com/datajoint/element-array-ephys/compare/0.1.1...0.1.2
-[0.1.1]: https://github.com/datajoint/element-array-ephys/compare/0.1.0...0.1.1
-[0.1.0]: https://github.com/datajoint/element-array-ephys/compare/0.1.0b0...0.1.0
-[0.1.0b0]: https://github.com/datajoint/element-array-ephys/compare/0.1.0a5...0.1.0b0
+[0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
+[0.1.3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.3
+[0.1.2]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.2
+[0.1.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.1
+[0.1.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0
+[0.1.0b0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0b0
 [0.1.0a5]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0a5

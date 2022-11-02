@@ -1,0 +1,20 @@
+# Element Array Electrophysiology
+
+This Element features DataJoint schemas for analyzing extracellular array electrophysiology data acquired with Neuropixels probes and spike sorted using Kilosort spike sorter. Each Element is a modular pipeline for data storage and processing with corresponding database tables that can be combined with other Elements to assemble a fully functional pipeline.
+
+The Element is comprised of `probe` and `ephys` schemas. Several `ephys` schemas are developed to handle various use cases of this pipeline and workflow: 
++ `ephys_acute`: A probe is inserted into a new location during each session. 
++ `ephys_chronic`: A probe is inserted once and used to record across multiple sessions. 
++ `ephys_precluster`: A probe is inserted into a new location during each session. Pre-clustering steps are performed on the data from each probe prior to Kilosort analysis.
++ `ephys_no_curation`: A probe is inserted into a new location during each session and Kilosort-triggered clustering is performed without the option to manually curate the results. 
+
+Visit the [Concepts page](./concepts.md) for more information about the use cases of `ephys` schemas and an explanation of the tables. To get started with building your own data pipeline, visit the [Tutorials page](./tutorials.md).  
+
+### `ephys_acute` module
+![element-array-ephys-acute diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
+
+### `ephys_chronic` module
+![element-array-ephys-chronic diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_chronic.svg)
+
+### `ephys_precluster` module
+![element-array-ephys-precluster diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)

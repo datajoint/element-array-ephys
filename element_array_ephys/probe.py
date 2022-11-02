@@ -8,16 +8,26 @@ import numpy as np
 schema = dj.schema()
 
 
-def activate(schema_name, *, create_schema=True, create_tables=True):
+def activate(
+    schema_name: str, 
+    *, 
+    create_schema: bool = True,
+    create_tables: bool = True, 
+):
+    """Activates the `probe` schemas. 
+
+    Args:
+        schema_name (str): A string containing the name of the probe scehma.
+        create_schema (bool): If True, schema will be created in the database.
+        create_tables (bool): If True, tables related to the schema will be created in the database.
+    
+    Dependencies:
+    Upstream tables:
+        Session: A parent table to ProbeInsertion.
+    
+    Functions:
     """
-    activate(schema_name, create_schema=True, create_tables=True)
-        :param schema_name: schema name on the database server to activate the `probe` element
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    """
-    schema.activate(
-        schema_name, create_schema=create_schema, create_tables=create_tables
-    )
+    schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
 
     # Add neuropixels probes
     for probe_type in (
@@ -32,12 +42,29 @@ def activate(schema_name, *, create_schema=True, create_tables=True):
 
 @schema
 class ProbeType(dj.Lookup):
+    """Type of probe.
+
+    Attributes:
+        probe_type (foreign key, varchar (32) ): Name of the probe type.
+    """
     definition = """
     # Type of probe, with specific electrodes geometry defined
     probe_type: varchar(32)  # e.g. neuropixels_1.0
     """
 
     class Electrode(dj.Part):
+        """Electrode information for a given probe.
+
+        Attributes:
+            ProbeType (foreign key): ProbeType primary key.
+            electrode (foreign key, int): Electrode index, starting at 0.
+            shank (int): shank index, starting at 0.
+            shank_col (int): column index, starting at 0.
+            shank_row (int): row index, starting at 0.
+            x_coord (float): x-coordinate of the electrode within the probe in micrometers.
+            y_coord (float): y-coordinate of the electrode within the probe in micrometers.
+        """
+        
         definition = """
         -> master
         electrode: int       # electrode index, starts at 0
@@ -50,7 +77,7 @@ class ProbeType(dj.Lookup):
         """
 
     @staticmethod
-    def create_neuropixels_probe(probe_type="neuropixels 1.0 - 3A"):
+    def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
         """
         Create `ProbeType` and `Electrode` for neuropixels probes:
         + neuropixels 1.0 - 3A
@@ -113,23 +140,24 @@ class ProbeType(dj.Lookup):
         }
 
         def build_electrodes(
-            site_count,
-            col_spacing,
-            row_spacing,
-            white_spacing,
-            col_count,
-            shank_count,
-            shank_spacing,
-        ):
-            """
-            :param site_count: site count per shank
-            :param col_spacing: (um) horizontal spacing between sites
-            :param row_spacing: (um) vertical spacing between columns
-            :param white_spacing: (um) offset spacing
-            :param col_count: number of column per shank
-            :param shank_count: number of shank
-            :param shank_spacing: spacing between shanks
-            :return:
+            site_count: int, 
+            col_spacing: float, 
+            row_spacing: float,
+            white_spacing: float,
+            col_count: int, 
+            shank_count: int,
+            shank_spacing: float,
+        ) -> dict: 
+            """Builds electrode layouts.
+
+            Args:
+                site_count (int): site count per shank
+                col_spacing (float): (um) horrizontal spacing between sites
+                row_spacing (float): (um) vertical spacing between columns
+                white_spacing (float): (um) offset spacing
+                col_count (int): number of column per shank
+                shank_count (int): number of shank
+                shank_spacing (float): spacing between shanks
             """
             row_count = int(site_count / col_count)
             x_coords = np.tile(
@@ -177,6 +205,14 @@ class ProbeType(dj.Lookup):
 
 @schema
 class Probe(dj.Lookup):
+    """Represent a physical probe with unique ID
+
+    Attributes:
+        probe (foreign key, varchar(32) ): Unique ID for this model of the probe.
+        ProbeType (dict): ProbeType entry.
+        probe_comment (varchar(1000) ): Comment about this model of probe.
+    """
+
     definition = """
     # Represent a physical probe with unique identification
     probe: varchar(32)  # unique identifier for this model of probe (e.g. serial number)
@@ -188,6 +224,14 @@ class Probe(dj.Lookup):
 
 @schema
 class ElectrodeConfig(dj.Lookup):
+    """Electrode configuration setting on a probe.
+
+    Attributes:
+        electrode_config_hash (foreign key, uuid): unique index for electrode configuration.
+        ProbeType (dict): ProbeType entry.
+        electrode_config_name (varchar(4000) ): User-friendly name for this electrode configuration.
+    """
+
     definition = """
     # The electrode configuration setting on a given probe
     electrode_config_hash: uuid  
@@ -197,6 +241,13 @@ class ElectrodeConfig(dj.Lookup):
     """
 
     class Electrode(dj.Part):
+        """Electrode included in the recording.
+
+        Attributes:
+            ElectrodeConfig (foreign key): ElectrodeConfig primary key.
+            ProbeType.Electrode (foreign key): ProbeType.Electrode primary key.
+        """
+        
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
