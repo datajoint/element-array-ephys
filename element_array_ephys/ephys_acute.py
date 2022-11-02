@@ -122,9 +122,8 @@ def get_processed_root_data_dir() -> str:
 class AcquisitionSoftware(dj.Lookup):
     """Name of software used for recording electrophysiological data.
 
-    Atrributes:
-        SpikeGLX (str): Data acquired using spike GLX
-        Open Ephys (str): Data acquired using Open Ephys 
+    Attributes:
+        acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys 
     """
     
     definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
