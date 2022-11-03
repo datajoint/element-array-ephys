@@ -10,10 +10,6 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Add `ephys_no_curation` and routines to trigger spike-sorting analysis
   using Kilosort (2.0, 2.5)
 + Add - mkdocs for Element Documentation
-
-
-## 0.1.5 - 2022-09-29
-
 + Add - New `QualityMetrics` table to store clusters' and waveforms' metrics after the spike sorting analysis.
 
 ## [0.1.4] - 2022-07-11
@@ -55,7 +51,8 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - GitHub Action release process
 + Add - `probe` and `ephys` elements
 + Add - Readers for: `SpikeGLX`, `Open Ephys`, `Kilosort`
-+ Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS, 2.0 - MS
++ Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
+  2.0 - MS
 
 [0.2.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.0
 [0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
