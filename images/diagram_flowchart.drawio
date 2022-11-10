@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="4ApZs3ESX_rJ877tGElo" name="docs">
-        <mxGraphModel dx="2037" dy="2067" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1240" math="0" shadow="0">
+        <mxGraphModel dx="1703" dy="1160" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1240" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -10,7 +10,7 @@
                 <mxCell id="0lQ9qycPSiAqUX2RLHM0-48" value="Optionally&lt;br style=&quot;font-size: 28px;&quot;&gt;curate units" style="rounded=1;whiteSpace=wrap;html=1;fontSize=28;fontFamily=Roboto Slab;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto%2BSlab;container=1;labelBackgroundColor=none;fillColor=#808285;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1024" y="1210" width="323" height="200" as="geometry"/>
                 </mxCell>
-                <mxCell id="0lQ9qycPSiAqUX2RLHM0-52" value="Synchronize data modalities&lt;br&gt;&amp;amp; exploratory&lt;br&gt;analysis" style="rounded=1;whiteSpace=wrap;html=1;fontSize=28;fontFamily=Roboto Slab;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto%2BSlab;container=0;labelBackgroundColor=none;fillColor=#808285;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
+                <mxCell id="0lQ9qycPSiAqUX2RLHM0-52" value="" style="rounded=1;whiteSpace=wrap;html=1;fontSize=28;fontFamily=Roboto Slab;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto%2BSlab;container=0;labelBackgroundColor=none;fillColor=#808285;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="348" y="1510" width="323" height="200" as="geometry"/>
                 </mxCell>
                 <mxCell id="65jm_7ulDt7xcRRwg3B_-30" value="Acquire Neuropixels data with OpenEphys&lt;br&gt;&amp;nbsp;or SpikeGLX" style="rounded=1;whiteSpace=wrap;html=1;fontSize=28;fontFamily=Roboto Slab;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto%2BSlab;container=1;labelBackgroundColor=none;fillColor=#808285;fontColor=#FFFFFF;strokeColor=none;verticalAlign=middle;" parent="1" vertex="1">
@@ -65,6 +65,9 @@
                 </mxCell>
                 <mxCell id="0lQ9qycPSiAqUX2RLHM0-50" value="" style="triangle;whiteSpace=wrap;html=1;fillColor=#FFFFFF;rounded=1;strokeColor=#808285;strokeWidth=2;fontSize=28;" parent="1" vertex="1">
                     <mxGeometry x="318" y="1530" width="60" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="Synchronize data modalities&lt;br&gt;&amp;amp; exploratory&lt;br&gt;analysis" style="rounded=1;whiteSpace=wrap;html=1;fontSize=28;fontFamily=Roboto Slab;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRoboto%2BSlab;container=0;labelBackgroundColor=none;fillColor=#808285;fontColor=#FFFFFF;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="376.25" y="1510" width="266.5" height="200" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
