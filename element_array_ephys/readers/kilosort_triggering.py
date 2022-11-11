@@ -347,7 +347,6 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / 'json_configs'
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
-        self._median_subtraction_finished = False
         self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
@@ -428,13 +427,6 @@ class OpenEphysKilosortPipeline:
             if module_status['completion_time'] is not None:
                 continue
 
-            if module == 'median_subtraction' and self._median_subtraction_finished:
-                self._update_module_status(
-                    {module: {'start_time': datetime.utcnow(),
-                              'completion_time': datetime.utcnow(),
-                              'duration': 0}})
-                continue
-
             module_output_json = self._get_module_output_json_filename(module)
             command = [sys.executable,
                     '-W', 'ignore', '-m', 'ecephys_spike_sorting.modules.' + module,
@@ -477,7 +469,11 @@ class OpenEphysKilosortPipeline:
                     for line in f.readlines():
                         if (line.startswith('ecephys spike sorting: median subtraction module')
                                 and previous_line.startswith('Total processing time:')):
-                            self._median_subtraction_finished = True
+                            duration = int(re.search('\d+\.?\d+', previous_line).group())
+                            median_subtraction_status = self._get_module_status('median_subtraction')
+                            median_subtraction_status['duration'] = duration
+                            median_subtraction_status['completion_time'] = datetime.strptime(median_subtraction_status['start_time'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(seconds=duration)
+                            self._update_module_status({'median_subtraction': median_subtraction_status})
                             return continuous_file
                         previous_line = line
 
