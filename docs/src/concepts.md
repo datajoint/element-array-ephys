@@ -55,7 +55,17 @@ Over the past few years, several labs have developed DataJoint-based data manage
 
 Each of the DataJoint Elements creates a set of tables for common neuroscience data modalities to organize, preprocess, and analyze data. Each node in the following diagram is a table within the Element or a table connected to the Element.
 
-![element-array-ephys diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
+### `ephys_acute` module
+
+![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
+
+### `ephys_chronic` module
+
+![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_chronic.svg)
+
+### `ephys_precluster` module
+
+![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
 
 ### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 - Although not required, most choose to connect the `Session` table to a `Subject` table.

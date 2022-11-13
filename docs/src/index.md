@@ -26,19 +26,4 @@ developed to handle various use cases of this pipeline and workflow:
 
 Visit the [Concepts page](./concepts.md) for more information about the use cases of
 `ephys` schemas and an explanation of the tables. To get started with building your own
-data pipeline, visit the [Tutorials page](./tutorials.md).  
-
-### `ephys_acute` module
-
-![element-array-ephys-acute diagram]
- (https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
-
-### `ephys_chronic` module
-
-![element-array-ephys-chronic diagram]
- (https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_chronic.svg)
-
-### `ephys_precluster` module
-
-![element-array-ephys-precluster diagram]
- (https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
+data pipeline, visit the [Tutorials page](./tutorials.md).
