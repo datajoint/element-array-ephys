@@ -431,7 +431,9 @@ class OpenEphysKilosortPipeline:
             if module == 'median_subtraction' and self._median_subtraction_status:
                 median_subtraction_status = self._get_module_status('median_subtraction')
                 median_subtraction_status['duration'] = self._median_subtraction_status['duration']
-                median_subtraction_status['completion_time'] = datetime.strptime(median_subtraction_status['start_time'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(seconds=median_subtraction_status['duration'])
+                median_subtraction_status['completion_time'] = (
+                            datetime.strptime(median_subtraction_status['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                            + timedelta(seconds=median_subtraction_status['duration']))
                 self._update_module_status({'median_subtraction': median_subtraction_status})
                 continue
 
