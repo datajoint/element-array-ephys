@@ -20,13 +20,11 @@ import spikeinterface.widgets as sw
 import spikeinterface.preprocessing as sip
 import probeinterface as pi
 
-
 log = get_logger(__name__)
 
 schema = dj.schema()
 
 _linking_module = None
-
 
 def activate(ephys_schema_name, probe_schema_name=None, *, create_schema=True,
              create_tables=True, linking_module=None):
@@ -597,7 +595,7 @@ class Clustering(dj.Imported):
             # update clustering_output_dir
             ClusteringTask.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
 
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        # kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
             kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
@@ -607,7 +605,7 @@ class Clustering(dj.Imported):
                 'acq_software', 'clustering_method', 'params')
 
             if 'kilosort' in clustering_method:
-                from element_array_ephys.readers import kilosort_triggering
+                # from element_array_ephys.readers import kilosort_triggering
 
                 # add additional probe-recording and channels details into `params`
                 params = {**params, **get_recording_channels_details(key)}
@@ -618,6 +616,10 @@ class Clustering(dj.Imported):
                     spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                     spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
                     spikeglx_recording.validate_file('ap')
+
+                    stream_name = os.path.split(spikeglx_meta_filepath)[1]
+                    
+                    oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=spikeglx_meta_filepath, stream_name=stream_name) 
 
                     sglx_si_recording = se.SpikeGLXRecordingExtractor(spikeglx_meta_filepath,"imec.ap")
 
@@ -729,17 +731,21 @@ class Clustering(dj.Imported):
                                           f' clustering analysis is not yet supported')
                     
                 elif acq_software == 'Open Ephys':
-                    oe_probe = get_openephys_probe_data(key)
+                    # oe_probe = get_openephys_probe_data(key)
 
-                    inserted_probe_serial_number = (ProbeInsertion * probe.Probe
-                                    & key).fetch1('probe')
-                    oe_file_path = find_full_path(get_ephys_root_data_dir(),
-                                            get_session_directory(key))
+                    # inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                    #                 & key).fetch1('probe')
+                    # oe_file_path = find_full_path(get_ephys_root_data_dir(),
+                    #                         get_session_directory(key))
 
-                    assert len(oe_probe.recording_info['recording_files']) == 1
+                    # assert len(oe_probe.recording_info['recording_files']) == 1
 
-                    # Clarify how OE views multi probe data
-                    stream_name = 
+                    # Clarify how OE views and loads multi probe data
+                    
+                    oe_filepath = get_openephys_filepath(key)
+
+                    stream_name = os.path.split(oe_filepath)[1]
+                    
                     oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_file_path, stream_name=stream_name) 
 
                     electrode_query = (probe.ProbeType.Electrode
@@ -1046,6 +1052,40 @@ def get_spikeglx_meta_filepath(ephys_recording_key):
                     'No SpikeGLX data found for probe insertion: {}'.format(ephys_recording_key))
 
     return spikeglx_meta_filepath
+
+
+def get_openephys_filepath(ephys_recording_key):
+     # attempt to retrieve from EphysRecording.EphysFile
+    openephys_filepath = pathlib.Path(
+        (
+            EphysRecording.EphysFile
+            & ephys_recording_key
+            & 'file_path LIKE "%Neuropix-PXI%"'
+        ).fetch1("file_path")
+    )
+    return openephys_filepath
+    # try:
+    #     openephys_meta_filepath = find_full_path(get_ephys_root_data_dir(),
+    #                                             openephys_meta_filepath)
+    # except FileNotFoundError:
+    #     # if not found, search in session_dir again
+    #     if not openephys_meta_filepath.exists():
+    #         session_dir = find_full_path(get_ephys_root_data_dir(),
+    #                                   get_session_directory(ephys_recording_key))
+    #         inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+    #                                         & ephys_recording_key).fetch1('probe')
+
+    #         openephys_meta_filepaths = [fp for fp in session_dir.rglob('*Neuropix-PXI-100')]
+    #         for meta_filepath in openephys_meta_filepaths:
+    #             openephys_meta = openephys.OpenEphys(meta_filepath)
+    #             if str(openephys_meta.probe_SN) == inserted_probe_serial_number:
+    #                 openephys_meta_filepath = meta_filepath
+    #                 break
+    #         else:
+    #             raise FileNotFoundError(
+    #                 'No OpenEphys data found for probe insertion: {}'.format(ephys_recording_key))
+    # 
+    # return open_meta_filepath
 
 
 def get_openephys_probe_data(ephys_recording_key):
