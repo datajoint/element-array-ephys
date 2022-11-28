@@ -920,7 +920,7 @@ class CuratedClustering(dj.Imported):
     """Clustering results after curation. 
 
     Attributes:
-        Curation (foreign key): Curation primary key.
+        Clustering (foreign key): Clustering primary key.
     """
 
     definition = """
