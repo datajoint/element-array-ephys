@@ -596,7 +596,7 @@ class Clustering(dj.Imported):
             # update clustering_output_dir
             ClusteringTask.update1({**key, 'clustering_output_dir': output_dir.as_posix()})
 
-        # kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == 'load':
             kilosort.Kilosort(kilosort_dir)  # check if the directory is a valid Kilosort output
@@ -642,13 +642,13 @@ class Clustering(dj.Imported):
                     probe.set_device_channel_indices(channel_indices)
                     sglx_si_recording.set_probe(probe=probe)
  
-                    # Apply SpikeInterface Preprocessing Steps Before triggering spike sorting
 
-                    # Bandpass filter
-                    sglx_si_recording = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
-                    sglx_si_recording = sip.notch_filter(sglx_si_recording, freq=2000, q=3)
-
-
+                    # SpikeInterface Recording Object Preprocessing 
+                    # Apply bandpass filter and rewrite recording object
+                    # Store common mode referenced recording for construction of waveform extractor object
+                    recording_cmr = sglx_si_recording
+                    oe_si_recording = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
+                    recording_cmr = sip.common_reference(sglx_si_recording, reference="global", operator="median")
 
                     """ Preprocessing Options - Can choose optimal pipeline
                         'bandpass_filter': <class 'spikeinterface.preprocessing.filter.BandpassFilterRecording'>,
@@ -696,7 +696,7 @@ class Clustering(dj.Imported):
                     
                     # Check through all types of spike sorters
                     if clustering_method.startswith('kilosort'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort",
                             recording = sglx_si_recording,
                             output_folder = kilosort_dir,
@@ -704,7 +704,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort2'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort2",
                             recording = sglx_si_recording,
                             output_folder = kilosort_dir,
@@ -712,7 +712,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort2_5'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort2_5",
                             recording = sglx_si_recording,
                             output_folder = kilosort_dir,
@@ -720,7 +720,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort3'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort3",
                             recording = sglx_si_recording,
                             output_folder = kilosort_dir,
@@ -766,6 +766,13 @@ class Clustering(dj.Imported):
                     channel_indices = np.arange(channel_details['num_channels'])
                     probe.set_device_channel_indices(channel_indices)
                     oe_si_recording.set_probe(probe=probe)
+
+                    # Kilosort Recording Object Preprocessing 
+                    # Apply bandpass filter and rewrite recording object
+                    # Store common mode referenced recording for construction of waveform extractor object
+                    recording_cmr = oe_si_recording
+                    oe_si_recording = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
+                    recording_cmr = sip.common_reference(oe_si_recording, reference="global", operator="median")
 
 
                     # run kilosort
