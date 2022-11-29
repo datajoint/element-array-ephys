@@ -799,7 +799,7 @@ class Clustering(dj.Imported):
                     #******************** New SI Implementation *************************
 
                     if clustering_method.startswith('kilosort'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort",
                             recording = oe_si_recording,
                             output_folder = kilosort_dir,
@@ -807,7 +807,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort2'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort2",
                             recording = oe_si_recording,
                             output_folder = kilosort_dir,
@@ -815,7 +815,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort2_5'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort2_5",
                             recording = oe_si_recording,
                             output_folder = kilosort_dir,
@@ -823,7 +823,7 @@ class Clustering(dj.Imported):
                             **params
                         )
                     elif clustering_method.startswith('kilosort3'):
-                        si.run_sorter(
+                        sorting_kilosort = si.run_sorter(
                             sorter_name = "kilosort3",
                             recording = oe_si_recording,
                             output_folder = kilosort_dir,
@@ -834,7 +834,6 @@ class Clustering(dj.Imported):
                         raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
 
-
             else:
                 raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
@@ -844,6 +843,23 @@ class Clustering(dj.Imported):
 
         creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
         self.insert1({**key, 'clustering_time': creation_time})
+
+        if sorting_kilosort in locals():
+            # Create Waveform Extraction Object
+            we_kilosort = si.WaveformExtractor.create(recording_cmr, sorting_kilosort, "waveforms", remove_if_exists=True)
+            we_kilosort.set_params(ms_before=3., ms_after=4., max_spikes_per_unit=500)
+            we_kilosort.run_extract_waveforms(n_jobs=-1, chunk_size=30000)
+            unit_id0 = sorting_kilosort.unit_ids[0]
+            waveforms = we_kilosort.get_waveforms(unit_id0)
+            template = we_kilosort.get_template(unit_id0)
+            snrs = si.compute_snrs(we_kilosort)
+            
+
+            # QC Metrics 
+            si_violations_ratio, isi_violations_rate, isi_violations_count = si.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
+            metrics = si.compute_quality_metrics(we_kilosort, metric_names=["snr", "isi_violation", "amplitude_cutoff"])
+
+
 
 
 @schema
