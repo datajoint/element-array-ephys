@@ -6,6 +6,7 @@ import inspect
 import importlib
 import gc
 from decimal import Decimal
+import os
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 
