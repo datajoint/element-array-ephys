@@ -94,14 +94,14 @@ class OpenEphys:
 
                     if (processor['@pluginName'] == 'Neuropix-3a'
                             or 'NP_PROBE' not in processor['EDITOR']):
-                        if isinstance(processor['EDITOR']['PROBE'], dict):
-                            probe_indices = (0,)
-                        else:
-                            probe_indices = range(len(processor['EDITOR']['PROBE']))
+                        editor_probe_key = 'PROBE'
                     elif processor['@pluginName'] == 'Neuropix-PXI':
-                        probe_indices = range(len(processor['EDITOR']['NP_PROBE']))
+                        editor_probe_key = 'NP_PROBE'
                     else:
                         raise NotImplementedError
+                    
+                    probe_indices = (0,) if isinstance(processor['EDITOR'][editor_probe_key], dict) else range(len(processor['EDITOR'][editor_probe_key]))
+
                 else:  # not a processor for Neuropixels probe
                     continue
 
