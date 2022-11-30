@@ -211,7 +211,7 @@ class Probe:
             self._channels_connected = {int(re.search(r'\d+$', k).group()): int(v)
                                         for k, v in self.probe_info.pop('CHANNELSTATUS').items()}
         else:  # Neuropix-PXI
-            self.probe_info = processor['EDITOR']['NP_PROBE'][probe_index]
+            self.probe_info = processor['EDITOR']['NP_PROBE'] if isinstance(processor['EDITOR']['NP_PROBE'], dict) else processor['EDITOR']['NP_PROBE'][probe_index]
             self.probe_SN = self.probe_info['@probe_serial_number']
             self.probe_model = _probe_model_name_mapping[self.probe_info['@probe_name']]
 
