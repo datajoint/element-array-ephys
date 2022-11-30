@@ -37,7 +37,11 @@ def activate(
         "neuropixels 2.0 - SS",
         "neuropixels 2.0 - MS",
     ):
-        ProbeType.create_neuropixels_probe(probe_type)
+        if not (ProbeType & {'probe_type': probe_type}):
+            try:
+                ProbeType.create_neuropixels_probe(probe_type)
+            except dj.errors.DataJointError as e:
+                print(f'Unable to create probe-type: {probe_type}\n{str(e)}')
 
 
 @schema
