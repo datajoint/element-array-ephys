@@ -1,25 +1,12 @@
-"""autocorrelation code adapted from ibllib
-https://github.com/int-brain-lab/ibllib
+"""Code adapted from International Brain Laboratory, T. (2021). ibllib [Computer software]. https://github.com/int-brain-lab/ibllib
 """
 
 import numpy as np
 
 
-def _index_of(arr, lookup):
-    """Replace scalars in an array by their indices in a lookup table.
+def _index_of(arr: np.ndarray, lookup: np.ndarray):
+    """Replace scalars in an array by their indices in a lookup table."""
 
-    Implicitly assume that:
-
-    * All elements of arr and lookup are non-negative integers.
-    * All elements or arr belong to lookup.
-
-    This is not checked for performance reasons.
-
-    """
-    # Equivalent of np.digitize(arr, lookup) - 1, but much faster.
-    # TODO: assertions to disable in production for performance reasons.
-    # TODO: np.searchsorted(lookup, arr) is faster on small arrays with large
-    # values
     lookup = np.asarray(lookup, dtype=np.int32)
     m = (lookup.max() if len(lookup) else 0) + 1
     tmp = np.zeros(m + 1, dtype=int)
@@ -32,7 +19,9 @@ def _index_of(arr, lookup):
 
 def _increment(arr, indices):
     """Increment some indices in a 1D vector of non-negative integers.
-    Repeated indices are taken into account."""
+    Repeated indices are taken into account.
+    """
+
     bbins = np.bincount(indices)
     arr[: len(bbins)] += bbins
     return arr
@@ -63,24 +52,22 @@ def _symmetrize_correlograms(correlograms):
     return np.dstack((sym, correlograms))
 
 
-def xcorr(spike_times, spike_clusters, bin_size=None, window_size=None):
+def xcorr(
+    spike_times: np.ndarray,
+    spike_clusters: np.ndarray,
+    bin_size: float,
+    window_size: int,
+) -> np.ndarray:
     """Compute all pairwise cross-correlograms among the clusters appearing in `spike_clusters`.
 
-    Parameters
-    ----------
+    Args:
+        spike_times (np.ndarray): Spike times in seconds.
+        spike_clusters (np.ndarray): Spike-cluster mapping.
+        bin_size (float): Size of the time bin in seconds.
+        window_size (int): Size of the correlogram window in seconds.
 
-    :param spike_times: Spike times in seconds.
-    :type spike_times: array-like
-    :param spike_clusters: Spike-cluster mapping.
-    :type spike_clusters: array-like
-    :param bin_size: Size of the bin, in seconds.
-    :type bin_size: float
-    :param window_size: Size of the window, in seconds.
-    :type window_size: float
-
-    Returns an `(n_clusters, n_clusters, winsize_samples)` array with all pairwise
-    cross-correlograms.
-
+    Returns:
+         np.ndarray: cross-correlogram array
     """
     assert np.all(np.diff(spike_times) >= 0), "The spike times must be increasing."
     assert spike_times.ndim == 1
@@ -140,21 +127,16 @@ def xcorr(spike_times, spike_clusters, bin_size=None, window_size=None):
     return _symmetrize_correlograms(correlograms)
 
 
-def acorr(spike_times, bin_size=None, window_size=None):
-    """Compute the auto-correlogram of a neuron.
+def acorr(spike_times: np.ndarray, bin_size: float, window_size: int) -> np.ndarray:
+    """Compute the auto-correlogram of a unit.
 
-    Parameters
-    ----------
+    Args:
+        spike_times (np.ndarray): Spike times in seconds.
+        bin_size (float, optional): Size of the time bin in seconds.
+        window_size (int, optional): Size of the correlogram window in seconds.
 
-    :param spike_times: Spike times in seconds.
-    :type spike_times: array-like
-    :param bin_size: Size of the bin, in seconds.
-    :type bin_size: float
-    :param window_size: Size of the window, in seconds.
-    :type window_size: float
-
-    Returns an `(winsize_samples,)` array with the auto-correlogram.
-
+    Returns:
+        np.ndarray: auto-correlogram array (winsize_samples,)
     """
     xc = xcorr(
         spike_times,
