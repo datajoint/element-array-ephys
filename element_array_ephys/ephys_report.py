@@ -102,7 +102,7 @@ class UnitLevelReport(dj.Computed):
 
         from .plotting.unit_level import (
             plot_waveform,
-            plot_correlogram,
+            plot_auto_correlogram,
             plot_depth_waveforms,
         )
 
@@ -119,7 +119,7 @@ class UnitLevelReport(dj.Computed):
             waveform=peak_electrode_waveform, sampling_rate=sampling_rate
         )
 
-        correlogram_fig = plot_correlogram(
+        correlogram_fig = plot_auto_correlogram(
             spike_times=spike_times, bin_size=0.001, window_size=1
         )
 
