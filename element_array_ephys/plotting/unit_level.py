@@ -1,12 +1,22 @@
-from .. import probe
 from modulefinder import Module
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
+from typing import Any
+from .. import probe
 
 
 def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
+    """Plot unit waveform.
 
+    Args:
+        waveform (np.ndarray): Amplitude of a spike waveform in μV.
+        sampling_rate (float): Sampling rate in kHz.
+
+    Returns:
+        go.Figure: Plotly figure object.
+    """
     waveform_df = pd.DataFrame(data={"waveform": waveform})
     waveform_df["timestamp"] = waveform_df.index / sampling_rate
 
@@ -31,11 +41,20 @@ def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
     return fig
 
 
-def plot_correlogram(
+def plot_auto_correlogram(
     spike_times: np.ndarray, bin_size: float = 0.001, window_size: int = 1
 ) -> go.Figure:
+    """Plot the auto-correlogram of a unit.
 
-    from brainbox.singlecell import acorr
+    Args:
+        spike_times (np.ndarray): Spike timestamps in seconds
+        bin_size (float, optional): Size of the time bin (lag) in seconds. Defaults to 0.001.
+        window_size (int, optional): Size of the correlogram window in seconds. Defaults to 1.
+
+    Returns:
+        go.Figure: Plotly figure object.
+    """
+    from .corr import acorr
 
     correlogram = acorr(
         spike_times=spike_times, bin_size=bin_size, window_size=window_size
@@ -74,9 +93,19 @@ def plot_correlogram(
 
 def plot_depth_waveforms(
     ephys: Module,
-    unit_key: dict,
+    unit_key: dict[str, Any],
     y_range: float = 60,
 ) -> go.Figure:
+    """Plot waveforms
+
+    Args:
+        ephys (Module): Imported ephys module.
+        unit_key (dict[str, Any]): Key dictionary from ephys.CuratedClustering.Unit table.
+        y_range (float, optional): Vertical range to show waveforms relative to the peak waveform in μm. Defaults to 60.
+
+    Returns:
+        go.Figure: Plotly figure object.
+    """
 
     sampling_rate = (ephys.EphysRecording & unit_key).fetch1(
         "sampling_rate"
