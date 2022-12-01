@@ -36,12 +36,12 @@ def activate(
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
-    
+
     Dependencies:
     Upstream tables:
         Session: A parent table to ProbeInsertion
         Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.
-        
+    
     Functions: 
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
@@ -125,8 +125,8 @@ class AcquisitionSoftware(dj.Lookup):
     Attributes:
         acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys 
     """
-    
-    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
+
+    definition = """  # Software used for recording of neuropixels probes
     acq_software: varchar(24)    
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
@@ -271,7 +271,7 @@ class EphysRecording(dj.Imported):
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
-    sampling_rate: float # (Hz) 
+    sampling_rate: float # (Hz)
     recording_datetime: datetime # datetime of the recording from this probe
     recording_duration: float # (seconds) duration of the recording from this probe
     """
@@ -296,6 +296,7 @@ class EphysRecording(dj.Imported):
         session_dir = find_full_path(
             get_ephys_root_data_dir(), get_session_directory(key)
         )
+
         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1(
             "probe"
         )
@@ -708,7 +709,7 @@ class ClusteringTask(dj.Manual):
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
         clustering_outdir_dir (varchar (255) ): Relative path to output clustering results. 
-        task_mode (enum): `Trigger` and `load` either computes clustering or imports existing clustering data, respectively.
+        task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
     definition = """
@@ -732,9 +733,7 @@ class ClusteringTask(dj.Manual):
             e.g.: sub4/sess1/probe_2/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
-        session_dir = find_full_path(
-            get_ephys_root_data_dir(), get_session_directory(key)
-        )
+        session_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
         root_dir = find_root_directory(get_ephys_root_data_dir(), session_dir)
 
         method = (
@@ -798,7 +797,7 @@ class Clustering(dj.Imported):
         clustering_time (datetime): Time when clustering results are generated.
         package_version (varchar(16) ): Package version used for a clustering analysis. 
     """
-    
+
     definition = """
     # Clustering Procedure
     -> ClusteringTask
@@ -998,7 +997,7 @@ class CuratedClustering(dj.Imported):
             spike_depths (longblob): Array of depths associated with each spike, relative to each spike. 
         """
 
-        definition = """   
+        definition = """
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int

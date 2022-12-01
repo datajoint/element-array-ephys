@@ -13,7 +13,6 @@ from element_interface.utils import find_root_directory, find_full_path, dict_to
 from .readers import spikeglx, kilosort, openephys
 from . import probe, get_logger, ephys_report
 
-
 log = get_logger(__name__)
 
 schema = dj.schema()
@@ -48,7 +47,6 @@ def activate(
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory. 
     """
-
 
     if isinstance(linking_module, str):
         linking_module = importlib.import_module(linking_module)
@@ -96,8 +94,8 @@ def get_session_directory(session_key: dict) -> str:
     """Retrieve the session directory with Neuropixels for the given session.
 
     Args:
-        session_key (dict): A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database. 
-        
+        session_key (dict): A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database.
+
     Returns: 
         A string for the path to the session directory. 
     """
@@ -861,15 +859,15 @@ class Curation(dj.Manual):
     curation_id: int
     ---
     curation_time: datetime             # time of generation of this set of curated clustering results 
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to clustering root data directory
+    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
     curation_note='': varchar(2000)  
     """
 
-    def create1_from_clustering_task(self, key, curation_note str: = ""):
+    def create1_from_clustering_task(self, key, curation_note: str = ""):
         """
-        A function to create a new corresponding "Curation" for a particular 
+        A function to create a new corresponding "Curation" for a particular
         "ClusteringTask"
         """
         if key not in Clustering():
@@ -1367,8 +1365,7 @@ def get_openephys_probe_data(ephys_recording_key: dict) -> list:
     return probe_data
 
 
-def get_neuropixels_channel2electrode_map(ephys_recording_key: dict,
-acq_software: str) -> dict:
+def get_neuropixels_channel2electrode_map(ephys_recording_key: dict, acq_software: str) -> dict:
     """Get the channel map for neuropixels probe.
     """
     if acq_software == "SpikeGLX":
@@ -1461,7 +1458,7 @@ def generate_electrode_config(probe_type: str, electrodes: list) -> dict:
 
 
 def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
-    """Get details of recording channels for a givenn recording.
+    """Get details of recording channels for a given recording.
     """
     channels_details = {}
 
