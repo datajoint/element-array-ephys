@@ -1,8 +1,10 @@
-from .. import probe
 from modulefinder import Module
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
+
+from .. import probe
 
 
 def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
@@ -35,7 +37,7 @@ def plot_correlogram(
     spike_times: np.ndarray, bin_size: float = 0.001, window_size: int = 1
 ) -> go.Figure:
 
-    from brainbox.singlecell import acorr
+    from .acorr import acorr
 
     correlogram = acorr(
         spike_times=spike_times, bin_size=bin_size, window_size=window_size
