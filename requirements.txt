@@ -3,5 +3,5 @@ pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
 openpyxl
 pynwb>=2.0.0
 element-interface @ git+https://github.com/datajoint/element-interface.git
-ibllib @ git+https://github.com/int-brain-lab/ibllib.git
 plotly==5.9.0
+seaborn
