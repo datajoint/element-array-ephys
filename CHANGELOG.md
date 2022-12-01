@@ -60,6 +60,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.2.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.1
 [0.2.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.0
 [0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
 [0.1.3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.3
