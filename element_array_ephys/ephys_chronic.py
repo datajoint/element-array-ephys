@@ -28,7 +28,7 @@ def activate(
     create_tables: bool = True,
     linking_module: str = None,
 ):
-    """Activates the `ephys` and `probe` schemas. 
+    """Activates the `ephys` and `probe` schemas.
 
     Args:
         ephys_schema_name (str): A string containing the name of the ephys schema.
@@ -41,11 +41,11 @@ def activate(
     Upstream tables:
         Session: A parent table to ProbeInsertion
         Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.
-    
-    Functions: 
+
+    Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
-        get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory. 
+        get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
     """
 
     if isinstance(linking_module, str):
@@ -76,9 +76,9 @@ def get_ephys_root_data_dir() -> list:
     """Fetches absolute data path to ephys data directories.
 
     The absolute path here is used as a reference for all downstream relative paths used in DataJoint.
-    
+
     Returns:
-        A list of the absolute path(s) to ephys data directories. 
+        A list of the absolute path(s) to ephys data directories.
     """
     root_directories = _linking_module.get_ephys_root_data_dir()
     if isinstance(root_directories, (str, pathlib.Path)):
@@ -96,8 +96,8 @@ def get_session_directory(session_key: dict) -> str:
     Args:
         session_key (dict): A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database.
 
-    Returns: 
-        A string for the path to the session directory. 
+    Returns:
+        A string for the path to the session directory.
     """
     return _linking_module.get_session_directory(session_key)
 
@@ -123,7 +123,7 @@ class AcquisitionSoftware(dj.Lookup):
     """Name of software used for recording electrophysiological data.
 
     Attributes:
-        acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys 
+        acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys
     """
 
     definition = """  # Software used for recording of neuropixels probes
@@ -156,7 +156,7 @@ class ProbeInsertion(dj.Manual):
 class InsertionLocation(dj.Manual):
     """Stereotaxic location information for each probe insertion.
 
-    Attributes: 
+    Attributes:
         ProbeInsertion (foreign key): ProbeInsertion primary key.
         SkullReference (dict): SkullReference primary key.
         ap_location (decimal (6, 2) ): Anterior-posterior location in micrometers. Reference is 0 with anterior values positive.
@@ -186,12 +186,12 @@ class EphysRecording(dj.Imported):
     """Automated table with electrophysiology recording information for each probe inserted during an experimental session.
 
     Attributes:
-        ProbeInsertion (foreign key): ProbeInsertion primary key. 
-        probe.ElectrodeConfig (dict): probe.ElectrodeConfig primary key. 
+        ProbeInsertion (foreign key): ProbeInsertion primary key.
+        probe.ElectrodeConfig (dict): probe.ElectrodeConfig primary key.
         AcquisitionSoftware (dict): AcquisitionSoftware primary key.
         sampling_rate (float): sampling rate of the recording in Hertz (Hz).
         recording_datetime (datetime): datetime of the recording from this probe.
-        recording_duration (float): duration of the entire recording from this probe in seconds. 
+        recording_duration (float): duration of the entire recording from this probe in seconds.
     """
 
     definition = """
@@ -221,8 +221,7 @@ class EphysRecording(dj.Imported):
         """
 
     def make(self, key):
-        """Populates table with electrophysiology recording information.
-        """
+        """Populates table with electrophysiology recording information."""
         session_dir = find_full_path(
             get_ephys_root_data_dir(), get_session_directory(key)
         )
@@ -233,7 +232,8 @@ class EphysRecording(dj.Imported):
 
         # search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in (
-            ("*.ap.meta", "SpikeGLX"), ("*.oebin", "Open Ephys")
+            ("*.ap.meta", "SpikeGLX"),
+            ("*.oebin", "Open Ephys"),
         ):
             ephys_meta_filepaths = list(session_dir.rglob(ephys_pattern))
             if ephys_meta_filepaths:
@@ -391,7 +391,7 @@ class LFP(dj.Imported):
     class Electrode(dj.Part):
         """Saves local field potential data for each electrode.
 
-        Attributes: 
+        Attributes:
             LFP (foreign key): LFP primary key.
             probe.ElectrodeConfig.Electrode (foreign key): probe.ElectrodeConfig.Electrode primary key.
             lfp (longblob): LFP recording at this electrode in microvolts.
@@ -409,8 +409,7 @@ class LFP(dj.Imported):
     _skip_channel_counts = 9
 
     def make(self, key):
-        """Populates the LFP tables.
-        """
+        """Populates the LFP tables."""
         acq_software = (EphysRecording * ProbeInsertion & key).fetch1("acq_software")
 
         electrode_keys, lfp = [], []
@@ -513,11 +512,11 @@ class LFP(dj.Imported):
 
 @schema
 class ClusteringMethod(dj.Lookup):
-    """Kilosort clustering method. 
+    """Kilosort clustering method.
 
     Attributes:
         clustering_method (foreign key, varchar(16) ): Kilosort clustering method.
-        clustering_methods_desc (varchar(1000) ): Additional description of the clustering method. 
+        clustering_methods_desc (varchar(1000) ): Additional description of the clustering method.
     """
 
     definition = """
@@ -538,11 +537,11 @@ class ClusteringMethod(dj.Lookup):
 class ClusteringParamSet(dj.Lookup):
     """Parameters to be used in clustering procedure for spike sorting.
 
-    Attributes: 
-        paramset_idx (foreign key): Unique ID for the clustering parameter set. 
+    Attributes:
+        paramset_idx (foreign key): Unique ID for the clustering parameter set.
         ClusteringMethod (dict): ClusteringMethod primary key.
         paramset_desc (varchar(128) ): Description of the clustering parameter set.
-        param_set_hash (uuid): UUID hash for the parameter set. 
+        param_set_hash (uuid): UUID hash for the parameter set.
         params (longblob)
     """
 
@@ -639,7 +638,7 @@ class ClusteringTask(dj.Manual):
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
-        clustering_outdir_dir (varchar (255) ): Relative path to output clustering results. 
+        clustering_outdir_dir (varchar (255) ): Relative path to output clustering results.
         task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
@@ -654,11 +653,11 @@ class ClusteringTask(dj.Manual):
 
     @classmethod
     def infer_output_dir(cls, key, relative=False, mkdir=False):
-        """Infer output directory if it is not provided. 
-        
+        """Infer output directory if it is not provided.
+
         Args:
             key (dict): ClusteringTask primary key.
-        
+
         Returns:
             Pathlib.Path: Expected clustering_output_dir based on the following convention: processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
             e.g.: sub4/sess1/probe_2/kilosort2_0
@@ -722,11 +721,11 @@ class ClusteringTask(dj.Manual):
 @schema
 class Clustering(dj.Imported):
     """A processing table to handle each clustering task.
-    
+
     Attributes:
-        ClusteringTask (foreign key): ClusteringTask primary key. 
+        ClusteringTask (foreign key): ClusteringTask primary key.
         clustering_time (datetime): Time when clustering results are generated.
-        package_version (varchar(16) ): Package version used for a clustering analysis. 
+        package_version (varchar(16) ): Package version used for a clustering analysis.
     """
 
     definition = """
@@ -844,13 +843,13 @@ class Curation(dj.Manual):
     """Curation procedure table.
 
     Attributes:
-        Clustering (foreign key): Clustering primary key. 
+        Clustering (foreign key): Clustering primary key.
         curation_id (foreign key, int): Unique curation ID.
-        curation_time (datetime): Time when curation results are generated. 
-        curation_output_dir (varchar(255) ): Output directory of the curated results. 
+        curation_time (datetime): Time when curation results are generated.
+        curation_output_dir (varchar(255) ): Output directory of the curated results.
         quality_control (bool): If True, this clustering result has undergone quality control.
-        manual_curation (bool): If True, manual curation has been performed on this clustering result. 
-        curation_note (varchar(2000) ): Notes about the curation task. 
+        manual_curation (bool): If True, manual curation has been performed on this clustering result.
+        curation_note (varchar(2000) ): Notes about the curation task.
     """
 
     definition = """
@@ -903,7 +902,7 @@ class Curation(dj.Manual):
 
 @schema
 class CuratedClustering(dj.Imported):
-    """Clustering results after curation. 
+    """Clustering results after curation.
 
     Attributes:
         Curation (foreign key): Curation primary key.
@@ -917,15 +916,15 @@ class CuratedClustering(dj.Imported):
     class Unit(dj.Part):
         """Single unit properties after clustering and curation.
 
-        Attributes: 
-            CuratedClustering (foreign key): CuratedClustering primary key. 
+        Attributes:
+            CuratedClustering (foreign key): CuratedClustering primary key.
             unit (foreign key, int): Unique integer identifying a single unit.
             probe.ElectrodeConfig.Electrode (dict): probe.ElectrodeConfig.Electrode primary key.
             ClusteringQualityLabel (dict): CLusteringQualityLabel primary key.
             spike_count (int): Number of spikes in this recording for this unit.
-            spike_times (longblob): Spike times of this unit, relative to start time of EphysRecording. 
+            spike_times (longblob): Spike times of this unit, relative to start time of EphysRecording.
             spike_sites (longblob): Array of electrode associated with each spike.
-            spike_depths (longblob): Array of depths associated with each spike, relative to each spike. 
+            spike_depths (longblob): Array of depths associated with each spike, relative to each spike.
         """
 
         definition = """
@@ -942,8 +941,7 @@ class CuratedClustering(dj.Imported):
         """
 
     def make(self, key):
-        """Automated population of Unit information.
-        """
+        """Automated population of Unit information."""
         output_dir = (Curation & key).fetch1("curation_output_dir")
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
@@ -1024,8 +1022,8 @@ class CuratedClustering(dj.Imported):
 class WaveformSet(dj.Imported):
     """A set of spike waveforms for units out of a given CuratedClustering.
 
-    Attributes: 
-        CuratedClustering (foreign key): CuratedClustering primary key. 
+    Attributes:
+        CuratedClustering (foreign key): CuratedClustering primary key.
     """
 
     definition = """
@@ -1034,12 +1032,12 @@ class WaveformSet(dj.Imported):
     """
 
     class PeakWaveform(dj.Part):
-        """Mean waveform across spikes for a given unit. 
+        """Mean waveform across spikes for a given unit.
 
         Attributes:
-            WaveformSet (foreign key): WaveformSet primary key. 
+            WaveformSet (foreign key): WaveformSet primary key.
             CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key.
-            peak_electrode_waveform (longblob): Mean waveform for a given unit at its representative electrode. 
+            peak_electrode_waveform (longblob): Mean waveform for a given unit at its representative electrode.
         """
 
         definition = """
@@ -1051,14 +1049,14 @@ class WaveformSet(dj.Imported):
         """
 
     class Waveform(dj.Part):
-        """Spike waveforms for a given unit. 
+        """Spike waveforms for a given unit.
 
         Attributes:
             WaveformSet (foreign key): WaveformSet primary key.
-            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key. 
+            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key.
             probe.ElectrodeConfig.Electrode (foreign key): probe.ElectrodeConfig.Electrode primary key.
-            waveform_mean (longblob): mean waveform across spikes of the unit in microvolts. 
-            waveforms (longblob): waveforms of a sampling of spikes at the given electrode and unit. 
+            waveform_mean (longblob): mean waveform across spikes of the unit in microvolts.
+            waveforms (longblob): waveforms of a sampling of spikes at the given electrode and unit.
         """
 
         definition = """
@@ -1072,8 +1070,7 @@ class WaveformSet(dj.Imported):
         """
 
     def make(self, key):
-        """Populates waveform tables.
-        """
+        """Populates waveform tables."""
         output_dir = (Curation & key).fetch1("curation_output_dir")
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
@@ -1190,7 +1187,7 @@ class QualityMetrics(dj.Imported):
     """Clustering and waveform quality metrics.
 
     Attributes:
-        CuratedClustering (foreign key): CuratedClustering primary key. 
+        CuratedClustering (foreign key): CuratedClustering primary key.
     """
 
     definition = """
@@ -1201,23 +1198,23 @@ class QualityMetrics(dj.Imported):
     class Cluster(dj.Part):
         """Cluster metrics for a unit.
 
-        Attributes: 
-            QualityMetrics (foreign key): QualityMetrics primary key. 
-            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key. 
+        Attributes:
+            QualityMetrics (foreign key): QualityMetrics primary key.
+            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key.
             firing_rate (float): Firing rate of the unit.
             snr (float): Signal-to-noise ratio for a unit.
-            presence_ratio (float): Fraction of time where spikes are present. 
-            isi_violation (float): rate of ISI violation as a fraction of overall rate. 
-            number_violation (int): Total ISI violations. 
-            amplitude_cutoff (float): Estimate of miss rate based on amplitude histogram. 
+            presence_ratio (float): Fraction of time where spikes are present.
+            isi_violation (float): rate of ISI violation as a fraction of overall rate.
+            number_violation (int): Total ISI violations.
+            amplitude_cutoff (float): Estimate of miss rate based on amplitude histogram.
             isolation_distance (float): Distance to nearest cluster.
-            l_ratio (float): Amount of empty space between a cluster and other spikes in dataset. 
+            l_ratio (float): Amount of empty space between a cluster and other spikes in dataset.
             d_prime (float): Classification accuracy based on LDA.
             nn_hit_rate (float): Fraction of neighbors for target cluster that are also in target cluster.
-            nn_miss_rate (float): Fraction of neighbors outside target cluster that are in the target cluster. 
-            silhouette_core (float): Maximum change in spike depth throughout recording. 
-            cumulative_drift (float): Cumulative change in spike depth throughout recording. 
-            contamination_rate (float): Frequency of spikes in the refractory period. 
+            nn_miss_rate (float): Fraction of neighbors outside target cluster that are in the target cluster.
+            silhouette_core (float): Maximum change in spike depth throughout recording.
+            cumulative_drift (float): Cumulative change in spike depth throughout recording.
+            contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
         definition = """   
@@ -1243,22 +1240,22 @@ class QualityMetrics(dj.Imported):
         """
 
     class Waveform(dj.Part):
-        """Waveform metrics for a particular unit. 
+        """Waveform metrics for a particular unit.
 
-        Attributes: 
-            QualityMetrics (foreign key): QualityMetrics primary key. 
-            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key. 
-            amplitude (float): Absolute difference between waveform peak and trough in microvolts. 
-            duration (float): Time between waveform peak and trough in milliseconds. 
-            halfwidth (float): Spike width at half max amplitude. 
+        Attributes:
+            QualityMetrics (foreign key): QualityMetrics primary key.
+            CuratedClustering.Unit (foreign key): CuratedClustering.Unit primary key.
+            amplitude (float): Absolute difference between waveform peak and trough in microvolts.
+            duration (float): Time between waveform peak and trough in milliseconds.
+            halfwidth (float): Spike width at half max amplitude.
             pt_ratio (float): Absolute amplitude of peak divided by absolute amplitude of trough relative to 0.
-            repolarization_slope (float): Slope of the regression line fit to first 30 microseconds from trough to peak. 
-            recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail. 
+            repolarization_slope (float): Slope of the regression line fit to first 30 microseconds from trough to peak.
+            recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe. 
+            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
-        
+
         definition = """   
         # Waveform metrics for a particular unit
         -> master
@@ -1276,8 +1273,7 @@ class QualityMetrics(dj.Imported):
         """
 
     def make(self, key):
-        """Populates tables with quality metrics data.
-        """
+        """Populates tables with quality metrics data."""
         output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
@@ -1304,8 +1300,7 @@ class QualityMetrics(dj.Imported):
 
 
 def get_spikeglx_meta_filepath(ephys_recording_key: dict) -> str:
-    """Get spikeGLX data filepath.
-    """
+    """Get spikeGLX data filepath."""
     # attempt to retrieve from EphysRecording.EphysFile
     spikeglx_meta_filepath = pathlib.Path(
         (
@@ -1346,8 +1341,7 @@ def get_spikeglx_meta_filepath(ephys_recording_key: dict) -> str:
 
 
 def get_openephys_probe_data(ephys_recording_key: dict) -> list:
-    """Get OpenEphys probe data from file.
-    """
+    """Get OpenEphys probe data from file."""
     inserted_probe_serial_number = (
         ProbeInsertion * probe.Probe & ephys_recording_key
     ).fetch1("probe")
@@ -1365,9 +1359,10 @@ def get_openephys_probe_data(ephys_recording_key: dict) -> list:
     return probe_data
 
 
-def get_neuropixels_channel2electrode_map(ephys_recording_key: dict, acq_software: str) -> dict:
-    """Get the channel map for neuropixels probe.
-    """
+def get_neuropixels_channel2electrode_map(
+    ephys_recording_key: dict, acq_software: str
+) -> dict:
+    """Get the channel map for neuropixels probe."""
     if acq_software == "SpikeGLX":
         spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
         spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
@@ -1415,7 +1410,7 @@ def get_neuropixels_channel2electrode_map(ephys_recording_key: dict, acq_softwar
 
 def generate_electrode_config(probe_type: str, electrodes: list) -> dict:
     """Generate and insert new ElectrodeConfig
-    
+
     Args:
         probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
         electrodes (list): Electrode dict (keys of the probe.ProbeType.Electrode table)
@@ -1458,8 +1453,7 @@ def generate_electrode_config(probe_type: str, electrodes: list) -> dict:
 
 
 def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
-    """Get details of recording channels for a given recording.
-    """
+    """Get details of recording channels for a given recording."""
     channels_details = {}
 
     acq_software, sample_rate = (EphysRecording & ephys_recording_key).fetch1(

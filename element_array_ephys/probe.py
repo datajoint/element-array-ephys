@@ -9,25 +9,27 @@ schema = dj.schema()
 
 
 def activate(
-    schema_name: str, 
-    *, 
+    schema_name: str,
+    *,
     create_schema: bool = True,
-    create_tables: bool = True, 
+    create_tables: bool = True,
 ):
-    """Activates the `probe` schemas. 
+    """Activates the `probe` schemas.
 
     Args:
         schema_name (str): A string containing the name of the probe scehma.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
-    
+
     Dependencies:
     Upstream tables:
         Session: A parent table to ProbeInsertion.
-    
+
     Functions:
     """
-    schema.activate(schema_name, create_schema=create_schema, create_tables=create_tables)
+    schema.activate(
+        schema_name, create_schema=create_schema, create_tables=create_tables
+    )
 
     # Add neuropixels probes
     for probe_type in (
@@ -37,11 +39,11 @@ def activate(
         "neuropixels 2.0 - SS",
         "neuropixels 2.0 - MS",
     ):
-        if not (ProbeType & {'probe_type': probe_type}):
+        if not (ProbeType & {"probe_type": probe_type}):
             try:
                 ProbeType.create_neuropixels_probe(probe_type)
             except dj.errors.DataJointError as e:
-                print(f'Unable to create probe-type: {probe_type}\n{str(e)}')
+                print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
 
 
 @schema
@@ -51,6 +53,7 @@ class ProbeType(dj.Lookup):
     Attributes:
         probe_type (foreign key, varchar (32) ): Name of the probe type.
     """
+
     definition = """
     # Type of probe, with specific electrodes geometry defined
     probe_type: varchar(32)  # e.g. neuropixels_1.0
@@ -68,7 +71,7 @@ class ProbeType(dj.Lookup):
             x_coord (float): x-coordinate of the electrode within the probe in micrometers.
             y_coord (float): y-coordinate of the electrode within the probe in micrometers.
         """
-        
+
         definition = """
         -> master
         electrode: int       # electrode index, starts at 0
@@ -144,14 +147,14 @@ class ProbeType(dj.Lookup):
         }
 
         def build_electrodes(
-            site_count: int, 
-            col_spacing: float, 
+            site_count: int,
+            col_spacing: float,
             row_spacing: float,
             white_spacing: float,
-            col_count: int, 
+            col_count: int,
             shank_count: int,
             shank_spacing: float,
-        ) -> dict: 
+        ) -> dict:
             """Builds electrode layouts.
 
             Args:
@@ -251,7 +254,7 @@ class ElectrodeConfig(dj.Lookup):
             ElectrodeConfig (foreign key): ElectrodeConfig primary key.
             ProbeType.Electrode (foreign key): ProbeType.Electrode primary key.
         """
-        
+
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
