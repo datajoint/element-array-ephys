@@ -250,7 +250,7 @@ def build_electrode_layouts(
                     "shank_col": c_id,
                     "shank_row": r_id,
                     "x_coord": x + (shank_no * shank_spacing),
-                    "y_coord": y * {"top": -1, "bottom": 1}[y_origin],
+                    "y_coord": y if y_origin == "bottom" else -y,
                 }
                 for e_id, (c_id, r_id, x, y) in enumerate(
                     zip(shank_cols, shank_rows, x_coords, y_coords)
