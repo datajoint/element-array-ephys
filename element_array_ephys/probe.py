@@ -96,7 +96,7 @@ class ProbeType(dj.Lookup):
 
         neuropixels_probes_config = {
             "neuropixels 1.0 - 3A": dict(
-                site_count=960,
+                site_count_per_shank=960,
                 col_spacing=32,
                 row_spacing=20,
                 white_spacing=16,
@@ -105,7 +105,7 @@ class ProbeType(dj.Lookup):
                 shank_spacing=0,
             ),
             "neuropixels 1.0 - 3B": dict(
-                site_count=960,
+                site_count_per_shank=960,
                 col_spacing=32,
                 row_spacing=20,
                 white_spacing=16,
@@ -114,7 +114,7 @@ class ProbeType(dj.Lookup):
                 shank_spacing=0,
             ),
             "neuropixels UHD": dict(
-                site_count=384,
+                site_count_per_shank=384,
                 col_spacing=6,
                 row_spacing=6,
                 white_spacing=0,
@@ -123,7 +123,7 @@ class ProbeType(dj.Lookup):
                 shank_spacing=0,
             ),
             "neuropixels 2.0 - SS": dict(
-                site_count=1280,
+                site_count_per_shank=1280,
                 col_spacing=32,
                 row_spacing=15,
                 white_spacing=0,
@@ -132,7 +132,7 @@ class ProbeType(dj.Lookup):
                 shank_spacing=250,
             ),
             "neuropixels 2.0 - MS": dict(
-                site_count=1280,
+                site_count_per_shank=1280,
                 col_spacing=32,
                 row_spacing=15,
                 white_spacing=0,
@@ -203,7 +203,7 @@ class ElectrodeConfig(dj.Lookup):
 
 
 def build_electrode_layouts(
-    site_count: int,
+    site_count_per_shank: int,
     col_spacing: float = 1,
     row_spacing: float = 1,
     white_spacing: float = None,
@@ -216,7 +216,7 @@ def build_electrode_layouts(
     """Builds electrode layouts.
 
     Args:
-        site_count (int): site count per shank
+        site_count_per_shank (int): site count per shank.
         col_spacing (float): (μm) horizontal spacing between sites. Defaults to 1 (single column).
         row_spacing (float): (μm) vertical spacing between columns. Defaults to 1 (single row).
         white_spacing (float): (μm) offset spacing. Defaults to None.
@@ -225,7 +225,7 @@ def build_electrode_layouts(
         shank_spacing (float): spacing between shanks. Defaults to 1 (single shank).
         y_origin (str): {"bottom", "top"}. y value decrements if "top". Defaults to "bottom".
     """
-    row_count = int(site_count / col_count)
+    row_count = int(site_count_per_shank / col_count)
     x_coords = np.tile(np.arange(0, col_spacing * col_count, col_spacing), row_count)
     y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count)
 
@@ -243,7 +243,7 @@ def build_electrode_layouts(
         electrode_layouts.extend(
             [
                 {
-                    "electrode": (site_count * shank_no) + e_id,
+                    "electrode": (site_count_per_shank * shank_no) + e_id,
                     "shank": shank_no,
                     "shank_col": c_id,
                     "shank_row": r_id,
