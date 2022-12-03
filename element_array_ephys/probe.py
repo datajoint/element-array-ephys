@@ -100,7 +100,7 @@ class ProbeType(dj.Lookup):
                 col_spacing=32,
                 row_spacing=20,
                 white_spacing=16,
-                col_count=2,
+                col_count_per_shank=2,
                 shank_count=1,
                 shank_spacing=0,
             ),
@@ -109,7 +109,7 @@ class ProbeType(dj.Lookup):
                 col_spacing=32,
                 row_spacing=20,
                 white_spacing=16,
-                col_count=2,
+                col_count_per_shank=2,
                 shank_count=1,
                 shank_spacing=0,
             ),
@@ -118,7 +118,7 @@ class ProbeType(dj.Lookup):
                 col_spacing=6,
                 row_spacing=6,
                 white_spacing=0,
-                col_count=8,
+                col_count_per_shank=8,
                 shank_count=1,
                 shank_spacing=0,
             ),
@@ -127,7 +127,7 @@ class ProbeType(dj.Lookup):
                 col_spacing=32,
                 row_spacing=15,
                 white_spacing=0,
-                col_count=2,
+                col_count_per_shank=2,
                 shank_count=1,
                 shank_spacing=250,
             ),
@@ -136,7 +136,7 @@ class ProbeType(dj.Lookup):
                 col_spacing=32,
                 row_spacing=15,
                 white_spacing=0,
-                col_count=2,
+                col_count_per_shank=2,
                 shank_count=4,
                 shank_spacing=250,
             ),
@@ -207,7 +207,7 @@ def build_electrode_layouts(
     col_spacing: float = 1,
     row_spacing: float = 1,
     white_spacing: float = None,
-    col_count: int = 1,
+    col_count_per_shank: int = 1,
     shank_count: int = 1,
     shank_spacing: float = 1,
     y_origin="bottom",
@@ -220,14 +220,16 @@ def build_electrode_layouts(
         col_spacing (float): (μm) horizontal spacing between sites. Defaults to 1 (single column).
         row_spacing (float): (μm) vertical spacing between columns. Defaults to 1 (single row).
         white_spacing (float): (μm) offset spacing. Defaults to None.
-        col_count (int): number of column per shank. Defaults to 1 (single column).
+        col_count_per_shank (int): number of column per shank. Defaults to 1 (single column).
         shank_count (int): number of shank. Defaults to 1 (single shank).
         shank_spacing (float): spacing between shanks. Defaults to 1 (single shank).
         y_origin (str): {"bottom", "top"}. y value decrements if "top". Defaults to "bottom".
     """
-    row_count = int(site_count_per_shank / col_count)
-    x_coords = np.tile(np.arange(0, col_spacing * col_count, col_spacing), row_count)
-    y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count)
+    row_count = int(site_count_per_shank / col_count_per_shank)
+    x_coords = np.tile(
+        np.arange(0, col_spacing * col_count_per_shank, col_spacing), row_count
+    )
+    y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count_per_shank)
 
     if white_spacing:
         x_white_spaces = np.tile(
@@ -235,8 +237,8 @@ def build_electrode_layouts(
         )
         x_coords = x_coords + x_white_spaces
 
-    shank_cols = np.tile(range(col_count), row_count)
-    shank_rows = np.repeat(range(row_count), col_count)
+    shank_cols = np.tile(range(col_count_per_shank), row_count)
+    shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
     electrode_layouts = []
     for shank_no in range(shank_count):
