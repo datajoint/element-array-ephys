@@ -240,10 +240,7 @@ def build_electrode_layouts(
     shank_cols = np.tile(range(col_count_per_shank), row_count)
     shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
-    electrode_layouts = []
-    for shank_no in range(shank_count):
-        electrode_layouts.extend(
-            [
+    electrode_layouts = [
                 {
                     "electrode": (site_count_per_shank * shank_no) + e_id,
                     "shank": shank_no,
@@ -252,10 +249,10 @@ def build_electrode_layouts(
                     "x_coord": x + (shank_no * shank_spacing),
                     "y_coord": y if y_origin == "bottom" else -y,
                 }
+                for shank_no in range(shank_count)
                 for e_id, (c_id, r_id, x, y) in enumerate(
                     zip(shank_cols, shank_rows, x_coords, y_coords)
                 )
             ]
-        )
 
     return electrode_layouts
