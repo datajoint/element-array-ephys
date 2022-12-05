@@ -143,11 +143,13 @@ class ProbeType(dj.Lookup):
         }
 
         probe_type = {"probe_type": probe_type}
-        electrodes = build_electrode_layouts({**neuropixels_probes_config[probe_type["probe_type"]], **probe_type})
+        electrode_layouts: list[dict] = build_electrode_layouts(
+            **{**neuropixels_probes_config[probe_type["probe_type"]], **probe_type}
+        )
         with ProbeType.connection.transaction:
             ProbeType.insert1(probe_type, skip_duplicates=True)
             ProbeType.Electrode.insert(
-                [{**probe_type, **e} for e in electrodes], skip_duplicates=True
+                [{**e} for e in electrode_layouts], skip_duplicates=True
             )
 
 
@@ -203,7 +205,7 @@ class ElectrodeConfig(dj.Lookup):
 
 
 def build_electrode_layouts(
-    probe_type : str,
+    probe_type: str,
     site_count_per_shank: int,
     col_spacing: float = None,
     row_spacing: float = None,
@@ -243,7 +245,7 @@ def build_electrode_layouts(
     shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
     electrode_layouts = [
-        {   
+        {
             "probe_type": probe_type,
             "electrode": (site_count_per_shank * shank_no) + e_id,
             "shank": shank_no,
