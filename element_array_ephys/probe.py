@@ -74,9 +74,9 @@ class ProbeType(dj.Lookup):
         ---
         shank: int           # shank index, starts at 0, advance left to right
         shank_col: int       # column index, starts at 0, advance left to right
-        shank_row: int       # row index, starts at 0, advance tip to tail
-        x_coord=NULL: float  # (μm) x coordinate of the electrode within the probe, (0, 0) is the bottom left corner of the probe
-        y_coord=NULL: float  # (μm) y coordinate of the electrode within the probe, (0, 0) is the bottom left corner of the probe
+        shank_row: int       # row index, starts at 0.
+        x_coord=NULL: float  # (μm) x coordinate of the electrode within the probe.
+        y_coord=NULL: float  # (μm) y coordinate of the electrode within the probe.
         """
 
     @staticmethod
@@ -142,8 +142,8 @@ class ProbeType(dj.Lookup):
             ),
         }
 
-        electrodes = build_electrode_layouts(**neuropixels_probes_config[probe_type])
         probe_type = {"probe_type": probe_type}
+        electrodes = build_electrode_layouts({**neuropixels_probes_config[probe_type["probe_type"]], **probe_type})
         with ProbeType.connection.transaction:
             ProbeType.insert1(probe_type, skip_duplicates=True)
             ProbeType.Electrode.insert(
@@ -203,33 +203,35 @@ class ElectrodeConfig(dj.Lookup):
 
 
 def build_electrode_layouts(
+    probe_type : str,
     site_count_per_shank: int,
-    col_spacing: float = 1,
-    row_spacing: float = 1,
+    col_spacing: float = None,
+    row_spacing: float = None,
     white_spacing: float = None,
     col_count_per_shank: int = 1,
     shank_count: int = 1,
-    shank_spacing: float = 1,
+    shank_spacing: float = None,
     y_origin="bottom",
-) -> dict:
+) -> list[dict]:
 
     """Builds electrode layouts.
 
     Args:
         site_count_per_shank (int): site count per shank.
-        col_spacing (float): (μm) horizontal spacing between sites. Defaults to 1 (single column).
-        row_spacing (float): (μm) vertical spacing between columns. Defaults to 1 (single row).
+        col_spacing (float): (μm) horizontal spacing between sites. Defaults to None (single column).
+        row_spacing (float): (μm) vertical spacing between columns. Defaults to None (single row).
         white_spacing (float): (μm) offset spacing. Defaults to None.
         col_count_per_shank (int): number of column per shank. Defaults to 1 (single column).
         shank_count (int): number of shank. Defaults to 1 (single shank).
-        shank_spacing (float): spacing between shanks. Defaults to 1 (single shank).
+        shank_spacing (float): (μm) spacing between shanks. Defaults to None (single shank).
         y_origin (str): {"bottom", "top"}. y value decrements if "top". Defaults to "bottom".
     """
     row_count = int(site_count_per_shank / col_count_per_shank)
     x_coords = np.tile(
-        np.arange(0, col_spacing * col_count_per_shank, col_spacing), row_count
+        np.arange(0, (col_spacing or 1) * col_count_per_shank, (col_spacing or 1)),
+        row_count,
     )
-    y_coords = np.repeat(np.arange(row_count) * row_spacing, col_count_per_shank)
+    y_coords = np.repeat(np.arange(row_count) * (row_spacing or 1), col_count_per_shank)
 
     if white_spacing:
         x_white_spaces = np.tile(
@@ -241,18 +243,19 @@ def build_electrode_layouts(
     shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
     electrode_layouts = [
-                {
-                    "electrode": (site_count_per_shank * shank_no) + e_id,
-                    "shank": shank_no,
-                    "shank_col": c_id,
-                    "shank_row": r_id,
-                    "x_coord": x + (shank_no * shank_spacing),
-                    "y_coord": y if y_origin == "bottom" else -y,
-                }
-                for shank_no in range(shank_count)
-                for e_id, (c_id, r_id, x, y) in enumerate(
-                    zip(shank_cols, shank_rows, x_coords, y_coords)
-                )
-            ]
+        {   
+            "probe_type": probe_type,
+            "electrode": (site_count_per_shank * shank_no) + e_id,
+            "shank": shank_no,
+            "shank_col": c_id,
+            "shank_row": r_id,
+            "x_coord": x + (shank_no * (shank_spacing or 1)),
+            "y_coord": y if y_origin == "bottom" else -y,
+        }
+        for shank_no in range(shank_count)
+        for e_id, (c_id, r_id, x, y) in enumerate(
+            zip(shank_cols, shank_rows, x_coords, y_coords)
+        )
+    ]
 
     return electrode_layouts
