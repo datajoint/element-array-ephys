@@ -1382,20 +1382,20 @@ def get_neuropixels_channel2electrode_map(
     return channel2electrode_map
 
 
-def generate_electrode_config(probe_type: str, electrodes: list) -> dict:
+def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
     """Generate and insert new ElectrodeConfig
 
     Args:
         probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
-        electrodes (list): Electrode dict (keys of the probe.ProbeType.Electrode table)
+        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
 
     Returns:
         dict: representing a key of the probe.ElectrodeConfig table
     """
     # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
-    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrodes})
+    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
 
-    electrode_list = sorted([k["electrode"] for k in electrodes])
+    electrode_list = sorted([k["electrode"] for k in electrode_keys])
     electrode_gaps = (
         [-1]
         + np.where(np.diff(electrode_list) > 1)[0].tolist()
@@ -1420,7 +1420,7 @@ def generate_electrode_config(probe_type: str, electrodes: list) -> dict:
             }
         )
         probe.ElectrodeConfig.Electrode.insert(
-            {**electrode_config_key, **electrode} for electrode in electrodes
+            {**electrode_config_key, **electrode} for electrode in electrode_keys
         )
 
     return electrode_config_key

@@ -7,7 +7,6 @@ import importlib
 import gc
 from decimal import Decimal
 import pandas as pd
-from typing import Any
 
 from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
 from .readers import spikeglx, kilosort, openephys
@@ -1417,14 +1416,12 @@ def get_neuropixels_channel2electrode_map(
     return channel2electrode_map
 
 
-def generate_electrode_config(
-    probe_type: str, electrode_keys: list[dict[str, Any]]
-) -> dict:
+def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
     """Generate and insert new ElectrodeConfig
 
     Args:
         probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
-        electrode_keys (list[dict[str, Any]]): list of keys of the probe.ProbeType.Electrode table
+        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
 
     Returns:
         dict: representing a key of the probe.ElectrodeConfig table
@@ -1463,8 +1460,8 @@ def generate_electrode_config(
     return electrode_config_key
 
 
-def get_recording_channels_details(ephys_recording_key: dict[str, Any]) -> np.array:
-    """Get details of recording channels for a givenn recording."""
+def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
+    """Get details of recording channels for a given recording."""
     channels_details = {}
 
     acq_software, sample_rate = (EphysRecording & ephys_recording_key).fetch1(
