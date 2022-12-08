@@ -75,8 +75,8 @@ class ProbeType(dj.Lookup):
         shank: int           # shank index, starts at 0, advance left to right
         shank_col: int       # column index, starts at 0, advance left to right
         shank_row: int       # row index, starts at 0.
-        x_coord=NULL: float  # (μm) x coordinate of the electrode within the probe.
-        y_coord=NULL: float  # (μm) y coordinate of the electrode within the probe.
+        x_coord=NULL: float  # (um) x coordinate of the electrode within the probe.
+        y_coord=NULL: float  # (um) y coordinate of the electrode within the probe.
         """
 
     @staticmethod
@@ -220,12 +220,12 @@ def build_electrode_layouts(
 
     Args:
         site_count_per_shank (int): site count per shank.
-        col_spacing (float): (μm) horizontal spacing between sites. Defaults to None (single column).
-        row_spacing (float): (μm) vertical spacing between columns. Defaults to None (single row).
-        white_spacing (float): (μm) offset spacing. Defaults to None.
+        col_spacing (float): (um) horizontal spacing between sites. Defaults to None (single column).
+        row_spacing (float): (um) vertical spacing between columns. Defaults to None (single row).
+        white_spacing (float): (um) offset spacing. Defaults to None.
         col_count_per_shank (int): number of column per shank. Defaults to 1 (single column).
         shank_count (int): number of shank. Defaults to 1 (single shank).
-        shank_spacing (float): (μm) spacing between shanks. Defaults to None (single shank).
+        shank_spacing (float): (um) spacing between shanks. Defaults to None (single shank).
         y_origin (str): {"bottom", "top"}. y value decrements if "top". Defaults to "bottom".
     """
     row_count = int(site_count_per_shank / col_count_per_shank)
