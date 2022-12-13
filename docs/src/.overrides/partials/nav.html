@@ -7,14 +7,15 @@
 {% endif %}
 <nav class="{{ class }}" aria-label="{{ lang.t('nav.title') }}" data-md-level="0">
     <label class="md-nav__title" for="__drawer">
-        <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}"
-            class="md-nav__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+        <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}"
+            title="{{ config.site_name | e }}" class="md-nav__button md-logo"
+            aria-label="{{ config.site_name }}" data-md-component="logo">
             {% include "partials/logo.html" %}
         </a>
         {#-
         Add DataJoint home link to navigation header, otherwise unchanged
         -#}
-        <a href="https://datajoint.com/docs/" title="DataJoint">
+        <a href="https://datajoint.com/docs/elements/" title="DataJoint Elements">
             ⬅ Home
         </a>
     </label>

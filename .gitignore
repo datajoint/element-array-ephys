@@ -119,3 +119,7 @@ docker-compose.y*ml
 
 # include
 !docs/docker-compose.yaml
+
+# vscode settings
+.vscode
+*.code-workspace
