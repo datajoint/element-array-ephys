@@ -2,7 +2,6 @@ import pathlib
 import datetime
 import datajoint as dj
 import typing as T
-import json
 
 schema = dj.schema()
 
@@ -50,12 +49,9 @@ class ProbeLevelReport(dj.Computed):
 
         for shank_no in shanks:
 
-            table = (
-                units
-                * ephys.ProbeInsertion.proj()
-                * probe.ProbeType.Electrode.proj("shank")
-                & {"shank": shank_no}
-            )
+            table = units * ephys.ProbeInsertion * probe.ProbeType.Electrode & {
+                "shank": shank_no
+            }
 
             spike_times, spike_depths = table.fetch(
                 "spike_times", "spike_depths", order_by="unit"
@@ -139,7 +135,7 @@ class UnitLevelReport(dj.Computed):
 def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
     if root_dir is None:
         root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "ephys_figures"
+    save_dir = root_dir / "temp"
     save_dir.mkdir(parents=True, exist_ok=True)
     return save_dir
 
