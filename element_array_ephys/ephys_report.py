@@ -154,7 +154,7 @@ class UnitLevelReport(dj.Computed):
 def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
     if root_dir is None:
         root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "temp"
+    save_dir = root_dir / "temp_ephys_figures"
     save_dir.mkdir(parents=True, exist_ok=True)
     return save_dir
 
