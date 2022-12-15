@@ -160,7 +160,7 @@ class Probe(dj.Lookup):
     Attributes:
         probe (foreign key, varchar(32) ): Unique ID for this model of the probe.
         ProbeType (dict): ProbeType entry.
-        probe_comment (varchar(1000) ): Comment about this model of probe.
+        probe_comment ( varchar(1000) ): Comment about this model of probe.
     """
 
     definition = """
@@ -179,7 +179,7 @@ class ElectrodeConfig(dj.Lookup):
     Attributes:
         electrode_config_hash (foreign key, uuid): unique index for electrode configuration.
         ProbeType (dict): ProbeType entry.
-        electrode_config_name (varchar(4000) ): User-friendly name for this electrode configuration.
+        electrode_config_name ( varchar(4000) ): User-friendly name for this electrode configuration.
     """
 
     definition = """
