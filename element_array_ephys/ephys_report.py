@@ -1,7 +1,7 @@
 import pathlib
 import datetime
 import datajoint as dj
-import typing as T
+from . import probe
 
 schema = dj.schema()
 
@@ -9,14 +9,15 @@ ephys = None
 
 
 def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
+    """Activate the current schema.
+
+    Args:
+        schema_name (str): schema name on the database server to activate the `ephys_report` schema.
+        ephys_schema_name (str): schema name of the activated ephys element for which this ephys_report schema will be downstream from.
+        create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
+        create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
-    activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
-        :param schema_name: schema name on the database server to activate the `ephys_report` schema
-        :param ephys_schema_name: schema name of the activated ephys element for which this ephys_report schema will be downstream from
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
-    """
+
     global ephys
     ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
@@ -29,6 +30,14 @@ def activate(schema_name, ephys_schema_name, *, create_schema=True, create_table
 
 @schema
 class ProbeLevelReport(dj.Computed):
+    """Table for storing probe level figures.
+
+    Attributes:
+        ephys.CuratedClustering (foreign key): ephys.CuratedClustering primary key.
+        shank (tinyint unsigned): Shank of the probe.
+        drift_map_plot (attach): Figure object for drift map.
+    """
+
     definition = """
     -> ephys.CuratedClustering
     shank         : tinyint unsigned
@@ -38,7 +47,6 @@ class ProbeLevelReport(dj.Computed):
 
     def make(self, key):
 
-        from . import probe
         from .plotting.probe_level import plot_driftmap
 
         save_dir = _make_save_dir()
@@ -85,13 +93,23 @@ class ProbeLevelReport(dj.Computed):
 
 @schema
 class UnitLevelReport(dj.Computed):
+    """Table for storing unit level figures.
+
+    Attributes:
+        ephys.CuratedClustering (foreign key): ephys.CuratedClustering primary key.
+        ephys.ClusterQualityLabel (foreign key): ephys.ClusterQualityLabel primary key.
+        waveform_plotly (longblob): Figure object for unit waveform.
+        autocorrelogram_plotly (longblob): Figure object for an autocorrelogram.
+        depth_waveform_plotly (longblob): Figure object for depth waveforms.
+    """
+
     definition = """
     -> ephys.CuratedClustering.Unit
     ---
-    cluster_quality_label   : varchar(100) 
-    waveform_plotly         : longblob  
-    autocorrelogram_plotly  : longblob
-    depth_waveform_plotly   : longblob
+    -> ephys.ClusterQualityLabel 
+    waveform_plotly                 : longblob  
+    autocorrelogram_plotly          : longblob
+    depth_waveform_plotly           : longblob
     """
 
     def make(self, key):
@@ -142,7 +160,7 @@ def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
 
 def _save_figs(
     figs, fig_names, save_dir, fig_prefix, extension=".png"
-) -> T.Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     fig_dict = {}
     for fig, fig_name in zip(figs, fig_names):
         fig_filepath = save_dir / (fig_prefix + "_" + fig_name + extension)
