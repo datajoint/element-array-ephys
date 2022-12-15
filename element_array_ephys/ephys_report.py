@@ -52,8 +52,8 @@ class ProbeLevelReport(dj.Computed):
 
             table = (
                 units
-                * ephys.ProbeInsertion.proj()
-                * probe.ProbeType.Electrode.proj("shank")
+                * ephys.ProbeInsertion
+                * probe.ProbeType.Electrode
                 & {"shank": shank_no}
             )
 
