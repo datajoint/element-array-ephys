@@ -99,7 +99,7 @@ def plot_depth_waveforms(
     """Plot waveforms
 
     Args:
-        ephys (Module): Imported ephys module.
+        ephys (Module): Imported ephys module object.
         unit_key (dict[str, Any]): Key dictionary from ephys.CuratedClustering.Unit table.
         y_range (float, optional): Vertical range to show waveforms relative to the peak waveform in μm. Defaults to 60.
 

@@ -4,8 +4,16 @@ import numpy as np
 import seaborn as sns
 
 
-def plot_raster(units, spike_times) -> matplotlib.figure.Figure:
+def plot_raster(units: np.ndarray, spike_times: np.ndarray) -> matplotlib.figure.Figure:
+    """Population raster plots.
 
+    Args:
+        units (np.ndarray): Recorded units.
+        spike_times (np.ndarray): Spike timestamps in seconds.
+
+    Returns:
+        matplotlib.figure.Figure: matplotlib figure object.
+    """
     units = np.arange(1, len(units) + 1)
     x = np.hstack(spike_times)
     y = np.hstack([np.full_like(s, u) for u, s in zip(units, spike_times)])
@@ -26,6 +34,16 @@ def plot_raster(units, spike_times) -> matplotlib.figure.Figure:
 def plot_driftmap(
     spike_times: np.ndarray, spike_depths: np.ndarray, colormap="gist_heat_r"
 ) -> matplotlib.figure.Figure:
+    """Plot unit activity drift map all units recorded in a given shank of a probe.
+
+    Args:
+        spike_times (np.ndarray): Spike timestamps in seconds.
+        spike_depths (np.ndarray): The depth of the electrode where the spike was found in μm.
+        colormap (str, optional): Colormap. Defaults to "gist_heat_r".
+
+    Returns:
+        matplotlib.figure.Figure: matplotlib figure object.
+    """
 
     spike_times = np.hstack(spike_times)
     spike_depths = np.hstack(spike_depths)
