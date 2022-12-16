@@ -126,7 +126,7 @@ def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
         elif len(insertion_record) == 0:
             insert_location = "unknown"
         else:
-            raise DataJointError(f'Found multiple insertion locations for {this_probe}')
+            raise dj.DataJointError(f'Found multiple insertion locations for {this_probe}')
 
         device = nwbfile.create_device(
             name=this_probe["probe"],
