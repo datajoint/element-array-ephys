@@ -1,9 +1,10 @@
 from modulefinder import Module
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
-from typing import Any
+
 from .. import probe
 
 
@@ -96,7 +97,7 @@ def plot_depth_waveforms(
     unit_key: dict[str, Any],
     y_range: float = 60,
 ) -> go.Figure:
-    """Plot waveforms
+    """Plot the peak waveform (in red) and waveforms from its neighboring channels on a spatial coordinate.
 
     Args:
         ephys (Module): Imported ephys module object.
@@ -219,7 +220,7 @@ def plot_depth_waveforms(
             y=[y0, y0],
             mode="lines",
             line=dict(color="black", width=2),
-            hovertemplate=f"1 ms<extra></extra>",
+            hovertemplate="1 ms<extra></extra>",
         )
     )
     fig.add_trace(
