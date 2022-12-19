@@ -1,16 +1,16 @@
-import datajoint as dj
-import pathlib
-import numpy as np
-import inspect
-import importlib
 import gc
+import importlib
+import inspect
+import pathlib
 from decimal import Decimal
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-
-from .readers import spikeglx, kilosort, openephys
-from . import probe, get_logger, ephys_report
+from . import ephys_report, get_logger, probe
+from .readers import kilosort, openephys, spikeglx
 
 log = get_logger(__name__)
 

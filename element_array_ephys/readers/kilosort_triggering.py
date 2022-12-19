@@ -1,25 +1,24 @@
-import subprocess
-import shutil
-import sys
-import pathlib
-import json
-import re
 import inspect
+import json
 import os
-import scipy.io
-import numpy as np
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
 from datetime import datetime, timedelta
 
+import numpy as np
+import scipy.io
 from element_interface.utils import dict_to_uuid
-
 
 # import the spike sorting packages
 try:
-    from ecephys_spike_sorting.scripts.create_input_json import createInputJson
-    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
     from ecephys_spike_sorting.modules.kilosort_helper.__main__ import (
         get_noise_channels,
     )
+    from ecephys_spike_sorting.scripts.create_input_json import createInputJson
+    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 except Exception as e:
     print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
 

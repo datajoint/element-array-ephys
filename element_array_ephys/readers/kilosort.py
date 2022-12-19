@@ -1,10 +1,12 @@
-from os import path
-from datetime import datetime
-import pathlib
-import pandas as pd
-import numpy as np
-import re
 import logging
+import pathlib
+import re
+from datetime import datetime
+from os import path
+
+import numpy as np
+import pandas as pd
+
 from .utils import convert_to_number
 
 log = logging.getLogger(__name__)

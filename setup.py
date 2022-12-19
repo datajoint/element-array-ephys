@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 from os import path
+
+from setuptools import find_packages, setup
 
 pkg_name = next(p for p in find_packages() if "." not in p)
 here = path.abspath(path.dirname(__file__))

@@ -1,9 +1,11 @@
-import os
 import decimal
 import json
+import os
+import warnings
+
+import datajoint as dj
 import numpy as np
 import pynwb
-import datajoint as dj
 from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
@@ -13,10 +15,9 @@ from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunki
 )
 from spikeinterface import extractors
 from tqdm import tqdm
-import warnings
-from ... import probe
-from ... import ephys_no_curation as ephys
 
+from ... import ephys_no_curation as ephys
+from ... import probe
 
 ephys_mode = os.getenv("EPHYS_MODE", dj.config["custom"].get("ephys_mode", "acute"))
 if ephys_mode != "no-curation":

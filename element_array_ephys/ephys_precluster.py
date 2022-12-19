@@ -1,14 +1,14 @@
-import datajoint as dj
-import re
-import numpy as np
-import inspect
 import importlib
+import inspect
+import re
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-
-from .readers import spikeglx, kilosort, openephys
-from . import probe, ephys_report
+from . import ephys_report, probe
+from .readers import kilosort, openephys, spikeglx
 
 schema = dj.schema()
 

@@ -1,9 +1,10 @@
-import pathlib
-import pyopenephys
-import numpy as np
-import re
 import datetime
 import logging
+import pathlib
+import re
+
+import numpy as np
+import pyopenephys
 
 logger = logging.getLogger(__name__)
 

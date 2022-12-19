@@ -1,6 +1,8 @@
-import datajoint as dj
 import logging
 import os
+
+import datajoint as dj
+
 from . import ephys_acute as ephys
 
 __all__ = ["ephys", "get_logger"]

@@ -1,7 +1,9 @@
-from datetime import datetime
-import numpy as np
-import pathlib
 import logging
+import pathlib
+from datetime import datetime
+
+import numpy as np
+
 from .utils import convert_to_number
 
 logger = logging.getLogger(__name__)
