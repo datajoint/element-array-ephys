@@ -127,7 +127,7 @@ class AcquisitionSoftware(dj.Lookup):
     """
 
     definition = """  # Software used for recording of neuropixels probes
-    acq_software: varchar(24)    
+    acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
 
@@ -264,7 +264,7 @@ class EphysRecording(dj.Imported):
 
     definition = """
     # Ephys recording from a probe insertion for a given session.
-    -> ProbeInsertion      
+    -> ProbeInsertion
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
@@ -465,9 +465,9 @@ class LFP(dj.Imported):
 
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode
         ---
-        lfp: longblob               # (uV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode
         """
 
     # Only store LFP for every 9th channel, due to high channel density,
@@ -615,7 +615,7 @@ class ClusteringParamSet(dj.Lookup):
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> ClusteringMethod    
+    -> ClusteringMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -800,7 +800,7 @@ class Clustering(dj.Imported):
     # Clustering Procedure
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
+    clustering_time: datetime  # time of generation of this set of clustering results
     package_version='': varchar(16)
     """
 
@@ -925,11 +925,11 @@ class Curation(dj.Manual):
     -> Clustering
     curation_id: int
     ---
-    curation_time: datetime             # time of generation of this set of curated clustering results 
+    curation_time: datetime             # time of generation of this set of curated clustering results
     curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)  
+    curation_note='': varchar(2000)
     """
 
     def create1_from_clustering_task(self, key, curation_note=""):
@@ -978,7 +978,7 @@ class CuratedClustering(dj.Imported):
 
     definition = """
     # Clustering results of a curation.
-    -> Curation    
+    -> Curation
     """
 
     class Unit(dj.Part):
@@ -1005,7 +1005,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
         """
 
     def make(self, key):
@@ -1131,8 +1131,8 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode  
-        --- 
+        -> probe.ElectrodeConfig.Electrode
+        ---
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
@@ -1260,7 +1260,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering    
+    -> CuratedClustering
     """
 
     class Cluster(dj.Part):
@@ -1285,26 +1285,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """   
+        definition = """
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
+        firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
+        l_ratio=null: float  #
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
+        contamination_rate=null: float #
         """
 
     class Waveform(dj.Part):
@@ -1324,7 +1324,7 @@ class QualityMetrics(dj.Imported):
             velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """   
+        definition = """
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit

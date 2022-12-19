@@ -16,7 +16,7 @@ from element_interface.utils import dict_to_uuid
 # import the spike sorting packages
 try:
     from ecephys_spike_sorting.scripts.create_input_json import createInputJson
-    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils, log_from_json
+    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
     from ecephys_spike_sorting.modules.kilosort_helper.__main__ import (
         get_noise_channels,
     )

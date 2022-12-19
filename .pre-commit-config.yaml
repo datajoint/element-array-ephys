@@ -42,6 +42,14 @@ repos:
           - "--select=B,C,E,F,W,T4,B9"
 
           # these are errors that will be ignored by flake8
-          # check out their meaning here
-          # https://flake8.pycqa.org/en/latest/user/error-codes.html
-          - "--ignore=C813,C901,E203,E266,E501,W503,F403,F401,E402,W605"
+          # https://www.flake8rules.com/rules/{code}.html
+          - "--ignore=E203,E501,W503,W605"
+          # E203 - Colons should not have any space before them.
+          #        Needed for list indexing
+          # E501 - Line lengths are recommended to be no greater than 79 characters.
+          #        Needed as we conform to 88
+          # W503 - Line breaks should occur after the binary operator.
+          #        Needed because not compatible with black
+          # W605 - a backslash-character pair that is not a valid escape sequence now
+          #        generates a DeprecationWarning. This will eventually become a SyntaxError.
+          #        Needed because we use \d as an escape sequence
