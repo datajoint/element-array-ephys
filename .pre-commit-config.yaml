@@ -23,12 +23,12 @@ repos:
         args:
           - --line-length=88
 
-  # isort
-  - repo: https://github.com/pycqa/isort
-    rev: 5.11.2
-    hooks:
-      - id: isort
-        description: Sorts imports in an alphabetical order
+  # # isort
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.11.2
+  #   hooks:
+  #     - id: isort
+  #       description: Sorts imports in an alphabetical order
 
   # flake8
   - repo: https://github.com/pycqa/flake8

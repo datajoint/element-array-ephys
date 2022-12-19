@@ -169,8 +169,8 @@ class Kilosort:
             spk_feature_ycoord = ycoords[spk_feature_ind]
             # center of mass is sum(coords.*features)/sum(features)
             self._data["spike_depths"] = np.sum(
-                spk_feature_ycoord * pc_features ** 2, axis=1
-            ) / np.sum(pc_features ** 2, axis=1)
+                spk_feature_ycoord * pc_features**2, axis=1
+            ) / np.sum(pc_features**2, axis=1)
         else:
             self._data["spike_depths"] = None
 
