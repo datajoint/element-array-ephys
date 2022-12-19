@@ -1,11 +1,15 @@
+import pathlib
+from skimage import io
 from modulefinder import Module
 import ipywidgets as widgets
-import pathlib
+from ipywidgets import widgets as wg
 from IPython.display import display
-from .. import ephys_report
+from plotly.io import from_json
+from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 import plotly.express as px
-from skimage import io
+
+from .. import ephys_report
 
 
 def main(ephys: Module) -> widgets:
@@ -123,3 +127,125 @@ def main(ephys: Module) -> widgets:
     unit_widget = widgets.interactive(plot_unit_widget, unit=unit_dropdown_wg)
 
     return widgets.VBox([probe_widget, unit_widget])
+
+
+def qc_widget(ephys: Module) -> widgets:
+    from .qc import QualityMetricFigs
+
+    title_button = wg.Button(
+        description="Ephys Quality Control Metrics",
+        button_style="info",
+        layout=wg.Layout(
+            height="auto", width="auto", grid_area="title_button", border="solid"
+        ),
+        style=wg.ButtonStyle(button_color="#00a0df"),
+        disabled=True,
+    )
+
+    cluster_dropdown = wg.Dropdown(
+        options=ephys.QualityMetrics.fetch("KEY"),
+        description="Clusters:",
+        description_tooltip='Press "Load" to visualize the clusters identified.',
+        disabled=False,
+        layout=wg.Layout(
+            width="95%",
+            display="flex",
+            flex_flow="row",
+            justify_content="space-between",
+            grid_area="cluster_dropdown",
+        ),
+        style={"description_width": "80px"},
+    )
+
+    cutoff_dropdown = wg.Dropdown(
+        options=ephys_report.QualityMetricCutoffs.fetch("KEY"),
+        description="Cutoffs:",
+        description_tooltip='Press "Load" to visualize the clusters identified.',
+        disabled=False,
+        layout=wg.Layout(
+            width="95%",
+            display="flex",
+            flex_flow="row",
+            justify_content="space-between",
+            grid_area="cutoff_dropdown",
+        ),
+        style={"description_width": "80px"},
+    )
+
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        shared_yaxes=False,
+        horizontal_spacing=0.01,
+        vertical_spacing=0,
+        column_titles=["Firing", "Title2"],
+    )
+    fwg = go.FigureWidget(fig)
+
+    # figure_output = wg.VBox(
+    #     [QualityMetricFigs.empty_fig()],
+    #     layout=wg.Layout(width="95%", grid_area="figure_output"),
+    # )
+    # figure_output.add_class("box_style")
+
+    load_button = wg.Button(
+        description="Load",
+        tooltip="Load figures.",
+        layout=wg.Layout(width="auto", grid_area="load_button"),
+    )
+
+    def response(change, usedb=False):  # TODO: Accept cutoff vals?
+        global firing_rate_plot
+        if usedb:
+            if cluster_dropdown.value not in ephys_report.QualityMetricReport():
+                ephys_report.QualityMetricReport.populate(cluster_dropdown.value)
+
+            firing_rate_plot = from_json(
+                (ephys_report.QualityMetricReport & cluster_dropdown.value).fetch1(
+                    "firing_rate_plot"
+                )
+            )
+
+            presence_ratio_plot = from_json(
+                (ephys_report.QualityMetricReport & cluster_dropdown.value).fetch1(
+                    "presence_ratio_plot"
+                )
+            )
+
+        else:
+            qc_figs = QualityMetricFigs(cluster_dropdown)
+            firing_rate_plot = qc_figs.empty_fig()
+            presence_ratio_plot = qc_figs.empty_fig()
+
+        with fwg.batch_update():
+            fwg.data[0] = firing_rate_plot
+            fwg.data[1] = presence_ratio_plot
+
+    figure_output = wg.VBox(
+        [fwg], layout=wg.Layout(width="95%", grid_area="figure_output")
+    )
+    figure_output.add_class("box_style")
+
+    load_button.on_click(response)
+
+    main_container = wg.GridBox(
+        children=[
+            title_button,
+            cluster_dropdown,
+            cutoff_dropdown,
+            load_button,
+            figure_output,
+        ],
+        layout=wg.Layout(
+            grid_template_areas="""
+            "title_button title_button title_button"
+            "cluster_dropdown . load_button"
+            "cutoff_dropdown . load_button"
+            "figure_output figure_output figure_output"
+            """
+        ),
+        grid_template_rows="auto auto auto auto",
+        grid_template_columns="auto auto auto",
+    )
+
+    return main_container

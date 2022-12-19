@@ -2,7 +2,8 @@ import pathlib
 import datetime
 import datajoint as dj
 import typing as T
-import json
+
+from element_interface.utils import insert1_skip_full_duplicates
 
 schema = dj.schema()
 
@@ -133,6 +134,89 @@ class UnitLevelReport(dj.Computed):
                 "autocorrelogram_plotly": correlogram_fig.to_plotly_json(),
                 "depth_waveform_plotly": depth_waveform_fig.to_plotly_json(),
             }
+        )
+
+
+@schema
+class QualityMetricCutoffs(dj.Lookup):
+    definition = """
+    cutoffs_id                    : smallint
+    ---
+    amplitude_cutoff_maximum=null : float # Defualt null, no cutoff applied
+    presence_ratio_minimum=null   : float # Defualt null, no cutoff applied
+    isi_violations_maximum=null   : float # Defualt null, no cutoff applied
+    """
+
+    contents = [(0, None, None, None), (1, 0.1, 0.9, 0.5)]
+
+    def insert_new_cutoffs(
+        cls,
+        cutoffs_id: int,
+        amplitude_cutoff_maximum: float,
+        presence_ratio_minimum: float,
+        isi_violations_maximum: float,
+    ):
+        insert1_skip_full_duplicates(  # depends on element-interface/pull/43
+            cls,
+            dict(
+                cutoffs_id=cutoffs_id,
+                amplitude_cutoff_maximum=amplitude_cutoff_maximum,
+                presence_ratio_minimum=presence_ratio_minimum,
+                isi_violations_maximum=isi_violations_maximum,
+            ),
+        )
+
+
+@schema
+class QualityMetricSet(dj.Manual):
+    definition = """
+    -> ephys.QualityMetrics
+    -> QualityMetricCutoffs
+    """
+
+
+@schema
+class QualityMetricReport(dj.Computed):
+    definition = """
+    -> QualityMetricSet
+    """
+
+    class Cluster(dj.Part):
+        definition = """
+        -> master
+        ---
+        firing_rate_plot    : longblob
+        presence_ratio_plot : longblob
+        amp_cutoff_plot     : longblob
+        isi_violation_plot  : longblob
+        snr_plot            : longblob
+        iso_dist_plot       : longblob
+        d_prime_plot        : longblob
+        nn_hit_plot         : longblob
+        """
+
+    def make(self, key):
+        from .plotting.qc import QualityMetricFigs
+
+        cutoffs = (QualityMetricCutoffs & key).fetch1()
+        qc_key = ephys.QualityMetrics & key
+        qc_figs = QualityMetricFigs(qc_key, **cutoffs)
+
+        # ADD SAVEFIG?
+
+        self.insert1(key)
+        self.Cluster.insert1(
+            dict(
+                **key,
+                firing_rate_plot=qc_figs.firing_rate_plot().to_plotly_json(),
+                presence_ratio_plot=qc_figs.presence_ratio_plot().to_plotly_json(),
+                amp_cutoff_plot=qc_figs.amp_cutoff_plot().to_plotly_json(),
+                isi_violation_plot=qc_figs.isi_violation_plot().to_plotly_json(),
+                snr_plot=qc_figs.snr_plot().to_plotly_json(),
+                iso_dist_plot=qc_figs.iso_dist_plot().to_plotly_json(),
+                d_prime_plot=qc_figs.d_prime_plot().to_plotly_json(),
+                nn_hit_plot=qc_figs.nn_hit_plot().to_plotly_json(),
+            )
         )
 
 

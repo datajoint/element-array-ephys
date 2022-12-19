@@ -26,7 +26,7 @@ def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
             x=waveform_df["timestamp"],
             y=waveform_df["waveform"],
             mode="lines",
-            line=dict(color="rgb(51, 76.5, 204)", width=2),
+            line=dict(color="rgb(0, 160, 223)", width=2),  # DataJoint Blue
             hovertemplate="%{y:.2f} μV<br>" + "%{x:.2f} ms<extra></extra>",
         )
     )
