@@ -97,7 +97,7 @@ def plot_depth_waveforms(
     unit_key: dict[str, Any],
     y_range: float = 60,
 ) -> go.Figure:
-    """Plot the peak waveform (in red) and waveforms from its neighboring channels on a spatial coordinate.
+    """Plot the peak waveform (in red) and waveforms from its neighboring sites on a spatial coordinate.
 
     Args:
         ephys (Module): Imported ephys module object.

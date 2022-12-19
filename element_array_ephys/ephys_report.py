@@ -1,6 +1,8 @@
-import pathlib
 import datetime
+import pathlib
+
 import datajoint as dj
+
 from . import probe
 
 schema = dj.schema()
@@ -13,7 +15,7 @@ def activate(schema_name, ephys_schema_name, *, create_schema=True, create_table
 
     Args:
         schema_name (str): schema name on the database server to activate the `ephys_report` schema.
-        ephys_schema_name (str): schema name of the activated ephys element for which 
+        ephys_schema_name (str): schema name of the activated ephys element for which
                 this ephys_report schema will be downstream from.
         create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
         create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
@@ -97,7 +99,7 @@ class UnitLevelReport(dj.Computed):
     """Table for storing unit level figures.
 
     Attributes:
-        ephys.CuratedClustering (foreign key): ephys.CuratedClustering primary key.
+        ephys.CuratedClustering.Unit (foreign key): ephys.CuratedClustering.Unit primary key.
         ephys.ClusterQualityLabel (foreign key): ephys.ClusterQualityLabel primary key.
         waveform_plotly (longblob): Figure object for unit waveform.
         autocorrelogram_plotly (longblob): Figure object for an autocorrelogram.
@@ -107,19 +109,16 @@ class UnitLevelReport(dj.Computed):
     definition = """
     -> ephys.CuratedClustering.Unit
     ---
-    -> ephys.ClusterQualityLabel 
-    waveform_plotly                 : longblob  
+    -> ephys.ClusterQualityLabel
+    waveform_plotly                 : longblob
     autocorrelogram_plotly          : longblob
     depth_waveform_plotly           : longblob
     """
 
     def make(self, key):
 
-        from .plotting.unit_level import (
-            plot_waveform,
-            plot_auto_correlogram,
-            plot_depth_waveforms,
-        )
+        from .plotting.unit_level import (plot_auto_correlogram,
+                                          plot_depth_waveforms, plot_waveform)
 
         sampling_rate = (ephys.EphysRecording & key).fetch1(
             "sampling_rate"
