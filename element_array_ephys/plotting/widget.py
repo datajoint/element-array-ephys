@@ -1,11 +1,13 @@
-from modulefinder import Module
-import ipywidgets as widgets
 import pathlib
-from IPython.display import display
-from .. import ephys_report
-import plotly.graph_objs as go
+from modulefinder import Module
+
+import ipywidgets as widgets
 import plotly.express as px
+import plotly.graph_objs as go
+from IPython.display import display
 from skimage import io
+
+from .. import ephys_report
 
 
 def main(ephys: Module) -> widgets:

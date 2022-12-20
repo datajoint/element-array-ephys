@@ -1,7 +1,9 @@
-from datetime import datetime
-import numpy as np
-import pathlib
 import logging
+import pathlib
+from datetime import datetime
+
+import numpy as np
+
 from .utils import convert_to_number
 
 logger = logging.getLogger(__name__)
@@ -450,10 +452,10 @@ def _read_meta(meta_filepath):
 
     res = {}
     with open(meta_filepath) as f:
-        for l in (l.rstrip() for l in f):
-            if "=" in l:
+        for line in (line.rstrip() for line in f):
+            if "=" in line:
                 try:
-                    k, v = l.split("=")
+                    k, v = line.split("=")
                     v = convert_to_number(v)
                     res[k] = v
                 except ValueError:

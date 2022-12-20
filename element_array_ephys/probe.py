@@ -241,7 +241,7 @@ class ElectrodeConfig(dj.Lookup):
 
     definition = """
     # The electrode configuration setting on a given probe
-    electrode_config_hash: uuid  
+    electrode_config_hash: uuid
     ---
     -> ProbeType
     electrode_config_name: varchar(4000)  # user friendly name

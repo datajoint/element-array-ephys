@@ -117,8 +117,11 @@ class UnitLevelReport(dj.Computed):
 
     def make(self, key):
 
-        from .plotting.unit_level import (plot_auto_correlogram,
-                                          plot_depth_waveforms, plot_waveform)
+        from .plotting.unit_level import (
+            plot_auto_correlogram,
+            plot_depth_waveforms,
+            plot_waveform,
+        )
 
         sampling_rate = (ephys.EphysRecording & key).fetch1(
             "sampling_rate"
