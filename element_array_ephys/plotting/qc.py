@@ -1,9 +1,9 @@
+import logging
+import types
+
 import numpy as np
 import pandas as pd
-import datajoint as dj
-import logging
 import plotly.graph_objs as go
-import types
 from scipy.ndimage import gaussian_filter1d
 
 from .. import ephys_report
