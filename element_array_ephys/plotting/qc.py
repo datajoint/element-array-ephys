@@ -42,32 +42,32 @@ class QualityMetricFigs(object):
         self._ephys = ephys
         self._key = key
         self._scale = scale
-        self._plots = {}
+        self._plots = {}  # Empty default to defer set to dict property below
         self._fig_width = fig_width
         self._amplitude_cutoff_max = amplitude_cutoff_maximum
         self._presence_ratio_min = presence_ratio_minimum
         self._isi_violations_max = isi_violations_maximum
         self._dark_mode = dark_mode
-        self._units = pd.DataFrame()
+        self._units = pd.DataFrame()  # Empty default
         self._x_fmt = dict(showgrid=False, zeroline=False, linewidth=2, ticks="outside")
         self._y_fmt = dict(showgrid=False, linewidth=0, zeroline=True, visible=False)
-        self._no_data_text = "No data available"
-        self._null_series = pd.Series(np.nan)
+        self._no_data_text = "No data available"  # What to show when no data in table
+        self._null_series = pd.Series(np.nan)  # What to substitute when no data
 
     @property
     def key(self) -> dict:
         """Key in ephys.QualityMetrics table"""
         return self._key
 
-    @key.setter
+    @key.setter  # Allows `cls.property = new_item` notation
     def key(self, key: dict):
         """Use class_instance.key = your_key to reset key"""
         if key not in self._ephys.QualityMetrics.fetch("KEY"):
-            # if not already key, check if unquely identifies entry
+            # If not already full key, check if unquely identifies entry
             key = (self._ephys.QualityMetrics & key).fetch1("KEY")
         self._key = key
 
-    @key.deleter
+    @key.deleter  # Allows `del cls.property` to clear key
     def key(self):
         """Use del class_instance.key to clear key"""
         logger.info("Cleared key")
@@ -103,15 +103,17 @@ class QualityMetricFigs(object):
             "isi_violations_maximum", self._isi_violations_max
         )
         _ = self.units
+
         if add_to_tables:
             ephys_report.QualityMetricCutoffs.insert_new_cutoffs(**cutoff_kwargs)
+            logger.info("Added cutoffs to QualityMetricCutoffs table")
 
     @property
     def units(self) -> pd.DataFrame:
         """Pandas dataframe of QC metrics"""
         if not self._key:
-            logger.info("No key set")
             return self._null_series
+
         if self._units.empty:
             restrictions = ["TRUE"]
             if self._amplitude_cutoff_max:
@@ -120,7 +122,7 @@ class QualityMetricFigs(object):
                 restrictions.append(f"presence_ratio > {self._presence_ratio_min}")
             if self._isi_violations_max:
                 restrictions.append(f"isi_violation < {self._isi_violations_max}")
-            " AND ".join(restrictions)
+            " AND ".join(restrictions)  # Build restriction from cutoffs
             return (
                 self._ephys.QualityMetrics
                 * self._ephys.QualityMetrics.Cluster
@@ -128,6 +130,7 @@ class QualityMetricFigs(object):
                 & self._key
                 & restrictions
             ).fetch(format="frame")
+
         return self._units
 
     def _format_fig(
@@ -145,12 +148,13 @@ class QualityMetricFigs(object):
         Returns:
             go.Figure: Formatted figure
         """
-
         if not fig:
             fig = go.Figure()
         if not scale:
             scale = self._scale
+
         width = self._fig_width * scale
+
         return fig.update_layout(
             template="plotly_dark" if self._dark_mode else "simple_white",
             width=width,
@@ -160,14 +164,15 @@ class QualityMetricFigs(object):
         )
 
     def _empty_fig(
-        self, annotation="Select a key to visualize QC metrics", scale=None
+        self, text="Select a key to visualize QC metrics", scale=None
     ) -> go.Figure:
         """Return figure object for when no key is provided"""
         if not scale:
             scale = self._scale
+
         return (
             self._format_fig(scale=scale)
-            .add_annotation(text=annotation, showarrow=False)
+            .add_annotation(text=text, showarrow=False)
             .update_layout(xaxis=self._y_fmt, yaxis=self._y_fmt)
         )
 
@@ -196,10 +201,14 @@ class QualityMetricFigs(object):
             scale = self._scale
         if not fig:
             fig = self._format_fig(scale=scale)
-        # if data.isnull().all():
-        histogram, histogram_bins = np.histogram(data, bins=bins, density=True)
 
-        fig.add_trace(
+        if not data.isnull().all():
+            histogram, histogram_bins = np.histogram(data, bins=bins, density=True)
+        else:
+            # To quiet divide by zero error when no data
+            histogram, histogram_bins = np.ndarray(0), np.ndarray(0)
+
+        return fig.add_trace(
             go.Scatter(
                 x=histogram_bins[:-1],
                 y=gaussian_filter1d(histogram, 1),  # TODO: remove smoothing
@@ -209,7 +218,6 @@ class QualityMetricFigs(object):
             ),
             **trace_kwargs,
         )
-        return fig
 
     def get_single_fig(self, fig_name: str, scale: float = None) -> go.Figure:
         """Return a single figure of the plots listed in the plot_list property
@@ -224,7 +232,6 @@ class QualityMetricFigs(object):
         """
         if not self._key:
             return self._empty_fig()
-
         if not scale:
             scale = self._scale
 
@@ -234,7 +241,7 @@ class QualityMetricFigs(object):
         vline = fig_dict.get("vline", None)
 
         if data.isnull().all():
-            return self._empty_fig(annotation=self._no_data_text)
+            return self._empty_fig(text=self._no_data_text)
 
         fig = (
             self._plot_metric(data=data, bins=bins, scale=scale)
@@ -265,10 +272,10 @@ class QualityMetricFigs(object):
 
         if not self._key:
             return self._empty_fig()
-
-        n_rows = int(np.ceil(len(self.plots) / n_columns))
         if not scale:
             scale = self._scale
+
+        n_rows = int(np.ceil(len(self.plots) / n_columns))
 
         fig = self._format_fig(
             fig=make_subplots(
@@ -280,12 +287,12 @@ class QualityMetricFigs(object):
             ),
             scale=scale,
             ratio=(n_columns / n_rows),
-        ).update_layout(
+        ).update_layout(  # Global title
             title=dict(text="Histograms of Quality Metrics", xanchor="center", x=0.5),
             font=dict(size=12 * scale),
         )
 
-        for idx, plot in enumerate(self._plots.values()):
+        for idx, plot in enumerate(self._plots.values()):  # Each subplot
             this_row = int(np.floor(idx / n_columns) + 1)
             this_col = idx % n_columns + 1
             data = plot.get("data", self._null_series)
@@ -302,7 +309,7 @@ class QualityMetricFigs(object):
                         ),
                     ]
                 )
-            fig = self._plot_metric(  # still need to plot so vlines y_value works right
+            fig = self._plot_metric(  # still need to plot empty to cal y_vals min/max
                 data=data,
                 bins=plot["bins"],
                 fig=fig,
@@ -317,12 +324,11 @@ class QualityMetricFigs(object):
             )
             if vline:
                 y_vals = fig.to_dict()["data"][idx]["y"]
-                # y_vals = plot["data"]
-                fig.add_shape(
+                fig.add_shape(  # Add overlay WRT whole fig
                     go.layout.Shape(
                         type="line",
                         yref="paper",
-                        xref="x",
+                        xref="x",  # relative to subplot x
                         x0=vline,
                         y0=min(y_vals),
                         x1=vline,
@@ -332,14 +338,13 @@ class QualityMetricFigs(object):
                     row=this_row,
                     col=this_col,
                 )
-        fig.update_xaxes(**self._x_fmt)
-        fig.update_yaxes(**self._y_fmt)
-        return fig
+
+        return fig.update_xaxes(**self._x_fmt).update_yaxes(**self._y_fmt)
 
     @property
     def plot_list(self):
         """List of plots that can be rendered inidividually by name or as grid"""
-        if not self.plots:
+        if not self._plots:
             _ = self.plots
         return [plot for plot in self._plots]
 
