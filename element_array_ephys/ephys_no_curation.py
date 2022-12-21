@@ -34,6 +34,7 @@ def activate(
         ephys_schema_name (str): A string containing the name of the ephys schema.
         probe_schema_name (str): A string containing the name of the probe scehma.
         create_schema (bool): If True, schema will be created in the database.
+        create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
 
     Dependencies:
