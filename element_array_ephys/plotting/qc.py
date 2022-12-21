@@ -150,7 +150,7 @@ class QualityMetricFigs(object):
             fig = go.Figure()
         if not scale:
             scale = self._scale
-        width = self._fig_width * scale  # ctrl for scale @ init, likel
+        width = self._fig_width * scale
         return fig.update_layout(
             template="plotly_dark" if self._dark_mode else "simple_white",
             width=width,
