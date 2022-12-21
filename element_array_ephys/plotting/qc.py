@@ -1,21 +1,117 @@
 import numpy as np
 import pandas as pd
+import datajoint as dj
+import logging
 import plotly.graph_objs as go
+import types
 from scipy.ndimage import gaussian_filter1d
-from .. import ephys_no_curation as ephys
+
+from .. import ephys_report
+
+logger = logging.getLogger("datajoint")
 
 
 class QualityMetricFigs(object):
-    def __init__(self, key=None, **kwargs) -> None:
+    def __init__(
+        self,
+        ephys: types.ModuleType,
+        key: dict = None,
+        scale: float = 1,
+        fig_width=800,
+        amplitude_cutoff_maximum: float = None,
+        presence_ratio_minimum: float = None,
+        isi_violations_maximum: float = None,
+        dark_mode: bool = False,
+    ):
+        """Initialize QC metric class
+
+        Args:
+            ephys (module): datajoint module with a QualityMetric table
+            key (dict, optional): key from ephys.QualityMetric table. Defaults to None.
+            scale (float, optional): Scale at which to render figure. Defaults to 1.4.
+            fig_width (int, optional): Figure width in pixels. Defaults to 800.
+            amplitude_cutoff_maximum (float, optional): Cutoff for unit ampliude in
+                visualizations. Defaults to None.
+            presence_ratio_minimum (float, optional): Cutoff for presence ratio in
+                visualizations. Defaults to None.
+            isi_violations_maximum (float, optional): Cutoff for isi violations in
+                visualizations. Defaults to None.
+            dark_mode (bool, optional): Set background to black, foreground white.
+                Default False, black on white.
+        """
+        self._ephys = ephys
         self._key = key
-        self._amplitude_cutoff_max = kwargs.get("amplitude_cutoff_maximum", None)
-        self._presence_ratio_min = kwargs.get("presence_ratio_minimum", None)
-        self._isi_violations_max = kwargs.get("isi_violations_maximum", None)
+        self._scale = scale
+        self._plots = {}
+        self._fig_width = fig_width
+        self._amplitude_cutoff_max = amplitude_cutoff_maximum
+        self._presence_ratio_min = presence_ratio_minimum
+        self._isi_violations_max = isi_violations_maximum
+        self._dark_mode = dark_mode
         self._units = pd.DataFrame()
+        self._x_fmt = dict(showgrid=False, zeroline=False, linewidth=2, ticks="outside")
+        self._y_fmt = dict(showgrid=False, linewidth=0, zeroline=True, visible=False)
+        self._no_data_text = "No data available"
+        self._null_series = pd.Series(np.nan)
 
     @property
-    def units(self):
-        assert self._key, "Must use key when retrieving units for QC figures"
+    def key(self) -> dict:
+        """Key in ephys.QualityMetrics table"""
+        return self._key
+
+    @key.setter
+    def key(self, key: dict):
+        """Use class_instance.key = your_key to reset key"""
+        if key not in self._ephys.QualityMetrics.fetch("KEY"):
+            # if not already key, check if unquely identifies entry
+            key = (self._ephys.QualityMetrics & key).fetch1("KEY")
+        self._key = key
+
+    @key.deleter
+    def key(self):
+        """Use del class_instance.key to clear key"""
+        logger.info("Cleared key")
+        self._key = None
+
+    @property
+    def cutoffs(self) -> dict:
+        """Amplitude, presence ratio, isi violation cutoffs"""
+        return dict(
+            amplitude_cutoff_maximum=self._amplitude_cutoff_max,
+            presence_ratio_minimum=self._presence_ratio_min,
+            isi_violations_maximum=self._isi_violations_max,
+        )
+
+    @cutoffs.setter
+    def cutoffs(self, add_to_tables: bool = False, **cutoff_kwargs):
+        """Use class_instance.cutoffs = dict(var=cutoff) to adjust cutoffs
+
+        If add_to_tables=True, adds to the QualityMetricCutoffs/Set tables
+
+        Args:
+            add_to_tables (bool, optional): add to ephys_report tables. Default False
+            cutoff_kwargs (kwargs): Cutoffs to adjust: amplitude_cutoff_maximum,
+                presence_ratio_minimum, and/or isi_violations_maximum
+        """
+        self._amplitude_cutoff_max = cutoff_kwargs.get(
+            "amplitude_cutoff_maximum", self._amplitude_cutoff_max
+        )
+        self._presence_ratio_min = cutoff_kwargs.get(
+            "presence_ratio_minimum", self._presence_ratio_min
+        )
+        self._isi_violations_max = cutoff_kwargs.get(
+            "isi_violations_maximum", self._isi_violations_max
+        )
+        _ = self.units
+        if add_to_tables:
+            ephys_report.QualityMetricCutoffs.insert_new_cutoffs(**cutoff_kwargs)
+
+    @property
+    def units(self) -> pd.DataFrame:
+        """Pandas dataframe of QC metrics"""
+        if not self._key:
+            logger.info("No key set")
+            return self._null_series
         if self._units.empty:
             restrictions = ["TRUE"]
             if self._amplitude_cutoff_max:
@@ -26,35 +122,81 @@ class QualityMetricFigs(object):
                 restrictions.append(f"isi_violation < {self._isi_violations_max}")
             " AND ".join(restrictions)
             return (
-                ephys.QualityMetrics
-                * ephys.QualityMetrics.Cluster
-                * ephys.QualityMetrics.Waveform
+                self._ephys.QualityMetrics
+                * self._ephys.QualityMetrics.Cluster
+                * self._ephys.QualityMetrics.Waveform
                 & self._key
                 & restrictions
             ).fetch(format="frame")
         return self._units
 
+    def _format_fig(
+        self, fig: go.Figure = None, scale: float = None, ratio: float = 1.0
+    ) -> go.Figure:
+        """Return formatted figure or apply prmatting to existing figure
+
+        Args:
+            fig (go.Figure, optional): Apply formatting to this plotly graph object
+                Figure to apply formatting. Defaults to empty.
+            scale (float, optional): Scale to render figure. Defaults to scale from
+                class init, 1.
+            ratio (float, optional): Figure aspect ratio width/height . Defaults to 1.
+
+        Returns:
+            go.Figure: Formatted figure
+        """
+
+        if not fig:
+            fig = go.Figure()
+        if not scale:
+            scale = self._scale
+        width = self._fig_width * scale  # ctrl for scale @ init, likel
+        return fig.update_layout(
+            template="plotly_dark" if self._dark_mode else "simple_white",
+            width=width,
+            height=width / ratio,
+            margin=dict(l=20 * scale, r=20 * scale, t=40 * scale, b=40 * scale),
+            showlegend=False,
+        )
+
+    def _empty_fig(
+        self, annotation="Select a key to visualize QC metrics", scale=None
+    ) -> go.Figure:
+        """Return figure object for when no key is provided"""
+        if not scale:
+            scale = self._scale
+        return (
+            self._format_fig(scale=scale)
+            .add_annotation(text=annotation, showarrow=False)
+            .update_layout(xaxis=self._y_fmt, yaxis=self._y_fmt)
+        )
+
     def _plot_metric(
         self,
-        data,
-        bins,
-        x_axis_label,
-        scale=1,
-        vline=None,
-    ):
-        fig = go.Figure()
-        fig.update_layout(
-            xaxis_title=x_axis_label,
-            template="plotly_dark",  # "simple_white",
-            width=350 * scale,
-            height=350 * scale,
-            margin=dict(l=20 * scale, r=20 * scale, t=20 * scale, b=20 * scale),
-            xaxis=dict(showgrid=False, zeroline=False, linewidth=2, ticks="outside"),
-            yaxis=dict(showgrid=False, linewidth=0, zeroline=True, visible=False),
-        )
-        if data.isnull().all():
-            return fig.add_annotation(text="No data available", showarrow=False)
+        data: pd.DataFrame,
+        bins: np.ndarray,
+        scale: float = None,
+        fig: go.Figure = None,
+        **trace_kwargs,
+    ) -> go.Figure:
+        """Plot histogram using bins provided
 
+        Args:
+            data (pd.DataFrame): Data to be plotted, from QC metric
+            bins (np.ndarray): Array of bins to use for histogram
+            scale (float, optional): Scale to render figure. Defaults to scale from
+                class initialization.
+            fig (go.Figure, optional): Add trace to this figure. Defaults to empty
+                formatted figure.
+
+        Returns:
+            go.Figure: Histogram plot
+        """
+        if not scale:
+            scale = self._scale
+        if not fig:
+            fig = self._format_fig(scale=scale)
+        # if data.isnull().all():
         histogram, histogram_bins = np.histogram(data, bins=bins, density=True)
 
         fig.add_trace(
@@ -64,6 +206,42 @@ class QualityMetricFigs(object):
                 mode="lines",
                 line=dict(color="rgb(0, 160, 223)", width=2 * scale),  # DataJoint Blue
                 hovertemplate="%{x:.2f}<br>%{y:.2f}<extra></extra>",
+            ),
+            **trace_kwargs,
+        )
+        return fig
+
+    def get_single_fig(self, fig_name: str, scale: float = None) -> go.Figure:
+        """Return a single figure of the plots listed in the plot_list property
+
+        Args:
+            fig_name (str): Name of figure to be rendered
+            scale (float, optional): Scale to render fig. Defaults to scale at class
+                init, 1.
+
+        Returns:
+            go.Figure: Histogram plot
+        """
+        if not self._key:
+            return self._empty_fig()
+
+        if not scale:
+            scale = self._scale
+
+        fig_dict = self.plots.get(fig_name, dict()) if self._key else dict()
+        data = fig_dict.get("data", self._null_series)
+        bins = fig_dict.get("bins", np.linspace(0, 0, 0))
+        vline = fig_dict.get("vline", None)
+
+        if data.isnull().all():
+            return self._empty_fig(annotation=self._no_data_text)
+
+        fig = (
+            self._plot_metric(data=data, bins=bins, scale=scale)
+            .update_layout(xaxis=self._x_fmt, yaxis=self._y_fmt)
+            .update_layout(  # Add title
+                title=dict(text=fig_dict.get("xaxis", " "), xanchor="center", x=0.5),
+                font=dict(size=12 * scale),
             )
         )
 
@@ -72,60 +250,163 @@ class QualityMetricFigs(object):
 
         return fig
 
-    def empty_fig(self):  # TODO: Remove before submission?
-        return self._plot_metric(
-            pd.Series(["nan"]), np.linspace(0, 0, 0), "This fig left blank"
+    def get_grid(self, n_columns: int = 4, scale: float = 1.0) -> go.Figure:
+        """Plot grid of histograms as subplots in go.Figure using n_columns
+
+        Args:
+            n_columns (int, optional): Number of colums in grid. Defaults to 4.
+            scale (float, optional): Scale to render fig. Defaults to scale at class
+                init, 1.
+
+        Returns:
+            go.Figure: grid of available plots
+        """
+        from plotly.subplots import make_subplots
+
+        if not self._key:
+            return self._empty_fig()
+
+        n_rows = int(np.ceil(len(self.plots) / n_columns))
+        if not scale:
+            scale = self._scale
+
+        fig = self._format_fig(
+            fig=make_subplots(
+                rows=n_rows,
+                cols=n_columns,
+                shared_xaxes=False,
+                shared_yaxes=False,
+                vertical_spacing=(0.5 / n_rows),
+            ),
+            scale=scale,
+            ratio=(n_columns / n_rows),
+        ).update_layout(
+            title=dict(text="Histograms of Quality Metrics", xanchor="center", x=0.5),
+            font=dict(size=12 * scale),
         )
 
-    def firing_rate_plot(self):
-        return self._plot_metric(
-            np.log10(self.units["firing_rate"]),
-            np.linspace(-3, 2, 100),  # If linear, use np.linspace(0, 50, 100)
-            "log<sub>10</sub> firing rate (Hz)",
-        )
+        for idx, plot in enumerate(self._plots.values()):
+            this_row = int(np.floor(idx / n_columns) + 1)
+            this_col = idx % n_columns + 1
+            data = plot.get("data", self._null_series)
+            vline = plot.get("vline", None)
+            if data.isnull().all():
+                vline = None  # If no data, don't want vline either
+                fig["layout"].update(
+                    annotations=[
+                        dict(
+                            xref=f"x{idx+1}",
+                            yref=f"y{idx+1}",
+                            text=self._no_data_text,
+                            showarrow=False,
+                        ),
+                    ]
+                )
+            fig = self._plot_metric(  # still need to plot so vlines y_value works right
+                data=data,
+                bins=plot["bins"],
+                fig=fig,
+                row=this_row,
+                col=this_col,
+                scale=scale,
+            )
+            fig.update_xaxes(
+                title=dict(text=plot["xaxis"], font_size=11 * scale),
+                row=this_row,
+                col=this_col,
+            )
+            if vline:
+                y_vals = fig.to_dict()["data"][idx]["y"]
+                # y_vals = plot["data"]
+                fig.add_shape(
+                    go.layout.Shape(
+                        type="line",
+                        yref="paper",
+                        xref="x",
+                        x0=vline,
+                        y0=min(y_vals),
+                        x1=vline,
+                        y1=max(y_vals),
+                        line=dict(width=2 * scale),
+                    ),
+                    row=this_row,
+                    col=this_col,
+                )
+        fig.update_xaxes(**self._x_fmt)
+        fig.update_yaxes(**self._y_fmt)
+        return fig
 
-    def presence_ratio_plot(self):
-        return self._plot_metric(
-            self.units["presence_ratio"],
-            np.linspace(0, 1, 100),
-            "Presence ratio",
-            vline=0.9,
-        )
+    @property
+    def plot_list(self):
+        """List of plots that can be rendered inidividually by name or as grid"""
+        if not self.plots:
+            _ = self.plots
+        return [plot for plot in self._plots]
 
-    def amp_cutoff_plot(self):
-        return self._plot_metric(
-            self.units["amplitude_cutoff"],
-            np.linspace(0, 0.5, 200),
-            "Amplitude cutoff",
-            vline=0.1,
-        )
+    @property
+    def plots(self):
+        if not self._plots:
+            self._plots = {
+                "firing_rate": {  # If linear, use np.linspace(0, 50, 100)
+                    "xaxis": "Firing rate (log<sub>10</sub> Hz)",
+                    "data": np.log10(self.units.get("firing_rate", self._null_series)),
+                    "bins": np.linspace(-3, 2, 100),
+                },
+                "presence_ratio": {
+                    "xaxis": "Presence ratio",
+                    "data": self.units.get("presence_ratio", self._null_series),
+                    "bins": np.linspace(0, 1, 100),
+                    "vline": 0.9,
+                },
+                "amp_cutoff": {
+                    "xaxis": "Amplitude cutoff",
+                    "data": self.units.get("amplitude_cutoff", self._null_series),
+                    "bins": np.linspace(0, 0.5, 200),
+                    "vline": 0.1,
+                },
+                "isi_violation": {  # If linear bins(0, 10, 200). Offset b/c log(0) null
+                    "xaxis": "ISI violations (log<sub>10</sub>)",
+                    "data": np.log10(
+                        self.units.get("isi_violation", self._null_series) + 1e-5
+                    ),
+                    "bins": np.linspace(-6, 2.5, 100),
+                    "vline": np.log10(0.5),
+                },
+                "snr": {
+                    "xaxis": "SNR",
+                    "data": self.units.get("snr", self._null_series),
+                    "bins": np.linspace(0, 10, 100),
+                },
+                "iso_dist": {
+                    "xaxis": "Isolation distance",
+                    "data": self.units.get("isolation_distance", self._null_series),
+                    "bins": np.linspace(0, 170, 50),
+                },
+                "d_prime": {
+                    "xaxis": "d-prime",
+                    "data": self.units.get("d_prime", self._null_series),
+                    "bins": np.linspace(0, 15, 50),
+                },
+                "nn_hit": {
+                    "xaxis": "Nearest-neighbors hit rate",
+                    "data": self.units.get("nn_hit_rate", self._null_series),
+                    "bins": np.linspace(0, 1, 100),
+                },
+            }
+        return self._plots
 
-    def isi_violation_plot(self):
-        return self._plot_metric(
-            np.log10(self.units["isi_violation"] + 1e-5),  # Offset b/c log(0)
-            np.linspace(-6, 2.5, 100),  # If linear np.linspace(0, 10, 200)
-            "log<sub>10</sub> ISI violations",
-            vline=np.log10(0.5),
-        )
+    @plots.setter
+    def plots(self, new_plot_dict: dict):
+        """Adds or updates plot item in the set to be rendered.
 
-    def snr_plot(self):
-        return self._plot_metric(self.units["snr"], np.linspace(0, 10, 100), "SNR")
+        plot items are structured as followed: dict with name key, embedded dict with
+            xaxis: string x-axis label
+            data: pandas dataframe to be plotted
+            bins: numpy ndarray of bin cutoffs for histogram
+        """
+        _ = self.plots
+        [self._plots.update({k: v}) for k, v in new_plot_dict.items()]
 
-    def iso_dist_plot(self):
-        return self._plot_metric(
-            self.units["isolation_distance"],
-            np.linspace(0, 170, 50),
-            "Isolation distance",
-        )
-
-    def d_prime_plot(self):
-        return self._plot_metric(
-            self.units["d_prime"], np.linspace(0, 15, 50), "d-prime"
-        )
-
-    def nn_hit_plot(self):
-        return self._plot_metric(
-            self.units["nn_hit_rate"],
-            np.linspace(0, 1, 100),
-            "Nearest-neighbors hit rate",
-        )
+    def remove_plot(self, plot_name):
+        """Removes an item from the set of plots"""
+        _ = self._plots.pop(plot_name)

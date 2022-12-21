@@ -93,8 +93,8 @@ class UnitLevelReport(dj.Computed):
     definition = """
     -> ephys.CuratedClustering.Unit
     ---
-    cluster_quality_label   : varchar(100) 
-    waveform_plotly         : longblob  
+    cluster_quality_label   : varchar(100)
+    waveform_plotly         : longblob
     autocorrelogram_plotly  : longblob
     depth_waveform_plotly   : longblob
     """
@@ -151,11 +151,14 @@ class QualityMetricCutoffs(dj.Lookup):
 
     def insert_new_cutoffs(
         cls,
-        cutoffs_id: int,
-        amplitude_cutoff_maximum: float,
-        presence_ratio_minimum: float,
-        isi_violations_maximum: float,
+        cutoffs_id: int = None,
+        amplitude_cutoff_maximum: float = None,
+        presence_ratio_minimum: float = None,
+        isi_violations_maximum: float = None,
     ):
+        if not cutoffs_id:
+            cutoffs_id = (dj.U().aggr(cls, n="max(cutoffs_id)").fetch1("n") or 0) + 1
+
         insert1_skip_full_duplicates(  # depends on element-interface/pull/43
             cls,
             dict(
@@ -179,43 +182,19 @@ class QualityMetricSet(dj.Manual):
 class QualityMetricReport(dj.Computed):
     definition = """
     -> QualityMetricSet
+    ---
+    plot_grid : longblob
     """
-
-    class Cluster(dj.Part):
-        definition = """
-        -> master
-        ---
-        firing_rate_plot    : longblob
-        presence_ratio_plot : longblob
-        amp_cutoff_plot     : longblob
-        isi_violation_plot  : longblob
-        snr_plot            : longblob
-        iso_dist_plot       : longblob
-        d_prime_plot        : longblob
-        nn_hit_plot         : longblob
-        """
 
     def make(self, key):
         from .plotting.qc import QualityMetricFigs
 
         cutoffs = (QualityMetricCutoffs & key).fetch1()
         qc_key = ephys.QualityMetrics & key
-        qc_figs = QualityMetricFigs(qc_key, **cutoffs)
 
-        # ADD SAVEFIG?
-
-        self.insert1(key)
-        self.Cluster.insert1(
-            dict(
-                **key,
-                firing_rate_plot=qc_figs.firing_rate_plot().to_plotly_json(),
-                presence_ratio_plot=qc_figs.presence_ratio_plot().to_plotly_json(),
-                amp_cutoff_plot=qc_figs.amp_cutoff_plot().to_plotly_json(),
-                isi_violation_plot=qc_figs.isi_violation_plot().to_plotly_json(),
-                snr_plot=qc_figs.snr_plot().to_plotly_json(),
-                iso_dist_plot=qc_figs.iso_dist_plot().to_plotly_json(),
-                d_prime_plot=qc_figs.d_prime_plot().to_plotly_json(),
-                nn_hit_plot=qc_figs.nn_hit_plot().to_plotly_json(),
+        self.insert1(
+            key.update(
+                dict(plot_grid=QualityMetricFigs(qc_key, **cutoffs).get_grid().to_json)
             )
         )
 
