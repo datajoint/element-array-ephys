@@ -3,8 +3,6 @@ from skimage import io
 import types
 from ipywidgets import widgets
 from IPython.display import display
-from plotly.io import from_json
-from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 import plotly.express as px
 
