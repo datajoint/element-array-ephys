@@ -606,7 +606,7 @@ class Clustering(dj.Imported):
                 'acq_software', 'clustering_method', 'params')
 
             if 'kilosort' in clustering_method:
-                # from element_array_ephys.readers import kilosort_triggering
+                from element_array_ephys.readers import kilosort_triggering
 
                 # add additional probe-recording and channels details into `params`
                 params = {**params, **get_recording_channels_details(key)}
@@ -620,9 +620,7 @@ class Clustering(dj.Imported):
 
                     stream_name = os.path.split(spikeglx_meta_filepath)[1]
                     
-                    oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=spikeglx_meta_filepath, stream_name=stream_name) 
-
-                    sglx_si_recording = se.SpikeGLXRecordingExtractor(spikeglx_meta_filepath,"imec.ap")
+                    sglx_si_recording = se.SpikeGLXRecordingExtractor(folder_path=spikeglx_meta_filepath, stream_name=stream_name)
 
                     electrode_query = (probe.ProbeType.Electrode
                                     * probe.ElectrodeConfig.Electrode
@@ -631,23 +629,20 @@ class Clustering(dj.Imported):
                     xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'), electrode_query.fetch('y_coord'))]
 
                     channel_details = get_recording_channels_details(key)
-                        
 
                     probe = pi.Probe(ndim=2, si_units='um')
                     probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
                     probe.create_auto_shape(probe_type='tip')
 
-
                     channel_indices = np.arange(channel_details['num_channels'])
                     probe.set_device_channel_indices(channel_indices)
                     sglx_si_recording.set_probe(probe=probe)
  
-
                     # SpikeInterface Recording Object Preprocessing 
                     # Apply bandpass filter and rewrite recording object
                     # Store common mode referenced recording for construction of waveform extractor object
                     recording_cmr = sglx_si_recording
-                    oe_si_recording = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
+                    sglx_si_recording = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
                     recording_cmr = sip.common_reference(sglx_si_recording, reference="global", operator="median")
 
                     """ Preprocessing Options - Can choose optimal pipeline
@@ -670,99 +665,60 @@ class Clustering(dj.Imported):
                         'whiten': <class 'spikeinterface.preprocessing.whiten.WhitenRecording'>,
                         'zero_channel_pad': <class 'spikeinterface.preprocessing.zero_channel_pad.ZeroChannelPaddedRecording
                     """
-                    #******************** Current Implementation *************************
-                    # if clustering_method.startswith('pykilosort'):
-                    #     kilosort_triggering.run_pykilosort(
-                    #         continuous_file=spikeglx_recording.root_dir / (
-                    #                     spikeglx_recording.root_name + '.ap.bin'),
-                    #         kilosort_output_directory=kilosort_dir,
-                    #         channel_ind=params.pop('channel_ind'),
-                    #         x_coords=params.pop('x_coords'),
-                    #         y_coords=params.pop('y_coords'),
-                    #         shank_ind=params.pop('shank_ind'),
-                    #         connected=params.pop('connected'),
-                    #         sample_rate=params.pop('sample_rate'),
-                    #         params=params)
-                    # elif clustering_method.startswith('kilosort'):
-                    #     run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
-                    #         npx_input_dir=spikeglx_meta_filepath.parent,
-                    #         ks_output_dir=kilosort_dir,
-                    #         params=params,
-                    #         KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                    #         run_CatGT=True)
-                    #     run_kilosort.run_modules()
-
-                    # ***************** New SpikeInterface Implementation ************************
-                    
-                    # Check through all types of spike sorters
-                    if clustering_method.startswith('kilosort'):
+                    if clustering_method.startswith('pykilosort'):
+                        kilosort_triggering.run_pykilosort(
+                            continuous_file=spikeglx_recording.root_dir / (
+                                        spikeglx_recording.root_name + '.ap.bin'),
+                            kilosort_output_directory=kilosort_dir,
+                            channel_ind=params.pop('channel_ind'),
+                            x_coords=params.pop('x_coords'),
+                            y_coords=params.pop('y_coords'),
+                            shank_ind=params.pop('shank_ind'),
+                            connected=params.pop('connected'),
+                            sample_rate=params.pop('sample_rate'),
+                            params=params)
+                    elif clustering_method.endswith('spike_interface'):
+                        if clustering_method.startswith('kilosort2.5'):
+                            sorter_name = "kilosort2_5"
+                        else:
+                            sorter_name = clustering_method
                         sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort",
+                            sorter_name = sorter_name,
                             recording = sglx_si_recording,
                             output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort2'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort2",
-                            recording = sglx_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort2-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort2_5'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort2_5",
-                            recording = sglx_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort2_5-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort3'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort3",
-                            recording = sglx_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort3-compiled-base:latest",
-                            **params
-                        )
+                            docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
+                            **params)
+                    elif clustering_method.startswith('kilosort'):
+                        run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
+                            npx_input_dir=spikeglx_meta_filepath.parent,
+                            ks_output_dir=kilosort_dir,
+                            params=params,
+                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
+                            run_CatGT=True)
+                        run_kilosort.run_modules()
                     else:
                         raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
                     
                 elif acq_software == 'Open Ephys':
-                    # oe_probe = get_openephys_probe_data(key)
-
-                    # inserted_probe_serial_number = (ProbeInsertion * probe.Probe
-                    #                 & key).fetch1('probe')
-                    # oe_file_path = find_full_path(get_ephys_root_data_dir(),
-                    #                         get_session_directory(key))
-
-                    # assert len(oe_probe.recording_info['recording_files']) == 1
-
-                    # Clarify how OE views and loads multi probe data
-                    
+                    oe_probe = get_openephys_probe_data(key)
+                    inserted_probe_serial_number = (ProbeInsertion * probe.Probe
+                                    & key).fetch1('probe')
+                    oe_file_path = find_full_path(get_ephys_root_data_dir(),
+                                            get_session_directory(key))
+                    assert len(oe_probe.recording_info['recording_files']) == 1
                     oe_filepath = get_openephys_filepath(key)
-
                     stream_name = os.path.split(oe_filepath)[1]
-                    
                     oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_file_path, stream_name=stream_name) 
-
                     electrode_query = (probe.ProbeType.Electrode
                                     * probe.ElectrodeConfig.Electrode
                                     * EphysRecording & key)
 
                     xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
-
-                    channel_details = get_recording_channels_details(key)
-                        
-
+                    channel_details = get_recording_channels_details(key) 
                     probe = pi.Probe(ndim=2, si_units='um')
                     probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
                     probe.create_auto_shape(probe_type='tip')
-
-
                     channel_indices = np.arange(channel_details['num_channels'])
                     probe.set_device_channel_indices(channel_indices)
                     oe_si_recording.set_probe(probe=probe)
@@ -777,63 +733,40 @@ class Clustering(dj.Imported):
 
                     # run kilosort
                     #******************** Current Implementation *************************
-                    # if clustering_method.startswith('pykilosort'):
-                    #     kilosort_triggering.run_pykilosort(
-                    #         continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
-                    #         kilosort_output_directory=kilosort_dir,
-                    #         channel_ind=params.pop('channel_ind'),
-                    #         x_coords=params.pop('x_coords'),
-                    #         y_coords=params.pop('y_coords'),
-                    #         shank_ind=params.pop('shank_ind'),
-                    #         connected=params.pop('connected'),
-                    #         sample_rate=params.pop('sample_rate'),
-                    #         params=params)
-                    # else:
-                    #     run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
-                    #         npx_input_dir=oe_probe.recording_info['recording_files'][0],
-                    #         ks_output_dir=kilosort_dir,
-                    #         params=params,
-                    #         KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
-                    #     run_kilosort.run_modules()
+                    if clustering_method.startswith('pykilosort'):
+                        kilosort_triggering.run_pykilosort(
+                            continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
+                            kilosort_output_directory=kilosort_dir,
+                            channel_ind=params.pop('channel_ind'),
+                            x_coords=params.pop('x_coords'),
+                            y_coords=params.pop('y_coords'),
+                            shank_ind=params.pop('shank_ind'),
+                            connected=params.pop('connected'),
+                            sample_rate=params.pop('sample_rate'),
+                            params=params)
+                    elif clustering_method.endswith('spike_interface'):
+                        if clustering_method.startswith('kilosort2.5'):
+                            sorter_name = "kilosort2_5"
+                        else:
+                            sorter_name = clustering_method
+                        sorting_kilosort = si.run_sorter(
+                            sorter_name = sorter_name,
+                            recording = oe_si_recording,
+                            output_folder = kilosort_dir,
+                            docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
+                            **params
+                        )
+                        run_si = kilosort_triggering.SIKilosortPipeline(
 
-                    #******************** New SI Implementation *************************
-
-                    if clustering_method.startswith('kilosort'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort",
-                            recording = oe_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort2'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort2",
-                            recording = oe_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort2-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort2_5'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort2_5",
-                            recording = oe_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort2_5-compiled-base:latest",
-                            **params
-                        )
-                    elif clustering_method.startswith('kilosort3'):
-                        sorting_kilosort = si.run_sorter(
-                            sorter_name = "kilosort3",
-                            recording = oe_si_recording,
-                            output_folder = kilosort_dir,
-                            docker_image = "spikeinterface/kilosort3-compiled-base:latest",
-                            **params
-                        )
+                        ) 
+                        run_si.run_modules()  
                     else:
-                        raise NotImplementedError(f'Automatic triggering of {clustering_method}'
-                                          f' clustering analysis is not yet supported')
-
+                        run_kilosort = kilosort_triggering.OpenEphysKilosortPipeline(
+                            npx_input_dir=oe_probe.recording_info['recording_files'][0],
+                            ks_output_dir=kilosort_dir,
+                            params=params,
+                            KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}')
+                        run_kilosort.run_modules()
             else:
                 raise NotImplementedError(f'Automatic triggering of {clustering_method}'
                                           f' clustering analysis is not yet supported')
@@ -854,12 +787,9 @@ class Clustering(dj.Imported):
             template = we_kilosort.get_template(unit_id0)
             snrs = si.compute_snrs(we_kilosort)
             
-
             # QC Metrics 
             si_violations_ratio, isi_violations_rate, isi_violations_count = si.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
             metrics = si.compute_quality_metrics(we_kilosort, metric_names=["snr", "isi_violation", "amplitude_cutoff"])
-
-
 
 
 @schema
