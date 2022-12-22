@@ -149,6 +149,7 @@ class QualityMetricCutoffs(dj.Lookup):
 
     contents = [(0, None, None, None), (1, 0.1, 0.9, 0.5)]
 
+    @classmethod
     def insert_new_cutoffs(
         cls,
         cutoffs_id: int = None,

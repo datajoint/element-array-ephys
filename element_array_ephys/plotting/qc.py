@@ -83,30 +83,23 @@ class QualityMetricFigs(object):
         )
 
     @cutoffs.setter
-    def cutoffs(self, add_to_tables: bool = False, **cutoff_kwargs):
+    def cutoffs(self, cutoff_dict):
         """Use class_instance.cutoffs = dict(var=cutoff) to adjust cutoffs
 
-        If add_to_tables=True, adds to the QualityMetricCutoffs/Set tables
-
         Args:
-            add_to_tables (bool, optional): add to ephys_report tables. Default False
-            cutoff_kwargs (kwargs): Cutoffs to adjust: amplitude_cutoff_maximum,
+            cutoff_dict (kwargs): Cutoffs to adjust: amplitude_cutoff_maximum,
                 presence_ratio_minimum, and/or isi_violations_maximum
         """
-        self._amplitude_cutoff_max = cutoff_kwargs.get(
+        self._amplitude_cutoff_max = cutoff_dict.get(
             "amplitude_cutoff_maximum", self._amplitude_cutoff_max
         )
-        self._presence_ratio_min = cutoff_kwargs.get(
+        self._presence_ratio_min = cutoff_dict.get(
             "presence_ratio_minimum", self._presence_ratio_min
         )
-        self._isi_violations_max = cutoff_kwargs.get(
+        self._isi_violations_max = cutoff_dict.get(
             "isi_violations_maximum", self._isi_violations_max
         )
         _ = self.units
-
-        if add_to_tables:
-            ephys_report.QualityMetricCutoffs.insert_new_cutoffs(**cutoff_kwargs)
-            logger.info("Added cutoffs to QualityMetricCutoffs table")
 
     @property
     def units(self) -> pd.DataFrame:
