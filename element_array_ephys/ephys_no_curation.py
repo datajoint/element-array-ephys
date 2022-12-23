@@ -628,13 +628,13 @@ class Clustering(dj.Imported):
 
                     xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'), electrode_query.fetch('y_coord'))]
 
-                    channel_details = get_recording_channels_details(key)
+                    channels_details = get_recording_channels_details(key)
 
                     probe = pi.Probe(ndim=2, si_units='um')
                     probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
                     probe.create_auto_shape(probe_type='tip')
 
-                    channel_indices = np.arange(channel_details['num_channels'])
+                    channel_indices = np.arange(channels_details['num_channels'])
                     probe.set_device_channel_indices(channel_indices)
                     sglx_si_recording.set_probe(probe=probe)
  
@@ -715,11 +715,11 @@ class Clustering(dj.Imported):
                                     * EphysRecording & key)
 
                     xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
-                    channel_details = get_recording_channels_details(key) 
+                    channels_details = get_recording_channels_details(key) 
                     probe = pi.Probe(ndim=2, si_units='um')
                     probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
                     probe.create_auto_shape(probe_type='tip')
-                    channel_indices = np.arange(channel_details['num_channels'])
+                    channel_indices = np.arange(channels_details['num_channels'])
                     probe.set_device_channel_indices(channel_indices)
                     oe_si_recording.set_probe(probe=probe)
 
@@ -757,7 +757,12 @@ class Clustering(dj.Imported):
                             **params
                         )
                         run_si = kilosort_triggering.SIKilosortPipeline(
-
+                            sorter_name=sorter_name,
+                            recording=oe_si_recording,
+                            num_channels=channels_details['num_channels'],
+                            xy_coords=xy_coords,
+                            ks_output_dir=kilosort_dir,
+                            params=params,
                         ) 
                         run_si.run_modules()  
                     else:

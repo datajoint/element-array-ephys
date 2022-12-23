@@ -546,6 +546,73 @@ class OpenEphysKilosortPipeline:
             {'cumulative_execution_duration': cumulative_execution_duration,
              'total_duration': total_duration})
 
+class SIKilosortPipeline:
+    """
+    An object of SIKilosortPipeline manages the state of the Kilosort data processing pipeline
+    for one Neuropixels probe in one recording session.
+
+    Primarily calling routines specified in:
+    https://github.com/SpikeInterface/spikeinterface
+    """
+
+    _modules = [#'depth_estimation',
+                #'median_subtraction',
+                'si_kilosort_helper',
+                'si_kilosort_postprocessing',
+                'si_qc_metrics',
+                #'noise_templates',
+                #'mean_waveforms'
+                ]
+    ks2_params = {"fs": 30000, "fshigh": 150, "minfr_goodchannels": 0.1, "Th": [10, 4], 
+            "lam": 10, "AUCsplit": 0.9, "minFR": 0.02, "momentum": [20, 400], "sigmaMask": 30, 
+            "ThPr": 8, "spkTh": -6, "reorder": 1, "nskip": 25, "GPU": 1, "nfilt_factor": 4, 
+            "ntbuff": 64, "whiteningRange": 32, "nSkipCov": 25, 
+            "scaleproc": 200, "nPCs": 3, "useRAM": 0}
+
+    ks2_5_params = {"AUCsplit": 0.9, "GPU": 1, "Nfilt": 1024, "Th": [10, 4], "ThPr": 8, 
+                "ThPre": 8, "fs": 30000, "fshigh": 150, "lam": 10, "minFR": 0.02, 
+                "minfr_goodchannels": 0.1, "momentum": [20, 400], "nPCs": 3, "nSkipCov": 25, 
+                "nfilt_factor": 4, "nskip": 25, "ntbuff": 64, "reorder": 1, "scaleproc": 200, 
+                "sigmaMask": 30, "spkTh": -6, "useRAM": 0, "whiteningRange": 32}
+
+    _input_json_args = list(inspect.signature(createInputJson).parameters)
+
+    def __init__(self, sorter_name: str, recording, num_channels: int, xy_coords, ks_output_dir: str, 
+                 params: dict):
+        self._ks_output_dir = pathlib.Path(ks_output_dir)
+        self._ks_output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._xycoords = xy_coords
+        self._num_channels = num_channels
+        self._params = params
+
+        # self._json_directory = self._ks_output_dir / 'json_configs'
+        # self._json_directory.mkdir(parents=True, exist_ok=True)
+
+        # self.ks_input_params = None
+        # self._modules_input_hash = None
+        # self._modules_input_hash_fp = None
+
+    def create_si_probe(self):
+        probe = pi.Probe(ndim=2, si_units='um')
+        probe.set_contacts(positions=self._xy_coords, shapes='square', shape_params={'width': 5})
+        probe.create_auto_shape(probe_type='tip')
+        channel_indices = np.arange(self._num_channels)
+        probe.set_device_channel_indices(channel_indices)
+        oe_si_recording.set_probe(probe=probe)
+
+        # Kilosort Recording Object Preprocessing 
+        # Apply bandpass filter and rewrite recording object
+        # Store common mode referenced recording for construction of waveform extractor object
+        recording_cmr = oe_si_recording
+        oe_si_recording = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
+        recording_cmr = sip.common_reference(oe_si_recording, reference="global", operator="median")
+
+
+    def run_si_sorter(self):
+        
+
+
 
 def run_pykilosort(continuous_file, kilosort_output_directory, params,
                    channel_ind, x_coords, y_coords, shank_ind, connected, sample_rate):
