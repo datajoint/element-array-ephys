@@ -34,7 +34,7 @@ def plot_raster(units: np.ndarray, spike_times: np.ndarray) -> matplotlib.figure
 def plot_driftmap(
     spike_times: np.ndarray, spike_depths: np.ndarray, colormap="gist_heat_r"
 ) -> matplotlib.figure.Figure:
-    """Plot unit activity drift map all units recorded in a given shank of a probe.
+    """Plot drift map of unit activity for all units recorded in a given shank of a probe.
 
     Args:
         spike_times (np.ndarray): Spike timestamps in seconds.

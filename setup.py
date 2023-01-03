@@ -12,7 +12,6 @@ with open(path.join(here, "requirements.txt")) as f:
     requirements = f.read().splitlines()
 
 with open(path.join(here, pkg_name, "version.py")) as f:
-    __version__ = "Default value to quiet linter"
     exec(f.read())
 
 setup(
