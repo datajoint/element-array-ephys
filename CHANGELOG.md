@@ -6,7 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.2.2] - Unreleased
 
 + Update & fix docstrings
-+ `UnitLevelReport` depends on `ClusterQualityLabel`
++ Update - `ephys_report.UnitLevelReport` to add `ephys.ClusterQualityLabel` as a foreign key reference
 + Add `.pre-commit-config.yaml`
 
 ## [0.2.1] - Unreleased
