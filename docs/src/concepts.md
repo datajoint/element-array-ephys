@@ -109,8 +109,8 @@ Tables for storing probe or unit-level visualization results.
 
 | Table            | Description                                                   |
 | ---------------- | ------------------------------------------------------------- |
-| ProbeLevelReport | A table to store figures generated from each recording probe. |
-| UnitLevelReport  | A table to store figures generated for each unit.             |
+| ProbeLevelReport | A table to store drift map figures generated from each recording probe. |
+| UnitLevelReport  | A table to store figures (waveforms, autocorrelogram, peak waveform + neighbors) generated for each unit.             |
 
 ## Element Development
 
