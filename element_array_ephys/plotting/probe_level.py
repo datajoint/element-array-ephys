@@ -12,7 +12,7 @@ def plot_raster(units: np.ndarray, spike_times: np.ndarray) -> matplotlib.figure
         spike_times (np.ndarray): Spike timestamps in seconds.
 
     Returns:
-        matplotlib.figure.Figure: matplotlib figure object.
+        matplotlib.figure.Figure: matplotlib figure object showing spikes rasters over time (x-axis in seconds). Each row (y-axis) indicates a single unit.
     """
     units = np.arange(1, len(units) + 1)
     x = np.hstack(spike_times)
@@ -42,7 +42,7 @@ def plot_driftmap(
         colormap (str, optional): Colormap. Defaults to "gist_heat_r".
 
     Returns:
-        matplotlib.figure.Figure: matplotlib figure object.
+        matplotlib.figure.Figure: matplotlib figure object for showing population activity for all units over time (x-axis in seconds) according to the spatial depths of the spikes (y-axis in μm).
     """
 
     spike_times = np.hstack(spike_times)

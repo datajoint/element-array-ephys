@@ -16,7 +16,7 @@ def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
         sampling_rate (float): Sampling rate in kHz.
 
     Returns:
-        go.Figure: Plotly figure object.
+        go.Figure: Plotly figure object for showing the amplitude of a waveform (y-axis in μV) over time (x-axis).
     """
     waveform_df = pd.DataFrame(data={"waveform": waveform})
     waveform_df["timestamp"] = waveform_df.index / sampling_rate
@@ -50,10 +50,11 @@ def plot_auto_correlogram(
     Args:
         spike_times (np.ndarray): Spike timestamps in seconds
         bin_size (float, optional): Size of the time bin (lag) in seconds. Defaults to 0.001.
-        window_size (int, optional): Size of the correlogram window in seconds. Defaults to 1.
+        window_size (int, optional): Size of the correlogram window in seconds. Defaults to 1 (± 500ms)
 
     Returns:
-        go.Figure: Plotly figure object.
+        go.Figure: Plotly figure object for showing
+        counts (y-axis) over time lags (x-axis).
     """
     from .corr import acorr
 
