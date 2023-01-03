@@ -17,7 +17,7 @@ with open(path.join(here, pkg_name, "version.py")) as f:
 
 setup(
     name=pkg_name.replace("_", "-"),
-    version=__version__,
+    version=__version__, # noqa F821
     description="DataJoint Element for Extracellular Array Electrophysiology",
     long_description=long_description,
     long_description_content_type="text/markdown",
