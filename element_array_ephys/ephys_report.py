@@ -160,9 +160,9 @@ class QualityMetricCutoffs(dj.Lookup):
     definition = """
     cutoffs_id                    : smallint
     ---
-    amplitude_cutoff_maximum=null : float # Defualt null, no cutoff applied
-    presence_ratio_minimum=null   : float # Defualt null, no cutoff applied
-    isi_violations_maximum=null   : float # Defualt null, no cutoff applied
+    amplitude_cutoff_maximum=null : float # Defaults to null, no cutoff applied
+    presence_ratio_minimum=null   : float # Defaults to null, no cutoff applied
+    isi_violations_maximum=null   : float # Defaults to null, no cutoff applied
     cutoffs_hash: uuid
     unique index (cutoffs_hash)
     """
