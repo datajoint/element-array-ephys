@@ -1,7 +1,9 @@
 import datetime
 import pathlib
+from uuid import UUID
 
 import datajoint as dj
+from element_interface.utils import dict_to_uuid
 
 from . import probe
 
@@ -150,6 +152,94 @@ class UnitLevelReport(dj.Computed):
                 "autocorrelogram_plotly": correlogram_fig.to_plotly_json(),
                 "depth_waveform_plotly": depth_waveform_fig.to_plotly_json(),
             }
+        )
+
+
+@schema
+class QualityMetricCutoffs(dj.Lookup):
+    definition = """
+    cutoffs_id                    : smallint
+    ---
+    amplitude_cutoff_maximum=null : float # Defualt null, no cutoff applied
+    presence_ratio_minimum=null   : float # Defualt null, no cutoff applied
+    isi_violations_maximum=null   : float # Defualt null, no cutoff applied
+    cutoffs_hash: uuid
+    unique index (cutoffs_hash)
+    """
+
+    contents = [
+        (0, None, None, None, UUID("5d835de1-e1af-1871-d81f-d12a9702ff5f")),
+        (1, 0.1, 0.9, 0.5, UUID("f74ccd77-0b3a-2bf8-0bfd-ec9713b5dca8")),
+    ]
+
+    @classmethod
+    def insert_new_cutoffs(
+        cls,
+        cutoffs_id: int = None,
+        amplitude_cutoff_maximum: float = None,
+        presence_ratio_minimum: float = None,
+        isi_violations_maximum: float = None,
+    ):
+        if cutoffs_id is None:
+            cutoffs_id = (dj.U().aggr(cls, n="max(cutoffs_id)").fetch1("n") or 0) + 1
+
+        param_dict = {
+            "amplitude_cutoff_maximum": amplitude_cutoff_maximum,
+            "presence_ratio_minimum": presence_ratio_minimum,
+            "isi_violations_maximum": isi_violations_maximum,
+        }
+        param_hash = dict_to_uuid(param_dict)
+        param_query = cls & {"cutoffs_hash": param_hash}
+
+        if param_query:  # If the specified cutoff set already exists
+            existing_paramset_idx = param_query.fetch1("cutoffs_id")
+            if (
+                existing_paramset_idx == cutoffs_id
+            ):  # If the existing set has the same id: job done
+                return
+            # If not same name: human err, adding the same set with different name
+            else:
+                raise dj.DataJointError(
+                    f"The specified param-set already exists"
+                    f" - with paramset_idx: {existing_paramset_idx}"
+                )
+        else:
+            if {"cutoffs_id": cutoffs_id} in cls.proj():
+                raise dj.DataJointError(
+                    f"The specified cuttoffs_id {cutoffs_id} already exists,"
+                    f" please pick a different one."
+                )
+            cls.insert1(
+                {"cutoffs_id": cutoffs_id, **param_dict, "cutoffs_hash": param_hash}
+            )
+
+
+@schema
+class QualityMetricSet(dj.Manual):
+    definition = """
+    -> ephys.QualityMetrics
+    -> QualityMetricCutoffs
+    """
+
+
+@schema
+class QualityMetricReport(dj.Computed):
+    definition = """
+    -> QualityMetricSet
+    ---
+    plot_grid : longblob
+    """
+
+    def make(self, key):
+        from .plotting.qc import QualityMetricFigs
+
+        cutoffs = (QualityMetricCutoffs & key).fetch1()
+        qc_key = ephys.QualityMetrics & key
+
+        self.insert1(
+            key.update(
+                dict(plot_grid=QualityMetricFigs(qc_key, **cutoffs).get_grid().to_json)
+            )
         )
 
 

@@ -14,6 +14,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Update - clustering step, update duration for "median_subtraction" step
 + Bugfix - handles single probe recording in "Neuropix-PXI" format
 + Update - safeguard in creating/inserting probe types upon probe activation
++ Add - quality control metric dashboard
 
 ## [0.2.0] - 2022-10-28
 

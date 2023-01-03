@@ -123,3 +123,6 @@ docker-compose.y*ml
 # vscode settings
 .vscode
 *.code-workspace
+
+# exports/notes
+temp*
