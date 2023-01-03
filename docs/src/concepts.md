@@ -70,47 +70,47 @@ Each of the DataJoint Elements creates a set of tables for common neuroscience d
 ### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 - Although not required, most choose to connect the `Session` table to a `Subject` table.
 
-| Table   | Description                                                   |
-| ------- | ------------------------------------------------------------- |
+| Table | Description |
+| --- | --- |
 | Subject | A table containing basic information of the research subject. |
 
 ### `session` schema ([API docs](https://datajoint.com/docs/elements/element-session/api/element_session/session_with_datetime))
 
-| Table   | Description                                          |
-| ------- | ---------------------------------------------------- |
+| Table | Description |
+| --- | --- |
 | Session | A table for unique experimental session identifiers. |
 
 ### `probe` schema ([API docs](../api/element_array_ephys/probe))
 Tables related to the Neuropixels probe and electrode configuration.
 
-| Table                     | Description                                                                                                       |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| ProbeType                 | A lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank"). |
-| ProbeType.Electrode       | A table containing electrodes and their properties for a particular probe type.                                   |
-| Probe                     | A record of an actual physical probe.                                                                             |
-| ElectrodeConfig           | A record of a particular electrode configuration to be used for ephys recording.                                  |
-| ElectrodeConfig.Electrode | A record of electrodes out of those in `ProbeType.Electrode` that are used for recording.                         |
+| Table | Description |
+| --- | --- |
+| ProbeType | A lookup table specifying the type of Neuropixels probe (e.g. "neuropixels 1.0", "neuropixels 2.0 single-shank"). |
+| ProbeType.Electrode | A table containing electrodes and their properties for a particular probe type. |
+| Probe | A record of an actual physical probe. |
+| ElectrodeConfig | A record of a particular electrode configuration to be used for ephys recording. |
+| ElectrodeConfig.Electrode | A record of electrodes out of those in `ProbeType.Electrode` that are used for recording. |
 
 ### `ephys` schema ([API docs](../api/element_array_ephys/ephys))
 Tables related to information about physiological recordings and automatic ingestion of spike sorting results.
 
-| Table                | Description                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| ProbeInsertion       | A record of surgical insertions of a probe in the brain.                                   |
-| EphysRecording       | A table with metadata about each electrophysiogical recording.                             |
-| Clustering           | A table with clustering data for spike sorting extracellular electrophysiology data.       |
-| Curation             | A table to declare optional manual curation of spike sorting results.                      |
-| CuratedClustering    | A table with metadata for sorted data generated after each curation.                       |
+| Table | Description |
+| --- | --- |
+| ProbeInsertion | A record of surgical insertions of a probe in the brain. |
+| EphysRecording | A table with metadata about each electrophysiogical recording. |
+| Clustering | A table with clustering data for spike sorting extracellular electrophysiology data. |
+| Curation | A table to declare optional manual curation of spike sorting results. |
+| CuratedClustering | A table with metadata for sorted data generated after each curation. |
 | CuratedClusting.Unit | A part table containing single unit information after spike sorting and optional curation. |
-| WaveformSet          | A table containing spike waveforms for single units.                                       |
+| WaveformSet | A table containing spike waveforms for single units. |
 
 ### `ephys_report` schema ([API docs](../api/element_array_ephys/ephys_report))
 Tables for storing probe or unit-level visualization results.
 
-| Table            | Description                                                   |
-| ---------------- | ------------------------------------------------------------- |
+| Table | Description |
+| --- | --- |
 | ProbeLevelReport | A table to store drift map figures generated from each recording probe. |
-| UnitLevelReport  | A table to store figures (waveforms, autocorrelogram, peak waveform + neighbors) generated for each unit.             |
+| UnitLevelReport | A table to store figures (waveforms, autocorrelogram, peak waveform + neighbors) generated for each unit. |
 
 ## Element Development
 
