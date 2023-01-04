@@ -149,7 +149,7 @@ class ProbeType(dj.Lookup):
         with ProbeType.connection.transaction:
             ProbeType.insert1(probe_type, skip_duplicates=True)
             ProbeType.Electrode.insert(
-                [{**e} for e in electrode_layouts], skip_duplicates=True
+                electrode_layouts, skip_duplicates=True
             )
 
 
@@ -252,7 +252,7 @@ def build_electrode_layouts(
             "shank_col": c_id,
             "shank_row": r_id,
             "x_coord": x + (shank_no * (shank_spacing or 1)),
-            "y_coord": y if y_origin == "bottom" else -y,
+            "y_coord": {"top": -y, "bottom": y}[y_origin],
         }
         for shank_no in range(shank_count)
         for e_id, (c_id, r_id, x, y) in enumerate(
