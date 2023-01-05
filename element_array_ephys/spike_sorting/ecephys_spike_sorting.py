@@ -98,7 +98,7 @@ class KilosortPreProcessing(dj.Imported):
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             spikeglx_recording.validate_file("ap")
             run_CatGT = (
-                params.pop("run_CatGT", True)
+                params.get("run_CatGT", True)
                 and "_tcat." not in spikeglx_meta_filepath.stem
             )
 
