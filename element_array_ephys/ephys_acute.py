@@ -841,6 +841,10 @@ class Clustering(dj.Imported):
                         spikeglx_meta_filepath.parent
                     )
                     spikeglx_recording.validate_file("ap")
+                    run_CatGT = (
+                        params.pop("run_CatGT", True)
+                        and "_tcat." not in spikeglx_meta_filepath.stem
+                    )
 
                     if clustering_method.startswith("pykilosort"):
                         kilosort_triggering.run_pykilosort(
@@ -861,7 +865,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=True,
+                            run_CatGT=run_CatGT,
                         )
                         run_kilosort.run_modules()
                 elif acq_software == "Open Ephys":
