@@ -1,14 +1,15 @@
-from modulefinder import Module
-import ipywidgets as widgets
 import pathlib
+from skimage import io
+import types
+from ipywidgets import widgets
 from IPython.display import display
-from .. import ephys_report
 import plotly.graph_objs as go
 import plotly.express as px
-from skimage import io
+
+from .. import ephys_report
 
 
-def main(ephys: Module) -> widgets:
+def main(ephys: types.ModuleType) -> widgets:
 
     # Build dropdown widgets
     probe_dropdown_wg = widgets.Dropdown(

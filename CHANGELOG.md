@@ -5,9 +5,11 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## [0.2.1] - Unreleased
 
++ Update - parameterize run_CatGT step from parameters retrieved from `ClusteringParamSet` table
 + Update - clustering step, update duration for "median_subtraction" step
 + Bugfix - handles single probe recording in "Neuropix-PXI" format
 + Update - safeguard in creating/inserting probe types upon probe activation
++ Add - quality control metric dashboard
 
 ## [0.2.0] - 2022-10-28
 
