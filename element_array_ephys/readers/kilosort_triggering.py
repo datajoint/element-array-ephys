@@ -21,13 +21,13 @@ try:
         get_noise_channels,
     )
 except Exception as e:
-    print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
+    print(f'Warning: Failed loading "ecephys_spike_sorting" package - {str(e)}')
 
 # import pykilosort package
 try:
     import pykilosort
 except Exception as e:
-    print(f'Error in loading "pykilosort" package - {str(e)}')
+    print(f'Warning: Failed loading "pykilosort" package - {str(e)}')
 
 
 class SGLXKilosortPipeline:
