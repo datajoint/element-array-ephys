@@ -3,8 +3,18 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.2.1] - 2022-12-15
-+ Add `build_electrode_layouts` function in `probe.py` to compute the electrode layout for all types of probes.
+## [0.2.1] - 2022-01-06
+
++ Add - `build_electrode_layouts` function in `probe.py` to compute the electrode layout for all types of probes.
++ Update - parameterize run_CatGT step from parameters retrieved from `ClusteringParamSet` table
++ Update - clustering step, update duration for "median_subtraction" step
++ Bugfix - handles single probe recording in "Neuropix-PXI" format
++ Update - safeguard in creating/inserting probe types upon probe activation
++ Add - quality control metric dashboard
++ Update & fix docstrings
++ Update - `ephys_report.UnitLevelReport` to add `ephys.ClusterQualityLabel` as a foreign key reference
++ Add - `.pre-commit-config.yaml`
+
 ## [0.2.0] - 2022-10-28
 
 + Add - New schema `ephys_report` to compute and store figures from results
@@ -63,5 +73,6 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [0.1.2]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.2
 [0.1.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.1
 [0.1.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0
+[0.1.0b4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0b4
 [0.1.0b0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0b0
 [0.1.0a5]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.0a5
