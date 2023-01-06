@@ -17,7 +17,7 @@ def activate(
     """Activates the `probe` schemas.
 
     Args:
-        schema_name (str): A string containing the name of the probe scehma.
+        schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
 
@@ -159,7 +159,7 @@ class ProbeType(dj.Lookup):
 
             Args:
                 site_count (int): site count per shank
-                col_spacing (float): (um) horrizontal spacing between sites
+                col_spacing (float): (um) horizontal spacing between sites
                 row_spacing (float): (um) vertical spacing between columns
                 white_spacing (float): (um) offset spacing
                 col_count (int): number of column per shank
@@ -241,7 +241,7 @@ class ElectrodeConfig(dj.Lookup):
 
     definition = """
     # The electrode configuration setting on a given probe
-    electrode_config_hash: uuid  
+    electrode_config_hash: uuid
     ---
     -> ProbeType
     electrode_config_name: varchar(4000)  # user friendly name

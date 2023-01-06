@@ -10,6 +10,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Bugfix - handles single probe recording in "Neuropix-PXI" format
 + Update - safeguard in creating/inserting probe types upon probe activation
 + Add - quality control metric dashboard
++ Update & fix docstrings
++ Update - `ephys_report.UnitLevelReport` to add `ephys.ClusterQualityLabel` as a foreign key reference
++ Add `.pre-commit-config.yaml`
+
 
 ## [0.2.0] - 2022-10-28
 
@@ -40,7 +44,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Update - Rename module for acute probe insertions from `ephys.py` to `ephys_acute.py`.
 + Add - Module for pre-clustering steps (`ephys_precluster.py`), which is built off of `ephys_acute.py`.
-+ Add - Module for chronic probe insertions (`ephys_chronic.py`).  
++ Add - Module for chronic probe insertions (`ephys_chronic.py`).
 + Bugfix - Missing `fileTimeSecs` key in SpikeGLX meta file.
 + Update - Move common functions to `element-interface` package.
 + Add - NWB export function

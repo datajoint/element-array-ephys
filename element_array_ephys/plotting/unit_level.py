@@ -1,9 +1,10 @@
 from modulefinder import Module
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
-from typing import Any
+
 from .. import probe
 
 
@@ -15,7 +16,7 @@ def plot_waveform(waveform: np.ndarray, sampling_rate: float) -> go.Figure:
         sampling_rate (float): Sampling rate in kHz.
 
     Returns:
-        go.Figure: Plotly figure object.
+        go.Figure: Plotly figure object for showing the amplitude of a waveform (y-axis in μV) over time (x-axis).
     """
     waveform_df = pd.DataFrame(data={"waveform": waveform})
     waveform_df["timestamp"] = waveform_df.index / sampling_rate
@@ -49,10 +50,11 @@ def plot_auto_correlogram(
     Args:
         spike_times (np.ndarray): Spike timestamps in seconds
         bin_size (float, optional): Size of the time bin (lag) in seconds. Defaults to 0.001.
-        window_size (int, optional): Size of the correlogram window in seconds. Defaults to 1.
+        window_size (int, optional): Size of the correlogram window in seconds. Defaults to 1 (± 500ms)
 
     Returns:
-        go.Figure: Plotly figure object.
+        go.Figure: Plotly figure object for showing
+        counts (y-axis) over time lags (x-axis).
     """
     from .corr import acorr
 
@@ -96,10 +98,10 @@ def plot_depth_waveforms(
     unit_key: dict[str, Any],
     y_range: float = 60,
 ) -> go.Figure:
-    """Plot waveforms
+    """Plot the peak waveform (in red) and waveforms from its neighboring sites on a spatial coordinate.
 
     Args:
-        ephys (Module): Imported ephys module.
+        ephys (Module): Imported ephys module object.
         unit_key (dict[str, Any]): Key dictionary from ephys.CuratedClustering.Unit table.
         y_range (float, optional): Vertical range to show waveforms relative to the peak waveform in μm. Defaults to 60.
 
@@ -219,7 +221,7 @@ def plot_depth_waveforms(
             y=[y0, y0],
             mode="lines",
             line=dict(color="black", width=2),
-            hovertemplate=f"1 ms<extra></extra>",
+            hovertemplate="1 ms<extra></extra>",
         )
     )
     fig.add_trace(
