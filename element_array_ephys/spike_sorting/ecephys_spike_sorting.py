@@ -62,7 +62,7 @@ class KilosortPreProcessing(dj.Imported):
             ephys.ClusteringTask * ephys.ClusteringParamSet
             & {"task_mode": "trigger"}
             & 'clustering_method in ("kilosort2", "kilosort2.5", "kilosort3")'
-        )
+        ) - ephys.Clustering
 
     def make(self, key):
         """Triggers or imports clustering analysis."""
