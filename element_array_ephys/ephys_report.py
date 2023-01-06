@@ -1,8 +1,11 @@
-import pathlib
 import datetime
+import pathlib
+from uuid import UUID
+
 import datajoint as dj
-import typing as T
-import json
+from element_interface.utils import dict_to_uuid
+
+from . import probe
 
 schema = dj.schema()
 
@@ -10,14 +13,16 @@ ephys = None
 
 
 def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
+    """Activate the current schema.
+
+    Args:
+        schema_name (str): schema name on the database server to activate the `ephys_report` schema.
+        ephys_schema_name (str): schema name of the activated ephys element for which
+                this ephys_report schema will be downstream from.
+        create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
+        create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
-    activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
-        :param schema_name: schema name on the database server to activate the `ephys_report` schema
-        :param ephys_schema_name: schema name of the activated ephys element for which this ephys_report schema will be downstream from
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
-    """
+
     global ephys
     ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
@@ -30,6 +35,14 @@ def activate(schema_name, ephys_schema_name, *, create_schema=True, create_table
 
 @schema
 class ProbeLevelReport(dj.Computed):
+    """Table for storing probe level figures.
+
+    Attributes:
+        ephys.CuratedClustering (foreign key): ephys.CuratedClustering primary key.
+        shank (tinyint unsigned): Shank of the probe.
+        drift_map_plot (attach): Figure object for drift map.
+    """
+
     definition = """
     -> ephys.CuratedClustering
     shank         : tinyint unsigned
@@ -39,7 +52,6 @@ class ProbeLevelReport(dj.Computed):
 
     def make(self, key):
 
-        from . import probe
         from .plotting.probe_level import plot_driftmap
 
         save_dir = _make_save_dir()
@@ -50,12 +62,9 @@ class ProbeLevelReport(dj.Computed):
 
         for shank_no in shanks:
 
-            table = (
-                units
-                * ephys.ProbeInsertion
-                * probe.ProbeType.Electrode
-                & {"shank": shank_no}
-            )
+            table = units * ephys.ProbeInsertion * probe.ProbeType.Electrode & {
+                "shank": shank_no
+            }
 
             spike_times, spike_depths = table.fetch(
                 "spike_times", "spike_depths", order_by="unit"
@@ -89,21 +98,31 @@ class ProbeLevelReport(dj.Computed):
 
 @schema
 class UnitLevelReport(dj.Computed):
+    """Table for storing unit level figures.
+
+    Attributes:
+        ephys.CuratedClustering.Unit (foreign key): ephys.CuratedClustering.Unit primary key.
+        ephys.ClusterQualityLabel (foreign key): ephys.ClusterQualityLabel primary key.
+        waveform_plotly (longblob): Figure object for unit waveform.
+        autocorrelogram_plotly (longblob): Figure object for an autocorrelogram.
+        depth_waveform_plotly (longblob): Figure object for depth waveforms.
+    """
+
     definition = """
     -> ephys.CuratedClustering.Unit
     ---
-    cluster_quality_label   : varchar(100) 
-    waveform_plotly         : longblob  
-    autocorrelogram_plotly  : longblob
-    depth_waveform_plotly   : longblob
+    -> ephys.ClusterQualityLabel
+    waveform_plotly                 : longblob
+    autocorrelogram_plotly          : longblob
+    depth_waveform_plotly           : longblob
     """
 
     def make(self, key):
 
         from .plotting.unit_level import (
-            plot_waveform,
             plot_auto_correlogram,
             plot_depth_waveforms,
+            plot_waveform,
         )
 
         sampling_rate = (ephys.EphysRecording & key).fetch1(
@@ -136,17 +155,105 @@ class UnitLevelReport(dj.Computed):
         )
 
 
+@schema
+class QualityMetricCutoffs(dj.Lookup):
+    definition = """
+    cutoffs_id                    : smallint
+    ---
+    amplitude_cutoff_maximum=null : float # Defaults to null, no cutoff applied
+    presence_ratio_minimum=null   : float # Defaults to null, no cutoff applied
+    isi_violations_maximum=null   : float # Defaults to null, no cutoff applied
+    cutoffs_hash: uuid
+    unique index (cutoffs_hash)
+    """
+
+    contents = [
+        (0, None, None, None, UUID("5d835de1-e1af-1871-d81f-d12a9702ff5f")),
+        (1, 0.1, 0.9, 0.5, UUID("f74ccd77-0b3a-2bf8-0bfd-ec9713b5dca8")),
+    ]
+
+    @classmethod
+    def insert_new_cutoffs(
+        cls,
+        cutoffs_id: int = None,
+        amplitude_cutoff_maximum: float = None,
+        presence_ratio_minimum: float = None,
+        isi_violations_maximum: float = None,
+    ):
+        if cutoffs_id is None:
+            cutoffs_id = (dj.U().aggr(cls, n="max(cutoffs_id)").fetch1("n") or 0) + 1
+
+        param_dict = {
+            "amplitude_cutoff_maximum": amplitude_cutoff_maximum,
+            "presence_ratio_minimum": presence_ratio_minimum,
+            "isi_violations_maximum": isi_violations_maximum,
+        }
+        param_hash = dict_to_uuid(param_dict)
+        param_query = cls & {"cutoffs_hash": param_hash}
+
+        if param_query:  # If the specified cutoff set already exists
+            existing_paramset_idx = param_query.fetch1("cutoffs_id")
+            if (
+                existing_paramset_idx == cutoffs_id
+            ):  # If the existing set has the same id: job done
+                return
+            # If not same name: human err, adding the same set with different name
+            else:
+                raise dj.DataJointError(
+                    f"The specified param-set already exists"
+                    f" - with paramset_idx: {existing_paramset_idx}"
+                )
+        else:
+            if {"cutoffs_id": cutoffs_id} in cls.proj():
+                raise dj.DataJointError(
+                    f"The specified cuttoffs_id {cutoffs_id} already exists,"
+                    f" please pick a different one."
+                )
+            cls.insert1(
+                {"cutoffs_id": cutoffs_id, **param_dict, "cutoffs_hash": param_hash}
+            )
+
+
+@schema
+class QualityMetricSet(dj.Manual):
+    definition = """
+    -> ephys.QualityMetrics
+    -> QualityMetricCutoffs
+    """
+
+
+@schema
+class QualityMetricReport(dj.Computed):
+    definition = """
+    -> QualityMetricSet
+    ---
+    plot_grid : longblob
+    """
+
+    def make(self, key):
+        from .plotting.qc import QualityMetricFigs
+
+        cutoffs = (QualityMetricCutoffs & key).fetch1()
+        qc_key = ephys.QualityMetrics & key
+
+        self.insert1(
+            key.update(
+                dict(plot_grid=QualityMetricFigs(qc_key, **cutoffs).get_grid().to_json)
+            )
+        )
+
+
 def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
     if root_dir is None:
         root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "ephys_figures"
+    save_dir = root_dir / "temp_ephys_figures"
     save_dir.mkdir(parents=True, exist_ok=True)
     return save_dir
 
 
 def _save_figs(
     figs, fig_names, save_dir, fig_prefix, extension=".png"
-) -> T.Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     fig_dict = {}
     for fig, fig_name in zip(figs, fig_names):
         fig_filepath = save_dir / (fig_prefix + "_" + fig_name + extension)

@@ -1,7 +1,9 @@
-from datetime import datetime
-import numpy as np
-import pathlib
 import logging
+import pathlib
+from datetime import datetime
+
+import numpy as np
+
 from .utils import convert_to_number
 
 logger = logging.getLogger(__name__)
@@ -9,16 +11,17 @@ logger = logging.getLogger(__name__)
 AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
 
 # Imax values for different probe types - see metaguides (http://billkarsh.github.io/SpikeGLX/#metadata-guides)
-IMAX = {'neuropixels 1.0 - 3A': 512,
-        'neuropixels 1.0 - 3B': 512,
-        'neuropixels 2.0 - SS': 8192,
-        'neuropixels 2.0 - MS': 8192}
+IMAX = {
+    "neuropixels 1.0 - 3A": 512,
+    "neuropixels 1.0 - 3B": 512,
+    "neuropixels 2.0 - SS": 8192,
+    "neuropixels 2.0 - MS": 8192,
+}
 
 
 class SpikeGLX:
-
     def __init__(self, root_dir):
-        '''
+        """
         create neuropixels reader from 'root name' - e.g. the recording:
 
             /data/rec_1/npx_g0_t0.imec.ap.meta
@@ -33,23 +36,23 @@ class SpikeGLX:
         only a single recording is read/loaded via the root
         name & associated meta - no interpretation of g0_t0.imec, etc is
         performed at this layer.
-        '''
+        """
         self._apmeta, self._ap_timeseries = None, None
         self._lfmeta, self._lf_timeseries = None, None
 
         self.root_dir = pathlib.Path(root_dir)
 
         try:
-            meta_filepath = next(pathlib.Path(root_dir).glob('*.ap.meta'))
+            meta_filepath = next(pathlib.Path(root_dir).glob("*.ap.meta"))
         except StopIteration:
-            raise FileNotFoundError(f'No SpikeGLX file (.ap.meta) found at: {root_dir}')
+            raise FileNotFoundError(f"No SpikeGLX file (.ap.meta) found at: {root_dir}")
 
-        self.root_name = meta_filepath.name.replace('.ap.meta', '')
+        self.root_name = meta_filepath.name.replace(".ap.meta", "")
 
     @property
     def apmeta(self):
         if self._apmeta is None:
-            self._apmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.ap.meta'))
+            self._apmeta = SpikeGLXMeta(self.root_dir / (self.root_name + ".ap.meta"))
         return self._apmeta
 
     @property
@@ -60,14 +63,16 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('ap')
         """
         if self._ap_timeseries is None:
-            self.validate_file('ap')
-            self._ap_timeseries = self._read_bin(self.root_dir / (self.root_name + '.ap.bin'))
+            self.validate_file("ap")
+            self._ap_timeseries = self._read_bin(
+                self.root_dir / (self.root_name + ".ap.bin")
+            )
         return self._ap_timeseries
 
     @property
     def lfmeta(self):
         if self._lfmeta is None:
-            self._lfmeta = SpikeGLXMeta(self.root_dir / (self.root_name + '.lf.meta'))
+            self._lfmeta = SpikeGLXMeta(self.root_dir / (self.root_name + ".lf.meta"))
         return self._lfmeta
 
     @property
@@ -78,34 +83,36 @@ class SpikeGLX:
         - to convert to microvolts, multiply with self.get_channel_bit_volts('lf')
         """
         if self._lf_timeseries is None:
-            self.validate_file('lf')
-            self._lf_timeseries = self._read_bin(self.root_dir / (self.root_name + '.lf.bin'))
+            self.validate_file("lf")
+            self._lf_timeseries = self._read_bin(
+                self.root_dir / (self.root_name + ".lf.bin")
+            )
         return self._lf_timeseries
 
-    def get_channel_bit_volts(self, band='ap'):
+    def get_channel_bit_volts(self, band="ap"):
         """
         Extract the recorded AP and LF channels' int16 to microvolts - no Sync (SY) channels
         Following the steps specified in: https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
                 dataVolts = dataInt * Vmax / Imax / gain
         """
-        vmax = float(self.apmeta.meta['imAiRangeMax'])
+        vmax = float(self.apmeta.meta["imAiRangeMax"])
 
-        if band == 'ap':
+        if band == "ap":
             imax = IMAX[self.apmeta.probe_model]
-            imroTbl_data = self.apmeta.imroTbl['data']
+            imroTbl_data = self.apmeta.imroTbl["data"]
             imroTbl_idx = 3
             chn_ind = self.apmeta.get_recording_channels_indices(exclude_sync=True)
 
-        elif band == 'lf':
+        elif band == "lf":
             imax = IMAX[self.lfmeta.probe_model]
-            imroTbl_data = self.lfmeta.imroTbl['data']
+            imroTbl_data = self.lfmeta.imroTbl["data"]
             imroTbl_idx = 4
             chn_ind = self.lfmeta.get_recording_channels_indices(exclude_sync=True)
         else:
             raise ValueError(f'Unsupported band: {band} - Must be "ap" or "lf"')
 
         # extract channels' gains
-        if 'imDatPrb_dock' in self.apmeta.meta:
+        if "imDatPrb_dock" in self.apmeta.meta:
             # NP 2.0; APGain = 80 for all AP (LF is computed from AP)
             chn_gains = [AP_GAIN] * len(imroTbl_data)
         else:
@@ -117,9 +124,9 @@ class SpikeGLX:
         return vmax / imax / chn_gains * 1e6  # convert to uV as well
 
     def _read_bin(self, fname):
-        nchan = self.apmeta.meta['nSavedChans']
+        nchan = self.apmeta.meta["nSavedChans"]
         dtype = np.dtype((np.int16, nchan))
-        return np.memmap(fname, dtype, 'r')
+        return np.memmap(fname, dtype, "r")
 
     def extract_spike_waveforms(self, spikes, channel_ind, n_wf=500, wf_win=(-32, 32)):
         """
@@ -129,63 +136,80 @@ class SpikeGLX:
         :param wf_win: number of sample pre and post a spike
         :return: waveforms (in uV) - shape: (sample x channel x spike)
         """
-        channel_bit_volts = self.get_channel_bit_volts('ap')[channel_ind]
+        channel_bit_volts = self.get_channel_bit_volts("ap")[channel_ind]
 
         data = self.ap_timeseries
 
-        spikes = np.round(spikes * self.apmeta.meta['imSampRate']).astype(int)  # convert to sample
+        spikes = np.round(spikes * self.apmeta.meta["imSampRate"]).astype(
+            int
+        )  # convert to sample
         # ignore spikes at the beginning or end of raw data
-        spikes = spikes[np.logical_and(spikes > -wf_win[0],
-                                       spikes < data.shape[0] - wf_win[-1])]
+        spikes = spikes[
+            np.logical_and(spikes > -wf_win[0], spikes < data.shape[0] - wf_win[-1])
+        ]
 
         np.random.shuffle(spikes)
         spikes = spikes[:n_wf]
         if len(spikes) > 0:
             # waveform at each spike: (sample x channel x spike)
-            spike_wfs = np.dstack([data[int(spk + wf_win[0]):int(spk + wf_win[-1]),
-                                   channel_ind] * channel_bit_volts
-                                   for spk in spikes])
+            spike_wfs = np.dstack(
+                [
+                    data[int(spk + wf_win[0]) : int(spk + wf_win[-1]), channel_ind]
+                    * channel_bit_volts
+                    for spk in spikes
+                ]
+            )
             return spike_wfs
         else:  # if no spike found, return NaN of size (sample x channel x 1)
             return np.full((len(range(*wf_win)), len(channel_ind), 1), np.nan)
 
-    def validate_file(self, file_type='ap'):
-        file_path = self.root_dir / (self.root_name + f'.{file_type}.bin')
+    def validate_file(self, file_type="ap"):
+        file_path = self.root_dir / (self.root_name + f".{file_type}.bin")
         file_size = file_path.stat().st_size
 
-        meta_mapping = {
-            'ap': self.apmeta,
-            'lf': self.lfmeta}
-        meta = meta_mapping[file_type]
+        if file_type == "ap":
+            meta = self.apmeta
+        elif file_type == "lf":
+            meta = self.lfmeta
+        else:
+            raise KeyError(f"Unknown file_type {file_type} - must be 'ap' or 'lf'")
 
-        if file_size != meta.meta['fileSizeBytes']:
-            raise IOError(f'File size error! {file_path} may be corrupted or in transfer?')
+        if file_size != meta.meta["fileSizeBytes"]:
+            raise IOError(
+                f"File size error! {file_path} may be corrupted or in transfer?"
+            )
 
     def compress(self):
         from mtscomp import compress as mts_compress
 
-        ap_file = self.root_dir / (self.root_name + '.ap.bin')
-        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+        ap_file = self.root_dir / (self.root_name + ".ap.bin")
+        lfp_file = self.root_dir / (self.root_name + ".lf.bin")
 
-        meta_mapping = {'ap': self.apmeta, 'lfp': self.lfmeta}
+        meta_mapping = {"ap": self.apmeta, "lfp": self.lfmeta}
 
         compressed_files = []
-        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+        for bin_fp, band_type in zip([ap_file, lfp_file], ["ap", "lfp"]):
             if not bin_fp.exists():
-                raise FileNotFoundError(f'Compression error - "{bin_fp}" does not exist')
-            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
-            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+                raise FileNotFoundError(
+                    f'Compression error - "{bin_fp}" does not exist'
+                )
+            cbin_fp = bin_fp.parent / f"{bin_fp.stem}.cbin"
+            ch_fp = bin_fp.parent / f"{bin_fp.stem}.ch"
 
             if cbin_fp.exists():
                 assert ch_fp.exists()
-                logger.info(f'Compressed file exists ({cbin_fp}), skipping...')
+                logger.info(f"Compressed file exists ({cbin_fp}), skipping...")
                 continue
 
             try:
-                mts_compress(bin_fp, cbin_fp, ch_fp,
-                             sample_rate=meta_mapping[band_type]['sample_rate'],
-                             n_channels=meta_mapping[band_type]['num_channels'],
-                             dtype=np.memmap(bin_fp).dtype)
+                mts_compress(
+                    bin_fp,
+                    cbin_fp,
+                    ch_fp,
+                    sample_rate=meta_mapping[band_type]["sample_rate"],
+                    n_channels=meta_mapping[band_type]["num_channels"],
+                    dtype=np.memmap(bin_fp).dtype,
+                )
             except Exception as e:
                 cbin_fp.unlink(missing_ok=True)
                 ch_fp.unlink(missing_ok=True)
@@ -198,20 +222,22 @@ class SpikeGLX:
     def decompress(self):
         from mtscomp import decompress as mts_decompress
 
-        ap_file = self.root_dir / (self.root_name + '.ap.bin')
-        lfp_file = self.root_dir / (self.root_name + '.lf.bin')
+        ap_file = self.root_dir / (self.root_name + ".ap.bin")
+        lfp_file = self.root_dir / (self.root_name + ".lf.bin")
 
         decompressed_files = []
-        for bin_fp, band_type in zip([ap_file, lfp_file], ['ap', 'lfp']):
+        for bin_fp, band_type in zip([ap_file, lfp_file], ["ap", "lfp"]):
             if bin_fp.exists():
-                logger.info(f'Decompressed file exists ({bin_fp}), skipping...')
+                logger.info(f"Decompressed file exists ({bin_fp}), skipping...")
                 continue
 
-            cbin_fp = bin_fp.parent / f'{bin_fp.stem}.cbin'
-            ch_fp = bin_fp.parent / f'{bin_fp.stem}.ch'
+            cbin_fp = bin_fp.parent / f"{bin_fp.stem}.cbin"
+            ch_fp = bin_fp.parent / f"{bin_fp.stem}.ch"
 
             if not cbin_fp.exists():
-                raise FileNotFoundError(f'Decompression error - "{cbin_fp}" does not exist')
+                raise FileNotFoundError(
+                    f'Decompression error - "{cbin_fp}" does not exist'
+                )
 
             try:
                 decomp_arr = mts_decompress(cbin_fp, ch_fp)
@@ -226,7 +252,6 @@ class SpikeGLX:
 
 
 class SpikeGLXMeta:
-
     def __init__(self, meta_filepath):
         """
         Some good processing references:
@@ -238,48 +263,61 @@ class SpikeGLXMeta:
         self.meta = _read_meta(meta_filepath)
 
         # Infer npx probe model (e.g. 1.0 (3A, 3B) or 2.0)
-        probe_model = self.meta.get('imDatPrb_type', 1)
+        probe_model = self.meta.get("imDatPrb_type", 1)
         if probe_model <= 1:
-            if 'typeEnabled' in self.meta:
-                self.probe_model = 'neuropixels 1.0 - 3A'
-            elif 'typeImEnabled' in self.meta:
-                self.probe_model = 'neuropixels 1.0 - 3B'
+            if "typeEnabled" in self.meta:
+                self.probe_model = "neuropixels 1.0 - 3A"
+            elif "typeImEnabled" in self.meta:
+                self.probe_model = "neuropixels 1.0 - 3B"
         elif probe_model == 1100:
-            self.probe_model = 'neuropixels UHD'
+            self.probe_model = "neuropixels UHD"
         elif probe_model == 21:
-            self.probe_model = 'neuropixels 2.0 - SS'
+            self.probe_model = "neuropixels 2.0 - SS"
         elif probe_model == 24:
-            self.probe_model = 'neuropixels 2.0 - MS'
+            self.probe_model = "neuropixels 2.0 - MS"
         else:
             self.probe_model = str(probe_model)
 
         # Get recording time
-        self.recording_time = datetime.strptime(self.meta.get('fileCreateTime_original',
-                                                              self.meta['fileCreateTime']),
-                                                '%Y-%m-%dT%H:%M:%S')
-        self.recording_duration = self.meta.get('fileTimeSecs')
+        self.recording_time = datetime.strptime(
+            self.meta.get("fileCreateTime_original", self.meta["fileCreateTime"]),
+            "%Y-%m-%dT%H:%M:%S",
+        )
+        self.recording_duration = self.meta.get("fileTimeSecs")
 
         # Get probe serial number - 'imProbeSN' for 3A and 'imDatPrb_sn' for 3B
         try:
-            self.probe_SN = self.meta.get('imProbeSN', self.meta.get('imDatPrb_sn'))
+            self.probe_SN = self.meta.get("imProbeSN", self.meta.get("imDatPrb_sn"))
         except KeyError:
-            raise KeyError('Probe Serial Number not found in'
-                           ' either "imProbeSN" or "imDatPrb_sn"')
+            raise KeyError(
+                "Probe Serial Number not found in"
+                ' either "imProbeSN" or "imDatPrb_sn"'
+            )
 
-        self.chanmap = (self._parse_chanmap(self.meta['~snsChanMap'])
-                        if '~snsChanMap' in self.meta else None)
-        self.shankmap = (self._parse_shankmap(self.meta['~snsShankMap'])
-                         if '~snsShankMap' in self.meta else None)
-        self.imroTbl = (self._parse_imrotbl(self.meta['~imroTbl'])
-                        if '~imroTbl' in self.meta else None)
+        self.chanmap = (
+            self._parse_chanmap(self.meta["~snsChanMap"])
+            if "~snsChanMap" in self.meta
+            else None
+        )
+        self.shankmap = (
+            self._parse_shankmap(self.meta["~snsShankMap"])
+            if "~snsShankMap" in self.meta
+            else None
+        )
+        self.imroTbl = (
+            self._parse_imrotbl(self.meta["~imroTbl"])
+            if "~imroTbl" in self.meta
+            else None
+        )
 
         # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
-        self.recording_channels = np.arange(len(self.imroTbl['data']))[
-            self.get_recording_channels_indices(exclude_sync=True)]
+        self.recording_channels = np.arange(len(self.imroTbl["data"]))[
+            self.get_recording_channels_indices(exclude_sync=True)
+        ]
 
     @staticmethod
     def _parse_chanmap(raw):
-        '''
+        """
         https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/UserManual.md#channel-map
         Parse channel map header structure. Converts:
 
@@ -292,14 +330,14 @@ class SpikeGLXMeta:
         into dict of form:
 
             {'shape': [x,y,z], 'c0': [x,y], ... }
-        '''
+        """
 
         res = {}
-        for u in (i.rstrip(')').split(';') for i in raw.split('(') if i != ''):
+        for u in (i.rstrip(")").split(";") for i in raw.split("(") if i != ""):
             if (len(u)) == 1:
-                res['shape'] = u[0].split(',')
+                res["shape"] = u[0].split(",")
             else:
-                res[u[0]] = u[1].split(':')
+                res[u[0]] = u[1].split(":")
 
         return res
 
@@ -322,13 +360,13 @@ class SpikeGLXMeta:
 
             {'shape': [x,y,z], 'data': [[a,b,c,d],...]}
         """
-        res = {'shape': None, 'data': []}
+        res = {"shape": None, "data": []}
 
-        for u in (i.rstrip(')') for i in raw.split('(') if i != ''):
-            if ',' in u:
-                res['shape'] = [int(d) for d in u.split(',')]
+        for u in (i.rstrip(")") for i in raw.split("(") if i != ""):
+            if "," in u:
+                res["shape"] = [int(d) for d in u.split(",")]
             else:
-                res['data'].append([int(d) for d in u.split(':')])
+                res["data"].append([int(d) for d in u.split(":")])
 
         return res
 
@@ -352,13 +390,13 @@ class SpikeGLXMeta:
 
             {'shape': (x,y,z), 'data': []}
         """
-        res = {'shape': None, 'data': []}
+        res = {"shape": None, "data": []}
 
-        for u in (i.rstrip(')') for i in raw.split('(') if i != ''):
-            if ',' in u:
-                res['shape'] = [int(d) for d in u.split(',')]
+        for u in (i.rstrip(")") for i in raw.split("(") if i != ""):
+            if "," in u:
+                res["shape"] = [int(d) for d in u.split(",")]
             else:
-                res['data'].append([int(d) for d in u.split(' ')])
+                res["data"].append([int(d) for d in u.split(" ")])
 
         return res
 
@@ -367,12 +405,15 @@ class SpikeGLXMeta:
         The indices of recorded channels (in chanmap)
          with respect to the channels listed in the imro table
         """
-        recorded_chns_ind = [int(v[0]) for k, v in self.chanmap.items()
-                             if k != 'shape'
-                             and (not k.startswith('SY') if exclude_sync else True)]
+        recorded_chns_ind = [
+            int(v[0])
+            for k, v in self.chanmap.items()
+            if k != "shape" and (not k.startswith("SY") if exclude_sync else True)
+        ]
         orig_chns_ind = self.get_original_chans()
-        _, _, chns_ind = np.intersect1d(orig_chns_ind, recorded_chns_ind,
-                                        return_indices=True)
+        _, _, chns_ind = np.intersect1d(
+            orig_chns_ind, recorded_chns_ind, return_indices=True
+        )
         return chns_ind
 
     def get_original_chans(self):
@@ -384,21 +425,25 @@ class SpikeGLXMeta:
         Credit to https://billkarsh.github.io/SpikeGLX/Support/SpikeGLX_Datafile_Tools.zip
             OriginalChans() function
         """
-        if self.meta['snsSaveChanSubset'] == 'all':
+        if self.meta["snsSaveChanSubset"] == "all":
             # output = int32, 0 to nSavedChans - 1
-            channels = np.arange(0, int(self.meta['nSavedChans']))
+            channels = np.arange(0, int(self.meta["nSavedChans"]))
         else:
             # parse the channel list self.meta['snsSaveChanSubset']
             channels = np.arange(0)  # empty array
-            for channel_range in self.meta['snsSaveChanSubset'].split(','):
+            for channel_range in self.meta["snsSaveChanSubset"].split(","):
                 # a block of contiguous channels specified as chan or chan1:chan2 inclusive
-                ix = [int(r) for r in channel_range.split(':')]
-                assert len(ix) in (1, 2), f"Invalid channel range spec '{channel_range}'"
-                channels = np.append(channels, np.r_[ix[0]:ix[-1] + 1])
+                ix = [int(r) for r in channel_range.split(":")]
+                assert len(ix) in (
+                    1,
+                    2,
+                ), f"Invalid channel range spec '{channel_range}'"
+                channels = np.append(channels, np.r_[ix[0] : ix[-1] + 1])
         return channels
 
 
 # ============= HELPER FUNCTIONS =============
+
 
 def _read_meta(meta_filepath):
     """
@@ -411,10 +456,10 @@ def _read_meta(meta_filepath):
 
     res = {}
     with open(meta_filepath) as f:
-        for l in (l.rstrip() for l in f):
-            if '=' in l:
+        for line in (line.rstrip() for line in f):
+            if "=" in line:
                 try:
-                    k, v = l.split('=')
+                    k, v = line.split("=")
                     v = convert_to_number(v)
                     res[k] = v
                 except ValueError:
@@ -425,5 +470,7 @@ def _read_meta(meta_filepath):
 def retrieve_recording_duration(meta_filepath):
     root_dir = pathlib.Path(meta_filepath).parent
     spike_glx = SpikeGLX(root_dir)
-    return (spike_glx.apmeta.recording_duration
-            or spike_glx.ap_timeseries.shape[0] / spike_glx.apmeta.meta['imSampRate'])
+    return (
+        spike_glx.apmeta.recording_duration
+        or spike_glx.ap_timeseries.shape[0] / spike_glx.apmeta.meta["imSampRate"]
+    )

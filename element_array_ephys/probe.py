@@ -17,7 +17,7 @@ def activate(
     """Activates the `probe` schemas.
 
     Args:
-        schema_name (str): A string containing the name of the probe scehma.
+        schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
 
@@ -39,7 +39,11 @@ def activate(
         "neuropixels 2.0 - SS",
         "neuropixels 2.0 - MS",
     ):
-        ProbeType.create_neuropixels_probe(probe_type)
+        if not (ProbeType & {"probe_type": probe_type}):
+            try:
+                ProbeType.create_neuropixels_probe(probe_type)
+            except dj.errors.DataJointError as e:
+                print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
 
 
 @schema
@@ -182,7 +186,7 @@ class ElectrodeConfig(dj.Lookup):
 
     definition = """
     # The electrode configuration setting on a given probe
-    electrode_config_hash: uuid  
+    electrode_config_hash: uuid
     ---
     -> ProbeType
     electrode_config_name: varchar(4000)  # user friendly name

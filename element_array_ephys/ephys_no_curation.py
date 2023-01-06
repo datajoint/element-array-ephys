@@ -1,18 +1,17 @@
-import datajoint as dj
+import gc
+import importlib
+import inspect
 import pathlib
 import re
-import numpy as np
-import inspect
-import importlib
-import gc
 from decimal import Decimal
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
-from typing import Any
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-from .readers import spikeglx, kilosort, openephys
-from element_array_ephys import probe, get_logger, ephys_report
-
+from . import ephys_report, get_logger, probe
+from .readers import kilosort, openephys, spikeglx
 
 log = get_logger(__name__)
 
@@ -130,7 +129,7 @@ class AcquisitionSoftware(dj.Lookup):
     """
 
     definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
-    acq_software: varchar(24)    
+    acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
 
@@ -273,11 +272,11 @@ class EphysRecording(dj.Imported):
 
     definition = """
     # Ephys recording from a probe insertion for a given session.
-    -> ProbeInsertion      
+    -> ProbeInsertion
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
-    sampling_rate: float # (Hz) 
+    sampling_rate: float # (Hz)
     recording_datetime: datetime # datetime of the recording from this probe
     recording_duration: float # (seconds) duration of the recording from this probe
     """
@@ -316,8 +315,8 @@ class EphysRecording(dj.Imported):
                 break
         else:
             raise FileNotFoundError(
-                f"Ephys recording data not found!"
-                f" Neither SpikeGLX nor Open Ephys recording files found"
+                "Ephys recording data not found!"
+                " Neither SpikeGLX nor Open Ephys recording files found"
             )
 
         supported_probe_types = probe.ProbeType.fetch("probe_type")
@@ -472,9 +471,9 @@ class LFP(dj.Imported):
 
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode
         ---
-        lfp: longblob               # (uV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode
         """
 
     # Only store LFP for every 9th channel, due to high channel density,
@@ -622,7 +621,7 @@ class ClusteringParamSet(dj.Lookup):
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> ClusteringMethod    
+    -> ClusteringMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -807,7 +806,7 @@ class Clustering(dj.Imported):
     # Clustering Procedure
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
+    clustering_time: datetime  # time of generation of this set of clustering results
     package_version='': varchar(16)
     """
 
@@ -848,6 +847,10 @@ class Clustering(dj.Imported):
                         spikeglx_meta_filepath.parent
                     )
                     spikeglx_recording.validate_file("ap")
+                    run_CatGT = (
+                        params.pop("run_CatGT", True)
+                        and "_tcat." not in spikeglx_meta_filepath.stem
+                    )
 
                     if clustering_method.startswith("pykilosort"):
                         kilosort_triggering.run_pykilosort(
@@ -868,7 +871,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=True,
+                            run_CatGT=run_CatGT,
                         )
                         run_kilosort.run_modules()
                 elif acq_software == "Open Ephys":
@@ -923,7 +926,7 @@ class CuratedClustering(dj.Imported):
 
     definition = """
     # Clustering results of the spike sorting step.
-    -> Clustering    
+    -> Clustering
     """
 
     class Unit(dj.Part):
@@ -940,7 +943,7 @@ class CuratedClustering(dj.Imported):
             spike_depths (longblob): Array of depths associated with each spike, relative to each spike.
         """
 
-        definition = """   
+        definition = """
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int
@@ -950,7 +953,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
         """
 
     def make(self, key):
@@ -1074,8 +1077,8 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode  
-        --- 
+        -> probe.ElectrodeConfig.Electrode
+        ---
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
@@ -1201,7 +1204,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering    
+    -> CuratedClustering
     """
 
     class Cluster(dj.Part):
@@ -1226,26 +1229,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """   
+        definition = """
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
+        firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
+        l_ratio=null: float  #
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
+        contamination_rate=null: float #
         """
 
     class Waveform(dj.Part):
@@ -1265,7 +1268,7 @@ class QualityMetrics(dj.Imported):
             velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """   
+        definition = """
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
@@ -1417,14 +1420,12 @@ def get_neuropixels_channel2electrode_map(
     return channel2electrode_map
 
 
-def generate_electrode_config(
-    probe_type: str, electrode_keys: list[dict[str, Any]]
-) -> dict:
+def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
     """Generate and insert new ElectrodeConfig
 
     Args:
         probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
-        electrode_keys (list[dict[str, Any]]): list of keys of the probe.ProbeType.Electrode table
+        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
 
     Returns:
         dict: representing a key of the probe.ElectrodeConfig table
@@ -1463,8 +1464,8 @@ def generate_electrode_config(
     return electrode_config_key
 
 
-def get_recording_channels_details(ephys_recording_key: dict[str, Any]) -> np.array:
-    """Get details of recording channels for a givenn recording."""
+def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
+    """Get details of recording channels for a given recording."""
     channels_details = {}
 
     acq_software, sample_rate = (EphysRecording & ephys_recording_key).fetch1(
