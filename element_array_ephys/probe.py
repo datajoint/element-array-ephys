@@ -262,5 +262,3 @@ def build_electrode_layouts(
             zip(shank_cols, shank_rows, x_coords, y_coords)
         )
     ]
-
-    return electrode_layouts
