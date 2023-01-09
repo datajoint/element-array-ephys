@@ -247,7 +247,7 @@ def build_electrode_layouts(
     shank_cols = np.tile(range(col_count_per_shank), row_count)
     shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
-    electrode_layouts = [
+    return [
         {
             "probe_type": probe_type,
             "electrode": (site_count_per_shank * shank_no) + e_id,
