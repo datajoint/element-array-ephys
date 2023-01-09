@@ -680,7 +680,7 @@ class ClusterQualityLabel(dj.Lookup):
 
     Attributes:
         cluster_quality_label (foreign key, varchar(100) ): Cluster quality type.
-        cluster_quality_description (varchar(4000) ): Description of the cluster quality type.
+        cluster_quality_description ( varchar(4000) ): Description of the cluster quality type.
     """
 
     definition = """
@@ -704,7 +704,7 @@ class ClusteringTask(dj.Manual):
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
-        clustering_outdir_dir (varchar (255) ): Relative path to output clustering results.
+        clustering_output_dir ( varchar (255) ): Relative path to output clustering results.
         task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
@@ -793,7 +793,7 @@ class Clustering(dj.Imported):
     Attributes:
         ClusteringTask (foreign key): ClusteringTask primary key.
         clustering_time (datetime): Time when clustering results are generated.
-        package_version (varchar(16) ): Package version used for a clustering analysis.
+        package_version ( varchar(16) ): Package version used for a clustering analysis.
     """
 
     definition = """
@@ -918,10 +918,10 @@ class Curation(dj.Manual):
         Clustering (foreign key): Clustering primary key.
         curation_id (foreign key, int): Unique curation ID.
         curation_time (datetime): Time when curation results are generated.
-        curation_output_dir (varchar(255) ): Output directory of the curated results.
+        curation_output_dir ( varchar(255) ): Output directory of the curated results.
         quality_control (bool): If True, this clustering result has undergone quality control.
         manual_curation (bool): If True, manual curation has been performed on this clustering result.
-        curation_note (varchar(2000) ): Notes about the curation task.
+        curation_note ( varchar(2000) ): Notes about the curation task.
     """
 
     definition = """
