@@ -147,7 +147,7 @@ class ProbeType(dj.Lookup):
         }
 
         probe_type = {"probe_type": probe_type}
-        electrode_layouts: list[dict] = build_electrode_layouts(
+        electrode_layouts = build_electrode_layouts(
             **{**neuropixels_probes_config[probe_type["probe_type"]], **probe_type}
         )
         with ProbeType.connection.transaction:
