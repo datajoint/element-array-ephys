@@ -221,7 +221,7 @@ def build_electrode_layouts(
     """Builds electrode layouts.
 
     Args:
-        probe_type (str): probe type (e.g., "neuropixels 1.0 - 3A")
+        probe_type (str): probe type (e.g., "neuropixels 1.0 - 3A").
         site_count_per_shank (int): site count per shank.
         col_spacing (float): (um) horizontal spacing between sites. Defaults to None (single column).
         row_spacing (float): (um) vertical spacing between columns. Defaults to None (single row).
