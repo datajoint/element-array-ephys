@@ -46,6 +46,7 @@ def activate(
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
+
     """
 
     if isinstance(linking_module, str):
@@ -57,6 +58,7 @@ def activate(
     global _linking_module
     _linking_module = linking_module
 
+    # activate
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
     )
@@ -126,7 +128,7 @@ class AcquisitionSoftware(dj.Lookup):
         acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys
     """
 
-    definition = """  # Software used for recording of neuropixels probes
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
@@ -180,7 +182,10 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": spikeglx_meta.probe_model,
                     "probe": spikeglx_meta.probe_SN,
                 }
-                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
+                if (
+                    probe_key["probe"] not in [p["probe"] for p in probe_list]
+                    and probe_key not in probe.Probe()
+                ):
                     probe_list.append(probe_key)
 
                 probe_dir = meta_filepath.parent
@@ -204,7 +209,10 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": oe_probe.probe_model,
                     "probe": oe_probe.probe_SN,
                 }
-                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
+                if (
+                    probe_key["probe"] not in [p["probe"] for p in probe_list]
+                    and probe_key not in probe.Probe()
+                ):
                     probe_list.append(probe_key)
                 probe_insertion_list.append(
                     {
@@ -216,7 +224,7 @@ class ProbeInsertion(dj.Manual):
         else:
             raise NotImplementedError(f"Unknown acquisition software: {acq_software}")
 
-        probe.Probe.insert(probe_list, skip_duplicates=True)
+        probe.Probe.insert(probe_list)
         cls.insert(probe_insertion_list, skip_duplicates=True)
 
 
@@ -292,7 +300,6 @@ class EphysRecording(dj.Imported):
         session_dir = find_full_path(
             get_ephys_root_data_dir(), get_session_directory(key)
         )
-
         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1(
             "probe"
         )
@@ -308,9 +315,8 @@ class EphysRecording(dj.Imported):
                 break
         else:
             raise FileNotFoundError(
-                f"Ephys recording data not found!"
-                f" Neither SpikeGLX nor Open Ephys recording files found"
-                f" in {session_dir}"
+                "Ephys recording data not found!"
+                " Neither SpikeGLX nor Open Ephys recording files found"
             )
 
         supported_probe_types = probe.ProbeType.fetch("probe_type")
@@ -680,7 +686,7 @@ class ClusterQualityLabel(dj.Lookup):
 
     Attributes:
         cluster_quality_label (foreign key, varchar(100) ): Cluster quality type.
-        cluster_quality_description ( varchar(4000) ): Description of the cluster quality type.
+        cluster_quality_description (varchar(4000) ): Description of the cluster quality type.
     """
 
     definition = """
@@ -704,7 +710,7 @@ class ClusteringTask(dj.Manual):
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
-        clustering_output_dir ( varchar (255) ): Relative path to output clustering results.
+        clustering_outdir_dir (varchar (255) ): Relative path to output clustering results.
         task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
@@ -718,7 +724,7 @@ class ClusteringTask(dj.Manual):
     """
 
     @classmethod
-    def infer_output_dir(cls, key: dict, relative: bool = False, mkdir: bool = False):
+    def infer_output_dir(cls, key, relative: bool = False, mkdir: bool = False):
         """Infer output directory if it is not provided.
 
         Args:
@@ -793,7 +799,7 @@ class Clustering(dj.Imported):
     Attributes:
         ClusteringTask (foreign key): ClusteringTask primary key.
         clustering_time (datetime): Time when clustering results are generated.
-        package_version ( varchar(16) ): Package version used for a clustering analysis.
+        package_version (varchar(16) ): Package version used for a clustering analysis.
     """
 
     definition = """
@@ -911,78 +917,16 @@ class Clustering(dj.Imported):
 
 
 @schema
-class Curation(dj.Manual):
-    """Curation procedure table.
-
-    Attributes:
-        Clustering (foreign key): Clustering primary key.
-        curation_id (foreign key, int): Unique curation ID.
-        curation_time (datetime): Time when curation results are generated.
-        curation_output_dir ( varchar(255) ): Output directory of the curated results.
-        quality_control (bool): If True, this clustering result has undergone quality control.
-        manual_curation (bool): If True, manual curation has been performed on this clustering result.
-        curation_note ( varchar(2000) ): Notes about the curation task.
-    """
-
-    definition = """
-    # Manual curation procedure
-    -> Clustering
-    curation_id: int
-    ---
-    curation_time: datetime             # time of generation of this set of curated clustering results
-    curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
-    quality_control: bool               # has this clustering result undergone quality control?
-    manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)
-    """
-
-    def create1_from_clustering_task(self, key, curation_note=""):
-        """
-        A function to create a new corresponding "Curation" for a particular
-        "ClusteringTask"
-        """
-        if key not in Clustering():
-            raise ValueError(
-                f"No corresponding entry in Clustering available"
-                f" for: {key}; do `Clustering.populate(key)`"
-            )
-
-        task_mode, output_dir = (ClusteringTask & key).fetch1(
-            "task_mode", "clustering_output_dir"
-        )
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        creation_time, is_curated, is_qc = kilosort.extract_clustering_info(
-            kilosort_dir
-        )
-        # Synthesize curation_id
-        curation_id = (
-            dj.U().aggr(self & key, n="ifnull(max(curation_id)+1,1)").fetch1("n")
-        )
-        self.insert1(
-            {
-                **key,
-                "curation_id": curation_id,
-                "curation_time": creation_time,
-                "curation_output_dir": output_dir,
-                "quality_control": is_qc,
-                "manual_curation": is_curated,
-                "curation_note": curation_note,
-            }
-        )
-
-
-@schema
 class CuratedClustering(dj.Imported):
     """Clustering results after curation.
 
     Attributes:
-        Curation (foreign key): Curation primary key.
+        Clustering (foreign key): Clustering primary key.
     """
 
     definition = """
-    # Clustering results of a curation.
-    -> Curation
+    # Clustering results of the spike sorting step.
+    -> Clustering
     """
 
     class Unit(dj.Part):
@@ -1014,7 +958,7 @@ class CuratedClustering(dj.Imported):
 
     def make(self, key):
         """Automated population of Unit information."""
-        output_dir = (Curation & key).fetch1("curation_output_dir")
+        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
@@ -1080,9 +1024,7 @@ class CuratedClustering(dj.Imported):
                         ],
                         "spike_depths": spike_depths[
                             kilosort_dataset.data["spike_clusters"] == unit
-                        ]
-                        if spike_depths is not None
-                        else None,
+                        ],
                     }
                 )
 
@@ -1143,7 +1085,7 @@ class WaveformSet(dj.Imported):
 
     def make(self, key):
         """Populates waveform tables."""
-        output_dir = (Curation & key).fetch1("curation_output_dir")
+        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         kilosort_dataset = kilosort.Kilosort(kilosort_dir)
@@ -1158,15 +1100,13 @@ class WaveformSet(dj.Imported):
             recording_key, acq_software
         )
 
-        is_qc = (Curation & key).fetch1("quality_control")
-
         # Get all units
         units = {
             u["unit"]: u
             for u in (CuratedClustering.Unit & key).fetch(as_dict=True, order_by="unit")
         }
 
-        if is_qc:
+        if (kilosort_dir / "mean_waveforms.npy").exists():
             unit_waveforms = np.load(
                 kilosort_dir / "mean_waveforms.npy"
             )  # unit x channel x sample

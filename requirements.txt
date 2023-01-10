@@ -1,3 +1,7 @@
 datajoint>=0.13
-pyopenephys
+element-interface @ git+https://github.com/datajoint/element-interface.git
 openpyxl
+plotly
+pynwb>=2.0.0
+pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
+seaborn
