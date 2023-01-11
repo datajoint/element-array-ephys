@@ -48,7 +48,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Update - Rename module for acute probe insertions from `ephys.py` to `ephys_acute.py`.
 + Add - Module for pre-clustering steps (`ephys_precluster.py`), which is built off of `ephys_acute.py`.
-+ Add - Module for chronic probe insertions (`ephys_chronic.py`).  
++ Add - Module for chronic probe insertions (`ephys_chronic.py`).
 + Bugfix - Missing `fileTimeSecs` key in SpikeGLX meta file.
 + Update - Move common functions to `element-interface` package.
 + Add - NWB export function

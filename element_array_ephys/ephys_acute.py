@@ -1,17 +1,17 @@
-import datajoint as dj
+import gc
+import importlib
+import inspect
 import pathlib
 import re
-import numpy as np
-import inspect
-import importlib
-import gc
 from decimal import Decimal
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-
-from .readers import spikeglx, kilosort, openephys
-from . import probe, get_logger, ephys_report
+from . import ephys_report, get_logger, probe
+from .readers import kilosort, openephys, spikeglx
 
 log = get_logger(__name__)
 
@@ -127,7 +127,7 @@ class AcquisitionSoftware(dj.Lookup):
     """
 
     definition = """  # Software used for recording of neuropixels probes
-    acq_software: varchar(24)    
+    acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
 
@@ -265,7 +265,7 @@ class EphysRecording(dj.Imported):
 
     definition = """
     # Ephys recording from a probe insertion for a given session.
-    -> ProbeInsertion      
+    -> ProbeInsertion
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
@@ -473,9 +473,9 @@ class LFP(dj.Imported):
 
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode
         ---
-        lfp: longblob               # (uV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode
         """
 
     # Only store LFP for every 9th channel, due to high channel density,
@@ -629,7 +629,7 @@ class ClusteringParamSet(dj.Lookup):
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> ClusteringMethod    
+    -> ClusteringMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -694,7 +694,7 @@ class ClusterQualityLabel(dj.Lookup):
 
     Attributes:
         cluster_quality_label (foreign key, varchar(100) ): Cluster quality type.
-        cluster_quality_description (varchar(4000) ): Description of the cluster quality type.
+        cluster_quality_description ( varchar(4000) ): Description of the cluster quality type.
     """
 
     definition = """
@@ -718,7 +718,7 @@ class ClusteringTask(dj.Manual):
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
-        clustering_outdir_dir (varchar (255) ): Relative path to output clustering results.
+        clustering_output_dir ( varchar (255) ): Relative path to output clustering results.
         task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
@@ -808,14 +808,14 @@ class Clustering(dj.Imported):
     Attributes:
         ClusteringTask (foreign key): ClusteringTask primary key.
         clustering_time (datetime): Time when clustering results are generated.
-        package_version (varchar(16) ): Package version used for a clustering analysis.
+        package_version ( varchar(16) ): Package version used for a clustering analysis.
     """
 
     definition = """
     # Clustering Procedure
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
+    clustering_time: datetime  # time of generation of this set of clustering results
     package_version='': varchar(16)
     """
 
@@ -857,6 +857,10 @@ class Clustering(dj.Imported):
                         spikeglx_meta_filepath.parent
                     )
                     spikeglx_recording.validate_file("ap")
+                    run_CatGT = (
+                        params.pop("run_CatGT", True)
+                        and "_tcat." not in spikeglx_meta_filepath.stem
+                    )
 
                     if clustering_method.startswith("pykilosort"):
                         kilosort_triggering.run_pykilosort(
@@ -877,7 +881,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=True,
+                            run_CatGT=run_CatGT,
                         )
                         run_kilosort.run_modules()
                 elif acq_software == "Open Ephys":
@@ -930,10 +934,10 @@ class Curation(dj.Manual):
         Clustering (foreign key): Clustering primary key.
         curation_id (foreign key, int): Unique curation ID.
         curation_time (datetime): Time when curation results are generated.
-        curation_output_dir (varchar(255) ): Output directory of the curated results.
+        curation_output_dir ( varchar(255) ): Output directory of the curated results.
         quality_control (bool): If True, this clustering result has undergone quality control.
         manual_curation (bool): If True, manual curation has been performed on this clustering result.
-        curation_note (varchar(2000) ): Notes about the curation task.
+        curation_note ( varchar(2000) ): Notes about the curation task.
     """
 
     definition = """
@@ -941,11 +945,11 @@ class Curation(dj.Manual):
     -> Clustering
     curation_id: int
     ---
-    curation_time: datetime             # time of generation of this set of curated clustering results 
+    curation_time: datetime             # time of generation of this set of curated clustering results
     curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)  
+    curation_note='': varchar(2000)
     """
 
     def create1_from_clustering_task(self, key, curation_note=""):
@@ -994,7 +998,7 @@ class CuratedClustering(dj.Imported):
 
     definition = """
     # Clustering results of a curation.
-    -> Curation    
+    -> Curation
     """
 
     class Unit(dj.Part):
@@ -1021,7 +1025,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
         """
 
     def make(self, key):
@@ -1149,8 +1153,8 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode  
-        --- 
+        -> probe.ElectrodeConfig.Electrode
+        ---
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
@@ -1281,7 +1285,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering    
+    -> CuratedClustering
     """
 
     class Cluster(dj.Part):
@@ -1306,26 +1310,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """   
+        definition = """
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
+        firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
+        l_ratio=null: float  #
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
+        contamination_rate=null: float #
         """
 
     class Waveform(dj.Part):
@@ -1345,7 +1349,7 @@ class QualityMetrics(dj.Imported):
             velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """   
+        definition = """
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit

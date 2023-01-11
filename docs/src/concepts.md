@@ -104,6 +104,14 @@ Tables related to information about physiological recordings and automatic inges
 | CuratedClusting.Unit | A part table containing single unit information after spike sorting and optional curation. |
 | WaveformSet | A table containing spike waveforms for single units. |
 
+### `ephys_report` schema ([API docs](../api/element_array_ephys/ephys_report))
+Tables for storing probe or unit-level visualization results.
+
+| Table | Description |
+| --- | --- |
+| ProbeLevelReport | A table to store drift map figures generated from each recording probe. |
+| UnitLevelReport | A table to store figures (waveforms, autocorrelogram, peak waveform + neighbors) generated for each unit. |
+
 ## Element Development
 
 Through our interviews and direct collaboration on the precursor projects, we identified the common motifs to create the [Array Electrophysiology Element](https://github.com/datajoint/element-array-ephys).

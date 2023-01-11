@@ -1,7 +1,7 @@
 # Exporting data to NWB
 
 The `export/nwb/nwb.py` module maps from the element-array-ephys data structure to NWB.
-The main function is `ecephys_session_to_nwb`, which contains flags to control calling the following functions, 
+The main function is `ecephys_session_to_nwb`, which contains flags to control calling the following functions,
 which can be called independently:
 
 1. `session.export.nwb.session_to_nwb`: Gathers session-level metadata
@@ -10,7 +10,7 @@ which can be called independently:
 2. `add_electrodes_to_nwb`: Add electrodes table to NWBFile. This is needed for any ElectricalSeries, including
    raw source data and LFP.
 
-   
+
     ephys.InsertionLocation -> ElectrodeGroup.location
 
     probe.Probe::probe -> device.name
@@ -24,7 +24,7 @@ which can be called independently:
     probe.ProbeType.Electrode::shank_col -> electrodes["shank_col"]
     probe.ProbeType.Electrode::shank_row -> electrodes["shank_row"]
 
-3. `add_ephys_recording_to_nwb`: Read voltage data directly from source files and iteratively transfer them to the 
+3. `add_ephys_recording_to_nwb`: Read voltage data directly from source files and iteratively transfer them to the
    NWB file. Automatically applies lossless compression to the data, so the final file might be smaller than the original, but there is no
    data loss. Currently supports Neuropixels data acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the data.
 
@@ -47,7 +47,7 @@ which can be called independently:
     ephys.LFP.Electrode::lfp -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].data
     ephys.LFP::lfp_time_stamps -> processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"].timestamps
 
-6. `add_ephys_lfp_from_source_to_nwb`: Read the LFP data directly from the source file. Currently, only works for 
+6. `add_ephys_lfp_from_source_to_nwb`: Read the LFP data directly from the source file. Currently, only works for
    SpikeGLX data. Can be used instead of `add_ephys_lfp_from_dj_to_nwb`.
 
 
