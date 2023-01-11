@@ -3,6 +3,11 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.2] - Unreleased
+
++ Bugfix - Revert import order in `__init__.py` to avoid circular import error.
++ Update - `.pre-commit-config.yaml` to disable automatic positioning of import statement at the top.
+
 ## [0.2.1] - 2022-01-06
 
 + Add - `build_electrode_layouts` function in `probe.py` to compute the electrode layout for all types of probes.
