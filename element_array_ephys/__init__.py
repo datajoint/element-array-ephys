@@ -1,9 +1,12 @@
+"""
+isort:skip_file
+"""
+
 import logging
 import os
 
 import datajoint as dj
 
-from . import ephys_acute as ephys
 
 __all__ = ["ephys", "get_logger"]
 
@@ -14,3 +17,6 @@ def get_logger(name):
     log = logging.getLogger(name)
     log.setLevel(os.getenv("LOGLEVEL", "INFO"))
     return log
+
+
+from . import ephys_acute as ephys
