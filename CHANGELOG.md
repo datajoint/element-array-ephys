@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.2] - Unreleased
+
++ Bugfix - Update docstrings to render API for documentation website.
+
 ## [0.2.1] - 2022-01-06
 
 + Add - `build_electrode_layouts` function in `probe.py` to compute the electrode layout for all types of probes.
@@ -66,6 +70,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.2.2]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.2
 [0.2.1]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.1
 [0.2.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.0
 [0.1.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.1.4
