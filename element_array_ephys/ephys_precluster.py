@@ -702,7 +702,7 @@ class ClusteringParamSet(dj.Lookup):
         ClusteringMethod (dict): ClusteringMethod primary key.
         paramset_desc (varchar(128) ): Description of the clustering parameter set.
         param_set_hash (uuid): UUID hash for the parameter set.
-        params (longblob)
+        params (longblob): Paramset, dictionary of all applicable parameters.
     """
 
     definition = """
@@ -723,7 +723,7 @@ class ClusteringParamSet(dj.Lookup):
         """Inserts new parameters into the ClusteringParamSet table.
 
         Args:
-            clustering_method (str): name of the clustering method.
+            processing_method (str): name of the clustering method.
             paramset_desc (str): description of the parameter set
             params (dict): clustering parameters
             paramset_idx (int, optional): Unique parameter set ID. Defaults to None.
@@ -1245,7 +1245,7 @@ class QualityMetrics(dj.Imported):
             recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
+            velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
         definition = """

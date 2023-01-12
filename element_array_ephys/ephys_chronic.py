@@ -651,15 +651,16 @@ class ClusteringTask(dj.Manual):
     """
 
     @classmethod
-    def infer_output_dir(cls, key, relative=False, mkdir=False):
+    def infer_output_dir(cls, key, relative=False, mkdir=False) -> pathlib.Path:
         """Infer output directory if it is not provided.
 
         Args:
             key (dict): ClusteringTask primary key.
 
         Returns:
-            Pathlib.Path: Expected clustering_output_dir based on the following convention: processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
-            e.g.: sub4/sess1/probe_2/kilosort2_0
+            Expected clustering_output_dir based on the following convention:
+                processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
+                e.g.: sub4/sess1/probe_2/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
         sess_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
@@ -1256,7 +1257,7 @@ class QualityMetrics(dj.Imported):
             recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
+            velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
         definition = """
