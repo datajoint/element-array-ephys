@@ -6,8 +6,6 @@ import pandas as pd
 import plotly.graph_objs as go
 from scipy.ndimage import gaussian_filter1d
 
-from .. import ephys_report
-
 logger = logging.getLogger("datajoint")
 
 
