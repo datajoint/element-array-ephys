@@ -26,4 +26,4 @@ developed to handle various use cases of this pipeline and workflow:
 
 Visit the [Concepts page](./concepts.md) for more information about the use cases of
 `ephys` schemas and an explanation of the tables. To get started with building your own
-data pipeline, visit the [Tutorials page](./tutorials.md).
+data pipeline, visit the [Tutorials page](./tutorials/index.md).
