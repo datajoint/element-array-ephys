@@ -26,12 +26,12 @@ nav:
 
 # --------------------- NOTES TO CONTRIBUTORS -----------------------
 # Markdown in mkdocs
-# 01. Redering concatenates across single line breaks. This means...
+# 01. Rendering concatenates across single line breaks. This means...
 #     A. We have to be careful to add extra line breaks around paragraphs,
-#        including between the end of a pgf and the beginnign of bullets.
+#        including between the end of a pgf and the beginning of bullets.
 #     B. We can use hard wrapping to make github reviews easier to read.
 #        VSCode Rewrap extension offers a keyboard shortcut for hard wrap
-#        at the ruler, but don't add breaks in [multiword links](example.com)
+#        at the ruler, but don't add breaks in [multi-word links](example.com)
 # 02. Instead of designating codeblocks with bash, use console. For example..
 #     ```console
 #     cd ../my_dir
@@ -57,7 +57,7 @@ nav:
 # 02. Site analytics depend on a local environment variable GOOGLE_ANALYTICS_KEY
 #     You can find this in LastPass or declare with any string to suppress errors
 # 03. The API section will pull docstrings.
-#     A. Follow google styleguide e.g., 
+#     A. Follow google style guide e.g., 
 #        https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 #        With typing suggestions: https://docs.python.org/3/library/typing.html
 #     B. To pull a specific workflow fork, change ./docs/src/api/make_pages.py#L19
