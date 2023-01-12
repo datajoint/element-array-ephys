@@ -27,7 +27,7 @@ def activate(
 
     Args:
         ephys_schema_name (str): A string containing the name of the ephys schema.
-        probe_schema_name (str): A string containing the name of the probe scehma.
+        probe_schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
@@ -436,7 +436,7 @@ class PreClusterParamSteps(dj.Manual):
 
 @schema
 class PreClusterTask(dj.Manual):
-    """Defines a pre-clusting task ready to be run.
+    """Defines a pre-clustering task ready to be run.
 
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
