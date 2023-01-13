@@ -1,5 +1,5 @@
 datajoint>=0.13
-element-interface @ git+https://github.com/datajoint/element-interface.git
+element-interface>=0.2.0
 openpyxl
 plotly
 pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
