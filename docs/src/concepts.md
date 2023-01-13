@@ -189,9 +189,15 @@ Without Borders (NWB) files. This makes it easy to share files with collaborator
 publish results on [DANDI Archive](https://dandiarchive.org/).
 [NWB](https://www.nwb.org/), as an organization, is dedicated to standardizing data
 formats and maximizing interoperability across tools for neurophysiology. For more
-information on uploading NWB files to DANDI within the DataJoint Elements ecosystem,
-visit our documentation for the DANDI upload feature of [Element Array
-Electrophysiology](datajoint.com/docs/elements/element-array-ephys/).
+information on uploading NWB files to DANDI within the DataJoint Elements ecosystem see
+the corresponding notebook on the [tutorials page](./tutorials/index.md). 
+
+To use the export functionality with additional related dependencies, install the
+Element with the `nwb` option as follows:
+
+```console
+pip install element-array-ephys[nwb]
+```
 
 ## Roadmap
 

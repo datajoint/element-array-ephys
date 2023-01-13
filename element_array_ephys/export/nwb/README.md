@@ -1,5 +1,11 @@
 # Exporting data to NWB
 
+To use the export functionality, install the Element with the `nwb` option as follows:
+
+```console
+pip install element-array-ephys[nwb]
+```
+
 The `export/nwb/nwb.py` module maps from the element-array-ephys data structure to NWB.
 The main function is `ecephys_session_to_nwb`, which contains flags to control calling
 the following functions, which can be called independently:
