@@ -1,4 +1,5 @@
 dandi
 neo==0.10.2
-nwb-conversion-tools==0.11.1
+neuroconv
+pynwb>=2.0.0
 spikeinterface==0.93.0
