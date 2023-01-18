@@ -399,7 +399,9 @@ def add_ephys_recording_to_nwb(
         file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.ap")
+            extractor = extractors.read_spikeglx(
+                os.path.split(file_path)[0], stream_id="imec.ap"
+            )
         elif ephys_recording_record["acq_software"] == "OpenEphys":
             extractor = extractors.read_openephys(file_path, stream_id="0")
         else:
@@ -437,7 +439,7 @@ def add_ephys_recording_to_nwb(
 
 
 def add_ephys_lfp_from_dj_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
-    """Read LFP data from the data in element-aray-ephys
+    """Read LFP data from the data in element-array-ephys
 
     Mapping:
         ephys.LFP.Electrode::lfp ->
@@ -525,7 +527,9 @@ def add_ephys_lfp_from_source_to_nwb(
         file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.lf")
+            extractor = extractors.read_spikeglx(
+                os.path.split(file_path)[0], stream_id="imec.lf"
+            )
         else:
             raise ValueError(
                 "unsupported acq_software type:"

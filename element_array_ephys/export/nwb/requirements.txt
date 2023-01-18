@@ -1,5 +1,5 @@
 dandi
 neo==0.10.2
-neuroconv
+neuroconv[ecephys]>=0.2.0
 pynwb>=2.0.0
 spikeinterface==0.93.0
