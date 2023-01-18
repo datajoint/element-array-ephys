@@ -6,11 +6,12 @@ import warnings
 import datajoint as dj
 import numpy as np
 import pynwb
+from datajoint.table import Table
 from element_interface.utils import find_full_path
 from hdmf.backends.hdf5 import H5DataIO
 from hdmf.data_utils import GenericDataChunkIterator
-from nwb_conversion_tools.tools.nwb_helpers import get_module
-from nwb_conversion_tools.tools.spikeinterface.spikeinterfacerecordingdatachunkiterator import (
+from neuroconv.tools.nwb_helpers import get_module
+from neuroconv.tools.spikeinterface.spikeinterfacerecordingdatachunkiterator import (
     SpikeInterfaceRecordingDataChunkIterator,
 )
 from spikeinterface import extractors
@@ -27,6 +28,8 @@ if ephys_mode != "no-curation":
 
 
 class DecimalEncoder(json.JSONEncoder):
+    """Extension of json.JSONEncoder class"""
+
     def default(self, o):
         if isinstance(o, decimal.Decimal):
             return str(o)
@@ -34,19 +37,18 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 class LFPDataChunkIterator(GenericDataChunkIterator):
-    """
-    DataChunkIterator for LFP data that pulls data one channel at a time. Used when
-    reading LFP data from the database (as opposed to directly from source files)
+    """DataChunkIterator for LFP data that pulls data one channel at a time.
+
+    Used when reading LFP data from the database (as opposed to directly from source
+    files).
     """
 
-    def __init__(self, lfp_electrodes_query, chunk_length: int = 10000):
+    def __init__(self, lfp_electrodes_query: Table, chunk_length: int = 10000):
         """
-        Parameters
-        ----------
-        lfp_electrodes_query: element_array_ephys.ephys.LFP.Electrode
-        chunk_length: int, optional
-            Chunks are blocks of disk space where data are stored contiguously
-            and compressed
+        Arguments:
+            lfp_electrodes_query (datajoint table): element_array_ephys.ephys.LFP.Electrode
+            chunk_length (int): Optional. Default 10,000. Chunks are blocks of disk
+                space where data are stored contiguously and compressed.
         """
         self.lfp_electrodes_query = lfp_electrodes_query
         self.electrodes = self.lfp_electrodes_query.fetch("electrode")
@@ -62,7 +64,6 @@ class LFPDataChunkIterator(GenericDataChunkIterator):
         super().__init__(buffer_shape=(self.n_tt, 1), chunk_shape=(chunk_length, 1))
 
     def _get_data(self, selection):
-
         electrode = self.electrodes[selection[1]][0]
         return (self.lfp_electrodes_query & dict(electrode=electrode)).fetch1("lfp")[
             selection[0], np.newaxis
@@ -76,27 +77,27 @@ class LFPDataChunkIterator(GenericDataChunkIterator):
 
 
 def add_electrodes_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
-    """
-    Add electrodes table to NWBFile. This is needed for any ElectricalSeries, including
-    raw source data and LFP.
+    """Add electrodes table to NWBFile.
 
-    ephys.InsertionLocation -> ElectrodeGroup.location
+    This is needed for any ElectricalSeries, including raw source data and LFP.
 
-    probe.Probe::probe -> device.name
-    probe.Probe::probe_comment -> device.description
-    probe.Probe::probe_type -> device.manufacturer
+    Mapping:
+        ephys.InsertionLocation -> ElectrodeGroup.location
 
-    probe.ProbeType.Electrode::electrode -> electrodes["id_in_probe"]
-    probe.ProbeType.Electrode::y_coord -> electrodes["rel_y"]
-    probe.ProbeType.Electrode::x_coord -> electrodes["rel_x"]
-    probe.ProbeType.Electrode::shank -> electrodes["shank"]
-    probe.ProbeType.Electrode::shank_col -> electrodes["shank_col"]
-    probe.ProbeType.Electrode::shank_row -> electrodes["shank_row"]
+        probe.Probe::probe -> device.name
+        probe.Probe::probe_comment -> device.description
+        probe.Probe::probe_type -> device.manufacturer
 
-    Parameters
-    ----------
-    session_key: dict
-    nwbfile: pynwb.NWBFile
+        probe.ProbeType.Electrode::electrode -> electrodes["id_in_probe"]
+        probe.ProbeType.Electrode::y_coord -> electrodes["rel_y"]
+        probe.ProbeType.Electrode::x_coord -> electrodes["rel_x"]
+        probe.ProbeType.Electrode::shank -> electrodes["shank"]
+        probe.ProbeType.Electrode::shank_col -> electrodes["shank_col"]
+        probe.ProbeType.Electrode::shank_row -> electrodes["shank_row"]
+
+    Arguments:
+        session_key (dict): key from Session table
+        nwbfile (pynwb.NWBFile): nwb file
     """
     electrodes_query = probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
 
@@ -177,23 +178,20 @@ def create_units_table(
     desc="data on spiking units",
 ):
     """
+    Mapping:
+        ephys.CuratedClustering.Unit::unit -> units.id
+        ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
+        ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
+        ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
 
-    ephys.CuratedClustering.Unit::unit -> units.id
-    ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
-    ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
-    ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
+        ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
 
-    ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
-
-    Parameters
-    ----------
-    session_key: dict
-    nwbfile: pynwb.NWBFile
-    paramset_record: int
-    name: str, optional
-        default="units"
-    desc: str, optional
-        default="data on spiking units"
+    Arguments:
+        session_key (dict): key from Session table
+        nwbfile (pynwb.NWBFile): nwb file
+        paramset_record (int): paramset id from ephys schema
+        name (str): Optional table name. Default "units"
+        desc (str): Optional table description. Default "data on spiking units"
     """
 
     # electrode id mapping
@@ -255,8 +253,7 @@ def create_units_table(
 def add_ephys_units_to_nwb(
     session_key: dict, nwbfile: pynwb.NWBFile, primary_clustering_paramset_idx: int = 0
 ):
-    """
-    Add spiking data to NWBFile.
+    """Add spiking data to NWBFile.
 
     In NWB, spiking data is stored in a Units table. The primary Units table is
     stored at /units. The spiking data in /units is generally the data used in
@@ -269,18 +266,18 @@ def add_ephys_units_to_nwb(
     Use `primary_clustering_paramset_idx` to indicate which clustering is primary. All
     others will be stored in /processing/ecephys/.
 
-    ephys.CuratedClustering.Unit::unit -> units.id
-    ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
-    ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
-    ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
+    Mapping:
+        ephys.CuratedClustering.Unit::unit -> units.id
+        ephys.CuratedClustering.Unit::spike_times -> units["spike_times"]
+        ephys.CuratedClustering.Unit::spike_depths -> units["spike_depths"]
+        ephys.CuratedClustering.Unit::cluster_quality_label -> units["cluster_quality_label"]
 
-    ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
+        ephys.WaveformSet.PeakWaveform::peak_electrode_waveform -> units["waveform_mean"]
 
-    Parameters
-    ----------
-    session_key: dict
-    nwbfile: pynwb.NWBFile
-    primary_clustering_paramset_idx: int, optional
+    Arguments:
+        session_key (dict): key from Session table
+        nwbfile (pynwb.NWBFile): nwb file
+        primary_clustering_paramset_idx (int): Optional. Default 0
     """
 
     if not ephys.ClusteringTask & session_key:
@@ -314,19 +311,18 @@ def add_ephys_units_to_nwb(
             ecephys_module.add(units_table)
 
 
-def get_electrodes_mapping(electrodes):
-    """
-    Create a mapping from the probe and electrode id to the row number of the electrodes
-    table. This is used in the construction of the DynamicTableRegion that indicates
-    what rows of the electrodes table correspond to the data in an ElectricalSeries.
+def get_electrodes_mapping(electrodes) -> dict:
+    """Create mapping from probe and electrode id to row number in the electrodes table
 
-    Parameters
-    ----------
-    electrodes: hdmf.common.table.DynamicTable
+    This is used in the construction of the DynamicTableRegion that indicates what rows
+    of the electrodes table correspond to the data in an ElectricalSeries.
 
-    Returns
-    -------
-    dict
+    Arguments:
+        electrodes ( hdmf.common.table.DynamicTable ): hdmf Dynamic Table
+
+    Returns:
+        dict using tuple (electrodes device name, probe id index) as key and index
+            electrode index as value
 
     """
     return {
@@ -338,26 +334,23 @@ def get_electrodes_mapping(electrodes):
     }
 
 
-def gains_helper(gains):
-    """
-    This handles three different cases for gains:
-    1. gains are all 1. In this case, return conversion=1e-6, which applies to all
-    channels and converts from microvolts to volts.
-    2. Gains are all equal, but not 1. In this case, multiply this by 1e-6 to apply this
-    gain to all channels and convert units to volts.
-    3. Gains are different for different channels. In this case use the
-    `channel_conversion` field in addition to the `conversion` field so that each
-    channel can be converted to volts using its own individual gain.
+def gains_helper(gains) -> dict:
+    """This handles three different cases for gains. See below
 
-    Parameters
-    ----------
-    gains: np.ndarray
+    Cases:
+        1. gains are all 1. In this case, return conversion=1e-6, which applies to all
+            channels and converts from microvolts to volts.
+        2. Gains are all equal, but not 1. In this case, multiply this by 1e-6 to apply
+            this gain to all channels and convert units to volts.
+        3. Gains are different for different channels. In this case use the
+            `channel_conversion` field in addition to the `conversion` field so that
+             each channel can be converted to volts using its own individual gain.
 
-    Returns
-    -------
-    dict
-        conversion : float
-        channel_conversion : np.ndarray
+    Arguments:
+        gains ( np.ndarray ): array of gains
+
+    Returns:
+        dict with conversion float as key and channel_conversion np.ndarray value
 
     """
     if all(x == 1 for x in gains):
@@ -373,19 +366,20 @@ def add_ephys_recording_to_nwb(
     nwbfile: pynwb.NWBFile,
     end_frame: int = None,
 ):
-    """
-    Read voltage data directly from source files and iteratively transfer them to the
-    NWB file. Automatically applies lossless compression to the data, so the final file
-    might be smaller than the original, without data loss. Currently supports
-    Neuropixels data acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface
-    to read the data.
+    """Read voltage data from source files and iteratively transfer to the NWB file.
 
-    source data -> acquisition["ElectricalSeries"]
+    Automatically applies lossless compression to the data, so the final file might be
+    smaller than the original, without data loss. Currently supports Neuropixels data
+    acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the data.
 
-    Parameters
-    ----------
-    session_key: dict ephys_root_data_dir: str nwbfile: NWBFile end_frame: int, optional
-        Used for small test conversions
+    Mapping:
+        source data -> acquisition["ElectricalSeries"]
+
+    Arguments:
+        session_key (dict): key from Session table
+        ephys_root_data_dir (str): root data directory
+        nwbfile (NWBFile): nwb file
+        end_frame (int): Optional limit on frames for small test conversions
     """
 
     if nwbfile.electrodes is None:
@@ -405,7 +399,9 @@ def add_ephys_recording_to_nwb(
         file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.ap")
+            extractor = extractors.read_spikeglx(
+                os.path.split(file_path)[0], stream_id="imec.ap"
+            )
         elif ephys_recording_record["acq_software"] == "OpenEphys":
             extractor = extractors.read_openephys(file_path, stream_id="0")
         else:
@@ -443,20 +439,21 @@ def add_ephys_recording_to_nwb(
 
 
 def add_ephys_lfp_from_dj_to_nwb(session_key: dict, nwbfile: pynwb.NWBFile):
-    """
-    Read LFP data from the data in element-aray-ephys
+    """Read LFP data from the data in element-array-ephys
 
-    ephys.LFP.Electrode::lfp ->
-        processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"
-                                                   ].data
-    ephys.LFP::lfp_time_stamps ->
-        processing["ecephys"].lfp.electrical_series["ElectricalSeries{insertion_number}"
-                                                   ].timestamps
+    Mapping:
+        ephys.LFP.Electrode::lfp ->
+            processing["ecephys"].lfp.electrical_series[
+                "ElectricalSeries{insertion_number}"
+            ].data
+        ephys.LFP::lfp_time_stamps ->
+            processing["ecephys"].lfp.electrical_series[
+                "ElectricalSeries{insertion_number}"
+            ].timestamps
 
-    Parameters
-    ----------
-    session_key: dict
-    nwbfile: NWBFile
+    Arguments:
+        session_key (dict): key from Session table
+        nwbfile (NWBFile): nwb file
     """
 
     if nwbfile.electrodes is None:
@@ -501,13 +498,10 @@ def add_ephys_lfp_from_source_to_nwb(
 
     ephys.EphysRecording::recording_datetime -> acquisition
 
-    Parameters
-    ----------
-    session_key: dict
-    nwbfile: pynwb.NWBFile
-    end_frame: int, optional
-        use for small test conversions
-
+    Arguments:
+        session_key (dict): key from Session table
+        nwbfile (NWBFile): nwb file
+        end_frame (int): Optional limit on frames for small test conversions
     """
     if nwbfile.electrodes is None:
         add_electrodes_to_nwb(session_key, nwbfile)
@@ -533,7 +527,9 @@ def add_ephys_lfp_from_source_to_nwb(
         file_path = find_full_path(ephys_root_data_dir, relative_path)
 
         if ephys_recording_record["acq_software"] == "SpikeGLX":
-            extractor = extractors.read_spikeglx(os.path.split(file_path)[0], "imec.lf")
+            extractor = extractors.read_spikeglx(
+                os.path.split(file_path)[0], stream_id="imec.lf"
+            )
         else:
             raise ValueError(
                 "unsupported acq_software type:"
@@ -580,30 +576,27 @@ def ecephys_session_to_nwb(
     protocol_key=None,
     nwbfile_kwargs=None,
 ):
-    """
-    Main function for converting ephys data to NWB
+    """Main function for converting ephys data to NWB
 
-    Parameters
-    ----------
-    session_key: dict
-    raw: bool
-        Whether to include the raw data from source. SpikeGLX & OpenEphys are supported
-    spikes: bool
-        Whether to include CuratedClustering
-    lfp:
-        "dj" - read LFP data from ephys.LFP
-        "source" - read LFP data from source (SpikeGLX supported)
-        False - do not convert LFP
-    end_frame: int, optional
-        Used to create small test conversions where large datasets are truncated.
-    lab_key, project_key, and protocol_key: dictionaries to look up optional metadata
-    nwbfile_kwargs: dict, optional
-        - If element-session is not being used, this argument is required and must be a
-          dictionary containing 'session_description' (str), 'identifier' (str), and
-          'session_start_time' (datetime), the required minimal data for instantiating
-          an NWBFile object.
-        - If element-session is being used, this argument can optionally be used to
-          overwrite NWBFile fields.
+    Arguments:
+        session_key (dict): key from Session table
+        raw (bool): Optional. Default True. Include the raw data from source.
+            SpikeGLX & OpenEphys are supported
+        spikes (bool): Optional. Default True. Whether to include CuratedClustering
+        lfp (str): One of the following.
+            "dj", read LFP data from ephys.LFP.
+            "source", read LFP data from source (SpikeGLX supported).
+            False, do not convert LFP.
+        end_frame (int): Optional limit on frames for small test conversions.
+        lab_key (dict): Optional key to add metadata from other Element Lab.
+        project_key (dict): Optional key to add metadata from other Element Lab.
+        protocol_key (dict): Optional key to add metadata from other Element Lab.
+        nwbfile_kwargs (dict): Optional. If Element Session is not used, this argument
+            is required and must be a dictionary containing 'session_description' (str),
+            'identifier' (str), and 'session_start_time' (datetime), the required
+             minimal data for instantiating an NWBFile object. If element-session is
+             being used, this argument can optionally be used to overwrite NWBFile
+             fields.
     """
 
     session_to_nwb = getattr(ephys._linking_module, "session_to_nwb", False)
@@ -647,16 +640,13 @@ def ecephys_session_to_nwb(
 
 
 def write_nwb(nwbfile, fname, check_read=True):
-    """
-    Export NWBFile
+    """Export NWBFile
 
-    Parameters
-    ----------
-    nwbfile: pynwb.NWBFile
-    fname: str Absolute path including `*.nwb` extension.
-    check_read: bool
-        If True, PyNWB will try to read the produced NWB file and ensure that it can be
-        read.
+    Arguments:
+        nwbfile (NWBFile): nwb file
+        fname (str): Absolute path including `*.nwb` extension.
+        check_read (bool): If True, PyNWB will try to read the produced NWB file and
+            ensure that it can be read.
     """
     with pynwb.NWBHDF5IO(fname, "w") as io:
         io.write(nwbfile)

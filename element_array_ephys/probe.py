@@ -2,6 +2,7 @@
 Neuropixels Probes
 """
 from __future__ import annotations
+from typing import List
 
 import datajoint as dj
 import numpy as np
@@ -217,7 +218,7 @@ def build_electrode_layouts(
     shank_count: int = 1,
     shank_spacing: float = None,
     y_origin="bottom",
-) -> list[dict]:
+) -> List[dict]:
 
     """Builds electrode layouts.
 

@@ -102,6 +102,7 @@ ENV/
 
 # mkdocs documentation
 docs/site
+docs/src/tutorials/*ipynb
 
 # mypy
 .mypy_cache/

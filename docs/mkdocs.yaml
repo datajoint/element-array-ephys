@@ -7,19 +7,31 @@ repo_name: datajoint/element-array-ephys
 nav:
   - Element Array Ephys: index.md
   - Concepts: concepts.md
-  - Tutorials: tutorials.md
+  - Tutorials: 
+    - Overview: tutorials/index.md
+    - Data Download: tutorials/00-data-download-optional.ipynb
+    - Configure: tutorials/01-configure.ipynb
+    - Workflow Structure: tutorials/02-workflow-structure-optional.ipynb
+    - Process: tutorials/03-process.ipynb
+    - Automate: tutorials/04-automate-optional.ipynb
+    - Explore: tutorials/05-explore.ipynb
+    - Drop: tutorials/06-drop-optional.ipynb
+    - Downstream Analysis: tutorials/07-downstream-analysis.ipynb
+    - Visualizations: tutorials/10-data_visualization.ipynb
+    - Electrode Localization: tutorials/08-electrode-localization.ipynb
+    - NWB Export: tutorials/09-NWB-export.ipynb
   - Citation: citation.md
   - API: api/ # defer to gen-files + literate-nav
   - Changelog: changelog.md
 
 # --------------------- NOTES TO CONTRIBUTORS -----------------------
 # Markdown in mkdocs
-# 01. Redering concatenates across single line breaks. This means...
+# 01. Rendering concatenates across single line breaks. This means...
 #     A. We have to be careful to add extra line breaks around paragraphs,
-#        including between the end of a pgf and the beginnign of bullets.
+#        including between the end of a pgf and the beginning of bullets.
 #     B. We can use hard wrapping to make github reviews easier to read.
 #        VSCode Rewrap extension offers a keyboard shortcut for hard wrap
-#        at the ruler, but don't add breaks in [multiword links](example.com)
+#        at the ruler, but don't add breaks in [multi-word links](example.com)
 # 02. Instead of designating codeblocks with bash, use console. For example..
 #     ```console
 #     cd ../my_dir
@@ -43,9 +55,9 @@ nav:
 #     HOST_UID=$(id -u) docker compose -f docs/docker-compose.yaml up --build
 #     ```
 # 02. Site analytics depend on a local environment variable GOOGLE_ANALYTICS_KEY
-#     You can find this in LastPass or declare with any string to suprress errors
+#     You can find this in LastPass or declare with any string to suppress errors
 # 03. The API section will pull docstrings.
-#     A. Follow google styleguide e.g., 
+#     A. Follow google style guide e.g., 
 #        https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 #        With typing suggestions: https://docs.python.org/3/library/typing.html
 #     B. To pull a specific workflow fork, change ./docs/src/api/make_pages.py#L19
@@ -92,6 +104,12 @@ plugins:
   #       "index.md": "getting_started.md"
   - mkdocstrings:
       default_handler: python
+      handlers:
+        python:
+          options:
+            members_order: source
+            group_by_category: false
+            line_length: 88
   - gen-files:
       scripts:
       - ./src/api/make_pages.py
@@ -100,6 +118,8 @@ plugins:
   - exclude-search:
       exclude:
         - "*/navigation.md"
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
 markdown_extensions:
   - attr_list
   - toc:
@@ -120,6 +140,7 @@ markdown_extensions:
       linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - footnotes
   
 extra:
   PATCH_VERSION: !ENV PATCH_VERSION
