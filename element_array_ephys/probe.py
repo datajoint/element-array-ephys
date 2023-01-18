@@ -1,6 +1,7 @@
 """
 Neuropixels Probes
 """
+from __future__ import annotations
 from typing import List
 
 import datajoint as dj
