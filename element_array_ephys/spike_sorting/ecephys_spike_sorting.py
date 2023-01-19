@@ -299,4 +299,6 @@ class KilosortPostProcessing(dj.Imported):
         )
 
         # all finished, insert this `key` into ephys.Clustering
-        ephys.Clustering.insert1({**key, "clustering_time": datetime.utcnow()})
+        ephys.Clustering.insert1(
+            {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
+        )
