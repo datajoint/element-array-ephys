@@ -4,7 +4,7 @@ import pathlib
 import re
 
 import numpy as np
-import packaging
+from packaging.version import parse as version_parser
 
 pyopenephys_warning = (
     "It is recommended that you use DataJoint's fork of pyopenephys.\n"
@@ -19,7 +19,7 @@ except ImportError:
 
 logger = logging.getLogger("datajoint")
 
-if packaging.version.parse(pyopenephys.__version__) < packaging.version.parse("1.1.6"):
+if version_parser(pyopenephys.__version__) < version_parser("1.1.6"):
     logger.warning(pyopenephys_warning)
 
 """
