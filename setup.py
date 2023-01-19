@@ -11,6 +11,12 @@ with open(path.join(here, "README.md"), "r") as f:
 with open(path.join(here, "requirements.txt")) as f:
     requirements = f.read().splitlines()
 
+with open(path.join(here, "requirements_dev.txt")) as f:
+    requirements_dev = f.read().splitlines()
+
+with open(path.join(here, "element_array_ephys/export/nwb/requirements.txt")) as f:
+    requirements_nwb = f.read().splitlines()
+
 with open(path.join(here, pkg_name, "version.py")) as f:
     exec(f.read())
 
@@ -26,6 +32,7 @@ setup(
     url=f'https://github.com/datajoint/{pkg_name.replace("_", "-")}',
     keywords="neuroscience electrophysiology science datajoint",
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
+    extras_require={"dev": requirements_dev, "nwb": requirements_nwb},
     scripts=[],
     install_requires=requirements,
 )

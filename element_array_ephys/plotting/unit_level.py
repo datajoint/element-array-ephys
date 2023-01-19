@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from modulefinder import Module
 from typing import Any
 

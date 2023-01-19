@@ -6,8 +6,6 @@ import pandas as pd
 import plotly.graph_objs as go
 from scipy.ndimage import gaussian_filter1d
 
-from .. import ephys_report
-
 logger = logging.getLogger("datajoint")
 
 
@@ -30,7 +28,7 @@ class QualityMetricFigs(object):
             key (dict, optional): key from ephys.QualityMetric table. Defaults to None.
             scale (float, optional): Scale at which to render figure. Defaults to 1.4.
             fig_width (int, optional): Figure width in pixels. Defaults to 800.
-            amplitude_cutoff_maximum (float, optional): Cutoff for unit ampliude in
+            amplitude_cutoff_maximum (float, optional): Cutoff for unit amplitude in
                 visualizations. Defaults to None.
             presence_ratio_minimum (float, optional): Cutoff for presence ratio in
                 visualizations. Defaults to None.
@@ -63,7 +61,7 @@ class QualityMetricFigs(object):
     def key(self, key: dict):
         """Use class_instance.key = your_key to reset key"""
         if key not in self._ephys.QualityMetrics.fetch("KEY"):
-            # If not already full key, check if unquely identifies entry
+            # If not already full key, check if uniquely identifies entry
             key = (self._ephys.QualityMetrics & key).fetch1("KEY")
         self._key = key
 
@@ -129,7 +127,7 @@ class QualityMetricFigs(object):
     def _format_fig(
         self, fig: go.Figure = None, scale: float = None, ratio: float = 1.0
     ) -> go.Figure:
-        """Return formatted figure or apply prmatting to existing figure
+        """Return formatted figure or apply formatting to existing figure
 
         Args:
             fig (go.Figure, optional): Apply formatting to this plotly graph object
@@ -254,7 +252,7 @@ class QualityMetricFigs(object):
         """Plot grid of histograms as subplots in go.Figure using n_columns
 
         Args:
-            n_columns (int, optional): Number of colums in grid. Defaults to 4.
+            n_columns (int, optional): Number of column in grid. Defaults to 4.
             scale (float, optional): Scale to render fig. Defaults to scale at class
                 init, 1.
 
@@ -336,7 +334,7 @@ class QualityMetricFigs(object):
 
     @property
     def plot_list(self):
-        """List of plots that can be rendered inidividually by name or as grid"""
+        """List of plots that can be rendered individually by name or as grid"""
         if not self._plots:
             _ = self.plots
         return [plot for plot in self._plots]
