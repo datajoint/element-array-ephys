@@ -283,7 +283,7 @@ class KilosortPostProcessing(dj.Imported):
             ]
             run_kilosort.run_modules()
 
-        with open(self._modules_input_hash_fp) as f:
+        with open(run_kilosort._modules_input_hash_fp) as f:
             modules_status = json.load(f)
 
         self.insert1(
