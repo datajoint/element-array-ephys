@@ -310,11 +310,15 @@ class SGLXKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
-            # handle cases where hash is changed(different paramset) and trying to rerun processing
-            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
-            # recreate /json_configs directory after all kilosort output files are deleted
-            shutil.rmtree(self._ks_output_dir)
-            self._json_directory.mkdir(parents=True, exist_ok=True)
+            # handle cases of processing rerun on different parameters (the hash changes)
+            # delete outdated files
+            outdated_files = [
+                f
+                for f in self._json_directory.glob("*")
+                if f.is_file() and f.name != self._module_input_json.name
+            ]
+            for f in outdated_files:
+                f.unlink()
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
@@ -608,11 +612,15 @@ class OpenEphysKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
-            # handle cases where hash is changed(different paramset) and trying to rerun processing
-            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
-            # recreate /json_configs directory after all kilosort output files are deleted
-            shutil.rmtree(self._ks_output_dir)
-            self._json_directory.mkdir(parents=True, exist_ok=True)
+            # handle cases of processing rerun on different parameters (the hash changes)
+            # delete outdated files
+            outdated_files = [
+                f
+                for f in self._json_directory.glob("*")
+                if f.is_file() and f.name != self._module_input_json.name
+            ]
+            for f in outdated_files:
+                f.unlink()
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
