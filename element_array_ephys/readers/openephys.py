@@ -1,9 +1,10 @@
-import pathlib
-import pyopenephys
-import numpy as np
-import re
 import datetime
 import logging
+import pathlib
+import re
+
+import numpy as np
+import pyopenephys
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class OpenEphys:
             self._recording_time = sorted(recording_datetimes)[0]
         return self._recording_time
 
-    def load_probe_data(self):
+    def load_probe_data(self):  # noqa: C901
         """
         Loop through all Open Ephys "signalchains/processors", identify the processor for
          the Neuropixels probe(s), extract probe info

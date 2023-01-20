@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import datetime
 import pathlib
-import typing as T
 from uuid import UUID
 
 import datajoint as dj
 from element_interface.utils import dict_to_uuid
+
+from . import probe
 
 schema = dj.schema()
 
@@ -12,14 +15,16 @@ ephys = None
 
 
 def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
+    """Activate the current schema.
+
+    Args:
+        schema_name (str): schema name on the database server to activate the `ephys_report` schema.
+        ephys_schema_name (str): schema name of the activated ephys element for which
+                this ephys_report schema will be downstream from.
+        create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
+        create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
-    activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
-        :param schema_name: schema name on the database server to activate the `ephys_report` schema
-        :param ephys_schema_name: schema name of the activated ephys element for which this ephys_report schema will be downstream from
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
-    """
+
     global ephys
     ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
@@ -32,6 +37,14 @@ def activate(schema_name, ephys_schema_name, *, create_schema=True, create_table
 
 @schema
 class ProbeLevelReport(dj.Computed):
+    """Table for storing probe level figures.
+
+    Attributes:
+        ephys.CuratedClustering (foreign key): ephys.CuratedClustering primary key.
+        shank (tinyint unsigned): Shank of the probe.
+        drift_map_plot (attach): Figure object for drift map.
+    """
+
     definition = """
     -> ephys.CuratedClustering
     shank         : tinyint unsigned
@@ -41,7 +54,6 @@ class ProbeLevelReport(dj.Computed):
 
     def make(self, key):
 
-        from . import probe
         from .plotting.probe_level import plot_driftmap
 
         save_dir = _make_save_dir()
@@ -52,12 +64,9 @@ class ProbeLevelReport(dj.Computed):
 
         for shank_no in shanks:
 
-            table = (
-                units
-                * ephys.ProbeInsertion.proj()
-                * probe.ProbeType.Electrode.proj("shank")
-                & {"shank": shank_no}
-            )
+            table = units * ephys.ProbeInsertion * probe.ProbeType.Electrode & {
+                "shank": shank_no
+            }
 
             spike_times, spike_depths = table.fetch(
                 "spike_times", "spike_depths", order_by="unit"
@@ -91,13 +100,23 @@ class ProbeLevelReport(dj.Computed):
 
 @schema
 class UnitLevelReport(dj.Computed):
+    """Table for storing unit level figures.
+
+    Attributes:
+        ephys.CuratedClustering.Unit (foreign key): ephys.CuratedClustering.Unit primary key.
+        ephys.ClusterQualityLabel (foreign key): ephys.ClusterQualityLabel primary key.
+        waveform_plotly (longblob): Figure object for unit waveform.
+        autocorrelogram_plotly (longblob): Figure object for an autocorrelogram.
+        depth_waveform_plotly (longblob): Figure object for depth waveforms.
+    """
+
     definition = """
     -> ephys.CuratedClustering.Unit
     ---
-    cluster_quality_label   : varchar(100)
-    waveform_plotly         : longblob
-    autocorrelogram_plotly  : longblob
-    depth_waveform_plotly   : longblob
+    -> ephys.ClusterQualityLabel
+    waveform_plotly                 : longblob
+    autocorrelogram_plotly          : longblob
+    depth_waveform_plotly           : longblob
     """
 
     def make(self, key):
@@ -143,9 +162,9 @@ class QualityMetricCutoffs(dj.Lookup):
     definition = """
     cutoffs_id                    : smallint
     ---
-    amplitude_cutoff_maximum=null : float # Defualt null, no cutoff applied
-    presence_ratio_minimum=null   : float # Defualt null, no cutoff applied
-    isi_violations_maximum=null   : float # Defualt null, no cutoff applied
+    amplitude_cutoff_maximum=null : float # Defaults to null, no cutoff applied
+    presence_ratio_minimum=null   : float # Defaults to null, no cutoff applied
+    isi_violations_maximum=null   : float # Defaults to null, no cutoff applied
     cutoffs_hash: uuid
     unique index (cutoffs_hash)
     """
@@ -229,14 +248,14 @@ class QualityMetricReport(dj.Computed):
 def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
     if root_dir is None:
         root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "ephys_figures"
+    save_dir = root_dir / "temp_ephys_figures"
     save_dir.mkdir(parents=True, exist_ok=True)
     return save_dir
 
 
 def _save_figs(
     figs, fig_names, save_dir, fig_prefix, extension=".png"
-) -> T.Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     fig_dict = {}
     for fig, fig_name in zip(figs, fig_names):
         fig_filepath = save_dir / (fig_prefix + "_" + fig_name + extension)

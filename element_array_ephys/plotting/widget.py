@@ -1,10 +1,11 @@
 import pathlib
-from skimage import io
 import types
-from ipywidgets import widgets
-from IPython.display import display
-import plotly.graph_objs as go
+
 import plotly.express as px
+import plotly.graph_objs as go
+from IPython.display import display
+from ipywidgets import widgets
+from skimage import io
 
 from .. import ephys_report
 

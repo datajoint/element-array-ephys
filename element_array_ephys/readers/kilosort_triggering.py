@@ -1,25 +1,24 @@
-import subprocess
-import shutil
-import sys
-import pathlib
-import json
-import re
 import inspect
+import json
 import os
-import scipy.io
-import numpy as np
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
 from datetime import datetime, timedelta
 
+import numpy as np
+import scipy.io
 from element_interface.utils import dict_to_uuid
-
 
 # import the spike sorting packages
 try:
-    from ecephys_spike_sorting.scripts.create_input_json import createInputJson
-    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils, log_from_json
     from ecephys_spike_sorting.modules.kilosort_helper.__main__ import (
         get_noise_channels,
     )
+    from ecephys_spike_sorting.scripts.create_input_json import createInputJson
+    from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 except Exception as e:
     print(f'Warning: Failed loading "ecephys_spike_sorting" package - {str(e)}')
 
@@ -311,6 +310,12 @@ class SGLXKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
+            # handle cases where hash is changed(different paramset) and trying to rerun processing
+            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
+            # recreate /json_configs directory after all kilosort output files are deleted
+            shutil.rmtree(self._ks_output_dir)
+            self._json_directory.mkdir(parents=True, exist_ok=True)
+
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -603,6 +608,12 @@ class OpenEphysKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
+            # handle cases where hash is changed(different paramset) and trying to rerun processing
+            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
+            # recreate /json_configs directory after all kilosort output files are deleted
+            shutil.rmtree(self._ks_output_dir)
+            self._json_directory.mkdir(parents=True, exist_ok=True)
+
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -748,8 +759,8 @@ def _write_channel_map_file(
     )
 
     if is_0_based:
-        channel_ind += 1
-        shank_ind += 1
+        channel_ind = channel_ind + 1
+        shank_ind = shank_ind + 1
 
     channel_count = len(channel_ind)
     chanMap0ind = np.arange(0, channel_count, dtype="float64")

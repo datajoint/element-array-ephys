@@ -1,15 +1,14 @@
-import datajoint as dj
-import pathlib
-import re
-import numpy as np
-import inspect
 import importlib
+import inspect
+import re
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-
-from .readers import spikeglx, kilosort, openephys
-from . import probe, ephys_report
+from . import ephys_report, probe
+from .readers import kilosort, openephys, spikeglx
 
 schema = dj.schema()
 
@@ -28,7 +27,7 @@ def activate(
 
     Args:
         ephys_schema_name (str): A string containing the name of the ephys schema.
-        probe_schema_name (str): A string containing the name of the probe scehma.
+        probe_schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
@@ -102,7 +101,7 @@ class AcquisitionSoftware(dj.Lookup):
     """
 
     definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
-    acq_software: varchar(24)    
+    acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
 
@@ -170,7 +169,7 @@ class EphysRecording(dj.Imported):
 
     definition = """
     # Ephys recording from a probe insertion for a given session.
-    -> ProbeInsertion      
+    -> ProbeInsertion
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
@@ -364,7 +363,7 @@ class PreClusterParamSet(dj.Lookup):
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> PreClusterMethod    
+    -> PreClusterMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -437,7 +436,7 @@ class PreClusterParamSteps(dj.Manual):
 
 @schema
 class PreClusterTask(dj.Manual):
-    """Defines a pre-clusting task ready to be run.
+    """Defines a pre-clustering task ready to be run.
 
     Attributes:
         EphysRecording (foreign key): EphysRecording primary key.
@@ -472,7 +471,7 @@ class PreCluster(dj.Imported):
     definition = """
     -> PreClusterTask
     ---
-    precluster_time: datetime  # time of generation of this set of pre-clustering results 
+    precluster_time: datetime  # time of generation of this set of pre-clustering results
     package_version='': varchar(16)
     """
 
@@ -553,9 +552,9 @@ class LFP(dj.Imported):
 
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode
         ---
-        lfp: longblob               # (uV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode
         """
 
     # Only store LFP for every 9th channel, due to high channel density,
@@ -703,14 +702,14 @@ class ClusteringParamSet(dj.Lookup):
         ClusteringMethod (dict): ClusteringMethod primary key.
         paramset_desc (varchar(128) ): Description of the clustering parameter set.
         param_set_hash (uuid): UUID hash for the parameter set.
-        params (longblob)
+        params (longblob): Paramset, dictionary of all applicable parameters.
     """
 
     definition = """
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> ClusteringMethod    
+    -> ClusteringMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -724,7 +723,7 @@ class ClusteringParamSet(dj.Lookup):
         """Inserts new parameters into the ClusteringParamSet table.
 
         Args:
-            clustering_method (str): name of the clustering method.
+            processing_method (str): name of the clustering method.
             paramset_desc (str): description of the parameter set
             params (dict): clustering parameters
             paramset_idx (int, optional): Unique parameter set ID. Defaults to None.
@@ -811,7 +810,7 @@ class Clustering(dj.Imported):
     # Clustering Procedure
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
+    clustering_time: datetime  # time of generation of this set of clustering results
     package_version='': varchar(16)
     """
 
@@ -823,7 +822,7 @@ class Clustering(dj.Imported):
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == "load":
-            kilosort_dataset = kilosort.Kilosort(
+            _ = kilosort.Kilosort(
                 kilosort_dir
             )  # check if the directory is a valid Kilosort output
             creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
@@ -856,11 +855,11 @@ class Curation(dj.Manual):
     -> Clustering
     curation_id: int
     ---
-    curation_time: datetime             # time of generation of this set of curated clustering results 
+    curation_time: datetime             # time of generation of this set of curated clustering results
     curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)  
+    curation_note='': varchar(2000)
     """
 
     def create1_from_clustering_task(self, key, curation_note: str = ""):
@@ -909,7 +908,7 @@ class CuratedClustering(dj.Imported):
 
     definition = """
     # Clustering results of a curation.
-    -> Curation    
+    -> Curation
     """
 
     class Unit(dj.Part):
@@ -926,7 +925,7 @@ class CuratedClustering(dj.Imported):
             spike_depths (longblob): Array of depths associated with each spike, relative to each spike.
         """
 
-        definition = """   
+        definition = """
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int
@@ -936,7 +935,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
         """
 
     def make(self, key):
@@ -1058,8 +1057,8 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode  
-        --- 
+        -> probe.ElectrodeConfig.Electrode
+        ---
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
@@ -1185,7 +1184,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering    
+    -> CuratedClustering
     """
 
     class Cluster(dj.Part):
@@ -1210,26 +1209,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """   
+        definition = """
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
+        firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
+        l_ratio=null: float  #
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
+        contamination_rate=null: float #
         """
 
     class Waveform(dj.Part):
@@ -1246,10 +1245,10 @@ class QualityMetrics(dj.Imported):
             recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
+            velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """   
+        definition = """
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
