@@ -759,8 +759,8 @@ def _write_channel_map_file(
     )
 
     if is_0_based:
-        channel_ind += 1
-        shank_ind += 1
+        channel_ind = channel_ind + 1
+        shank_ind = shank_ind + 1
 
     channel_count = len(channel_ind)
     chanMap0ind = np.arange(0, channel_count, dtype="float64")
