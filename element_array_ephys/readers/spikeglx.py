@@ -1,7 +1,9 @@
-from datetime import datetime
-import numpy as np
-import pathlib
 import logging
+import pathlib
+from datetime import datetime
+
+import numpy as np
+
 from .utils import convert_to_number
 
 logger = logging.getLogger(__name__)
@@ -165,8 +167,12 @@ class SpikeGLX:
         file_path = self.root_dir / (self.root_name + f".{file_type}.bin")
         file_size = file_path.stat().st_size
 
-        meta_mapping = {"ap": self.apmeta, "lf": self.lfmeta}
-        meta = meta_mapping[file_type]
+        if file_type == "ap":
+            meta = self.apmeta
+        elif file_type == "lf":
+            meta = self.lfmeta
+        else:
+            raise KeyError(f"Unknown file_type {file_type} - must be 'ap' or 'lf'")
 
         if file_size != meta.meta["fileSizeBytes"]:
             raise IOError(
@@ -450,10 +456,10 @@ def _read_meta(meta_filepath):
 
     res = {}
     with open(meta_filepath) as f:
-        for l in (l.rstrip() for l in f):
-            if "=" in l:
+        for line in (line.rstrip() for line in f):
+            if "=" in line:
                 try:
-                    k, v = l.split("=")
+                    k, v = line.split("=")
                     v = convert_to_number(v)
                     res[k] = v
                 except ValueError:

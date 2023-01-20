@@ -1,7 +1,14 @@
-import datajoint as dj
+"""
+isort:skip_file
+"""
+
 import logging
 import os
 
+import datajoint as dj
+
+
+__all__ = ["ephys", "get_logger"]
 
 dj.config["enable_python_native_blobs"] = True
 

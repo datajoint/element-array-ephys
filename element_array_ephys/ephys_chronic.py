@@ -1,17 +1,16 @@
-import datajoint as dj
-import pathlib
-import re
-import numpy as np
-import inspect
-import importlib
 import gc
+import importlib
+import inspect
+import pathlib
 from decimal import Decimal
+
+import datajoint as dj
+import numpy as np
 import pandas as pd
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from element_interface.utils import find_root_directory, find_full_path, dict_to_uuid
-
-from .readers import spikeglx, kilosort, openephys
-from . import probe, get_logger, ephys_report
+from . import ephys_report, get_logger, probe
+from .readers import kilosort, openephys, spikeglx
 
 log = get_logger(__name__)
 
@@ -32,7 +31,7 @@ def activate(
 
     Args:
         ephys_schema_name (str): A string containing the name of the ephys schema.
-        probe_schema_name (str): A string containing the name of the probe scehma.
+        probe_schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
@@ -127,7 +126,7 @@ class AcquisitionSoftware(dj.Lookup):
     """
 
     definition = """  # Software used for recording of neuropixels probes
-    acq_software: varchar(24)    
+    acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
 
@@ -144,7 +143,7 @@ class ProbeInsertion(dj.Manual):
 
     definition = """
     # Probe insertion chronically implanted into an animal.
-    -> Subject  
+    -> Subject
     insertion_number: tinyint unsigned
     ---
     -> probe.Probe
@@ -163,8 +162,7 @@ class InsertionLocation(dj.Manual):
         ml_location (decimal (6, 2) ): Medial-lateral location in micrometers. Reference is zero with right side values positive.
         depth (decimal (6, 2) ): Manipulator depth relative to the surface of the brain at zero. Ventral is negative.
         Theta (decimal (5, 2) ): elevation - rotation about the ml-axis in degrees relative to positive z-axis.
-        phi (decimal (5, 2) ): azimuth - rotation about the dv-axis in degrees relative to the positive x-axis
-
+        phi (decimal (5, 2) ): azimuth - rotation about the dv-axis in degrees relative to the positive x-axis.
     """
 
     definition = """
@@ -197,7 +195,7 @@ class EphysRecording(dj.Imported):
     definition = """
     # Ephys recording from a probe insertion for a given session.
     -> Session
-    -> ProbeInsertion      
+    -> ProbeInsertion
     ---
     -> probe.ElectrodeConfig
     -> AcquisitionSoftware
@@ -399,9 +397,9 @@ class LFP(dj.Imported):
 
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode  
+        -> probe.ElectrodeConfig.Electrode
         ---
-        lfp: longblob               # (uV) recorded lfp at this electrode 
+        lfp: longblob               # (uV) recorded lfp at this electrode
         """
 
     # Only store LFP for every 9th channel, due to high channel density,
@@ -468,7 +466,8 @@ class LFP(dj.Imported):
                 - 1 : 0 : -self._skip_channel_counts
             ]
 
-            lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]  # (sample x channel)
+            # (sample x channel)
+            lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
             lfp = (
                 lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
             ).T  # (channel x sample)
@@ -542,14 +541,14 @@ class ClusteringParamSet(dj.Lookup):
         ClusteringMethod (dict): ClusteringMethod primary key.
         paramset_desc (varchar(128) ): Description of the clustering parameter set.
         param_set_hash (uuid): UUID hash for the parameter set.
-        params (longblob)
+        params (longblob): Parameters for clustering with Kilosort.
     """
 
     definition = """
     # Parameter set to be used in a clustering procedure
     paramset_idx:  smallint
     ---
-    -> ClusteringMethod    
+    -> ClusteringMethod
     paramset_desc: varchar(128)
     param_set_hash: uuid
     unique index (param_set_hash)
@@ -652,15 +651,16 @@ class ClusteringTask(dj.Manual):
     """
 
     @classmethod
-    def infer_output_dir(cls, key, relative=False, mkdir=False):
+    def infer_output_dir(cls, key, relative=False, mkdir=False) -> pathlib.Path:
         """Infer output directory if it is not provided.
 
         Args:
             key (dict): ClusteringTask primary key.
 
         Returns:
-            Pathlib.Path: Expected clustering_output_dir based on the following convention: processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
-            e.g.: sub4/sess1/probe_2/kilosort2_0
+            Expected clustering_output_dir based on the following convention:
+                processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
+                e.g.: sub4/sess1/probe_2/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
         sess_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
@@ -732,7 +732,7 @@ class Clustering(dj.Imported):
     # Clustering Procedure
     -> ClusteringTask
     ---
-    clustering_time: datetime  # time of generation of this set of clustering results 
+    clustering_time: datetime  # time of generation of this set of clustering results
     package_version='': varchar(16)
     """
 
@@ -773,6 +773,10 @@ class Clustering(dj.Imported):
                         spikeglx_meta_filepath.parent
                     )
                     spikeglx_recording.validate_file("ap")
+                    run_CatGT = (
+                        params.pop("run_CatGT", True)
+                        and "_tcat." not in spikeglx_meta_filepath.stem
+                    )
 
                     if clustering_method.startswith("pykilosort"):
                         kilosort_triggering.run_pykilosort(
@@ -793,7 +797,7 @@ class Clustering(dj.Imported):
                             ks_output_dir=kilosort_dir,
                             params=params,
                             KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                            run_CatGT=True,
+                            run_CatGT=run_CatGT,
                         )
                         run_kilosort.run_modules()
                 elif acq_software == "Open Ephys":
@@ -857,11 +861,11 @@ class Curation(dj.Manual):
     -> Clustering
     curation_id: int
     ---
-    curation_time: datetime             # time of generation of this set of curated clustering results 
+    curation_time: datetime             # time of generation of this set of curated clustering results
     curation_output_dir: varchar(255)   # output directory of the curated results, relative to root data directory
     quality_control: bool               # has this clustering result undergone quality control?
     manual_curation: bool               # has manual curation been performed on this clustering result?
-    curation_note='': varchar(2000)  
+    curation_note='': varchar(2000)
     """
 
     def create1_from_clustering_task(self, key, curation_note: str = ""):
@@ -910,7 +914,7 @@ class CuratedClustering(dj.Imported):
 
     definition = """
     # Clustering results of a curation.
-    -> Curation    
+    -> Curation
     """
 
     class Unit(dj.Part):
@@ -937,7 +941,7 @@ class CuratedClustering(dj.Imported):
         spike_count: int         # how many spikes in this recording for this unit
         spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
         """
 
     def make(self, key):
@@ -1063,8 +1067,8 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode  
-        --- 
+        -> probe.ElectrodeConfig.Electrode
+        ---
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
@@ -1192,7 +1196,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering    
+    -> CuratedClustering
     """
 
     class Cluster(dj.Part):
@@ -1217,26 +1221,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """   
+        definition = """
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit 
+        firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  # 
+        l_ratio=null: float  #
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
-        contamination_rate=null: float # 
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
+        contamination_rate=null: float #
         """
 
     class Waveform(dj.Part):
@@ -1253,10 +1257,10 @@ class QualityMetrics(dj.Imported):
             recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
+            velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """   
+        definition = """
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
