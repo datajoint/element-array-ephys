@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta
-import glob
 
 import numpy as np
 import scipy.io
@@ -313,7 +312,7 @@ class SGLXKilosortPipeline:
         else:
             # handle cases where hash is changed(different paramset) and trying to rerun processing
             # delete all files in kilosort output folder, except continuous.dat and -input.json
-            [os.remove(f) for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
+            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -608,7 +607,7 @@ class OpenEphysKilosortPipeline:
         else:
             # handle cases where hash is changed(different paramset) and trying to rerun processing
             # delete all files in kilosort output folder except continuous.dat and the -input.json
-            [os.remove(f) for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
+            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
