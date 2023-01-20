@@ -310,7 +310,7 @@ class SGLXKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
-            # handle cases where hash is changed(different paramset) and trying to rerun same key
+            # handle cases where hash is changed(different paramset) and trying to rerun processing
             # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
             # recreate /json_configs directory after all kilosort output files are deleted
             shutil.rmtree(self._ks_output_dir)
@@ -608,7 +608,7 @@ class OpenEphysKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
-            # handle cases where hash is changed(different paramset) and trying to rerun same key
+            # handle cases where hash is changed(different paramset) and trying to rerun processing
             # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
             # recreate /json_configs directory after all kilosort output files are deleted
             shutil.rmtree(self._ks_output_dir)
