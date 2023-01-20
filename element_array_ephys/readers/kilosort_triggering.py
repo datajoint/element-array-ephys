@@ -777,8 +777,7 @@ def _write_channel_map_file(
 
     # channels to exclude
     mask = get_noise_channels(ap_band_file, channel_count, sample_rate, bit_volts)
-    bad_channel_ind = np.where(mask is False)[0]
-    connected[bad_channel_ind] = 0
+    connected = np.where(mask is False, 0, connected)
 
     mdict = {
         "chanMap": chanMap,
