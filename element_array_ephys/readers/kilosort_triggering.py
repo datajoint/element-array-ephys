@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta
+import glob
 
 import numpy as np
 import scipy.io
@@ -311,11 +312,8 @@ class SGLXKilosortPipeline:
             modules_status = {**modules_status, **updated_module_status}
         else:
             # handle cases where hash is changed(different paramset) and trying to rerun processing
-            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
-            # recreate /json_configs directory after all kilosort output files are deleted
-            shutil.rmtree(self._ks_output_dir)
-            self._json_directory.mkdir(parents=True, exist_ok=True)
-
+            # delete all files in kilosort output folder, except continuous.dat and -input.json
+            [os.remove(f) for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -609,11 +607,8 @@ class OpenEphysKilosortPipeline:
             modules_status = {**modules_status, **updated_module_status}
         else:
             # handle cases where hash is changed(different paramset) and trying to rerun processing
-            # delete all files in kilosort output folder, all will be regenerated when kilosort is rerun
-            # recreate /json_configs directory after all kilosort output files are deleted
-            shutil.rmtree(self._ks_output_dir)
-            self._json_directory.mkdir(parents=True, exist_ok=True)
-
+            # delete all files in kilosort output folder except continuous.dat and the -input.json
+            [os.remove(f) for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
