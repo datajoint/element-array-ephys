@@ -10,6 +10,15 @@ import scipy.io
 import numpy as np
 from datetime import datetime, timedelta
 
+import spikeinterface as si
+import spikeinterface.extractors as se
+import spikeinterface.sorters as ss
+import spikeinterface.comparison as sc
+import spikeinterface.widgets as sw
+import spikeinterface.preprocessing as sip
+import probeinterface as pi
+
+
 from element_interface.utils import dict_to_uuid
 
 
@@ -370,8 +379,8 @@ class OpenEphysKilosortPipeline:
 
     def generate_modules_input_json(self):
         self.make_chanmap_file()
-
         self._module_input_json = self._json_directory / f'{self._npx_input_dir.name}-input.json'
+
 
         continuous_file = self._get_raw_data_filepaths()
 
@@ -555,13 +564,10 @@ class SIKilosortPipeline:
     https://github.com/SpikeInterface/spikeinterface
     """
 
-    _modules = [#'depth_estimation',
-                #'median_subtraction',
+    _modules = ['si_kilosort_preprocessing',
                 'si_kilosort_helper',
                 'si_kilosort_postprocessing',
                 'si_qc_metrics',
-                #'noise_templates',
-                #'mean_waveforms'
                 ]
     ks2_params = {"fs": 30000, "fshigh": 150, "minfr_goodchannels": 0.1, "Th": [10, 4], 
             "lam": 10, "AUCsplit": 0.9, "minFR": 0.02, "momentum": [20, 400], "sigmaMask": 30, 
@@ -575,16 +581,19 @@ class SIKilosortPipeline:
                 "nfilt_factor": 4, "nskip": 25, "ntbuff": 64, "reorder": 1, "scaleproc": 200, 
                 "sigmaMask": 30, "spkTh": -6, "useRAM": 0, "whiteningRange": 32}
 
-    _input_json_args = list(inspect.signature(createInputJson).parameters)
+    # _input_json_args = list(inspect.signature(createInputJson).parameters)
 
     def __init__(self, sorter_name: str, recording, num_channels: int, xy_coords, ks_output_dir: str, 
                  params: dict):
         self._ks_output_dir = pathlib.Path(ks_output_dir)
         self._ks_output_dir.mkdir(parents=True, exist_ok=True)
 
+        self._sorter_name = sorter_name
         self._xycoords = xy_coords
         self._num_channels = num_channels
         self._params = params
+
+        self._recording = recording
 
         # self._json_directory = self._ks_output_dir / 'json_configs'
         # self._json_directory.mkdir(parents=True, exist_ok=True)
@@ -595,11 +604,11 @@ class SIKilosortPipeline:
 
     def create_si_probe(self):
         probe = pi.Probe(ndim=2, si_units='um')
-        probe.set_contacts(positions=self._xy_coords, shapes='square', shape_params={'width': 5})
+        probe.set_contacts(positions=self._xycoords, shapes='square', shape_params={'width': 5})
         probe.create_auto_shape(probe_type='tip')
         channel_indices = np.arange(self._num_channels)
         probe.set_device_channel_indices(channel_indices)
-        oe_si_recording.set_probe(probe=probe)
+        self._recording.set_probe(probe=probe)
 
         # Kilosort Recording Object Preprocessing 
         # Apply bandpass filter and rewrite recording object
@@ -610,7 +619,82 @@ class SIKilosortPipeline:
 
 
     def run_si_sorter(self):
-        
+        sorting_kilosort = si.run_sorter(
+                            sorter_name = self._sorter_name,
+                            recording = self._recording,
+                            output_folder = self._ks_output_dir,
+                            docker_image = f"spikeinterface/{self._sorter_name}-compiled-base:latest",
+                            **self._params
+                        )
+        return sorting_kilosort
+
+    def run_modules(self):
+
+        print('---- Running Modules ----')
+        self.generate_modules_input_json()
+        module_input_json = self._module_input_json.as_posix()
+        module_logfile = module_input_json.replace('-input.json', '-run_modules-log.txt')
+
+        for module in self._modules:
+            module_status = self._get_module_status(module)
+            if module_status['completion_time'] is not None:
+                continue
+
+            start_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': None,
+                          'duration': None}})
+            with open(module_logfile, "a") as f:
+                # subprocess.check_call(command.split(' '), stdout=f)
+            completion_time = datetime.utcnow()
+            self._update_module_status(
+                {module: {'start_time': start_time,
+                          'completion_time': completion_time,
+                          'duration': (completion_time - start_time).total_seconds()}})
+
+        self._update_total_duration()
+
+    def _update_module_status(self, updated_module_status={}):
+        if self._modules_input_hash is None:
+            raise RuntimeError('"generate_modules_input_json()" not yet performed!')
+
+        self._modules_input_hash_fp = self._json_directory / f'.{self._modules_input_hash}.json'
+        if self._modules_input_hash_fp.exists():
+            with open(self._modules_input_hash_fp) as f:
+                modules_status = json.load(f)
+            modules_status = {**modules_status, **updated_module_status}
+        else:
+            modules_status = {module: {'start_time': None,
+                                       'completion_time': None,
+                                       'duration': None}
+                              for module in self._modules}
+        with open(self._modules_input_hash_fp, 'w') as f:
+            json.dump(modules_status, f, default=str)
+
+    def _get_module_status(self, module):
+        if self._modules_input_hash_fp is None:
+            self._update_module_status()
+
+        if self._modules_input_hash_fp.exists():
+            with open(self._modules_input_hash_fp) as f:
+                modules_status = json.load(f)
+            if modules_status[module]['completion_time'] is None:
+                # additional logic to read from the "-output.json" file for this module as well
+                # handle cases where the module has finished successfully,
+                # but the "_modules_input_hash_fp" is not updated (for whatever reason),
+                # resulting in this module not registered as completed in the "_modules_input_hash_fp"
+                module_output_json_fp = pathlib.Path(self._get_module_output_json_filename(module))
+                if module_output_json_fp.exists():
+                    with open(module_output_json_fp) as f:
+                        module_run_output = json.load(f)
+                    modules_status[module]['duration'] = module_run_output['execution_time']
+                    modules_status[module]['completion_time'] = (
+                            datetime.strptime(modules_status[module]['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                            + timedelta(seconds=module_run_output['execution_time']))
+            return modules_status[module]
+
+        return {'start_time': None, 'completion_time': None, 'duration': None}
 
 
 

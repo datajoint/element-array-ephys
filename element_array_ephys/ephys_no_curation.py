@@ -709,13 +709,17 @@ class Clustering(dj.Imported):
                     assert len(oe_probe.recording_info['recording_files']) == 1
                     oe_filepath = get_openephys_filepath(key)
                     stream_name = os.path.split(oe_filepath)[1]
+
                     oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_file_path, stream_name=stream_name) 
+                    
                     electrode_query = (probe.ProbeType.Electrode
                                     * probe.ElectrodeConfig.Electrode
                                     * EphysRecording & key)
 
                     xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
-                    channels_details = get_recording_channels_details(key) 
+                    channels_details = get_recording_channels_details(key)
+
+
                     probe = pi.Probe(ndim=2, si_units='um')
                     probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
                     probe.create_auto_shape(probe_type='tip')
@@ -731,8 +735,7 @@ class Clustering(dj.Imported):
                     recording_cmr = sip.common_reference(oe_si_recording, reference="global", operator="median")
 
 
-                    # run kilosort
-                    #******************** Current Implementation *************************
+                    # Trigger kilosort 
                     if clustering_method.startswith('pykilosort'):
                         kilosort_triggering.run_pykilosort(
                             continuous_file=pathlib.Path(oe_probe.recording_info['recording_files'][0]) / 'continuous.dat',
@@ -744,7 +747,7 @@ class Clustering(dj.Imported):
                             connected=params.pop('connected'),
                             sample_rate=params.pop('sample_rate'),
                             params=params)
-                    elif clustering_method.endswith('spike_interface'):
+                    elif clustering_method.endswith('spike_interface'): # Define convention for paramset insertion
                         if clustering_method.startswith('kilosort2.5'):
                             sorter_name = "kilosort2_5"
                         else:
@@ -758,6 +761,8 @@ class Clustering(dj.Imported):
                         )
                         run_si = kilosort_triggering.SIKilosortPipeline(
                             sorter_name=sorter_name,
+                            file_path=oe_file_path,
+                            stream_name=stream_name,
                             recording=oe_si_recording,
                             num_channels=channels_details['num_channels'],
                             xy_coords=xy_coords,
