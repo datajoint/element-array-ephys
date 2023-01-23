@@ -1,3 +1,26 @@
+"""
+The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the
+"ecephys_spike_sorting" pipeline.
+The "ecephys_spike_sorting" was originally developed by the Allen Institute (https://github.com/AllenInstitute/ecephys_spike_sorting) for Neuropixels data acquired with Open Ephys acquisition system.
+Then forked by Jennifer Colonell from the Janelia Research Campus (https://github.com/jenniferColonell/ecephys_spike_sorting) to support SpikeGLX acquisition system.
+
+At DataJoint, we fork from Jennifer's fork and implemented a version that supports both Open Ephys and Spike GLX.
+https://github.com/datajoint-company/ecephys_spike_sorting
+
+The follow pipeline features three tables:
+1. KilosortPreProcessing - for preprocessing steps (no GPU required)
+    - median_subtraction for Open Ephys
+    - or the CatGT step for SpikeGLX
+2. KilosortClustering - kilosort (MATLAB) - requires GPU
+    - supports kilosort 2.0, 2.5 or 3.0 (https://github.com/MouseLand/Kilosort.git)
+3. KilosortPostProcessing - for postprocessing steps (no GPU required)
+    - kilosort_postprocessing
+    - noise_templates
+    - mean_waveforms
+    - quality_metrics
+"""
+
+
 import datajoint as dj
 from element_array_ephys import get_logger
 from decimal import Decimal
