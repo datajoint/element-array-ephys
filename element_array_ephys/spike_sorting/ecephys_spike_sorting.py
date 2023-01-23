@@ -29,10 +29,9 @@ def activate(
     """
     activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
         :param schema_name: schema name on the database server to activate the `spike_sorting` schema
-        :param ephys_module: the activated ephys element for which this ephys_report schema will be downstream from
+        :param ephys_module: the activated ephys element for which this `spike_sorting` schema will be downstream from
         :param create_schema: when True (default), create schema in the database if it does not yet exist.
         :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    (The "activation" of this ephys_report module should be evoked by one of the ephys modules only)
     """
     global ephys
     ephys = ephys_module
