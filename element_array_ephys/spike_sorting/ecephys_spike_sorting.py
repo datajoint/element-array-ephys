@@ -41,6 +41,12 @@ schema = dj.schema()
 
 ephys = None
 
+_supported_kilosort_versions = [
+    "kilosort2",
+    "kilosort2.5",
+    "kilosort3",
+]
+
 
 def activate(
     schema_name,
@@ -111,11 +117,9 @@ class KilosortPreProcessing(dj.Imported):
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method", "params")
 
-        assert clustering_method in (
-            "kilosort2",
-            "kilosort2.5",
-            "kilosort3",
-        ), 'Supporting "kilosort" clustering_method only'
+        assert (
+            clustering_method in _supported_kilosort_versions
+        ), f'Clustering_method "{clustering_method}" is not supported'
 
         # add additional probe-recording and channels details into `params`
         params = {**params, **ephys.get_recording_channels_details(key)}
@@ -186,11 +190,6 @@ class KilosortClustering(dj.Imported):
         acq_software, clustering_method = (
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
-        assert clustering_method in (
-            "kilosort2",
-            "kilosort2.5",
-            "kilosort3",
-        ), 'Supporting "kilosort" clustering_method only'
 
         params = (KilosortPreProcessing & key).fetch1("params")
 
@@ -257,11 +256,6 @@ class KilosortPostProcessing(dj.Imported):
         acq_software, clustering_method = (
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
-        assert clustering_method in (
-            "kilosort2",
-            "kilosort2.5",
-            "kilosort3",
-        ), 'Supporting "kilosort" clustering_method only'
 
         params = (KilosortPreProcessing & key).fetch1("params")
 
