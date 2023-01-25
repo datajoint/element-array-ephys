@@ -30,8 +30,6 @@ from datetime import datetime, timedelta
 from element_interface.utils import find_full_path
 from element_array_ephys.readers import (
     spikeglx,
-    kilosort,
-    openephys,
     kilosort_triggering,
 )
 
