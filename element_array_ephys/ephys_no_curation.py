@@ -802,7 +802,7 @@ class Clustering(dj.Imported):
     Attributes:
         ClusteringTask (foreign key): ClusteringTask primary key.
         clustering_time (datetime): Time when clustering results are generated.
-        package_version (varchar(16) ): Package version used for a clustering analysis.
+        package_version (varchar(16): Package version used for a clustering analysis.
     """
 
     definition = """
