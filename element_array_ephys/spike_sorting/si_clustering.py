@@ -202,7 +202,8 @@ class SIPreProcessing(dj.Imported):
             oe_si_recording_filtered = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
             oe_recording_cmr = sip.common_reference(oe_si_recording_filtered, reference="global", operator="median")
             # oe_recording_cmr.save_to_folder('oe_recording_cmr', kilosort_dir)
-            oe_recording_cmr.dump_to_json('oe_recording_cmr.json', kilosort_dir)
+            # oe_recording_cmr.dump_to_json('oe_recording_cmr.json', kilosort_dir)
+            oe_si_recording_filtered.save_to_folder('', kilosort_dir)
 
         self.insert1(
             {
@@ -220,7 +221,7 @@ class SIClustering(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> SI_PreProcessing
+    -> SIPreProcessing
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
