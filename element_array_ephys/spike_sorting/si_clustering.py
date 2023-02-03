@@ -8,8 +8,8 @@ At DataJoint, we fork from Jennifer's fork and implemented a version that suppor
 https://github.com/datajoint-company/ecephys_spike_sorting
 
 The follow pipeline features intermediary tables:
-1. KilosortPreProcessing - for preprocessing steps (no GPU required)
-    - median_subtraction for Open Ephys
+1. SIPreProcessing - for preprocessing steps (no GPU required)
+    - 
     - or the CatGT step for SpikeGLX
 2. KilosortClustering - kilosort (MATLAB) - requires GPU
     - supports kilosort 2.0, 2.5 or 3.0 (https://github.com/MouseLand/Kilosort.git)
@@ -90,7 +90,7 @@ def activate(
     )
 
 @schema
-class SI_PreProcessing(dj.Imported):
+class SIPreProcessing(dj.Imported):
     """A table to handle preprocessing of each clustering task."""
 
     definition = """
@@ -168,8 +168,8 @@ class SI_PreProcessing(dj.Imported):
 
             # run preprocessing and save results to output folder
             sglx_si_recording_filtered = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
-            sglx_recording_cmr = sip.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
-            sglx_recording_cmr.save_to_folder('sglx_recording_cmr', kilosort_dir)    
+            # sglx_recording_cmr = sip.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
+            sglx_si_recording_filtered.save_to_folder('sglx_si_recording_filtered', kilosort_dir)    
 
 
         elif acq_software == "Open Ephys":
@@ -216,7 +216,7 @@ class SI_PreProcessing(dj.Imported):
             }
         )           
 @schema
-class SI_KilosortClustering(dj.Imported):
+class SIClustering(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
@@ -236,8 +236,7 @@ class SI_KilosortClustering(dj.Imported):
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
 
-        params = (SI_PreProcessing & key).fetch1("params") 
-
+        params = (SIPreProcessing & key).fetch1("params") 
 
         if acq_software == "SpikeGLX":
             # sglx_probe = ephys.get_openephys_probe_data(key)
@@ -287,11 +286,11 @@ class SI_KilosortClustering(dj.Imported):
         )
 
 @schema
-class SI_PostProcessing(dj.Imported):
+class SIPostProcessing(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> SI_KilosortClustering
+    -> SIClustering
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -307,7 +306,7 @@ class SI_PostProcessing(dj.Imported):
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
 
-        params = (SI_PreProcessing & key).fetch1("params")
+        params = (SIPreProcessing & key).fetch1("params")
 
         if acq_software == "SpikeGLX":
             sorting_file = kilosort_dir / 'sorting_kilosort'
