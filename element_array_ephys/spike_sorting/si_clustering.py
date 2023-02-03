@@ -221,7 +221,7 @@ class ClusteringModule(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> SIPreProcessing
+    -> PreProcessing
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
