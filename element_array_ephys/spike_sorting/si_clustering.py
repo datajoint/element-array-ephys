@@ -90,7 +90,7 @@ def activate(
     )
 
 @schema
-class SIPreProcessing(dj.Imported):
+class PreProcessing(dj.Imported):
     """A table to handle preprocessing of each clustering task."""
 
     definition = """
@@ -164,7 +164,7 @@ class SIPreProcessing(dj.Imported):
             probe.create_auto_shape(probe_type='tip')
             channel_indices = np.arange(channels_details['num_channels'])
             probe.set_device_channel_indices(channel_indices)
-            oe_si_recording.set_probe(probe=probe)
+            sglx_si_recording.set_probe(probe=probe)
 
             # run preprocessing and save results to output folder
             sglx_si_recording_filtered = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
@@ -217,7 +217,7 @@ class SIPreProcessing(dj.Imported):
             }
         )           
 @schema
-class SIClustering(dj.Imported):
+class ClusteringModule(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
@@ -237,7 +237,7 @@ class SIClustering(dj.Imported):
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
 
-        params = (SIPreProcessing & key).fetch1("params") 
+        params = (PreProcessing & key).fetch1("params") 
 
         if acq_software == "SpikeGLX":
             # sglx_probe = ephys.get_openephys_probe_data(key)
@@ -287,11 +287,11 @@ class SIClustering(dj.Imported):
         )
 
 @schema
-class SIPostProcessing(dj.Imported):
+class PostProcessing(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> SIClustering
+    -> ClusteringModule
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -307,7 +307,7 @@ class SIPostProcessing(dj.Imported):
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("acq_software", "clustering_method")
 
-        params = (SIPreProcessing & key).fetch1("params")
+        params = (PreProcessing & key).fetch1("params")
 
         if acq_software == "SpikeGLX":
             sorting_file = kilosort_dir / 'sorting_kilosort'
