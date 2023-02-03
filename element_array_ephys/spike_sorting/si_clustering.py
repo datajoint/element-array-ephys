@@ -44,7 +44,9 @@ import element_array_ephys.probe as probe
 #     get_recording_channels_details,
 # )
 import spikeinterface as si
+import spikeinterface.core as sic
 import spikeinterface.extractors as se
+import spikeinterface.exporters as sie
 import spikeinterface.sorters as ss
 import spikeinterface.comparison as sc
 import spikeinterface.widgets as sw
@@ -88,7 +90,7 @@ def activate(
     )
 
 @schema
-class SI_preprocessing(dj.Imported):
+class SI_PreProcessing(dj.Imported):
     """A table to handle preprocessing of each clustering task."""
 
     definition = """
@@ -172,8 +174,8 @@ class SI_preprocessing(dj.Imported):
 
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
-            oe_full_path = find_full_path(get_ephys_root_data_dir(),get_session_directory(key))
-            oe_filepath = get_openephys_filepath(key)
+            oe_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
+            oe_filepath = ephys.get_openephys_filepath(key)
             stream_name = os.path.split(oe_filepath)[1]
 
             assert len(oe_probe.recording_info["recording_files"]) == 1
@@ -186,7 +188,7 @@ class SI_preprocessing(dj.Imported):
                 * ephys.EphysRecording & key)
 
             xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
-            channels_details = get_recording_channels_details(key)
+            channels_details = ephys.get_recording_channels_details(key)
 
             # Create SI probe object 
             probe = pi.Probe(ndim=2, si_units='um')
@@ -199,7 +201,8 @@ class SI_preprocessing(dj.Imported):
             # run preprocessing and save results to output folder
             oe_si_recording_filtered = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
             oe_recording_cmr = sip.common_reference(oe_si_recording_filtered, reference="global", operator="median")
-            oe_recording_cmr.save_to_folder('oe_recording_cmr', kilosort_dir)
+            # oe_recording_cmr.save_to_folder('oe_recording_cmr', kilosort_dir)
+            oe_recording_cmr.dump_to_json('oe_recording_cmr.json', kilosort_dir)
 
         self.insert1(
             {
@@ -217,7 +220,7 @@ class SI_KilosortClustering(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> KilosortPreProcessing
+    -> SI_PreProcessing
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -236,16 +239,18 @@ class SI_KilosortClustering(dj.Imported):
         params = (KilosortPreProcessing & key).fetch1("params")
 
         if acq_software == "SpikeGLX":
-            sglx_probe = ephys.get_openephys_probe_data(key)
-            oe_si_recording = se.load_from_folder
-            assert len(oe_probe.recording_info["recording_files"]) == 1
+            # sglx_probe = ephys.get_openephys_probe_data(key)
+            recording_file = kilosort_dir / 'sglx_recording_cmr.json'
+            # sglx_si_recording = se.load_from_folder(recording_file)  
+            sglx_si_recording = sic.load_extractor(recording_file)
+            # assert len(oe_probe.recording_info["recording_files"]) == 1
             if clustering_method.startswith('kilosort2.5'):
                 sorter_name = "kilosort2_5"
             else:
                 sorter_name = clustering_method
             sorting_kilosort = si.run_sorter(
                 sorter_name = sorter_name,
-                recording = oe_si_recording,
+                recording = sglx_si_recording,
                 output_folder = kilosort_dir,
                 docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
                 **params
@@ -253,7 +258,7 @@ class SI_KilosortClustering(dj.Imported):
             sorting_kilosort.save_to_folder('sorting_kilosort', kilosort_dir)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
-            oe_si_recording = se.load_from_folder
+            oe_si_recording = se.load_from_folder 
             assert len(oe_probe.recording_info["recording_files"]) == 1
             if clustering_method.startswith('kilosort2.5'):
                 sorter_name = "kilosort2_5"
@@ -266,7 +271,8 @@ class SI_KilosortClustering(dj.Imported):
                 docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
                 **params
             )
-            sorting_kilosort.save_to_folder('sorting_kilosort', kilosort_dir)
+            sorting_kilosort.save_to_folder('sorting_kilosort', kilosort_dir, n_jobs=-1, chunk_size=30000)
+            # sorting_kilosort.save(folder=kilosort_dir, n_jobs=20, chunk_size=30000)
 
         self.insert1(
             {
@@ -279,7 +285,100 @@ class SI_KilosortClustering(dj.Imported):
             }
         )
 
+@schema
+class SI_KilosortPostProcessing(dj.Imported):
+    """A processing table to handle each clustering task."""
 
+    definition = """
+    -> SI_KilosortClustering
+    ---
+    modules_status: longblob   # dictionary of summary status for all modules
+    execution_time: datetime   # datetime of the start of this step
+    execution_duration: float  # (hour) execution duration
+    """
+
+    def make(self, key):
+        execution_time = datetime.utcnow()
+
+        output_dir = (ephys.ClusteringTask & key).fetch1("clustering_output_dir")
+        kilosort_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+
+        acq_software, clustering_method = (
+            ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
+        ).fetch1("acq_software", "clustering_method")
+
+        params = (KilosortPreProcessing & key).fetch1("params")
+
+        if acq_software == "SpikeGLX":
+            sorting_file = kilosort_dir / 'sorting_kilosort'
+            recording_file = kilosort_dir / 'sglx_recording_cmr.json'
+            sglx_si_recording = sic.load_extractor(recording_file)
+            sorting_kilosort = sic.load_extractor(sorting_file)
+
+            we_kilosort = si.WaveformExtractor.create(sglx_si_recording, sorting_kilosort, "waveforms", remove_if_exists=True)
+            we_kilosort.run_extract_waveforms(n_jobs=-1, chunk_size=30000)
+            unit_id0 = sorting_kilosort.unit_ids[0]
+            waveforms = we_kilosort.get_waveforms(unit_id0)
+            template = we_kilosort.get_template(unit_id0)
+            snrs = si.compute_snrs(we_kilosort)
+
+            
+             # QC Metrics 
+            si_violations_ratio, isi_violations_rate, isi_violations_count = si.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
+            metrics = si.compute_quality_metrics(we_kilosort, metric_names=["firing_rate","snr","presence_ratio","isi_violation",
+                                                "num_spikes","amplitude_cutoff","amplitude_median","sliding_rp_violation","rp_violation","drift"])
+            sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
+            # ["firing_rate","snr","presence_ratio","isi_violation",
+            # "number_violation","amplitude_cutoff","isolation_distance","l_ratio","d_prime","nn_hit_rate",
+            # "nn_miss_rate","silhouette_core","cumulative_drift","contamination_rate"])
+
+            we_kilosort.save_to_folder('we_kilosort',kilosort_dir, n_jobs=-1, chunk_size=30000)
+
+
+
+        elif acq_software == "Open Ephys":
+            sorting_file = kilosort_dir / 'sorting_kilosort'
+            recording_file = kilosort_dir / 'sglx_recording_cmr.json'
+            sglx_si_recording = sic.load_extractor(recording_file)
+            sorting_kilosort = sic.load_extractor(sorting_file)
+
+            we_kilosort = si.WaveformExtractor.create(sglx_si_recording, sorting_kilosort, "waveforms", remove_if_exists=True)
+            we_kilosort.run_extract_waveforms(n_jobs=-1, chunk_size=30000)
+            unit_id0 = sorting_kilosort.unit_ids[0]
+            waveforms = we_kilosort.get_waveforms(unit_id0)
+            template = we_kilosort.get_template(unit_id0)
+            snrs = si.compute_snrs(we_kilosort)
+
+            
+             # QC Metrics 
+            si_violations_ratio, isi_violations_rate, isi_violations_count = si.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
+            metrics = si.compute_quality_metrics(we_kilosort, metric_names=["firing_rate","snr","presence_ratio","isi_violation",
+                                                "num_spikes","amplitude_cutoff","amplitude_median","sliding_rp_violation","rp_violation","drift"])
+            sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
+
+            we_kilosort.save_to_folder('we_kilosort',kilosort_dir, n_jobs=-1, chunk_size=30000)
+            
+            
+
+        with open(run_kilosort._modules_input_hash_fp) as f:
+            modules_status = json.load(f)
+
+        self.insert1(
+            {
+                **key,
+                "modules_status": modules_status,
+                "execution_time": execution_time,
+                "execution_duration": (
+                    datetime.utcnow() - execution_time
+                ).total_seconds()
+                / 3600,
+            }
+        )
+
+        # all finished, insert this `key` into ephys.Clustering
+        ephys.Clustering.insert1(
+            {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
+        )
 
 
 
