@@ -293,7 +293,6 @@ class SI_PostProcessing(dj.Imported):
     definition = """
     -> SI_KilosortClustering
     ---
-    modules_status: longblob   # dictionary of summary status for all modules
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
     """
@@ -358,13 +357,10 @@ class SI_PostProcessing(dj.Imported):
 
             we_kilosort.save_to_folder('we_kilosort',kilosort_dir, n_jobs=-1, chunk_size=30000)
             
-        with open(run_kilosort._modules_input_hash_fp) as f:
-            modules_status = json.load(f)
 
         self.insert1(
             {
                 **key,
-                "modules_status": modules_status,
                 "execution_time": execution_time,
                 "execution_duration": (
                     datetime.utcnow() - execution_time
