@@ -1,22 +1,20 @@
 """
 The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the
-"ecephys_spike_sorting" pipeline.
-The "ecephys_spike_sorting" was originally developed by the Allen Institute (https://github.com/AllenInstitute/ecephys_spike_sorting) for Neuropixels data acquired with Open Ephys acquisition system.
-Then forked by Jennifer Colonell from the Janelia Research Campus (https://github.com/jenniferColonell/ecephys_spike_sorting) to support SpikeGLX acquisition system.
+"spikeinterface" pipeline.
+Spikeinterface developed by Alessio Buccino, Samuel Garcia, Cole Hurwitz, Jeremy Magland, and Matthias Hennig (https://github.com/SpikeInterface)
 
-At DataJoint, we fork from Jennifer's fork and implemented a version that supports both Open Ephys and Spike GLX.
-https://github.com/datajoint-company/ecephys_spike_sorting
+The DataJoint pipeline currently incorporated Spikeinterfaces approach of running Kilosort using a container
 
 The follow pipeline features intermediary tables:
-1. SIPreProcessing - for preprocessing steps (no GPU required)
-    - 
-    - or the CatGT step for SpikeGLX
-2. KilosortClustering - kilosort (MATLAB) - requires GPU
+1. PreProcessing - for preprocessing steps (no GPU required)
+    - create recording extractor and link it to a probe
+    - bandpass filtering
+    - common mode referencing
+2. ClusteringModule - kilosort (MATLAB) - requires GPU and docker/singularity containers
     - supports kilosort 2.0, 2.5 or 3.0 (https://github.com/MouseLand/Kilosort.git)
-3. KilosortPostProcessing - for postprocessing steps (no GPU required)
-    - kilosort_postprocessing
-    - noise_templates
-    - mean_waveforms
+3. PostProcessing - for postprocessing steps (no GPU required)
+    - create waveform extractor object
+    - extract templates, waveforms and snrs
     - quality_metrics
 
 
@@ -48,8 +46,6 @@ import spikeinterface.core as sic
 import spikeinterface.extractors as se
 import spikeinterface.exporters as sie
 import spikeinterface.sorters as ss
-import spikeinterface.comparison as sc
-import spikeinterface.widgets as sw
 import spikeinterface.preprocessing as sip
 import probeinterface as pi
 
