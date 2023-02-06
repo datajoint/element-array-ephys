@@ -310,6 +310,16 @@ class SGLXKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
+            # handle cases of processing rerun on different parameters (the hash changes)
+            # delete outdated files
+            outdated_files = [
+                f
+                for f in self._json_directory.glob("*")
+                if f.is_file() and f.name != self._module_input_json.name
+            ]
+            for f in outdated_files:
+                f.unlink()
+
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -602,6 +612,16 @@ class OpenEphysKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
+            # handle cases of processing rerun on different parameters (the hash changes)
+            # delete outdated files
+            outdated_files = [
+                f
+                for f in self._json_directory.glob("*")
+                if f.is_file() and f.name != self._module_input_json.name
+            ]
+            for f in outdated_files:
+                f.unlink()
+
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
                 for module in self._modules
@@ -747,8 +767,8 @@ def _write_channel_map_file(
     )
 
     if is_0_based:
-        channel_ind += 1
-        shank_ind += 1
+        channel_ind = channel_ind + 1
+        shank_ind = shank_ind + 1
 
     channel_count = len(channel_ind)
     chanMap0ind = np.arange(0, channel_count, dtype="float64")
@@ -757,8 +777,7 @@ def _write_channel_map_file(
 
     # channels to exclude
     mask = get_noise_channels(ap_band_file, channel_count, sample_rate, bit_volts)
-    bad_channel_ind = np.where(mask is False)[0]
-    connected[bad_channel_ind] = 0
+    connected = np.where(mask is False, 0, connected)
 
     mdict = {
         "chanMap": chanMap,
