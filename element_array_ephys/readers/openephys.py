@@ -4,23 +4,9 @@ import pathlib
 import re
 
 import numpy as np
-from packaging.version import parse as version_parser
-
-pyopenephys_warning = (
-    "It is recommended that you use DataJoint's fork of pyopenephys.\n"
-    + "Please install with the following command:\n"
-    + "pip install git+https://github.com/datajoint-company/pyopenephys.git"
-)
-
-try:
-    import pyopenephys
-except ImportError:
-    raise ImportError(pyopenephys_warning)
+import pyopenephys
 
 logger = logging.getLogger("datajoint")
-
-if version_parser(pyopenephys.__version__) < version_parser("1.1.6"):
-    logger.warning(pyopenephys_warning)
 
 """
 The Open Ephys Record Node saves Neuropixels data in binary format according to the following the directory structure:
