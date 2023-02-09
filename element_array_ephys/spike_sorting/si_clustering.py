@@ -186,11 +186,14 @@ class PreProcessing(dj.Imported):
             oe_recording_cmr = sip.common_reference(oe_si_recording_filtered, reference="global", operator="median")
             # oe_recording_cmr.save_to_folder('oe_recording_cmr', kilosort_dir)
             # oe_recording_cmr.dump_to_json('oe_recording_cmr.json', kilosort_dir)
-            oe_si_recording_filtered.save_to_folder('', kilosort_dir)
+            save_file_name = 'si_recording.pkl'
+            save_file_path = kilosort_dir / save_file_name
+            oe_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
 
         self.insert1(
             {
                 **key,
+                "file_name": save_file_name,
                 "params": params,
                 "execution_time": execution_time,
                 "execution_duration": (
