@@ -32,15 +32,8 @@ from element_array_ephys.readers import (
     spikeglx,
     kilosort_triggering,
 )
-import element_array_ephys.ephys_no_curation as ephys
 import element_array_ephys.probe as probe
-# from element_array_ephys.ephys_no_curation import (
-#     get_ephys_root_data_dir,
-#     get_session_directory,
-#     get_openephys_filepath,
-#     get_spikeglx_meta_filepath,
-#     get_recording_channels_details,
-# )
+
 import spikeinterface as si
 import spikeinterface.core as sic
 import spikeinterface.extractors as se
@@ -92,6 +85,7 @@ class PreProcessing(dj.Imported):
     definition = """
     -> ephys.ClusteringTask
     ---
+    file_name: varchar(60)     # filename where recording object is saved to
     params: longblob           # finalized parameterset for this run
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -137,30 +131,27 @@ class PreProcessing(dj.Imported):
         params = {**params, **ephys.get_recording_channels_details(key)}
         params["fs"] = params["sample_rate"]
 
+    
         if acq_software == "SpikeGLX":
             sglx_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
             sglx_filepath = ephys.get_spikeglx_meta_filepath(key)
             stream_name = os.path.split(sglx_filepath)[1]
 
-            assert len(oe_probe.recording_info["recording_files"]) == 1
+            # assert len(oe_probe.recording_info["recording_files"]) == 1
 
             # Create SI recording extractor object
             # sglx_si_recording = se.SpikeGLXRecordingExtractor(folder_path=sglx_full_path, stream_name=stream_name) 
             sglx_si_recording = se.read_spikeglx(folder_path=sglx_full_path, stream_name=stream_name) 
-            electrode_query = (probe.ProbeType.Electrode
-                * probe.ElectrodeConfig.Electrode
-                * ephys.EphysRecording & key)
 
-            xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
+            xy_coords = [list(i) for i in zip(channels_details['x_coords'],channels_details['y_coords'])]
             channels_details = ephys.get_recording_channels_details(key)
 
             # Create SI probe object 
-            probe = pi.Probe(ndim=2, si_units='um')
-            probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
-            probe.create_auto_shape(probe_type='tip')
-            channel_indices = np.arange(channels_details['num_channels'])
-            probe.set_device_channel_indices(channel_indices)
-            sglx_si_recording.set_probe(probe=probe)
+            si_probe = pi.Probe(ndim=2, si_units='um')
+            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+            si_probe.create_auto_shape(probe_type='tip')
+            si_probe.set_device_channel_indices(channels_details['channel_ind'])
+            sglx_si_recording.set_probe(probe=si_probe)
 
             # run preprocessing and save results to output folder
             sglx_si_recording_filtered = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
@@ -170,29 +161,25 @@ class PreProcessing(dj.Imported):
 
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
-            oe_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
-            oe_filepath = ephys.get_openephys_filepath(key)
-            stream_name = os.path.split(oe_filepath)[1]
-
+            oe_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
+            
             assert len(oe_probe.recording_info["recording_files"]) == 1
+            stream_name = os.path.split(oe_probe.recording_info['recording_files'][0])[1]
 
             # Create SI recording extractor object
             # oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_full_path, stream_name=stream_name) 
-            oe_si_recording = se.read_openephys(folder_path=oe_full_path, stream_name=stream_name) 
-            electrode_query = (probe.ProbeType.Electrode
-                * probe.ElectrodeConfig.Electrode
-                * ephys.EphysRecording & key)
+            oe_si_recording = se.read_openephys(folder_path=oe_session_full_path, stream_name=stream_name)
 
-            xy_coords = [list(i) for i in zip(electrode_query.fetch('x_coord'),electrode_query.fetch('y_coord'))]
+            xy_coords = [list(i) for i in zip(channels_details['x_coords'],channels_details['y_coords'])]
+            
             channels_details = ephys.get_recording_channels_details(key)
 
             # Create SI probe object 
-            probe = pi.Probe(ndim=2, si_units='um')
-            probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
-            probe.create_auto_shape(probe_type='tip')
-            channel_indices = np.arange(channels_details['num_channels'])
-            probe.set_device_channel_indices(channel_indices)
-            oe_si_recording.set_probe(probe=probe)
+            si_probe = pi.Probe(ndim=2, si_units='um')
+            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+            si_probe.create_auto_shape(probe_type='tip')
+            si_probe.set_device_channel_indices(channels_details['channel_ind'])
+            oe_si_recording.set_probe(probe=si_probe)
 
             # run preprocessing and save results to output folder
             oe_si_recording_filtered = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
@@ -219,8 +206,10 @@ class ClusteringModule(dj.Imported):
     definition = """
     -> PreProcessing
     ---
-    execution_time: datetime   # datetime of the start of this step
-    execution_duration: float  # (hour) execution duration
+    recording_file: varchar(60) # filename of saved recording object 
+    sorting_file: varchar(60)   # filename of saved sorting object
+    execution_time: datetime    # datetime of the start of this step
+    execution_duration: float   # (hour) execution duration
     """
 
     def make(self, key):
@@ -234,10 +223,11 @@ class ClusteringModule(dj.Imported):
         ).fetch1("acq_software", "clustering_method")
 
         params = (PreProcessing & key).fetch1("params") 
+        file_name = (PreProcessing & key).fetch1("file_name") 
 
         if acq_software == "SpikeGLX":
             # sglx_probe = ephys.get_openephys_probe_data(key)
-            recording_file = kilosort_dir / 'sglx_recording_cmr.json'
+            recording_file = kilosort_dir / file_name
             # sglx_si_recording = se.load_from_folder(recording_file)  
             sglx_si_recording = sic.load_extractor(recording_file)
             # assert len(oe_probe.recording_info["recording_files"]) == 1
