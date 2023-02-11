@@ -34,7 +34,7 @@ from element_array_ephys.readers import (
 )
 import element_array_ephys.probe as probe
 
-import spikeinterface as si
+import spikeinterface.full as si
 import spikeinterface.core as sic
 import spikeinterface.extractors as se
 import spikeinterface.exporters as sie
@@ -85,7 +85,7 @@ class PreProcessing(dj.Imported):
     definition = """
     -> ephys.ClusteringTask
     ---
-    file_name: varchar(60)     # filename where recording object is saved to
+    recording_filename: varchar(60)     # filename where recording object is saved to
     params: longblob           # finalized parameterset for this run
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -133,22 +133,19 @@ class PreProcessing(dj.Imported):
 
     
         if acq_software == "SpikeGLX":
-            sglx_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
+            # sglx_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
             sglx_filepath = ephys.get_spikeglx_meta_filepath(key)
-            stream_name = os.path.split(sglx_filepath)[1]
-
-            # assert len(oe_probe.recording_info["recording_files"]) == 1
 
             # Create SI recording extractor object
-            # sglx_si_recording = se.SpikeGLXRecordingExtractor(folder_path=sglx_full_path, stream_name=stream_name) 
-            sglx_si_recording = se.read_spikeglx(folder_path=sglx_full_path, stream_name=stream_name) 
-
-            xy_coords = [list(i) for i in zip(channels_details['x_coords'],channels_details['y_coords'])]
+            sglx_si_recording = se.read_spikeglx(folder_path=sglx_filepath.parent) 
+            
             channels_details = ephys.get_recording_channels_details(key)
+            xy_coords = [list(i) for i in zip(channels_details['x_coords'],channels_details['y_coords'])]
+            
 
             # Create SI probe object 
             si_probe = pi.Probe(ndim=2, si_units='um')
-            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 12})
             si_probe.create_auto_shape(probe_type='tip')
             si_probe.set_device_channel_indices(channels_details['channel_ind'])
             sglx_si_recording.set_probe(probe=si_probe)
@@ -156,7 +153,10 @@ class PreProcessing(dj.Imported):
             # run preprocessing and save results to output folder
             sglx_si_recording_filtered = sip.bandpass_filter(sglx_si_recording, freq_min=300, freq_max=6000)
             # sglx_recording_cmr = sip.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
-            sglx_si_recording_filtered.save_to_folder('sglx_si_recording_filtered', kilosort_dir)    
+
+            save_file_name = 'si_recording.pkl'
+            save_file_path = kilosort_dir / save_file_name
+            sglx_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
 
 
         elif acq_software == "Open Ephys":
@@ -170,22 +170,21 @@ class PreProcessing(dj.Imported):
             # oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_full_path, stream_name=stream_name) 
             oe_si_recording = se.read_openephys(folder_path=oe_session_full_path, stream_name=stream_name)
 
+            channels_details = ephys.get_recording_channels_details(key)
             xy_coords = [list(i) for i in zip(channels_details['x_coords'],channels_details['y_coords'])]
             
-            channels_details = ephys.get_recording_channels_details(key)
-
             # Create SI probe object 
             si_probe = pi.Probe(ndim=2, si_units='um')
-            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 5})
+            si_probe.set_contacts(positions=xy_coords, shapes='square', shape_params={'width': 12})
             si_probe.create_auto_shape(probe_type='tip')
             si_probe.set_device_channel_indices(channels_details['channel_ind'])
             oe_si_recording.set_probe(probe=si_probe)
 
             # run preprocessing and save results to output folder
+            # Switch case to allow for specified preprocessing steps
             oe_si_recording_filtered = sip.bandpass_filter(oe_si_recording, freq_min=300, freq_max=6000)
             oe_recording_cmr = sip.common_reference(oe_si_recording_filtered, reference="global", operator="median")
-            # oe_recording_cmr.save_to_folder('oe_recording_cmr', kilosort_dir)
-            # oe_recording_cmr.dump_to_json('oe_recording_cmr.json', kilosort_dir)
+
             save_file_name = 'si_recording.pkl'
             save_file_path = kilosort_dir / save_file_name
             oe_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
@@ -193,7 +192,7 @@ class PreProcessing(dj.Imported):
         self.insert1(
             {
                 **key,
-                "file_name": save_file_name,
+                "recording_filename": save_file_name,
                 "params": params,
                 "execution_time": execution_time,
                 "execution_duration": (
@@ -202,15 +201,14 @@ class PreProcessing(dj.Imported):
                 / 3600,
             }
         )           
-@schema
+ @schema
 class ClusteringModule(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
     -> PreProcessing
     ---
-    recording_file: varchar(60) # filename of saved recording object 
-    sorting_file: varchar(60)   # filename of saved sorting object
+    sorting_filename: varchar(60)   # filename of saved sorting object
     execution_time: datetime    # datetime of the start of this step
     execution_duration: float   # (hour) execution duration
     """
@@ -226,13 +224,13 @@ class ClusteringModule(dj.Imported):
         ).fetch1("acq_software", "clustering_method")
 
         params = (PreProcessing & key).fetch1("params") 
-        file_name = (PreProcessing & key).fetch1("file_name") 
+        recording_filename = (PreProcessing & key).fetch1("recording_filename") 
 
         if acq_software == "SpikeGLX":
             # sglx_probe = ephys.get_openephys_probe_data(key)
-            recording_file = kilosort_dir / file_name
+            recording_fullpath = kilosort_dir / recording_filename
             # sglx_si_recording = se.load_from_folder(recording_file)  
-            sglx_si_recording = sic.load_extractor(recording_file)
+            sglx_si_recording = sic.load_extractor(recording_fullpath)
             # assert len(oe_probe.recording_info["recording_files"]) == 1
             if clustering_method.startswith('kilosort2.5'):
                 sorter_name = "kilosort2_5"
@@ -245,10 +243,11 @@ class ClusteringModule(dj.Imported):
                 docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
                 **params
             )
-            sorting_kilosort.save_to_folder('sorting_kilosort', kilosort_dir)
+            sorting_save_path = kilosort_dir / 'sorting_kilosort.pkl'
+            sorting_kilosort.dump_to_pickle(sorting_save_path)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
-            oe_si_recording = se.load_from_folder 
+            oe_si_recording = sic.load_extractor(recording_fullpath) 
             assert len(oe_probe.recording_info["recording_files"]) == 1
             if clustering_method.startswith('kilosort2.5'):
                 sorter_name = "kilosort2_5"
@@ -261,7 +260,8 @@ class ClusteringModule(dj.Imported):
                 docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
                 **params
             )
-            sorting_kilosort.save_to_folder('sorting_kilosort', kilosort_dir, n_jobs=-1, chunk_size=30000)
+            sorting_save_path = kilosort_dir / 'sorting_kilosort.pkl'
+            sorting_kilosort.dump_to_pickle(sorting_save_path)
             # sorting_kilosort.save(folder=kilosort_dir, n_jobs=20, chunk_size=30000)
 
         self.insert1(
@@ -363,3 +363,7 @@ class PostProcessing(dj.Imported):
             {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
         )
 
+
+
+def preProcessing_switch(preprocess_list):
+    
