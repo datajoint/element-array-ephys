@@ -128,8 +128,8 @@ class PreProcessing(dj.Imported):
         ), f'Clustering_method "{clustering_method}" is not supported'
 
         # add additional probe-recording and channels details into `params`
-        params = {**params, **ephys.get_recording_channels_details(key)}
-        params["fs"] = params["sample_rate"]
+        # params = {**params, **ephys.get_recording_channels_details(key)}
+        # params["fs"] = params["sample_rate"]
 
     
         if acq_software == "SpikeGLX":
