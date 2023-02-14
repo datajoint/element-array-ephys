@@ -314,17 +314,7 @@ class SGLXKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            outdated_files = [
-                f
-                for f in self._json_directory.glob("*")
-                if f.is_file() and f.name != self._module_input_json.name
-            ]
-            outdated_data_files = [
-                f
-                for f in self._json_directory.parent.glob("*")
-            ]
-            for f in outdated_files:
-                f.unlink()
+            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('-input.json'))]
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
@@ -622,13 +612,7 @@ class OpenEphysKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            outdated_files = [
-                f
-                for f in self._json_directory.glob("*")
-                if f.is_file() and f.name != self._module_input_json.name
-            ]
-            for f in outdated_files:
-                f.unlink()
+            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
