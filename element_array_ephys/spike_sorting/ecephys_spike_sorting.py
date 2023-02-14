@@ -152,8 +152,8 @@ class KilosortPreProcessing(dj.Imported):
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
             )
-            run_kilosort._modules = ["depth_estimation", "median_subtraction"]
-            run_kilosort.run_modules()
+            modules_to_run = ["depth_estimation", "median_subtraction"]
+            run_kilosort.run_modules(modules_to_run)
 
         self.insert1(
             {
@@ -218,8 +218,8 @@ class KilosortClustering(dj.Imported):
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
             )
-            run_kilosort._modules = ["kilosort_helper"]
-            run_kilosort.run_modules()
+            modules_to_run = ["kilosort_helper"]
+            run_kilosort.run_modules(modules_to_run)
 
         self.insert1(
             {
@@ -289,13 +289,13 @@ class KilosortPostProcessing(dj.Imported):
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
             )
-            run_kilosort._modules = [
+            modules_to_run = [
                 "kilosort_postprocessing",
                 "noise_templates",
                 "mean_waveforms",
                 "quality_metrics",
             ]
-            run_kilosort.run_modules()
+            run_kilosort.run_modules(modules_to_run)
 
         with open(run_kilosort._modules_input_hash_fp) as f:
             modules_status = json.load(f)
