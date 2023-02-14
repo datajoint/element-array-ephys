@@ -20,13 +20,13 @@ try:
     from ecephys_spike_sorting.scripts.create_input_json import createInputJson
     from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 except Exception as e:
-    print(f'Warning: Failed loading "ecephys_spike_sorting" package - {str(e)}')
+    print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
 
 # import pykilosort package
 try:
     import pykilosort
 except Exception as e:
-    print(f'Warning: Failed loading "pykilosort" package - {str(e)}')
+    print(f'Error in loading "pykilosort" package - {str(e)}')
 
 
 class SGLXKilosortPipeline:
@@ -499,7 +499,7 @@ class OpenEphysKilosortPipeline:
 
         self._modules_input_hash = dict_to_uuid(self.ks_input_params)
 
-    def run_modules(self):
+    def run_modules(self, modules_to_run=None):
         print("---- Running Modules ----")
         self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
@@ -507,7 +507,9 @@ class OpenEphysKilosortPipeline:
             "-input.json", "-run_modules-log.txt"
         )
 
-        for module in self._modules:
+        modules = modules_to_run or self._modules  
+
+        for module in modules:
             module_status = self._get_module_status(module)
             if module_status["completion_time"] is not None:
                 continue
@@ -612,6 +614,9 @@ class OpenEphysKilosortPipeline:
                 modules_status = json.load(f)
             modules_status = {**modules_status, **updated_module_status}
         else:
+            # handle cases where hash is changed(different paramset) and trying to rerun processing
+            # delete all files in kilosort output folder except continuous.dat and the -input.json
+            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
             outdated_files = [
