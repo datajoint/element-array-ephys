@@ -20,13 +20,13 @@ try:
     from ecephys_spike_sorting.scripts.create_input_json import createInputJson
     from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 except Exception as e:
-    print(f'Error in loading "ecephys_spike_sorting" package - {str(e)}')
+    print(f'Warning: Failed loading "ecephys_spike_sorting" package - {str(e)}')
 
 # import pykilosort package
 try:
     import pykilosort
 except Exception as e:
-    print(f'Error in loading "pykilosort" package - {str(e)}')
+    print(f'Warning: Failed loading "pykilosort" package - {str(e)}')
 
 
 class SGLXKilosortPipeline:
@@ -318,6 +318,10 @@ class SGLXKilosortPipeline:
                 f
                 for f in self._json_directory.glob("*")
                 if f.is_file() and f.name != self._module_input_json.name
+            ]
+            outdated_data_files = [
+                f
+                for f in self._json_directory.parent.glob("*")
             ]
             for f in outdated_files:
                 f.unlink()
