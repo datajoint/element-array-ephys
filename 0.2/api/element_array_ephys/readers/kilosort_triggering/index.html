@@ -1635,7 +1635,17 @@ https://github.com/jenniferColonell/ecephys_spike_sorting</p>
 <span class="normal">375</span>
 <span class="normal">376</span>
 <span class="normal">377</span>
-<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SGLXKilosortPipeline</span><span class="p">:</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SGLXKilosortPipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object of SGLXKilosortPipeline manages the state of the Kilosort data processing pipeline</span>
 <span class="sd">     for one Neuropixels probe in one recording session using the Spike GLX acquisition software.</span>
@@ -1916,6 +1926,16 @@ https://github.com/jenniferColonell/ecephys_spike_sorting</p>
                 <span class="n">modules_status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">modules_status</span><span class="p">,</span> <span class="o">**</span><span class="n">updated_module_status</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># handle cases of processing rerun on different parameters (the hash changes)</span>
+            <span class="c1"># delete outdated files</span>
+            <span class="n">outdated_files</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">f</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">outdated_files</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;completion_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
                 <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>
@@ -2028,17 +2048,7 @@ https://github.com/AllenInstitute/ecephys_spike_sorting</p>
 
         <details class="quote">
           <summary>Source code in <code>element_array_ephys/readers/kilosort_triggering.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">391</span>
 <span class="normal">392</span>
 <span class="normal">393</span>
 <span class="normal">394</span>
@@ -2317,7 +2327,27 @@ https://github.com/AllenInstitute/ecephys_spike_sorting</p>
 <span class="normal">667</span>
 <span class="normal">668</span>
 <span class="normal">669</span>
-<span class="normal">670</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphysKilosortPipeline</span><span class="p">:</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphysKilosortPipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object of OpenEphysKilosortPipeline manages the state of the Kilosort data processing pipeline</span>
 <span class="sd">     for one Neuropixels probe in one recording session using the Open Ephys acquisition software.</span>
@@ -2541,6 +2571,16 @@ https://github.com/AllenInstitute/ecephys_spike_sorting</p>
                 <span class="n">modules_status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">modules_status</span><span class="p">,</span> <span class="o">**</span><span class="n">updated_module_status</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># handle cases of processing rerun on different parameters (the hash changes)</span>
+            <span class="c1"># delete outdated files</span>
+            <span class="n">outdated_files</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">f</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">outdated_files</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;completion_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
                 <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>

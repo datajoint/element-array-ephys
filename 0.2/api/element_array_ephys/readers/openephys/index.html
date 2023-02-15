@@ -1319,7 +1319,7 @@
 
 
 <h2 id="element_array_ephys.readers.openephys.logger" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;datajoint&#39;</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
@@ -1376,7 +1376,8 @@
 
         <details class="quote">
           <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 37</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 36</span>
+<span class="normal"> 37</span>
 <span class="normal"> 38</span>
 <span class="normal"> 39</span>
 <span class="normal"> 40</span>
@@ -1579,8 +1580,7 @@
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphys</span><span class="p">:</span>
+<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphys</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_dir</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">experiment_dir</span><span class="p">)</span>
 
@@ -1819,7 +1819,8 @@
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 79</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 78</span>
+<span class="normal"> 79</span>
 <span class="normal"> 80</span>
 <span class="normal"> 81</span>
 <span class="normal"> 82</span>
@@ -1980,8 +1981,7 @@
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">load_probe_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
+<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">load_probe_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loop through all Open Ephys &quot;signalchains/processors&quot;, identify the processor for</span>
 <span class="sd">     the Neuropixels probe(s), extract probe info</span>
@@ -2181,7 +2181,8 @@
 
         <details class="quote">
           <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">259</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">258</span>
+<span class="normal">259</span>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
@@ -2409,8 +2410,7 @@
 <span class="normal">484</span>
 <span class="normal">485</span>
 <span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Probe</span><span class="p">:</span>
+<span class="normal">487</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Probe</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">,</span> <span class="n">probe_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="n">processor_node_id</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;@nodeId&quot;</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;@NodeId&quot;</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">processor_node_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2729,7 +2729,8 @@ Data are stored as int16 - to convert to microvolts,
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">374</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
+<span class="normal">374</span>
 <span class="normal">375</span>
 <span class="normal">376</span>
 <span class="normal">377</span>
@@ -2764,8 +2765,7 @@ Data are stored as int16 - to convert to microvolts,
 <span class="normal">406</span>
 <span class="normal">407</span>
 <span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">extract_spike_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikes</span><span class="p">,</span> <span class="n">channel_ind</span><span class="p">,</span> <span class="n">n_wf</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">wf_win</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)):</span>
+<span class="normal">409</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">extract_spike_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikes</span><span class="p">,</span> <span class="n">channel_ind</span><span class="p">,</span> <span class="n">n_wf</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">wf_win</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param spikes: spike times (in second) to extract waveforms</span>
 <span class="sd">    :param channel_ind: channel indices (of meta[&#39;channels_ids&#39;]) to extract waveforms</span>

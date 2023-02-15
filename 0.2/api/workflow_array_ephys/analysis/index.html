@@ -1391,8 +1391,7 @@
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">13</span>
-<span class="normal">14</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
 <span class="normal">17</span>
@@ -1418,7 +1417,8 @@
 <span class="normal">37</span>
 <span class="normal">38</span>
 <span class="normal">39</span>
-<span class="normal">40</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">activate</span><span class="p">(</span>
+<span class="normal">40</span>
+<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">activate</span><span class="p">(</span>
     <span class="n">schema_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linking_module</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Activate this schema.</span>
@@ -1486,8 +1486,23 @@
     </thead>
     <tbody>
         <tr>
+          <td><code>ephys.CuratedClustering</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>CuratedClustering foreign key</p></td>
+        </tr>
+        <tr>
+          <td><code>event.AlignmentEvent</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>AlignmentEvent foreign key</p></td>
+        </tr>
+        <tr>
           <td><code>trial_condition</code></td>
           <td>
+                <code>foreign key</code>
           </td>
           <td><p>varchar(128) # user-friendly name of condition</p></td>
         </tr>
@@ -1512,8 +1527,7 @@ Default 0.04</p></td>
 
         <details class="quote">
           <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">43</span>
-<span class="normal">44</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
 <span class="normal">47</span>
@@ -1540,13 +1554,14 @@ Default 0.04</p></td>
 <span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
-<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
 <span class="k">class</span> <span class="nc">SpikesAlignmentCondition</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Alignment activity table</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        ephys.CuratedClustering (foreign key)</span>
-<span class="sd">        event.AlignmentEvent (foreign key)</span>
+<span class="sd">        ephys.CuratedClustering (foreign key): CuratedClustering foreign key</span>
+<span class="sd">        event.AlignmentEvent (foreign key): AlignmentEvent foreign key</span>
 <span class="sd">        trial_condition: varchar(128) # user-friendly name of condition</span>
 <span class="sd">        condition_description ( varchar(1000), nullable): condition description</span>
 <span class="sd">        bin_size (float, optional): Bin-size (in second) used to compute the PSTH</span>
@@ -1603,13 +1618,13 @@ Default 0.04</p></td>
 
         <details class="quote">
           <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">65</span>
-<span class="normal">66</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
-<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Trial</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Trial</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Trials on which to compute event-aligned spikes and PSTH&quot;&quot;&quot;</span>
 
     <span class="n">definition</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;  # Trials on which to compute event-aligned spikes and PSTH</span>
@@ -1668,8 +1683,7 @@ Default 0.04</p></td>
 
         <details class="quote">
           <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 74</span>
-<span class="normal"> 75</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 75</span>
 <span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
@@ -1815,7 +1829,8 @@ Default 0.04</p></td>
 <span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
-<span class="normal">221</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
 <span class="k">class</span> <span class="nc">SpikesAlignment</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Spike alignment table pairing AlignedTrialSpikes and by-unit PSTH&quot;&quot;&quot;</span>
 
@@ -1827,9 +1842,9 @@ Default 0.04</p></td>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Spike activity aligned to the event time within the designated window</span>
 
 <span class="sd">        Attributes:</span>
-<span class="sd">            SpikesAlignmentCondition.Trial (foreign key)</span>
-<span class="sd">            ephys.CuratedClustering.Unit  (foreign key)</span>
-<span class="sd">            SpikesAlignmentCondition.Trial (foreign key)</span>
+<span class="sd">            SpikesAlignmentCondition.Trial (foreign key): Trial foreign key</span>
+<span class="sd">            ephys.CuratedClustering.Unit (foreign key): Unit foreign key</span>
+<span class="sd">            SpikesAlignmentCondition.Trial (foreign key): Trial foreign key</span>
 <span class="sd">            aligned_spike_times (longblob): (s) spike times relative to alignment event</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1845,10 +1860,10 @@ Default 0.04</p></td>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Event-aligned spike peristimulus time histogram (PSTH) by unit</span>
 
 <span class="sd">        Attributes:</span>
-<span class="sd">            SpikesAlignment (foreign key)</span>
-<span class="sd">            ephys.CuratedClustering.Unit (foreign key)</span>
+<span class="sd">            SpikesAlignment (foreign key): SpikesAlignment foreign key</span>
+<span class="sd">            ephys.CuratedClustering.Unit (foreign key): Unit foreign key</span>
 <span class="sd">            psth (longblob): event-aligned spike peristimulus time histogram (PSTH)</span>
-<span class="sd">            psth_edges (longblob)</span>
+<span class="sd">            psth_edges (longblob): set of PSTH edges</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">definition</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -1856,7 +1871,7 @@ Default 0.04</p></td>
 <span class="s2">        -&gt; ephys.CuratedClustering.Unit</span>
 <span class="s2">        ---</span>
 <span class="s2">        psth: longblob  # event-aligned spike peristimulus time histogram (PSTH)</span>
-<span class="s2">        psth_edges: longblob  </span>
+<span class="s2">        psth_edges: longblob</span>
 <span class="s2">        &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
@@ -2005,6 +2020,27 @@ Default 0.04</p></td>
     </thead>
     <tbody>
         <tr>
+          <td><code>SpikesAlignmentCondition.Trial</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>Trial foreign key</p></td>
+        </tr>
+        <tr>
+          <td><code>ephys.CuratedClustering.Unit</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>Unit foreign key</p></td>
+        </tr>
+        <tr>
+          <td><code>SpikesAlignmentCondition.Trial</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>Trial foreign key</p></td>
+        </tr>
+        <tr>
           <td><code>aligned_spike_times</code></td>
           <td>
                 <code>longblob</code>
@@ -2017,8 +2053,7 @@ Default 0.04</p></td>
 
         <details class="quote">
           <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">82</span>
-<span class="normal">83</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">83</span>
 <span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span>
@@ -2033,13 +2068,14 @@ Default 0.04</p></td>
 <span class="normal">95</span>
 <span class="normal">96</span>
 <span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AlignedTrialSpikes</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AlignedTrialSpikes</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Spike activity aligned to the event time within the designated window</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        SpikesAlignmentCondition.Trial (foreign key)</span>
-<span class="sd">        ephys.CuratedClustering.Unit  (foreign key)</span>
-<span class="sd">        SpikesAlignmentCondition.Trial (foreign key)</span>
+<span class="sd">        SpikesAlignmentCondition.Trial (foreign key): Trial foreign key</span>
+<span class="sd">        ephys.CuratedClustering.Unit (foreign key): Unit foreign key</span>
+<span class="sd">        SpikesAlignmentCondition.Trial (foreign key): Trial foreign key</span>
 <span class="sd">        aligned_spike_times (longblob): (s) spike times relative to alignment event</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -2101,11 +2137,32 @@ Default 0.04</p></td>
     </thead>
     <tbody>
         <tr>
+          <td><code>SpikesAlignment</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>SpikesAlignment foreign key</p></td>
+        </tr>
+        <tr>
+          <td><code>ephys.CuratedClustering.Unit</code></td>
+          <td>
+                <code>foreign key</code>
+          </td>
+          <td><p>Unit foreign key</p></td>
+        </tr>
+        <tr>
           <td><code>psth</code></td>
           <td>
                 <code>longblob</code>
           </td>
           <td><p>event-aligned spike peristimulus time histogram (PSTH)</p></td>
+        </tr>
+        <tr>
+          <td><code>psth_edges</code></td>
+          <td>
+                <code>longblob</code>
+          </td>
+          <td><p>set of PSTH edges</p></td>
         </tr>
     </tbody>
   </table>
@@ -2113,8 +2170,7 @@ Default 0.04</p></td>
 
         <details class="quote">
           <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
-<span class="normal">101</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
@@ -2129,14 +2185,15 @@ Default 0.04</p></td>
 <span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">UnitPSTH</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
+<span class="normal">116</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">UnitPSTH</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Part</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Event-aligned spike peristimulus time histogram (PSTH) by unit</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        SpikesAlignment (foreign key)</span>
-<span class="sd">        ephys.CuratedClustering.Unit (foreign key)</span>
+<span class="sd">        SpikesAlignment (foreign key): SpikesAlignment foreign key</span>
+<span class="sd">        ephys.CuratedClustering.Unit (foreign key): Unit foreign key</span>
 <span class="sd">        psth (longblob): event-aligned spike peristimulus time histogram (PSTH)</span>
-<span class="sd">        psth_edges (longblob)</span>
+<span class="sd">        psth_edges (longblob): set of PSTH edges</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">definition</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -2144,7 +2201,7 @@ Default 0.04</p></td>
 <span class="s2">    -&gt; ephys.CuratedClustering.Unit</span>
 <span class="s2">    ---</span>
 <span class="s2">    psth: longblob  # event-aligned spike peristimulus time histogram (PSTH)</span>
-<span class="s2">    psth_edges: longblob  </span>
+<span class="s2">    psth_edges: longblob</span>
 <span class="s2">    &quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -2208,8 +2265,7 @@ Default 0.04</p></td>
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">118</span>
-<span class="normal">119</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
@@ -2272,7 +2328,8 @@ Default 0.04</p></td>
 <span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
-<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="normal">182</span>
+<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Populate SpikesAlignment, AlignedTrialSpikes and UnitPSTH</span>
 
 <span class="sd">    Args:</span>
@@ -2427,8 +2484,7 @@ Default is plt.subplots(2, 1, figsize=(12, 8))</p></td>
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/analysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
-<span class="normal">185</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
 <span class="normal">186</span>
 <span class="normal">187</span>
 <span class="normal">188</span>
@@ -2464,7 +2520,8 @@ Default is plt.subplots(2, 1, figsize=(12, 8))</p></td>
 <span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
-<span class="normal">221</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">axs</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Figure</span><span class="p">:</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">axs</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Figure</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot event-aligned and trial-averaged spiking</span>
 
 <span class="sd">    Args:</span>

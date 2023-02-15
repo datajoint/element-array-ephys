@@ -1050,6 +1050,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#workflow_array_ephys.export.ecephys_session_to_nwb" class="md-nav__link">
+    ecephys_session_to_nwb()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow_array_ephys.export.write_nwb" class="md-nav__link">
+    write_nwb()
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1248,6 +1262,390 @@
 
   <div class="doc doc-children">
 
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="workflow_array_ephys.export.ecephys_session_to_nwb" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">ecephys_session_to_nwb</span><span class="p">(</span><span class="n">session_key</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">spikes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lfp</span><span class="o">=</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="n">end_frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lab_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">protocol_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nwbfile_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#workflow_array_ephys.export.ecephys_session_to_nwb" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Main function for converting ephys data to NWB</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>session_key</code></td>
+          <td>
+                <code>dict</code>
+          </td>
+          <td><p>key from Session table</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>raw</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Optional. Default True. Include the raw data from source.
+SpikeGLX &amp; OpenEphys are supported</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>spikes</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Optional. Default True. Whether to include CuratedClustering</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lfp</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>One of the following.
+"dj", read LFP data from ephys.LFP.
+"source", read LFP data from source (SpikeGLX supported).
+False, do not convert LFP.</p></td>
+          <td>
+                <code>&#39;source&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>end_frame</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Optional limit on frames for small test conversions.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lab_key</code></td>
+          <td>
+                <code>dict</code>
+          </td>
+          <td><p>Optional key to add metadata from other Element Lab.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>project_key</code></td>
+          <td>
+                <code>dict</code>
+          </td>
+          <td><p>Optional key to add metadata from other Element Lab.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>protocol_key</code></td>
+          <td>
+                <code>dict</code>
+          </td>
+          <td><p>Optional key to add metadata from other Element Lab.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nwbfile_kwargs</code></td>
+          <td>
+                <code>dict</code>
+          </td>
+          <td><p>Optional. If Element Session is not used, this argument
+is required and must be a dictionary containing 'session_description' (str),
+'identifier' (str), and 'session_start_time' (datetime), the required
+ minimal data for instantiating an NWBFile object. If element-session is
+ being used, this argument can optionally be used to overwrite NWBFile
+ fields.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>element_array_ephys/export/nwb/nwb.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">ecephys_session_to_nwb</span><span class="p">(</span>
+    <span class="n">session_key</span><span class="p">,</span>
+    <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">spikes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">lfp</span><span class="o">=</span><span class="s2">&quot;source&quot;</span><span class="p">,</span>
+    <span class="n">end_frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">lab_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">project_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">protocol_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">nwbfile_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function for converting ephys data to NWB</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        session_key (dict): key from Session table</span>
+<span class="sd">        raw (bool): Optional. Default True. Include the raw data from source.</span>
+<span class="sd">            SpikeGLX &amp; OpenEphys are supported</span>
+<span class="sd">        spikes (bool): Optional. Default True. Whether to include CuratedClustering</span>
+<span class="sd">        lfp (str): One of the following.</span>
+<span class="sd">            &quot;dj&quot;, read LFP data from ephys.LFP.</span>
+<span class="sd">            &quot;source&quot;, read LFP data from source (SpikeGLX supported).</span>
+<span class="sd">            False, do not convert LFP.</span>
+<span class="sd">        end_frame (int): Optional limit on frames for small test conversions.</span>
+<span class="sd">        lab_key (dict): Optional key to add metadata from other Element Lab.</span>
+<span class="sd">        project_key (dict): Optional key to add metadata from other Element Lab.</span>
+<span class="sd">        protocol_key (dict): Optional key to add metadata from other Element Lab.</span>
+<span class="sd">        nwbfile_kwargs (dict): Optional. If Element Session is not used, this argument</span>
+<span class="sd">            is required and must be a dictionary containing &#39;session_description&#39; (str),</span>
+<span class="sd">            &#39;identifier&#39; (str), and &#39;session_start_time&#39; (datetime), the required</span>
+<span class="sd">             minimal data for instantiating an NWBFile object. If element-session is</span>
+<span class="sd">             being used, this argument can optionally be used to overwrite NWBFile</span>
+<span class="sd">             fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">session_to_nwb</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ephys</span><span class="o">.</span><span class="n">_linking_module</span><span class="p">,</span> <span class="s2">&quot;session_to_nwb&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">session_to_nwb</span><span class="p">:</span>
+        <span class="n">nwbfile</span> <span class="o">=</span> <span class="n">session_to_nwb</span><span class="p">(</span>
+            <span class="n">session_key</span><span class="p">,</span>
+            <span class="n">lab_key</span><span class="o">=</span><span class="n">lab_key</span><span class="p">,</span>
+            <span class="n">project_key</span><span class="o">=</span><span class="n">project_key</span><span class="p">,</span>
+            <span class="n">protocol_key</span><span class="o">=</span><span class="n">protocol_key</span><span class="p">,</span>
+            <span class="n">additional_nwbfile_kwargs</span><span class="o">=</span><span class="n">nwbfile_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nwbfile</span> <span class="o">=</span> <span class="n">pynwb</span><span class="o">.</span><span class="n">NWBFile</span><span class="p">(</span><span class="o">**</span><span class="n">nwbfile_kwargs</span><span class="p">)</span>
+
+    <span class="n">ephys_root_data_dir</span> <span class="o">=</span> <span class="n">ephys</span><span class="o">.</span><span class="n">get_ephys_root_data_dir</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">raw</span><span class="p">:</span>
+        <span class="n">add_ephys_recording_to_nwb</span><span class="p">(</span>
+            <span class="n">session_key</span><span class="p">,</span>
+            <span class="n">ephys_root_data_dir</span><span class="o">=</span><span class="n">ephys_root_data_dir</span><span class="p">,</span>
+            <span class="n">nwbfile</span><span class="o">=</span><span class="n">nwbfile</span><span class="p">,</span>
+            <span class="n">end_frame</span><span class="o">=</span><span class="n">end_frame</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">spikes</span><span class="p">:</span>
+        <span class="n">add_ephys_units_to_nwb</span><span class="p">(</span><span class="n">session_key</span><span class="p">,</span> <span class="n">nwbfile</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lfp</span> <span class="o">==</span> <span class="s2">&quot;dj&quot;</span><span class="p">:</span>
+        <span class="n">add_ephys_lfp_from_dj_to_nwb</span><span class="p">(</span><span class="n">session_key</span><span class="p">,</span> <span class="n">nwbfile</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lfp</span> <span class="o">==</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span>
+        <span class="n">add_ephys_lfp_from_source_to_nwb</span><span class="p">(</span>
+            <span class="n">session_key</span><span class="p">,</span>
+            <span class="n">ephys_root_data_dir</span><span class="o">=</span><span class="n">ephys_root_data_dir</span><span class="p">,</span>
+            <span class="n">nwbfile</span><span class="o">=</span><span class="n">nwbfile</span><span class="p">,</span>
+            <span class="n">end_frame</span><span class="o">=</span><span class="n">end_frame</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">nwbfile</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="workflow_array_ephys.export.write_nwb" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">write_nwb</span><span class="p">(</span><span class="n">nwbfile</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">check_read</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#workflow_array_ephys.export.write_nwb" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Export NWBFile</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>nwbfile</code></td>
+          <td>
+                <code>NWBFile</code>
+          </td>
+          <td><p>nwb file</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>fname</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Absolute path including <code>*.nwb</code> extension.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>check_read</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>If True, PyNWB will try to read the produced NWB file and
+ensure that it can be read.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>element_array_ephys/export/nwb/nwb.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_nwb</span><span class="p">(</span><span class="n">nwbfile</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">check_read</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export NWBFile</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        nwbfile (NWBFile): nwb file</span>
+<span class="sd">        fname (str): Absolute path including `*.nwb` extension.</span>
+<span class="sd">        check_read (bool): If True, PyNWB will try to read the produced NWB file and</span>
+<span class="sd">            ensure that it can be read.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">pynwb</span><span class="o">.</span><span class="n">NWBHDF5IO</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">io</span><span class="p">:</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">nwbfile</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">check_read</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">pynwb</span><span class="o">.</span><span class="n">NWBHDF5IO</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">io</span><span class="p">:</span>
+            <span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
 
 
 

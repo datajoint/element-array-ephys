@@ -1263,8 +1263,8 @@
   <div class="doc doc-contents first">
   
       <p>Load CCF files.</p>
-<p>When imported, checks to see that CCF (nrrd and query.csv) files in the 
-ephys_root_data_dir have been loaded into 
+<p>When imported, checks to see that CCF (nrrd and query.csv) files in the
+ephys_root_data_dir have been loaded into
 element_electrode_localization.coordinate_framework. Default voxel resolution is 100.
 To load other resolutions, please modify this script.</p>
 
@@ -1320,13 +1320,13 @@ To load other resolutions, please modify this script.</p>
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/paths.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
-<span class="normal"> 7</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
 <span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_ephys_root_data_dir</span><span class="p">():</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_ephys_root_data_dir</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return root directory for ephys from &#39;ephys_root_data_dir&#39; in dj.config</span>
 
 <span class="sd">    Returns:</span>
@@ -1402,8 +1402,7 @@ To load other resolutions, please modify this script.</p>
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/paths.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
-<span class="normal">16</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">16</span>
 <span class="normal">17</span>
 <span class="normal">18</span>
 <span class="normal">19</span>
@@ -1414,7 +1413,8 @@ To load other resolutions, please modify this script.</p>
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
-<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_session_directory</span><span class="p">(</span><span class="n">session_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">27</span>
+<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_session_directory</span><span class="p">(</span><span class="n">session_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return relative path from SessionDirectory table given key</span>
 
 <span class="sd">    Args:</span>
@@ -1496,8 +1496,7 @@ To load other resolutions, please modify this script.</p>
 
       <details class="quote">
         <summary>Source code in <code>workflow_array_ephys/paths.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
-<span class="normal">31</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
@@ -1526,7 +1525,8 @@ To load other resolutions, please modify this script.</p>
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_electrode_localization_dir</span><span class="p">(</span><span class="n">probe_insertion_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">60</span>
+<span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_electrode_localization_dir</span><span class="p">(</span><span class="n">probe_insertion_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return root directory of localization data for a given probe</span>
 
 <span class="sd">    Args:</span>
