@@ -131,6 +131,46 @@ class PreProcessing(dj.Imported):
         # params = {**params, **ephys.get_recording_channels_details(key)}
         # params["fs"] = params["sample_rate"]
 
+        
+        preprocess_list = params.pop('PreProcessing_params')
+
+        # If else 
+        if preprocess_list['Filter']:
+            oe_si_recording = sip.FilterRecording(oe_si_recording)
+        elif preprocess_list['BandpassFilter']:
+            oe_si_recording = sip.BandpassFilterRecording(oe_si_recording)
+        elif preprocess_list['HighpassFilter']:
+            oe_si_recording = sip.HighpassFilterRecording(oe_si_recording)
+        elif preprocess_list['NormalizeByQuantile']:
+            oe_si_recording = sip.NormalizeByQuantileRecording(oe_si_recording)
+        elif preprocess_list['Scale']:
+            oe_si_recording = sip.ScaleRecording(oe_si_recording)
+        elif preprocess_list['Center']:
+            oe_si_recording = sip.CenterRecording(oe_si_recording)
+        elif preprocess_list['ZScore']:
+            oe_si_recording = sip.ZScoreRecording(oe_si_recording)
+        elif preprocess_list['Whiten']:
+            oe_si_recording = sip.WhitenRecording(oe_si_recording)
+        elif preprocess_list['CommonReference']:
+            oe_si_recording = sip.CommonReferenceRecording(oe_si_recording)
+        elif preprocess_list['PhaseShift']:
+            oe_si_recording = sip.PhaseShiftRecording(oe_si_recording)
+        elif preprocess_list['Rectify']:
+            oe_si_recording = sip.RectifyRecording(oe_si_recording)
+        elif preprocess_list['Clip']:
+            oe_si_recording = sip.ClipRecording(oe_si_recording)
+        elif preprocess_list['BlankSaturation']:
+            oe_si_recording = sip.BlankSaturationRecording(oe_si_recording)
+        elif preprocess_list['RemoveArtifacts']:
+            oe_si_recording = sip.RemoveArtifactsRecording(oe_si_recording)
+        elif preprocess_list['RemoveBadChannels']:
+            oe_si_recording = sip.RemoveBadChannelsRecording(oe_si_recording)
+        elif preprocess_list['ZeroChannelPad']:
+            oe_si_recording = sip.ZeroChannelPadRecording(oe_si_recording)
+        elif preprocess_list['DeepInterpolation']:
+            oe_si_recording = sip.DeepInterpolationRecording(oe_si_recording)
+        elif preprocess_list['Resample']:
+            oe_si_recording = sip.ResampleRecording(oe_si_recording)
     
         if acq_software == "SpikeGLX":
             # sglx_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
@@ -232,17 +272,23 @@ class ClusteringModule(dj.Imported):
             # sglx_si_recording = se.load_from_folder(recording_file)  
             sglx_si_recording = sic.load_extractor(recording_fullpath)
             # assert len(oe_probe.recording_info["recording_files"]) == 1
+
+            ## Assume that the worker process will trigger this sorting step
+            # - Will need to store/load the sorter_name, sglx_si_recording object etc. 
+            # - Store in shared EC2 space accessible by all containers (needs to be mounted)
+            # - Load into the cloud init script, and 
+            # - Option A: Can call this function within a separate container within spike_sorting_worker
             if clustering_method.startswith('kilosort2.5'):
                 sorter_name = "kilosort2_5"
             else:
                 sorter_name = clustering_method
-            sorting_kilosort = si.run_sorter(
-                sorter_name = sorter_name,
-                recording = sglx_si_recording,
-                output_folder = kilosort_dir,
-                docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
-                **params
-            )
+            # sorting_kilosort = si.run_sorter(
+            #     sorter_name = sorter_name,
+            #     recording = sglx_si_recording,
+            #     output_folder = kilosort_dir,
+            #     docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
+            #     **params
+            # )
             sorting_save_path = kilosort_dir / 'sorting_kilosort.pkl'
             sorting_kilosort.dump_to_pickle(sorting_save_path)
         elif acq_software == "Open Ephys":
@@ -253,13 +299,13 @@ class ClusteringModule(dj.Imported):
                 sorter_name = "kilosort2_5"
             else:
                 sorter_name = clustering_method
-            sorting_kilosort = si.run_sorter(
-                sorter_name = sorter_name,
-                recording = oe_si_recording,
-                output_folder = kilosort_dir,
-                docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
-                **params
-            )
+            # sorting_kilosort = si.run_sorter(
+            #     sorter_name = sorter_name,
+            #     recording = oe_si_recording,
+            #     output_folder = kilosort_dir,
+            #     docker_image = f"spikeinterface/{sorter_name}-compiled-base:latest",
+            #     **params
+            # )
             sorting_save_path = kilosort_dir / 'sorting_kilosort.pkl'
             sorting_kilosort.dump_to_pickle(sorting_save_path)
             # sorting_kilosort.save(folder=kilosort_dir, n_jobs=20, chunk_size=30000)
@@ -363,7 +409,42 @@ class PostProcessing(dj.Imported):
             {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
         )
 
-
-
-def preProcessing_switch(preprocess_list):
-    
+## Example SI parameter set
+'''
+{'detect_threshold': 6,
+ 'projection_threshold': [10, 4],
+ 'preclust_threshold': 8,
+ 'car': True,
+ 'minFR': 0.02,
+ 'minfr_goodchannels': 0.1,
+ 'nblocks': 5,
+ 'sig': 20,
+ 'freq_min': 150,
+ 'sigmaMask': 30,
+ 'nPCs': 3,
+ 'ntbuff': 64,
+ 'nfilt_factor': 4,
+ 'NT': None,
+ 'do_correction': True,
+ 'wave_length': 61,
+ 'keep_good_only': False,
+ 'PreProcessing_params': {'Filter': False,
+  'BandpassFilter': True,
+  'HighpassFilter': False,
+  'NotchFilter': False,
+  'NormalizeByQuantile': False,
+  'Scale': False,
+  'Center': False,
+  'ZScore': False,
+  'Whiten': False,
+  'CommonReference': False,
+  'PhaseShift': False,
+  'Rectify': False,
+  'Clip': False,
+  'BlankSaturation': False,
+  'RemoveArtifacts': False,
+  'RemoveBadChannels': False,
+  'ZeroChannelPad': False,
+  'DeepInterpolation': False,
+  'Resample': False}}
+'''
