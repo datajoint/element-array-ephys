@@ -441,8 +441,9 @@ class PostProcessing(dj.Imported):
             unit_locations = si.compute_unit_locations(we_kilosort)
             template_metrics = si.compute_template_metrics(we_kilosort)
             noise_levels = si.compute_noise_levels(we_kilosort)
+            pcs = si.compute_principal_components(we_kilosort)
             drift_metrics = si.compute_drift_metrics(we_kilosort)
-
+            template_similarity = si.compute_tempoate_similarity(we_kilosort)
             (isi_violations_ratio, isi_violations_count) = si.compute_isi_violations(
                 we_kilosort, isi_threshold_ms=1.5
             )
