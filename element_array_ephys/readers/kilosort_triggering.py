@@ -617,7 +617,7 @@ class OpenEphysKilosortPipeline:
             [
                 f.unlink()
                 for f in self._ks_output_dir.rglob("*")
-                if not f.name.endswith("-input.json")
+                if f.is_file() and f.name != self._module_input_json.name
             ]
 
             modules_status = {
