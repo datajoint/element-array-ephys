@@ -464,8 +464,8 @@ class PostProcessing(dj.Imported):
                 ],
             )
             sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
-
-            we_kilosort.save("we_kilosort", kilosort_dir, n_jobs=-1, chunk_size=30000)
+            we_savedir = kilosort_dir / "we_kilosort"
+            we_kilosort.save(we_savedir, n_jobs=-1, chunk_size=30000)
 
         self.insert1(
             {
