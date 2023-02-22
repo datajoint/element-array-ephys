@@ -67,7 +67,6 @@ class SGLXKilosortPipeline:
         ni_present=False,
         ni_extract_string=None,
     ):
-
         self._npx_input_dir = pathlib.Path(npx_input_dir)
 
         self._ks_output_dir = pathlib.Path(ks_output_dir)
@@ -237,7 +236,7 @@ class SGLXKilosortPipeline:
         )
 
         modules = modules_to_run or self._modules
-        
+
         for module in modules:
             module_status = self._get_module_status(module)
             if module_status["completion_time"] is not None:
@@ -314,7 +313,11 @@ class SGLXKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('-input.json'))]
+            [
+                f.unlink()
+                for f in self._ks_output_dir.rglob("*")
+                if not f.name.endswith("-input.json")
+            ]
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
@@ -410,7 +413,6 @@ class OpenEphysKilosortPipeline:
     def __init__(
         self, npx_input_dir: str, ks_output_dir: str, params: dict, KS2ver: str
     ):
-
         self._npx_input_dir = pathlib.Path(npx_input_dir)
 
         self._ks_output_dir = pathlib.Path(ks_output_dir)
@@ -612,7 +614,11 @@ class OpenEphysKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            [f.unlink() for f in self._ks_output_dir.rglob('*') if not (str(f).endswith('continuous.dat') or str(f).endswith('-input.json'))]
+            [
+                f.unlink()
+                for f in self._ks_output_dir.rglob("*")
+                if not f.name.endswith("-input.json")
+            ]
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
