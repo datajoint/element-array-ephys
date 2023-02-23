@@ -19,4 +19,4 @@ def get_logger(name):
     return log
 
 
-from . import ephys_acute as ephys
+from . import ephys_organoids as ephys
