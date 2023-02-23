@@ -1,10 +1,8 @@
-"""
-Neuropixels Probes
-"""
 from __future__ import annotations
 
 import datajoint as dj
 import numpy as np
+from element_interface.utils import dict_to_uuid
 
 schema = dj.schema()
 
@@ -31,20 +29,6 @@ def activate(
     schema.activate(
         schema_name, create_schema=create_schema, create_tables=create_tables
     )
-
-    # Add neuropixels probes
-    for probe_type in (
-        "neuropixels 1.0 - 3A",
-        "neuropixels 1.0 - 3B",
-        "neuropixels UHD",
-        "neuropixels 2.0 - SS",
-        "neuropixels 2.0 - MS",
-    ):
-        if not (ProbeType & {"probe_type": probe_type}):
-            try:
-                ProbeType.create_neuropixels_probe(probe_type)
-            except dj.errors.DataJointError as e:
-                print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
 
 
 @schema
@@ -83,77 +67,6 @@ class ProbeType(dj.Lookup):
         x_coord=NULL: float  # (um) x coordinate of the electrode within the probe.
         y_coord=NULL: float  # (um) y coordinate of the electrode within the probe.
         """
-
-    @staticmethod
-    def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
-        """
-        Create `ProbeType` and `Electrode` for neuropixels probes:
-        + neuropixels 1.0 - 3A
-        + neuropixels 1.0 - 3B
-        + neuropixels UHD
-        + neuropixels 2.0 - SS
-        + neuropixels 2.0 - MS
-
-        For electrode location, the (0, 0) is the
-         bottom left corner of the probe (ignore the tip portion)
-        Electrode numbering is 1-indexing
-        """
-
-        neuropixels_probes_config = {
-            "neuropixels 1.0 - 3A": dict(
-                site_count_per_shank=960,
-                col_spacing=32,
-                row_spacing=20,
-                white_spacing=16,
-                col_count_per_shank=2,
-                shank_count=1,
-                shank_spacing=0,
-            ),
-            "neuropixels 1.0 - 3B": dict(
-                site_count_per_shank=960,
-                col_spacing=32,
-                row_spacing=20,
-                white_spacing=16,
-                col_count_per_shank=2,
-                shank_count=1,
-                shank_spacing=0,
-            ),
-            "neuropixels UHD": dict(
-                site_count_per_shank=384,
-                col_spacing=6,
-                row_spacing=6,
-                white_spacing=0,
-                col_count_per_shank=8,
-                shank_count=1,
-                shank_spacing=0,
-            ),
-            "neuropixels 2.0 - SS": dict(
-                site_count_per_shank=1280,
-                col_spacing=32,
-                row_spacing=15,
-                white_spacing=0,
-                col_count_per_shank=2,
-                shank_count=1,
-                shank_spacing=250,
-            ),
-            "neuropixels 2.0 - MS": dict(
-                site_count_per_shank=1280,
-                col_spacing=32,
-                row_spacing=15,
-                white_spacing=0,
-                col_count_per_shank=2,
-                shank_count=4,
-                shank_spacing=250,
-            ),
-        }
-
-        probe_type = {"probe_type": probe_type}
-        electrode_layouts = build_electrode_layouts(
-            **{**neuropixels_probes_config[probe_type["probe_type"]], **probe_type}
-        )
-        with ProbeType.connection.transaction:
-            ProbeType.insert1(probe_type, skip_duplicates=True)
-            ProbeType.Electrode.insert(electrode_layouts, skip_duplicates=True)
 
 
 @schema
@@ -218,7 +131,6 @@ def build_electrode_layouts(
     shank_spacing: float = None,
     y_origin="bottom",
 ) -> list[dict]:
-
     """Builds electrode layouts.
 
     Args:
@@ -263,3 +175,47 @@ def build_electrode_layouts(
             zip(shank_cols, shank_rows, x_coords, y_coords)
         )
     ]
+
+
+def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
+    """Generate and insert new ElectrodeConfig
+
+    Args:
+        probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
+        electrode_keys (list): list of keys of the ProbeType.Electrode table
+
+    Returns:
+        dict: representing a key of the ElectrodeConfig table
+    """
+    # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
+    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
+
+    electrode_list = sorted([k["electrode"] for k in electrode_keys])
+    electrode_gaps = (
+        [-1]
+        + np.where(np.diff(electrode_list) > 1)[0].tolist()
+        + [len(electrode_list) - 1]
+    )
+    electrode_config_name = "; ".join(
+        [
+            f"{electrode_list[start + 1]}-{electrode_list[end]}"
+            for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
+        ]
+    )
+
+    electrode_config_key = {"electrode_config_hash": electrode_config_hash}
+
+    # ---- make new ElectrodeConfig if needed ----
+    if not ElectrodeConfig & electrode_config_key:
+        ElectrodeConfig.insert1(
+            {
+                **electrode_config_key,
+                "probe_type": probe_type,
+                "electrode_config_name": electrode_config_name,
+            }
+        )
+        ElectrodeConfig.Electrode.insert(
+            {**electrode_config_key, **electrode} for electrode in electrode_keys
+        )
+
+    return electrode_config_key
