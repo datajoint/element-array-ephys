@@ -130,10 +130,15 @@ class PreProcessing(dj.Imported):
             clustering_method in _supported_kilosort_versions
         ), f'Clustering_method "{clustering_method}" is not supported'
 
+        if clustering_method.startswith("kilosort2.5"):
+            sorter_name = "kilosort2_5"
+        else:
+            sorter_name = clustering_method
         # add additional probe-recording and channels details into `params`
         # params = {**params, **ephys.get_recording_channels_details(key)}
         # params["fs"] = params["sample_rate"]
 
+        default_params = si.get_default_sorter_params(sorter_name)
         preprocess_list = params.pop("PreProcessing_params")
 
         # If else
@@ -406,7 +411,7 @@ class PostProcessing(dj.Imported):
                     "num_spikes",
                     "amplitude_cutoff",
                     "amplitude_median",
-                    "sliding_rp_violation",
+                    # "sliding_rp_violation",
                     "rp_violation",
                     "drift",
                 ],
@@ -436,14 +441,14 @@ class PostProcessing(dj.Imported):
 
             # QC Metrics
             # Apply waveform extractor extensions
-            spike_locations = si.compute_spike_locations(we_kilosort)
-            spike_amplitudes = si.compute_spike_amplitudes(we_kilosort)
-            unit_locations = si.compute_unit_locations(we_kilosort)
-            template_metrics = si.compute_template_metrics(we_kilosort)
-            noise_levels = si.compute_noise_levels(we_kilosort)
-            pcs = si.compute_principal_components(we_kilosort)
-            drift_metrics = si.compute_drift_metrics(we_kilosort)
-            template_similarity = si.compute_tempoate_similarity(we_kilosort)
+            _ = si.compute_spike_locations(we_kilosort)
+            _ = si.compute_spike_amplitudes(we_kilosort)
+            _ = si.compute_unit_locations(we_kilosort)
+            _ = si.compute_template_metrics(we_kilosort)
+            _ = si.compute_noise_levels(we_kilosort)
+            _ = si.compute_principal_components(we_kilosort)
+            _ = si.compute_drift_metrics(we_kilosort)
+            _ = si.compute_tempoate_similarity(we_kilosort)
             (isi_violations_ratio, isi_violations_count) = si.compute_isi_violations(
                 we_kilosort, isi_threshold_ms=1.5
             )
