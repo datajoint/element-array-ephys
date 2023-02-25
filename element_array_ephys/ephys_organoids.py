@@ -9,12 +9,12 @@ from decimal import Decimal
 import datajoint as dj
 import numpy as np
 import pandas as pd
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from intanrhsreader import load_file
 
 from . import ephys_report, get_logger, probe
 from .readers import kilosort, openephys, spikeglx
+
 
 log = get_logger(__name__)
 
@@ -42,8 +42,7 @@ def activate(
 
     Dependencies:
     Upstream tables:
-        Session: A parent table to ProbeInsertion
-        Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.
+        Probe: A parent table to EphysSession. Probe information is required before electrophysiology data is imported.
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
@@ -139,7 +138,7 @@ class EphysSession(dj.Manual):
 
     definition = """
     -> Subject
-    probe_id        : int
+    probe_id        : int  # probe ID from probe.yaml
     start_time      : datetime
     end_time        : datetime
     ---
@@ -151,12 +150,13 @@ class EphysSession(dj.Manual):
 class RawEphys(dj.Imported):
     definition = """
     -> Subject
-    start_time      : datetime  # date and time of file creation
+    start_time      : datetime(6) # date and time of file creation
     ---
-    end_time        : datetime  # date and time of the end of the file
-    file_name       : varchar(32)  # name of the file
+    end_time        : datetime(6) # date and time of the end of the file
+    file_name       : varchar(32) # name of the file
     file_path       : filepath@external-raw  
-    sampling_rate   : float  # (Hz)
+    sampling_rate   : float # (Hz)
+    timestamps      : longblob # (s) timestamps with respect to the start of the recording (recording_timestamp)
     header          : longblob  # meta information about the file.
     """
 
@@ -175,11 +175,11 @@ class RawEphys(dj.Imported):
         -> master
         channel_id  : varchar(16)
         ---
-        trace       : blob@external-raw  # raw ephys trace from this channel in microvolts.
+        trace       : blob@external-raw # raw ephys trace from this channel in microvolts.
         """
 
     def make(self, key):
-        data_dir = get_ephys_root_data_dir()
+        data_dir = get_ephys_root_data_dir()[0]
         data_files = data_dir.glob(f"{key['induction_id']}*.rhs")
 
         # Loop through all the data files.
@@ -188,7 +188,7 @@ class RawEphys(dj.Imported):
             data = load_file(file)
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
             start_time = datetime.strptime(start_time, "%y%m%d_%H%M%S")
-            timestamps = data.pop("t")
+            timestamps = start_time + data.pop("t") * timedelta(seconds=1)
 
             self.insert1(
                 {
@@ -199,13 +199,19 @@ class RawEphys(dj.Imported):
                     "file_name": file.relative_to(data_dir),
                     "file_path": file,
                     "sampling_rate": data["header"]["sample_rate"],
+                    "timestamps": timestamps,
                     "header": data.pop("header"),
                 }
             )
 
             # Populate Attributes table.
             attribute_list = [
-                {**key, "attribute_name": k, "attribute_blob": v}
+                {
+                    **key,
+                    "start_time": start_time,
+                    "attribute_name": k,
+                    "attribute_blob": v,
+                }
                 for k, v in data.items()
                 if "data" not in k
             ]  # don't insert data here
@@ -225,361 +231,72 @@ class RawEphys(dj.Imported):
                 }
                 for ch, trace in zip(trace_channels, data.pop("amplifier_data"))
             ]
-
             self.Trace.insert(trace_list)
 
 
-# @schema
-# class InsertionLocation(dj.Manual):
-#     """Stereotaxic location information for each probe insertion.
+@schema
+class LFP(dj.Imported):
+    definition = """
+    # Acquired local field potential (LFP) from a given Ephys recording.
+    -> EphysSession
+    ---
+    lfp_sampling_rate       : float # (Hz)
+    lfp_time_stamps         : longblob # (s) timestamps with respect to the start of the recording (recording_timestamp)
+    """
 
-#     Attributes:
-#         ProbeInsertion (foreign key): ProbeInsertion primary key.
-#         ap_location (decimal (6, 2) ): Anterior-posterior location in micrometers. Reference is 0 with anterior values positive.
-#         ml_location (decimal (6, 2) ): Medial-lateral location in micrometers. Reference is zero with right side values positive.
-#         depth (decimal (6, 2) ): Manipulator depth relative to the surface of the brain at zero. Ventral is negative.
-#         Theta (decimal (5, 2) ): elevation - rotation about the ml-axis in degrees relative to positive z-axis.
-#         phi (decimal (5, 2) ): azimuth - rotation about the dv-axis in degrees relative to the positive x-axis.
-#     """
+    class Electrode(dj.Part):
+        definition = """
+        -> master
+        -> probe.ElectrodeConfig.Electrode
+        ---
+        lfp                 : longblob # (uV) recorded lfp at this electrode
+        """
 
-#     definition = """
-#     # Brain Location of a given probe insertion.
-#     -> ProbeInsertion
-#     ---
-#     ap_location: decimal(6, 2) # (um) anterior-posterior; ref is 0; more anterior is more positive
-#     ml_location: decimal(6, 2) # (um) medial axis; ref is 0 ; more right is more positive
-#     depth:       decimal(6, 2) # (um) manipulator depth relative to surface of the brain (0); more ventral is more negative
-#     theta=null:  decimal(5, 2) # (deg) - elevation - rotation about the ml-axis [0, 180] - w.r.t the z+ axis
-#     phi=null:    decimal(5, 2) # (deg) - azimuth - rotation about the dv-axis [0, 360] - w.r.t the x+ axis
-#     beta=null:   decimal(5, 2) # (deg) rotation about the shank of the probe [-180, 180] - clockwise is increasing in degree - 0 is the probe-front facing anterior
-#     """
+    @property
+    def key_source(self):
+        return EphysSession & "session_type='lfp'"
 
+    def make(self, key):
+        """Populates the LFP tables."""
 
-# @schema
-# class EphysRecording(dj.Imported):
-#     """Automated table with electrophysiology recording information for each probe inserted during an experimental session.
+        oe_probe = get_openephys_probe_data(key)
 
-#     Attributes:
-#         ProbeInsertion (foreign key): ProbeInsertion primary key.
-#         probe.ElectrodeConfig (dict): probe.ElectrodeConfig primary key.
-#         AcquisitionSoftware (dict): AcquisitionSoftware primary key.
-#         sampling_rate (float): sampling rate of the recording in Hertz (Hz).
-#         recording_datetime (datetime): datetime of the recording from this probe.
-#         recording_duration (float): duration of the entire recording from this probe in seconds.
-#     """
+        lfp_channel_ind = np.r_[
+            len(oe_probe.lfp_meta["channels_indices"])
+            - 1 : 0 : -self._skip_channel_counts
+        ]
 
-#     definition = """
-#     # Ephys recording from a probe insertion for a given session.
-#     -> Session
-#     -> ProbeInsertion
-#     ---
-#     -> probe.ElectrodeConfig
-#     -> AcquisitionSoftware
-#     sampling_rate: float # (Hz)
-#     recording_datetime: datetime # datetime of the recording from this probe
-#     recording_duration: float # (seconds) duration of the recording from this probe
-#     """
+        # (sample x channel)
+        lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
+        lfp = (
+            lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
+        ).T  # (channel x sample)
+        lfp_timestamps = oe_probe.lfp_timestamps
 
-#     class EphysFile(dj.Part):
-#         """Paths of electrophysiology recording files for each insertion.
+        self.insert1(
+            dict(
+                key,
+                lfp_sampling_rate=oe_probe.lfp_meta["sample_rate"],
+                lfp_time_stamps=lfp_timestamps,
+                lfp_mean=lfp.mean(axis=0),
+            )
+        )
 
-#         Attributes:
-#             EphysRecording (foreign key): EphysRecording primary key.
-#             file_path (varchar(255) ): relative file path for electrophysiology recording.
-#         """
+        electrode_query = (
+            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysSession
+            & key
+        )
+        probe_electrodes = {
+            key["electrode"]: key for key in electrode_query.fetch("KEY")
+        }
 
-#         definition = """
-#         # Paths of files of a given EphysRecording round.
-#         -> master
-#         file_path: varchar(255)  # filepath relative to root data directory
-#         """
+        electrode_keys.extend(
+            probe_electrodes[channel_idx] for channel_idx in lfp_channel_ind
+        )
 
-#     def make(self, key):
-#         """Populates table with electrophysiology recording information."""
-#         session_dir = find_full_path(
-#             get_ephys_root_data_dir(), get_session_directory(key)
-#         )
-
-#         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1(
-#             "probe"
-#         )
-
-#         # search session dir and determine acquisition software
-#         for ephys_pattern, ephys_acq_type in (
-#             ("*.ap.meta", "SpikeGLX"),
-#             ("*.oebin", "Open Ephys"),
-#         ):
-#             ephys_meta_filepaths = list(session_dir.rglob(ephys_pattern))
-#             if ephys_meta_filepaths:
-#                 acq_software = ephys_acq_type
-#                 break
-#         else:
-#             raise FileNotFoundError(
-#                 f"Ephys recording data not found!"
-#                 f" Neither SpikeGLX nor Open Ephys recording files found"
-#                 f" in {session_dir}"
-#             )
-
-#         supported_probe_types = probe.ProbeType.fetch("probe_type")
-
-#         if acq_software == "SpikeGLX":
-#             for meta_filepath in ephys_meta_filepaths:
-#                 spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-#                 if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
-#                     break
-#             else:
-#                 raise FileNotFoundError(
-#                     f"No SpikeGLX data found for probe insertion: {key}"
-#                     + " The probe serial number does not match."
-#                 )
-
-#             if spikeglx_meta.probe_model in supported_probe_types:
-#                 probe_type = spikeglx_meta.probe_model
-#                 electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
-
-#                 probe_electrodes = {
-#                     (shank, shank_col, shank_row): key
-#                     for key, shank, shank_col, shank_row in zip(
-#                         *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-#                     )
-#                 }
-
-#                 electrode_group_members = [
-#                     probe_electrodes[(shank, shank_col, shank_row)]
-#                     for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap["data"]
-#                 ]
-#             else:
-#                 raise NotImplementedError(
-#                     "Processing for neuropixels probe model"
-#                     " {} not yet implemented".format(spikeglx_meta.probe_model)
-#                 )
-
-#             self.insert1(
-#                 {
-#                     **key,
-#                     **generate_electrode_config(probe_type, electrode_group_members),
-#                     "acq_software": acq_software,
-#                     "sampling_rate": spikeglx_meta.meta["imSampRate"],
-#                     "recording_datetime": spikeglx_meta.recording_time,
-#                     "recording_duration": (
-#                         spikeglx_meta.recording_duration
-#                         or spikeglx.retrieve_recording_duration(meta_filepath)
-#                     ),
-#                 }
-#             )
-
-#             root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
-#             self.EphysFile.insert1(
-#                 {**key, "file_path": meta_filepath.relative_to(root_dir).as_posix()}
-#             )
-#         elif acq_software == "Open Ephys":
-#             dataset = openephys.OpenEphys(session_dir)
-#             for serial_number, probe_data in dataset.probes.items():
-#                 if str(serial_number) == inserted_probe_serial_number:
-#                     break
-#             else:
-#                 raise FileNotFoundError(
-#                     "No Open Ephys data found for probe insertion: {}".format(key)
-#                 )
-
-#             if not probe_data.ap_meta:
-#                 raise IOError(
-#                     'No analog signals found - check "structure.oebin" file or "continuous" directory'
-#                 )
-
-#             if probe_data.probe_model in supported_probe_types:
-#                 probe_type = probe_data.probe_model
-#                 electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
-
-#                 probe_electrodes = {
-#                     key["electrode"]: key for key in electrode_query.fetch("KEY")
-#                 }
-
-#                 electrode_group_members = [
-#                     probe_electrodes[channel_idx]
-#                     for channel_idx in probe_data.ap_meta["channels_indices"]
-#                 ]
-#             else:
-#                 raise NotImplementedError(
-#                     "Processing for neuropixels"
-#                     " probe model {} not yet implemented".format(probe_data.probe_model)
-#                 )
-
-#             self.insert1(
-#                 {
-#                     **key,
-#                     **generate_electrode_config(probe_type, electrode_group_members),
-#                     "acq_software": acq_software,
-#                     "sampling_rate": probe_data.ap_meta["sample_rate"],
-#                     "recording_datetime": probe_data.recording_info[
-#                         "recording_datetimes"
-#                     ][0],
-#                     "recording_duration": np.sum(
-#                         probe_data.recording_info["recording_durations"]
-#                     ),
-#                 }
-#             )
-
-#             root_dir = find_root_directory(
-#                 get_ephys_root_data_dir(),
-#                 probe_data.recording_info["recording_files"][0],
-#             )
-#             self.EphysFile.insert(
-#                 [
-#                     {**key, "file_path": fp.relative_to(root_dir).as_posix()}
-#                     for fp in probe_data.recording_info["recording_files"]
-#                 ]
-#             )
-#             # explicitly garbage collect "dataset"
-#             # as these may have large memory footprint and may not be cleared fast enough
-#             del probe_data, dataset
-#             gc.collect()
-#         else:
-#             raise NotImplementedError(
-#                 f"Processing ephys files from"
-#                 f" acquisition software of type {acq_software} is"
-#                 f" not yet implemented"
-#             )
-
-
-# @schema
-# class LFP(dj.Imported):
-#     """Extracts local field potentials (LFP) from an electrophysiology recording.
-
-#     Attributes:
-#         EphysRecording (foreign key): EphysRecording primary key.
-#         lfp_sampling_rate (float): Sampling rate for LFPs in Hz.
-#         lfp_time_stamps (longblob): Time stamps with respect to the start of the recording.
-#         lfp_mean (longblob): Overall mean LFP across electrodes.
-#     """
-
-#     definition = """
-#     # Acquired local field potential (LFP) from a given Ephys recording.
-#     -> EphysRecording
-#     ---
-#     lfp_sampling_rate: float   # (Hz)
-#     lfp_time_stamps: longblob  # (s) timestamps with respect to the start of the recording (recording_timestamp)
-#     lfp_mean: longblob         # (uV) mean of LFP across electrodes - shape (time,)
-#     """
-
-#     class Electrode(dj.Part):
-#         """Saves local field potential data for each electrode.
-
-#         Attributes:
-#             LFP (foreign key): LFP primary key.
-#             probe.ElectrodeConfig.Electrode (foreign key): probe.ElectrodeConfig.Electrode primary key.
-#             lfp (longblob): LFP recording at this electrode in microvolts.
-#         """
-
-#         definition = """
-#         -> master
-#         -> probe.ElectrodeConfig.Electrode
-#         ---
-#         lfp: longblob               # (uV) recorded lfp at this electrode
-#         """
-
-#     # Only store LFP for every 9th channel, due to high channel density,
-#     # close-by channels exhibit highly similar LFP
-#     _skip_channel_counts = 9
-
-#     def make(self, key):
-#         """Populates the LFP tables."""
-#         acq_software = (EphysRecording * ProbeInsertion & key).fetch1("acq_software")
-
-#         electrode_keys, lfp = [], []
-
-#         if acq_software == "SpikeGLX":
-#             spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
-#             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
-
-#             lfp_channel_ind = spikeglx_recording.lfmeta.recording_channels[
-#                 -1 :: -self._skip_channel_counts
-#             ]
-
-#             # Extract LFP data at specified channels and convert to uV
-#             lfp = spikeglx_recording.lf_timeseries[
-#                 :, lfp_channel_ind
-#             ]  # (sample x channel)
-#             lfp = (
-#                 lfp * spikeglx_recording.get_channel_bit_volts("lf")[lfp_channel_ind]
-#             ).T  # (channel x sample)
-
-#             self.insert1(
-#                 dict(
-#                     key,
-#                     lfp_sampling_rate=spikeglx_recording.lfmeta.meta["imSampRate"],
-#                     lfp_time_stamps=(
-#                         np.arange(lfp.shape[1])
-#                         / spikeglx_recording.lfmeta.meta["imSampRate"]
-#                     ),
-#                     lfp_mean=lfp.mean(axis=0),
-#                 )
-#             )
-
-#             electrode_query = (
-#                 probe.ProbeType.Electrode
-#                 * probe.ElectrodeConfig.Electrode
-#                 * EphysRecording
-#                 & key
-#             )
-#             probe_electrodes = {
-#                 (shank, shank_col, shank_row): key
-#                 for key, shank, shank_col, shank_row in zip(
-#                     *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-#                 )
-#             }
-
-#             for recorded_site in lfp_channel_ind:
-#                 shank, shank_col, shank_row, _ = spikeglx_recording.apmeta.shankmap[
-#                     "data"
-#                 ][recorded_site]
-#                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
-#         elif acq_software == "Open Ephys":
-#             oe_probe = get_openephys_probe_data(key)
-
-#             lfp_channel_ind = np.r_[
-#                 len(oe_probe.lfp_meta["channels_indices"])
-#                 - 1 : 0 : -self._skip_channel_counts
-#             ]
-
-#             # (sample x channel)
-#             lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
-#             lfp = (
-#                 lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
-#             ).T  # (channel x sample)
-#             lfp_timestamps = oe_probe.lfp_timestamps
-
-#             self.insert1(
-#                 dict(
-#                     key,
-#                     lfp_sampling_rate=oe_probe.lfp_meta["sample_rate"],
-#                     lfp_time_stamps=lfp_timestamps,
-#                     lfp_mean=lfp.mean(axis=0),
-#                 )
-#             )
-
-#             electrode_query = (
-#                 probe.ProbeType.Electrode
-#                 * probe.ElectrodeConfig.Electrode
-#                 * EphysRecording
-#                 & key
-#             )
-#             probe_electrodes = {
-#                 key["electrode"]: key for key in electrode_query.fetch("KEY")
-#             }
-
-#             electrode_keys.extend(
-#                 probe_electrodes[channel_idx] for channel_idx in lfp_channel_ind
-#             )
-#         else:
-#             raise NotImplementedError(
-#                 f"LFP extraction from acquisition software"
-#                 f" of type {acq_software} is not yet implemented"
-#             )
-
-#         # single insert in loop to mitigate potential memory issue
-#         for electrode_key, lfp_trace in zip(electrode_keys, lfp):
-#             self.Electrode.insert1({**key, **electrode_key, "lfp": lfp_trace})
+        # single insert in loop to mitigate potential memory issue
+        for electrode_key, lfp_trace in zip(electrode_keys, lfp):
+            self.Electrode.insert1({**key, **electrode_key, "lfp": lfp_trace})
 
 
 # ------------ Clustering --------------
@@ -1376,15 +1093,15 @@ class QualityMetrics(dj.Imported):
         self.Waveform.insert(metrics_list, ignore_extra_fields=True)
 
 
-# # ---------------- HELPER FUNCTIONS ----------------
+# ---------------- HELPER FUNCTIONS ----------------
 
 
 # def get_spikeglx_meta_filepath(ephys_recording_key: dict) -> str:
 #     """Get spikeGLX data filepath."""
-#     # attempt to retrieve from EphysRecording.EphysFile
+#     # attempt to retrieve from EphysSession.EphysFile
 #     spikeglx_meta_filepath = pathlib.Path(
 #         (
-#             EphysRecording.EphysFile
+#             EphysSession.EphysFile
 #             & ephys_recording_key
 #             & 'file_path LIKE "%.ap.meta"'
 #         ).fetch1("file_path")
@@ -1420,69 +1137,69 @@ class QualityMetrics(dj.Imported):
 #     return spikeglx_meta_filepath
 
 
-# def get_openephys_probe_data(ephys_recording_key: dict) -> list:
-#     """Get OpenEphys probe data from file."""
-#     inserted_probe_serial_number = (
-#         ProbeInsertion * probe.Probe & ephys_recording_key
-#     ).fetch1("probe")
-#     session_dir = find_full_path(
-#         get_ephys_root_data_dir(), get_session_directory(ephys_recording_key)
-#     )
-#     loaded_oe = openephys.OpenEphys(session_dir)
-#     probe_data = loaded_oe.probes[inserted_probe_serial_number]
+def get_openephys_probe_data(ephys_recording_key: dict) -> list:
+    """Get OpenEphys probe data from file."""
+    inserted_probe_serial_number = (
+        ProbeInsertion * probe.Probe & ephys_recording_key
+    ).fetch1("probe")
+    session_dir = find_full_path(
+        get_ephys_root_data_dir(), get_session_directory(ephys_recording_key)
+    )
+    loaded_oe = openephys.OpenEphys(session_dir)
+    probe_data = loaded_oe.probes[inserted_probe_serial_number]
 
-#     # explicitly garbage collect "loaded_oe"
-#     # as these may have large memory footprint and may not be cleared fast enough
-#     del loaded_oe
-#     gc.collect()
+    # explicitly garbage collect "loaded_oe"
+    # as these may have large memory footprint and may not be cleared fast enough
+    del loaded_oe
+    gc.collect()
 
-#     return probe_data
+    return probe_data
 
 
-# def get_neuropixels_channel2electrode_map(
-#     ephys_recording_key: dict, acq_software: str
-# ) -> dict:
-#     """Get the channel map for neuropixels probe."""
-#     if acq_software == "SpikeGLX":
-#         spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
-#         spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
-#         electrode_config_key = (
-#             EphysRecording * probe.ElectrodeConfig & ephys_recording_key
-#         ).fetch1("KEY")
+def get_neuropixels_channel2electrode_map(
+    ephys_recording_key: dict, acq_software: str
+) -> dict:
+    """Get the channel map for neuropixels probe."""
+    if acq_software == "SpikeGLX":
+        spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
+        spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
+        electrode_config_key = (
+            EphysSession * probe.ElectrodeConfig & ephys_recording_key
+        ).fetch1("KEY")
 
-#         electrode_query = (
-#             probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-#             & electrode_config_key
-#         )
+        electrode_query = (
+            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
+            & electrode_config_key
+        )
 
-#         probe_electrodes = {
-#             (shank, shank_col, shank_row): key
-#             for key, shank, shank_col, shank_row in zip(
-#                 *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-#             )
-#         }
+        probe_electrodes = {
+            (shank, shank_col, shank_row): key
+            for key, shank, shank_col, shank_row in zip(
+                *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
+            )
+        }
 
-#         channel2electrode_map = {
-#             recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
-#             for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
-#                 spikeglx_meta.shankmap["data"]
-#             )
-#         }
-#     elif acq_software == "Open Ephys":
-#         probe_dataset = get_openephys_probe_data(ephys_recording_key)
+        channel2electrode_map = {
+            recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
+            for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
+                spikeglx_meta.shankmap["data"]
+            )
+        }
+    elif acq_software == "Open Ephys":
+        probe_dataset = get_openephys_probe_data(ephys_recording_key)
 
-#         electrode_query = (
-#             probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording
-#             & ephys_recording_key
-#         )
+        electrode_query = (
+            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysSession
+            & ephys_recording_key
+        )
 
-#         probe_electrodes = {
-#             key["electrode"]: key for key in electrode_query.fetch("KEY")
-#         }
+        probe_electrodes = {
+            key["electrode"]: key for key in electrode_query.fetch("KEY")
+        }
 
-#         channel2electrode_map = {
-#             channel_idx: probe_electrodes[channel_idx]
-#             for channel_idx in probe_dataset.ap_meta["channels_indices"]
-#         }
+        channel2electrode_map = {
+            channel_idx: probe_electrodes[channel_idx]
+            for channel_idx in probe_dataset.ap_meta["channels_indices"]
+        }
 
-#     return channel2electrode_map
+    return channel2electrode_map
