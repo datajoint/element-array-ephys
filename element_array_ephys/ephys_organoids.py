@@ -267,7 +267,6 @@ class LFP(dj.Imported):
         DS_FACTOR = 10  # downsampling factor
 
         timestamp_concat = np.array([], dtype=np.datetime64)  # initialize array
-        lfp_concat = np.array([], dtype=np.float32)  # initialize array
 
         query = (
             RawData
@@ -302,6 +301,8 @@ class LFP(dj.Imported):
             probe_type, electrode, channel_id, lfps = q.fetch(
                 "probe_type", "electrode", "channel_id", "trace", order_by="start_time"
             )
+
+            lfp_concat = np.array([], dtype=np.float32)  # initialize array
 
             # Downsample & concatenate LFP traces.
             for lfp in lfps:
