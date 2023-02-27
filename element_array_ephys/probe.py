@@ -92,7 +92,7 @@ class Probe(dj.Lookup):
 class ElectrodeConfig(dj.Lookup):
     definition = """
     # The electrode configuration setting on a given probe
-    config_id                : int unsigned
+    probe_config_id          : int unsigned
     ---
     -> ProbeType
     channel_to_electrode_map : longblob

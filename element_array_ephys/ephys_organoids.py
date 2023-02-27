@@ -15,7 +15,6 @@ from intanrhsreader import load_file
 from . import ephys_report, get_logger, probe
 from .readers import kilosort, openephys, spikeglx
 
-
 log = get_logger(__name__)
 
 schema = dj.schema()
@@ -138,16 +137,16 @@ class EphysSession(dj.Manual):
 
     definition = """
     -> Subject
-    probe_id        : int  # probe ID from probe.yaml
-    start_time      : datetime
-    end_time        : datetime
+    -> probe.ElectrodeConfig # probe electrode config from probe.yaml
+    start_time                  : datetime
+    end_time                    : datetime
     ---
-    session_type    : enum("lfp", "spike_sorting", "both")  # analysis target
+    session_type                : enum("lfp", "spike_sorting", "both")  # analysis target
     """
 
 
 @schema
-class RawEphys(dj.Imported):
+class RawData(dj.Imported):
     definition = """
     -> Subject
     start_time      : datetime(6) # date and time of file creation
@@ -173,7 +172,7 @@ class RawEphys(dj.Imported):
         definition = """
         # Raw ephys trace per channel.
         -> master
-        channel_id  : varchar(16)
+        channel_id  : varchar(16) # channel id read from the raw file.
         ---
         trace       : blob@external-raw # raw ephys trace from this channel in microvolts.
         """
@@ -182,20 +181,31 @@ class RawEphys(dj.Imported):
         data_dir = get_ephys_root_data_dir()[0]
         data_files = data_dir.glob(f"{key['induction_id']}*.rhs")
 
+        recording_start_time = 0  # start of the acquisition.
+
         # Loop through all the data files.
         for file in sorted(list(data_files)):
             # Load data
             data = load_file(file)
+            timestamps = data.pop("t")  # timestamp doesn't reset to 0 for each file.
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
-            start_time = datetime.strptime(start_time, "%y%m%d_%H%M%S")
-            timestamps = start_time + data.pop("t") * timedelta(seconds=1)
+            start_time = np.datetime64(
+                datetime.strptime(start_time, "%y%m%d_%H%M%S")
+            )  # start time based on the file name
+
+            if not recording_start_time:
+                recording_start_time = start_time - (
+                    timestamps[0] * 10**6 * np.timedelta64(1, "us")
+                )  # get the start time of the acquisition.
+            timestamps = recording_start_time + (
+                timestamps * 10**6 * np.timedelta64(1, "us")
+            )
 
             self.insert1(
                 {
                     **key,
-                    "start_time": start_time,
-                    "end_time": start_time
-                    + (timestamps[-1] - timestamps[0]) * timedelta(seconds=1),
+                    "start_time": timestamps[0],
+                    "end_time": timestamps[-1],
                     "file_name": file.relative_to(data_dir),
                     "file_path": file,
                     "sampling_rate": data["header"]["sample_rate"],
@@ -204,11 +214,10 @@ class RawEphys(dj.Imported):
                 }
             )
 
-            # Populate Attributes table.
             attribute_list = [
                 {
                     **key,
-                    "start_time": start_time,
+                    "start_time": timestamps[0],
                     "attribute_name": k,
                     "attribute_blob": v,
                 }
@@ -217,15 +226,14 @@ class RawEphys(dj.Imported):
             ]  # don't insert data here
             self.Attributes.insert(attribute_list)
 
-            # Populate Trace table.
             trace_channels = [
                 ch["native_channel_name"] for ch in data["amplifier_channels"]
-            ]
+            ]  # channels with raw ephys traces
 
             trace_list = [
                 {
                     **key,
-                    "start_time": start_time,
+                    "start_time": timestamps[0],
                     "channel_id": ch,
                     "trace": trace,
                 }
@@ -237,11 +245,10 @@ class RawEphys(dj.Imported):
 @schema
 class LFP(dj.Imported):
     definition = """
-    # Acquired local field potential (LFP) from a given Ephys recording.
     -> EphysSession
     ---
-    lfp_sampling_rate       : float # (Hz)
-    lfp_time_stamps         : longblob # (s) timestamps with respect to the start of the recording (recording_timestamp)
+    lfp_sampling_rate       : float # (Hz) down-sampled sampling rate.
+    lfp_time_stamps         : blob@external-raw # (s) 
     """
 
     class Electrode(dj.Part):
@@ -249,54 +256,66 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp                 : longblob # (uV) recorded lfp at this electrode
+        lfp                 : blob@external-raw 
         """
 
     @property
     def key_source(self):
-        return EphysSession & "session_type='lfp'"
+        return EphysSession - "session_type='spike_sorting'"
 
     def make(self, key):
-        """Populates the LFP tables."""
+        DS_FACTOR = 10  # downsampling factor
 
-        oe_probe = get_openephys_probe_data(key)
+        timestamp_concat = np.array([], dtype=np.datetime64)  # initialize array
+        lfp_concat = np.array([], dtype=np.float32)  # initialize array
 
-        lfp_channel_ind = np.r_[
-            len(oe_probe.lfp_meta["channels_indices"])
-            - 1 : 0 : -self._skip_channel_counts
-        ]
+        query = (
+            RawData
+            & f"start_time >= '{key['start_time']}'"
+            & f"end_time <= '{key['end_time']}'"
+        )
 
-        # (sample x channel)
-        lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
-        lfp = (
-            lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
-        ).T  # (channel x sample)
-        lfp_timestamps = oe_probe.lfp_timestamps
+        header = query.fetch("header")[0]
+        lfp_sampling_rate = header["sample_rate"] / DS_FACTOR
+
+        # Downsample & concatenate timestamps.
+        for timestamps in query.fetch("timestamps"):
+            timestamp_concat = np.concatenate(
+                (timestamp_concat, timestamps[::DS_FACTOR]), axis=0
+            )
 
         self.insert1(
-            dict(
-                key,
-                lfp_sampling_rate=oe_probe.lfp_meta["sample_rate"],
-                lfp_time_stamps=lfp_timestamps,
-                lfp_mean=lfp.mean(axis=0),
+            {
+                **key,
+                "lfp_sampling_rate": lfp_sampling_rate,
+                "lfp_time_stamps": timestamp_concat,
+            }
+        )
+
+        channels = (probe.ElectrodeConfig.Electrode & key).fetch("channel_id")
+
+        lfp_query = RawData.Trace * (probe.ElectrodeConfig.Electrode & key) & query
+
+        # Single insert in loop to mitigate potential memory issue.
+        for ch in channels:
+            q = lfp_query & f"channel_id='{ch}'"
+            probe_type, electrode, channel_id, lfps = q.fetch(
+                "probe_type", "electrode", "channel_id", "trace", order_by="start_time"
             )
-        )
 
-        electrode_query = (
-            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysSession
-            & key
-        )
-        probe_electrodes = {
-            key["electrode"]: key for key in electrode_query.fetch("KEY")
-        }
+            # Downsample & concatenate LFP traces.
+            for lfp in lfps:
+                lfp_concat = np.concatenate((lfp_concat, lfp[::DS_FACTOR]), axis=0)
 
-        electrode_keys.extend(
-            probe_electrodes[channel_idx] for channel_idx in lfp_channel_ind
-        )
-
-        # single insert in loop to mitigate potential memory issue
-        for electrode_key, lfp_trace in zip(electrode_keys, lfp):
-            self.Electrode.insert1({**key, **electrode_key, "lfp": lfp_trace})
+            self.Electrode.insert1(
+                {
+                    **key,
+                    "probe_type": probe_type[0],
+                    "electrode": electrode[0],
+                    "channel_id": channel_id[0],
+                    "lfp": lfp_concat,
+                }
+            )
 
 
 # ------------ Clustering --------------
@@ -442,6 +461,10 @@ class ClusteringTask(dj.Manual):
     clustering_output_dir='': varchar(255)  #  clustering output directory relative to the clustering root data directory
     task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
+
+    @property
+    def key_source(self):
+        return EphysSession - "session_type='lfp'"
 
     @classmethod
     def infer_output_dir(cls, key, relative=False, mkdir=False) -> pathlib.Path:
