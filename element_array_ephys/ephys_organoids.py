@@ -264,7 +264,6 @@ class LFP(dj.Imported):
         return EphysSession - "session_type='spike_sorting'"
 
     def make(self, key):
-        DS_FACTOR = 10  # downsampling factor
 
         timestamp_concat = np.array([], dtype=np.datetime64)  # initialize array
 
@@ -275,18 +274,21 @@ class LFP(dj.Imported):
         )
 
         header = query.fetch("header")[0]
-        lfp_sampling_rate = header["sample_rate"] / DS_FACTOR
+        
+        lfp_sampling_rate = header["sample_rate"] 
+        TARGET_SAMPLING_RATE = 2000 
+        ds_factor = lfp_sampling_rate / TARGET_SAMPLING_RATE # downsampling factor
 
         # Downsample & concatenate timestamps.
         for timestamps in query.fetch("timestamps"):
             timestamp_concat = np.concatenate(
-                (timestamp_concat, timestamps[::DS_FACTOR]), axis=0
+                (timestamp_concat, timestamps[::ds_factor]), axis=0
             )
 
         self.insert1(
             {
                 **key,
-                "lfp_sampling_rate": lfp_sampling_rate,
+                "lfp_sampling_rate": TARGET_SAMPLING_RATE,
                 "lfp_time_stamps": timestamp_concat,
             }
         )
@@ -306,7 +308,7 @@ class LFP(dj.Imported):
 
             # Downsample & concatenate LFP traces.
             for lfp in lfps:
-                lfp_concat = np.concatenate((lfp_concat, lfp[::DS_FACTOR]), axis=0)
+                lfp_concat = np.concatenate((lfp_concat, lfp[::ds_factor]), axis=0)
 
             self.Electrode.insert1(
                 {
