@@ -90,33 +90,19 @@ class Probe(dj.Lookup):
 
 @schema
 class ElectrodeConfig(dj.Lookup):
-    """Electrode configuration setting on a probe.
-
-    Attributes:
-        electrode_config_hash (foreign key, uuid): unique index for electrode configuration.
-        ProbeType (dict): ProbeType entry.
-        electrode_config_name ( varchar(4000) ): User-friendly name for this electrode configuration.
-    """
-
     definition = """
     # The electrode configuration setting on a given probe
-    electrode_config_hash: uuid
+    config_id                : int unsigned
     ---
     -> ProbeType
-    electrode_config_name: varchar(4000)  # user friendly name
+    channel_to_electrode_map : longblob
     """
 
     class Electrode(dj.Part):
-        """Electrode included in the recording.
-
-        Attributes:
-            ElectrodeConfig (foreign key): ElectrodeConfig primary key.
-            ProbeType.Electrode (foreign key): ProbeType.Electrode primary key.
-        """
-
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
+        channel_id:  varchar(16)  # channel id mapped to the electrode
         """
 
 
