@@ -137,10 +137,11 @@ class EphysSession(dj.Manual):
 
     definition = """
     -> Subject
-    -> probe.ElectrodeConfig # probe electrode config from probe.yaml
+    insertion_number            : int
     start_time                  : datetime
     end_time                    : datetime
     ---
+    -> probe.ElectrodeConfig 
     session_type                : enum("lfp", "spike_sorting", "both")  # analysis target
     """
 
@@ -149,98 +150,32 @@ class EphysSession(dj.Manual):
 class RawData(dj.Imported):
     definition = """
     -> Subject
-    start_time      : datetime(6) # date and time of file creation
+    start_time        : datetime # date and time of file creation
     ---
-    end_time        : datetime(6) # date and time of the end of the file
-    file_name       : varchar(32) # name of the file
-    file_path       : filepath@external-raw  
-    sampling_rate   : float # (Hz)
-    timestamps      : longblob # (s) timestamps with respect to the start of the recording (recording_timestamp)
-    header          : longblob  # meta information about the file.
+    file_name         : varchar(32) # name of the file
+    file_path         : filepath@external-raw  
     """
-
-    class Attributes(dj.Part):
-        definition = """
-        # All non-data attributes read from raw data file.
-        -> master
-        attribute_name      : varchar(32)
-        ---
-        attribute_blob=null : longblob
-        """
-
-    class Trace(dj.Part):
-        definition = """
-        # Raw ephys trace per channel.
-        -> master
-        channel_id  : varchar(16) # channel id read from the raw file.
-        ---
-        trace       : blob@external-raw # raw ephys trace from this channel in microvolts.
-        """
 
     def make(self, key):
         data_dir = get_ephys_root_data_dir()[0]
         data_files = data_dir.glob(f"{key['induction_id']}*.rhs")
 
-        recording_start_time = 0  # start of the acquisition.
-
         # Loop through all the data files.
         for file in sorted(list(data_files)):
             # Load data
-            data = load_file(file)
-            timestamps = data.pop("t")  # timestamp doesn't reset to 0 for each file.
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
             start_time = np.datetime64(
                 datetime.strptime(start_time, "%y%m%d_%H%M%S")
             )  # start time based on the file name
 
-            if not recording_start_time:
-                recording_start_time = start_time - (
-                    timestamps[0] * 10**6 * np.timedelta64(1, "us")
-                )  # get the start time of the acquisition.
-            timestamps = recording_start_time + (
-                timestamps * 10**6 * np.timedelta64(1, "us")
-            )
-
             self.insert1(
                 {
                     **key,
-                    "start_time": timestamps[0],
-                    "end_time": timestamps[-1],
+                    "start_time": start_time,
                     "file_name": file.relative_to(data_dir),
                     "file_path": file,
-                    "sampling_rate": data["header"]["sample_rate"],
-                    "timestamps": timestamps,
-                    "header": data.pop("header"),
                 }
             )
-
-            attribute_list = [
-                {
-                    **key,
-                    "start_time": timestamps[0],
-                    "attribute_name": k,
-                    "attribute_blob": v,
-                }
-                for k, v in data.items()
-                if "data" not in k
-            ]  # don't insert data here
-            self.Attributes.insert(attribute_list)
-
-            trace_channels = [
-                ch["native_channel_name"] for ch in data["amplifier_channels"]
-            ]  # channels with raw ephys traces
-
-            trace_list = [
-                {
-                    **key,
-                    "start_time": timestamps[0],
-                    "channel_id": ch,
-                    "trace": trace,
-                }
-                for ch, trace in zip(trace_channels, data.pop("amplifier_data"))
-            ]
-            self.Trace.insert(trace_list)
-
 
 @schema
 class LFP(dj.Imported):
@@ -254,7 +189,7 @@ class LFP(dj.Imported):
     class Electrode(dj.Part):
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode
+        -> probe.ElectrodeConfig.Electrode   #! rename to channel name
         ---
         lfp                 : blob@external-raw 
         """
@@ -270,7 +205,7 @@ class LFP(dj.Imported):
         query = (
             RawData
             & f"start_time >= '{key['start_time']}'"
-            & f"end_time <= '{key['end_time']}'"
+            & f"end_time <= '{key['start_time']}'"
         )
 
         header = query.fetch("header")[0]
