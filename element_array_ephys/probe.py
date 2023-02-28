@@ -92,17 +92,16 @@ class Probe(dj.Lookup):
 class ElectrodeConfig(dj.Lookup):
     definition = """
     # The electrode configuration setting on a given probe
-    probe_config_id          : int unsigned
+    electrode_config_hash: uuid
     ---
     -> ProbeType
-    channel_to_electrode_map : longblob
+    electrode_config_name: varchar(30)
     """
 
     class Electrode(dj.Part):
         definition = """  # Electrodes selected for recording
         -> master
         -> ProbeType.Electrode
-        channel_id:  varchar(16)  # channel id mapped to the electrode
         """
 
 
@@ -163,31 +162,11 @@ def build_electrode_layouts(
     ]
 
 
-def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
-    """Generate and insert new ElectrodeConfig
-
-    Args:
-        probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
-        electrode_keys (list): list of keys of the ProbeType.Electrode table
-
-    Returns:
-        dict: representing a key of the ElectrodeConfig table
-    """
+def generate_electrode_config(
+    probe_type: str, electrode_keys: list, electrode_config_name: str
+) -> dict:
     # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
     electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
-
-    electrode_list = sorted([k["electrode"] for k in electrode_keys])
-    electrode_gaps = (
-        [-1]
-        + np.where(np.diff(electrode_list) > 1)[0].tolist()
-        + [len(electrode_list) - 1]
-    )
-    electrode_config_name = "; ".join(
-        [
-            f"{electrode_list[start + 1]}-{electrode_list[end]}"
-            for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
-        ]
-    )
 
     electrode_config_key = {"electrode_config_hash": electrode_config_hash}
 
