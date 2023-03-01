@@ -3,14 +3,16 @@ import importlib
 import inspect
 import pathlib
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
 import numpy as np
 import pandas as pd
-from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
+from element_interface.utils import (dict_to_uuid, find_full_path,
+                                     find_root_directory)
 from intanrhsreader import load_file
+from scipy import signal
 
 from . import ephys_report, get_logger, probe
 from .readers import kilosort, openephys, spikeglx
@@ -137,11 +139,11 @@ class EphysSession(dj.Manual):
 
     definition = """
     -> Subject
+    -> probe.ElectrodeConfig 
     insertion_number            : int
     start_time                  : datetime
     end_time                    : datetime
     ---
-    -> probe.ElectrodeConfig 
     session_type                : enum("lfp", "spike_sorting", "both")  # analysis target
     """
 
@@ -177,19 +179,29 @@ class RawData(dj.Imported):
                 }
             )
 
+
 @schema
 class LFP(dj.Imported):
     definition = """
     -> EphysSession
     ---
-    lfp_sampling_rate       : float # (Hz) down-sampled sampling rate.
-    lfp_time_stamps         : blob@external-raw # (s) 
+    lfp_sampling_rate    : float # (Hz) down-sampled sampling rate.
+    header               : longblob
     """
 
-    class Electrode(dj.Part):
+    class Attributes(dj.Part):
+        definition = """
+        # All non-data attributes read from raw data file.
+        -> master
+        attribute_name      : varchar(32)
+        ---
+        attribute_blob=null : longblob
+        """
+
+    class Trace(dj.Part):
         definition = """
         -> master
-        -> probe.ElectrodeConfig.Electrode   #! rename to channel name
+        -> probe.ElectrodeConfig.Electrode
         ---
         lfp                 : blob@external-raw 
         """
@@ -199,59 +211,84 @@ class LFP(dj.Imported):
         return EphysSession - "session_type='spike_sorting'"
 
     def make(self, key):
-
-        timestamp_concat = np.array([], dtype=np.datetime64)  # initialize array
-
-        query = (
+        files = (
             RawData
-            & f"start_time >= '{key['start_time']}'"
-            & f"end_time <= '{key['start_time']}'"
-        )
+            & f"start_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
+        ).fetch("file_path")
 
-        header = query.fetch("header")[0]
-        
-        lfp_sampling_rate = header["sample_rate"] 
-        TARGET_SAMPLING_RATE = 2000 
-        ds_factor = lfp_sampling_rate / TARGET_SAMPLING_RATE # downsampling factor
+        TARGET_SAMPLING_RATE = 2000
+        header = {}
+        lfp_concat = np.array([], dtype=np.float64)  # initialize array
 
-        # Downsample & concatenate timestamps.
-        for timestamps in query.fetch("timestamps"):
-            timestamp_concat = np.concatenate(
-                (timestamp_concat, timestamps[::ds_factor]), axis=0
-            )
+        for file in files:
+            data = load_file(file)
+
+            if not header:
+                # Fetch this from the first file
+                header = data.pop("header")
+                lfp_sampling_rate = header["sample_rate"]
+                ds_factor = int(
+                    lfp_sampling_rate / TARGET_SAMPLING_RATE
+                )  # downsampling factor
+
+                attribute_list = [
+                    {
+                        **key,
+                        "attribute_name": k,
+                        "attribute_blob": v,
+                    }
+                    for k, v in data.items()
+                    if "data" not in k
+                ]  # don't insert data here
+
+                channels = [
+                    ch["native_channel_name"] for ch in data["amplifier_channels"]
+                ]  # channels with raw ephys traces
+
+            lfp = data["amplifier_data"][:, ::ds_factor]  # downsample
+
+            if lfp_concat.size == 0:
+                lfp_concat = lfp
+            else:
+                lfp_concat = np.hstack((lfp_concat, lfp))
+            del data, lfp
 
         self.insert1(
             {
                 **key,
                 "lfp_sampling_rate": TARGET_SAMPLING_RATE,
-                "lfp_time_stamps": timestamp_concat,
+                "header": header,
             }
         )
 
-        channels = (probe.ElectrodeConfig.Electrode & key).fetch("channel_id")
+        self.Attributes.insert(attribute_list)
 
-        lfp_query = RawData.Trace * (probe.ElectrodeConfig.Electrode & key) & query
+        electrode_query = probe.ElectrodeConfig.Electrode & key
 
         # Single insert in loop to mitigate potential memory issue.
-        for ch in channels:
-            q = lfp_query & f"channel_id='{ch}'"
-            probe_type, electrode, channel_id, lfps = q.fetch(
-                "probe_type", "electrode", "channel_id", "trace", order_by="start_time"
+        for ch, lfp in zip(channels, lfp_concat):
+            # 50 Hz powerline noise removal
+            b_notch, a_notch = signal.iirnotch(w0=50, Q=30, fs=TARGET_SAMPLING_RATE)
+            lfp = signal.filtfilt(b_notch, a_notch, lfp)
+
+            # Bandpass filter
+            b_butter, a_butter = signal.butter(
+                N=4, Wn=[3, 300], btype="bandpass", fs=TARGET_SAMPLING_RATE
             )
+            lfp = signal.filtfilt(b_butter, a_butter, lfp)
+            # https://www.sciencedirect.com/science/article/pii/S221112471930172X
 
-            lfp_concat = np.array([], dtype=np.float32)  # initialize array
+            econf_hash, probe_type, electrode = (
+                electrode_query & f"channel='{ch}'"
+            ).fetch1("electrode_config_hash", "probe_type", "electrode")
 
-            # Downsample & concatenate LFP traces.
-            for lfp in lfps:
-                lfp_concat = np.concatenate((lfp_concat, lfp[::ds_factor]), axis=0)
-
-            self.Electrode.insert1(
+            self.Trace.insert1(
                 {
                     **key,
-                    "probe_type": probe_type[0],
-                    "electrode": electrode[0],
-                    "channel_id": channel_id[0],
-                    "lfp": lfp_concat,
+                    "electrode_config_hash": econf_hash,
+                    "probe_type": probe_type,
+                    "electrode": electrode,
+                    "lfp": lfp,
                 }
             )
 
@@ -520,7 +557,6 @@ class Clustering(dj.Imported):
                 # add additional probe-recording and channels details into `params`
                 params = {**params, **get_recording_channels_details(key)}
                 params["fs"] = params["sample_rate"]
-
                 if acq_software == "SpikeGLX":
                     spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                     spikeglx_recording = spikeglx.SpikeGLX(
