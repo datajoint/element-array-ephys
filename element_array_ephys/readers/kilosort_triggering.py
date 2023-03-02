@@ -315,7 +315,7 @@ class SGLXKilosortPipeline:
             # delete outdated files
             [
                 f.unlink()
-                for f in self._ks_output_dir.rglob("*")
+                for f in self._json_directory.glob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
 
@@ -583,19 +583,24 @@ class OpenEphysKilosortPipeline:
                 module_logfile = module_input_json.replace(
                     "-input.json", "-run_modules-log.txt"
                 )
-                with open(module_logfile, "r") as f:
-                    previous_line = ""
-                    for line in f.readlines():
-                        if line.startswith(
-                            "ecephys spike sorting: median subtraction module"
-                        ) and previous_line.startswith("Total processing time:"):
-                            # regex to search for the processing duration - a float value
-                            duration = int(
-                                re.search("\d+\.?\d+", previous_line).group()
-                            )
-                            self._median_subtraction_status["duration"] = duration
-                            return continuous_file
-                        previous_line = line
+                if module_logfile.exists():
+                    with open(module_logfile, "r") as f:
+                        previous_line = ""
+                        for line in f.readlines():
+                            if line.startswith(
+                                "ecephys spike sorting: median subtraction module"
+                            ) and previous_line.startswith("Total processing time:"):
+                                # regex to search for the processing duration - a float value
+                                duration = int(
+                                    re.search("\d+\.?\d+", previous_line).group()
+                                )
+                                self._median_subtraction_status["duration"] = duration
+                                return continuous_file
+                            previous_line = line
+                else: 
+                    # if module_logfile does not exist, the continuous.dat file must be outdated
+                    continuous_file.unlink()
+                    (self._ks_output_dir / "residuals.dat").unlink(missing_ok=True)
 
         shutil.copy2(raw_ap_fp, continuous_file)
         return continuous_file
@@ -616,7 +621,7 @@ class OpenEphysKilosortPipeline:
             # delete outdated files
             [
                 f.unlink()
-                for f in self._ks_output_dir.rglob("*")
+                for f in self._json_directory.glob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
 
