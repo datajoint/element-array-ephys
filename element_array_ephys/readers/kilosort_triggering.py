@@ -67,7 +67,6 @@ class SGLXKilosortPipeline:
         ni_present=False,
         ni_extract_string=None,
     ):
-
         self._npx_input_dir = pathlib.Path(npx_input_dir)
 
         self._ks_output_dir = pathlib.Path(ks_output_dir)
@@ -225,7 +224,7 @@ class SGLXKilosortPipeline:
 
         self._modules_input_hash = dict_to_uuid(self.ks_input_params)
 
-    def run_modules(self):
+    def run_modules(self, modules_to_run=None):
         if self._run_CatGT and not self._CatGT_finished:
             self.run_CatGT()
 
@@ -236,7 +235,9 @@ class SGLXKilosortPipeline:
             "-input.json", "-run_modules-log.txt"
         )
 
-        for module in self._modules:
+        modules = modules_to_run or self._modules
+
+        for module in modules:
             module_status = self._get_module_status(module)
             if module_status["completion_time"] is not None:
                 continue
@@ -312,13 +313,11 @@ class SGLXKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            outdated_files = [
-                f
-                for f in self._json_directory.glob("*")
+            [
+                f.unlink()
+                for f in self._ks_output_dir.rglob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
-            for f in outdated_files:
-                f.unlink()
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
@@ -414,7 +413,6 @@ class OpenEphysKilosortPipeline:
     def __init__(
         self, npx_input_dir: str, ks_output_dir: str, params: dict, KS2ver: str
     ):
-
         self._npx_input_dir = pathlib.Path(npx_input_dir)
 
         self._ks_output_dir = pathlib.Path(ks_output_dir)
@@ -499,7 +497,7 @@ class OpenEphysKilosortPipeline:
 
         self._modules_input_hash = dict_to_uuid(self.ks_input_params)
 
-    def run_modules(self):
+    def run_modules(self, modules_to_run=None):
         print("---- Running Modules ----")
         self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
@@ -507,7 +505,9 @@ class OpenEphysKilosortPipeline:
             "-input.json", "-run_modules-log.txt"
         )
 
-        for module in self._modules:
+        modules = modules_to_run or self._modules
+
+        for module in modules:
             module_status = self._get_module_status(module)
             if module_status["completion_time"] is not None:
                 continue
@@ -619,13 +619,11 @@ class OpenEphysKilosortPipeline:
         else:
             # handle cases of processing rerun on different parameters (the hash changes)
             # delete outdated files
-            outdated_files = [
-                f
-                for f in self._json_directory.glob("*")
+            [
+                f.unlink()
+                for f in self._ks_output_dir.rglob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
-            for f in outdated_files:
-                f.unlink()
 
             modules_status = {
                 module: {"start_time": None, "completion_time": None, "duration": None}
