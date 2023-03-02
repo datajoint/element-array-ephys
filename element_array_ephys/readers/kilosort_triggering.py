@@ -84,6 +84,13 @@ class SGLXKilosortPipeline:
         self._json_directory = self._ks_output_dir / "json_configs"
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
+        self._module_input_json = (
+            self._json_directory / f"{self._npx_input_dir.name}-input.json"
+        )
+        self._module_logfile = (
+            self._json_directory / f"{self._npx_input_dir.name}-run_modules-log.txt"
+        )
+
         self._CatGT_finished = False
         self.ks_input_params = None
         self._modules_input_hash = None
@@ -231,9 +238,7 @@ class SGLXKilosortPipeline:
         print("---- Running Modules ----")
         self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
-        module_logfile = module_input_json.replace(
-            "-input.json", "-run_modules-log.txt"
-        )
+        module_logfile = self._module_logfile.as_posix()
 
         modules = modules_to_run or self._modules
 
@@ -424,7 +429,13 @@ class OpenEphysKilosortPipeline:
         self._json_directory = self._ks_output_dir / "json_configs"
         self._json_directory.mkdir(parents=True, exist_ok=True)
 
-        self._median_subtraction_status = {}
+        self._module_input_json = (
+            self._json_directory / f"{self._npx_input_dir.name}-input.json"
+        )
+        self._module_logfile = (
+            self._json_directory / f"{self._npx_input_dir.name}-run_modules-log.txt"
+        )
+
         self.ks_input_params = None
         self._modules_input_hash = None
         self._modules_input_hash_fp = None
@@ -449,9 +460,6 @@ class OpenEphysKilosortPipeline:
 
     def generate_modules_input_json(self):
         self.make_chanmap_file()
-        self._module_input_json = (
-            self._json_directory / f"{self._npx_input_dir.name}-input.json"
-        )
 
         continuous_file = self._get_raw_data_filepaths()
 
@@ -501,9 +509,7 @@ class OpenEphysKilosortPipeline:
         print("---- Running Modules ----")
         self.generate_modules_input_json()
         module_input_json = self._module_input_json.as_posix()
-        module_logfile = module_input_json.replace(
-            "-input.json", "-run_modules-log.txt"
-        )
+        module_logfile = self._module_logfile.as_posix()
 
         modules = modules_to_run or self._modules
 
@@ -513,7 +519,9 @@ class OpenEphysKilosortPipeline:
                 continue
 
             if module == "median_subtraction":
-                median_subtraction_duration = self._get_median_subtraction_duration_from_log()
+                median_subtraction_duration = (
+                    self._get_median_subtraction_duration_from_log()
+                )
                 if median_subtraction_duration is not None:
                     median_subtraction_status = self._get_module_status(
                         "median_subtraction"
@@ -577,12 +585,9 @@ class OpenEphysKilosortPipeline:
         continuous_file = self._ks_output_dir / "continuous.dat"
         if continuous_file.exists():
             if raw_ap_fp.stat().st_mtime == continuous_file.stat().st_mtime:
-                    return continuous_file
+                return continuous_file
             else:
-                module_logfile = self._json_directory / self._module_input_json.name.replace(
-                    "-input.json", "-run_modules-log.txt"
-                )
-                if module_logfile.exists():
+                if self._module_logfile.exists():
                     return continuous_file
 
         shutil.copy2(raw_ap_fp, continuous_file)
@@ -681,11 +686,8 @@ class OpenEphysKilosortPipeline:
         if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
             # if the copied continuous.dat was actually modified,
             # median_subtraction may have been completed - let's check
-            module_logfile = self._json_directory / self._module_input_json.name.replace(
-                    "-input.json", "-run_modules-log.txt"
-                )
-            if module_logfile.exists():
-                with open(module_logfile, "r") as f:
+            if self._module_logfile.exists():
+                with open(self._module_logfile, "r") as f:
                     previous_line = ""
                     for line in f.readlines():
                         if line.startswith(
