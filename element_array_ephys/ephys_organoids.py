@@ -7,10 +7,11 @@ from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
+import intanrhsreader
 import numpy as np
 import pandas as pd
-from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
-import intanrhsreader
+from element_interface.utils import (dict_to_uuid, find_full_path,
+                                     find_root_directory)
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -159,8 +160,9 @@ class RawData(dj.Imported):
     """
 
     def make(self, key):
-        data_dir = get_ephys_root_data_dir()[0]
-        data_files = data_dir.glob(f"{key['induction_id']}*.rhs")
+        subject_id = key["induction_id"]
+        data_dir = get_ephys_root_data_dir()[0] / subject_id
+        data_files = data_dir.glob(f"{subject_id}*.rhs")
 
         # Loop through all the data files.
         for file in sorted(list(data_files)):
@@ -197,16 +199,17 @@ class EphysSessionInfo(dj.Imported):
         file = (RawData & key).fetch("file_path", order_by="start_time")[0]
         data = intanrhsreader.load_file(file)
         del data["header"], data["t"]
-        attribute_list = [
-            {
-                **key,
-                "attribute_name": k,
-                "attribute_blob": v,
-            }
-            for k, v in data.items()
-            if "data" not in k
-        ]  # don't insert data here
-        self.insert(attribute_list)
+        self.insert(
+            [
+                {
+                    **key,
+                    "attribute_name": k,
+                    "attribute_blob": v,
+                }
+                for k, v in data.items()
+                if "data" not in k
+            ]
+        )
 
 
 @schema
@@ -248,15 +251,13 @@ class LFP(dj.Imported):
                 header = data.pop("header")
                 lfp_sampling_rate = header["sample_rate"]
                 powerline_noise_freq = header["notch_filter_frequency"]  # in Hz
-                downsample_factor = int(
-                    lfp_sampling_rate / TARGET_SAMPLING_RATE
-                )
+                downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
 
                 channels = [
                     ch["native_channel_name"] for ch in data["amplifier_channels"]
                 ]  # channels with raw ephys traces
 
-            lfp = data["amplifier_data"][:, ::ds_factor]  # downsample
+            lfp = data["amplifier_data"][:, ::downsample_factor]  # downsample
 
             if lfp_concat.size == 0:
                 lfp_concat = lfp
@@ -276,7 +277,7 @@ class LFP(dj.Imported):
 
         # Single insert in loop to mitigate potential memory issue.
         for ch, lfp in zip(channels, lfp_concat):
-            # 50 Hz powerline noise removal
+            # Powerline noise removal
             b_notch, a_notch = signal.iirnotch(
                 w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
             )
@@ -1100,21 +1101,31 @@ class QualityMetrics(dj.Imported):
         self.Waveform.insert(metrics_list, ignore_extra_fields=True)
 
 
-def generate_electrode_config(
-    probe_type: str, electrode_keys: list, electrode_config_name: str
-) -> dict:
+def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
     """Generate and insert new ElectrodeConfig
 
     Args:
         probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
         electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
-        electrode_config_name (str): user-defined name of the probe configuration
 
     Returns:
         dict: representing a key of the probe.ElectrodeConfig table
     """
     # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
     electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
+
+    electrode_list = sorted([k["electrode"] for k in electrode_keys])
+    electrode_gaps = (
+        [-1]
+        + np.where(np.diff(electrode_list) > 1)[0].tolist()
+        + [len(electrode_list) - 1]
+    )
+    electrode_config_name = "; ".join(
+        [
+            f"{electrode_list[start + 1]}-{electrode_list[end]}"
+            for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
+        ]
+    )
 
     electrode_config_key = {"electrode_config_hash": electrode_config_hash}
 
