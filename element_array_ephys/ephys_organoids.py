@@ -140,7 +140,7 @@ class EphysSession(dj.Manual):
     definition = """
     -> Subject
     -> probe.ElectrodeConfig 
-    insertion_number            : int
+    insertion_number            : tinyint unsigned
     start_time                  : datetime
     end_time                    : datetime
     ---
