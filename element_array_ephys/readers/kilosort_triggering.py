@@ -315,7 +315,7 @@ class SGLXKilosortPipeline:
             # delete outdated files
             [
                 f.unlink()
-                for f in self._ks_output_dir.rglob("*")
+                for f in self._json_directory.glob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
 
@@ -621,7 +621,7 @@ class OpenEphysKilosortPipeline:
             # delete outdated files
             [
                 f.unlink()
-                for f in self._ks_output_dir.rglob("*")
+                for f in self._json_directory.glob("*")
                 if f.is_file() and f.name != self._module_input_json.name
             ]
 
