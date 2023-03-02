@@ -512,20 +512,20 @@ class OpenEphysKilosortPipeline:
             if module_status["completion_time"] is not None:
                 continue
 
-            if module == "median_subtraction" and self._median_subtraction_status:
-                median_subtraction_status = self._get_module_status(
-                    "median_subtraction"
-                )
-                median_subtraction_status["duration"] = self._median_subtraction_status[
-                    "duration"
-                ]
-                median_subtraction_status["completion_time"] = datetime.strptime(
-                    median_subtraction_status["start_time"], "%Y-%m-%d %H:%M:%S.%f"
-                ) + timedelta(seconds=median_subtraction_status["duration"])
-                self._update_module_status(
-                    {"median_subtraction": median_subtraction_status}
-                )
-                continue
+            if module == "median_subtraction":
+                median_subtraction_duration = self._get_median_subtraction_duration_from_log()
+                if median_subtraction_duration is not None:
+                    median_subtraction_status = self._get_module_status(
+                        "median_subtraction"
+                    )
+                    median_subtraction_status["duration"] = median_subtraction_duration
+                    median_subtraction_status["completion_time"] = datetime.strptime(
+                        median_subtraction_status["start_time"], "%Y-%m-%d %H:%M:%S.%f"
+                    ) + timedelta(seconds=median_subtraction_status["duration"])
+                    self._update_module_status(
+                        {"median_subtraction": median_subtraction_status}
+                    )
+                    continue
 
             module_output_json = self._get_module_output_json_filename(module)
             command = [
@@ -576,31 +576,14 @@ class OpenEphysKilosortPipeline:
         assert "depth_estimation" in self._modules
         continuous_file = self._ks_output_dir / "continuous.dat"
         if continuous_file.exists():
-            if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
-                # if the copied continuous.dat was actually modified,
-                # median_subtraction may have been completed - let's check
-                module_input_json = self._module_input_json.as_posix()
-                module_logfile = module_input_json.replace(
+            if raw_ap_fp.stat().st_mtime == continuous_file.stat().st_mtime:
+                    return continuous_file
+            else:
+                module_logfile = self._json_directory / self._module_input_json.name.replace(
                     "-input.json", "-run_modules-log.txt"
                 )
-                if pathlib.Path(module_logfile).exists():
-                    with open(module_logfile, "r") as f:
-                        previous_line = ""
-                        for line in f.readlines():
-                            if line.startswith(
-                                "ecephys spike sorting: median subtraction module"
-                            ) and previous_line.startswith("Total processing time:"):
-                                # regex to search for the processing duration - a float value
-                                duration = int(
-                                    re.search("\d+\.?\d+", previous_line).group()
-                                )
-                                self._median_subtraction_status["duration"] = duration
-                                return continuous_file
-                            previous_line = line
-                else: 
-                    # if module_logfile does not exist, the continuous.dat file must be outdated
-                    continuous_file.unlink()
-                    (self._ks_output_dir / "residuals.dat").unlink(missing_ok=True)
+                if module_logfile.exists():
+                    return continuous_file
 
         shutil.copy2(raw_ap_fp, continuous_file)
         return continuous_file
@@ -691,6 +674,29 @@ class OpenEphysKilosortPipeline:
                 "total_duration": total_duration,
             }
         )
+
+    def _get_median_subtraction_duration_from_log(self):
+        raw_ap_fp = self._npx_input_dir / "continuous.dat"
+        continuous_file = self._ks_output_dir / "continuous.dat"
+        if raw_ap_fp.stat().st_mtime < continuous_file.stat().st_mtime:
+            # if the copied continuous.dat was actually modified,
+            # median_subtraction may have been completed - let's check
+            module_logfile = self._json_directory / self._module_input_json.name.replace(
+                    "-input.json", "-run_modules-log.txt"
+                )
+            if module_logfile.exists():
+                with open(module_logfile, "r") as f:
+                    previous_line = ""
+                    for line in f.readlines():
+                        if line.startswith(
+                            "ecephys spike sorting: median subtraction module"
+                        ) and previous_line.startswith("Total processing time:"):
+                            # regex to search for the processing duration - a float value
+                            duration = int(
+                                re.search("\d+\.?\d+", previous_line).group()
+                            )
+                            return duration
+                        previous_line = line
 
 
 def run_pykilosort(
