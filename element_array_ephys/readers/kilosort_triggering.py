@@ -583,7 +583,7 @@ class OpenEphysKilosortPipeline:
                 module_logfile = module_input_json.replace(
                     "-input.json", "-run_modules-log.txt"
                 )
-                if module_logfile.exists():
+                if pathlib.Path(module_logfile).exists():
                     with open(module_logfile, "r") as f:
                         previous_line = ""
                         for line in f.readlines():
