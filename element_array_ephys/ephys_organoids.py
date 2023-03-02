@@ -248,9 +248,9 @@ class LFP(dj.Imported):
                 header = data.pop("header")
                 lfp_sampling_rate = header["sample_rate"]
                 powerline_noise_freq = header["notch_filter_frequency"]  # in Hz
-                ds_factor = int(
+                downsample_factor = int(
                     lfp_sampling_rate / TARGET_SAMPLING_RATE
-                )  # downsampling factor
+                )
 
                 channels = [
                     ch["native_channel_name"] for ch in data["amplifier_channels"]
