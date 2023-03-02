@@ -9,9 +9,8 @@ from decimal import Decimal
 import datajoint as dj
 import numpy as np
 import pandas as pd
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
-from intanrhsreader import load_file
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
+import intanrhsreader
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -139,12 +138,13 @@ class EphysSession(dj.Manual):
 
     definition = """
     -> Subject
-    -> probe.ElectrodeConfig 
     insertion_number            : tinyint unsigned
     start_time                  : datetime
     end_time                    : datetime
     ---
-    session_type                : enum("lfp", "spike_sorting", "both")  # analysis method
+    -> probe.Probe 
+    -> probe.ElectrodeConfig 
+    session_type                : enum("lfp", "spike_sorting", "both") # analysis method
     """
 
 
@@ -181,6 +181,35 @@ class RawData(dj.Imported):
 
 
 @schema
+class EphysSessionInfo(dj.Imported):
+    definition = """
+    -> EphysSession
+    attribute_name      : varchar(32)
+    ---
+    attribute_blob=null : longblob
+    """
+
+    @property
+    def key_source(self):
+        return EphysSession - "session_type='spike_sorting'"
+
+    def make(self, key):
+        file = (RawData & key).fetch("file_path", order_by="start_time")[0]
+        data = intanrhsreader.load_file(file)
+        del data["header"], data["t"]
+        attribute_list = [
+            {
+                **key,
+                "attribute_name": k,
+                "attribute_blob": v,
+            }
+            for k, v in data.items()
+            if "data" not in k
+        ]  # don't insert data here
+        self.insert(attribute_list)
+
+
+@schema
 class LFP(dj.Imported):
     definition = """
     -> EphysSession
@@ -189,21 +218,12 @@ class LFP(dj.Imported):
     header               : longblob
     """
 
-    class Attributes(dj.Part):
-        definition = """
-        # All non-data attributes read from raw data file.
-        -> master
-        attribute_name      : varchar(32)
-        ---
-        attribute_blob=null : longblob
-        """
-
     class Trace(dj.Part):
         definition = """
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp                 : blob@external-raw 
+        lfp              : blob@external-raw 
         """
 
     @property
@@ -214,32 +234,23 @@ class LFP(dj.Imported):
         files = (
             RawData
             & f"start_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
-        ).fetch("file_path")
+        ).fetch("file_path", order_by="start_time")
 
         TARGET_SAMPLING_RATE = 2000
         header = {}
         lfp_concat = np.array([], dtype=np.float64)  # initialize array
 
         for file in files:
-            data = load_file(file)
+            data = intanrhsreader.load_file(file)
 
             if not header:
                 # Fetch this from the first file
                 header = data.pop("header")
                 lfp_sampling_rate = header["sample_rate"]
+                powerline_noise_freq = header["notch_filter_frequency"]  # in Hz
                 ds_factor = int(
                     lfp_sampling_rate / TARGET_SAMPLING_RATE
                 )  # downsampling factor
-
-                attribute_list = [
-                    {
-                        **key,
-                        "attribute_name": k,
-                        "attribute_blob": v,
-                    }
-                    for k, v in data.items()
-                    if "data" not in k
-                ]  # don't insert data here
 
                 channels = [
                     ch["native_channel_name"] for ch in data["amplifier_channels"]
@@ -261,22 +272,21 @@ class LFP(dj.Imported):
             }
         )
 
-        self.Attributes.insert(attribute_list)
-
-        electrode_query = probe.ElectrodeConfig.Electrode & key
+        electrode_query = EphysSession * probe.ElectrodeConfig.Electrode & key
 
         # Single insert in loop to mitigate potential memory issue.
         for ch, lfp in zip(channels, lfp_concat):
             # 50 Hz powerline noise removal
-            b_notch, a_notch = signal.iirnotch(w0=50, Q=30, fs=TARGET_SAMPLING_RATE)
+            b_notch, a_notch = signal.iirnotch(
+                w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
+            )
             lfp = signal.filtfilt(b_notch, a_notch, lfp)
 
             # Bandpass filter
             b_butter, a_butter = signal.butter(
-                N=4, Wn=[3, 300], btype="bandpass", fs=TARGET_SAMPLING_RATE
+                N=4, Wn=[0.5, 300], btype="bandpass", fs=TARGET_SAMPLING_RATE
             )
             lfp = signal.filtfilt(b_butter, a_butter, lfp)
-            # https://www.sciencedirect.com/science/article/pii/S221112471930172X
 
             econf_hash, probe_type, electrode = (
                 electrode_query & f"channel='{ch}'"
@@ -1090,113 +1100,35 @@ class QualityMetrics(dj.Imported):
         self.Waveform.insert(metrics_list, ignore_extra_fields=True)
 
 
-# ---------------- HELPER FUNCTIONS ----------------
-
-
-# def get_spikeglx_meta_filepath(ephys_recording_key: dict) -> str:
-#     """Get spikeGLX data filepath."""
-#     # attempt to retrieve from EphysSession.EphysFile
-#     spikeglx_meta_filepath = pathlib.Path(
-#         (
-#             EphysSession.EphysFile
-#             & ephys_recording_key
-#             & 'file_path LIKE "%.ap.meta"'
-#         ).fetch1("file_path")
-#     )
-
-#     try:
-#         spikeglx_meta_filepath = find_full_path(
-#             get_ephys_root_data_dir(), spikeglx_meta_filepath
-#         )
-#     except FileNotFoundError:
-#         # if not found, search in session_dir again
-#         if not spikeglx_meta_filepath.exists():
-#             session_dir = find_full_path(
-#                 get_ephys_root_data_dir(), get_session_directory(ephys_recording_key)
-#             )
-#             inserted_probe_serial_number = (
-#                 ProbeInsertion * probe.Probe & ephys_recording_key
-#             ).fetch1("probe")
-
-#             spikeglx_meta_filepaths = [fp for fp in session_dir.rglob("*.ap.meta")]
-#             for meta_filepath in spikeglx_meta_filepaths:
-#                 spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-#                 if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
-#                     spikeglx_meta_filepath = meta_filepath
-#                     break
-#             else:
-#                 raise FileNotFoundError(
-#                     "No SpikeGLX data found for probe insertion: {}".format(
-#                         ephys_recording_key
-#                     )
-#                 )
-
-#     return spikeglx_meta_filepath
-
-
-def get_openephys_probe_data(ephys_recording_key: dict) -> list:
-    """Get OpenEphys probe data from file."""
-    inserted_probe_serial_number = (
-        ProbeInsertion * probe.Probe & ephys_recording_key
-    ).fetch1("probe")
-    session_dir = find_full_path(
-        get_ephys_root_data_dir(), get_session_directory(ephys_recording_key)
-    )
-    loaded_oe = openephys.OpenEphys(session_dir)
-    probe_data = loaded_oe.probes[inserted_probe_serial_number]
-
-    # explicitly garbage collect "loaded_oe"
-    # as these may have large memory footprint and may not be cleared fast enough
-    del loaded_oe
-    gc.collect()
-
-    return probe_data
-
-
-def get_neuropixels_channel2electrode_map(
-    ephys_recording_key: dict, acq_software: str
+def generate_electrode_config(
+    probe_type: str, electrode_keys: list, electrode_config_name: str
 ) -> dict:
-    """Get the channel map for neuropixels probe."""
-    if acq_software == "SpikeGLX":
-        spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
-        spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
-        electrode_config_key = (
-            EphysSession * probe.ElectrodeConfig & ephys_recording_key
-        ).fetch1("KEY")
+    """Generate and insert new ElectrodeConfig
 
-        electrode_query = (
-            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-            & electrode_config_key
+    Args:
+        probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
+        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
+        electrode_config_name (str): user-defined name of the probe configuration
+
+    Returns:
+        dict: representing a key of the probe.ElectrodeConfig table
+    """
+    # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
+    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
+
+    electrode_config_key = {"electrode_config_hash": electrode_config_hash}
+
+    # ---- make new ElectrodeConfig if needed ----
+    if not probe.ElectrodeConfig & electrode_config_key:
+        probe.ElectrodeConfig.insert1(
+            {
+                **electrode_config_key,
+                "probe_type": probe_type,
+                "electrode_config_name": electrode_config_name,
+            }
+        )
+        probe.ElectrodeConfig.Electrode.insert(
+            {**electrode_config_key, **electrode} for electrode in electrode_keys
         )
 
-        probe_electrodes = {
-            (shank, shank_col, shank_row): key
-            for key, shank, shank_col, shank_row in zip(
-                *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-            )
-        }
-
-        channel2electrode_map = {
-            recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
-            for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
-                spikeglx_meta.shankmap["data"]
-            )
-        }
-    elif acq_software == "Open Ephys":
-        probe_dataset = get_openephys_probe_data(ephys_recording_key)
-
-        electrode_query = (
-            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysSession
-            & ephys_recording_key
-        )
-
-        probe_electrodes = {
-            key["electrode"]: key for key in electrode_query.fetch("KEY")
-        }
-
-        channel2electrode_map = {
-            channel_idx: probe_electrodes[channel_idx]
-            for channel_idx in probe_dataset.ap_meta["channels_indices"]
-        }
-
-    return channel2electrode_map
+    return electrode_config_key

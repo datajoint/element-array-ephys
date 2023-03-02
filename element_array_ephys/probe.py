@@ -89,7 +89,7 @@ class ElectrodeConfig(dj.Lookup):
     electrode_config_hash: uuid
     ---
     -> ProbeType
-    electrode_config_name: varchar(30)
+    electrode_config_name: varchar(4000)  # user friendly name
     """
 
     class Electrode(dj.Part):
@@ -156,27 +156,3 @@ def build_electrode_layouts(
             zip(shank_cols, shank_rows, x_coords, y_coords)
         )
     ]
-
-
-def generate_electrode_config(
-    probe_type: str, electrode_keys: list, electrode_config_name: str
-) -> dict:
-    # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
-    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
-
-    electrode_config_key = {"electrode_config_hash": electrode_config_hash}
-
-    # ---- make new ElectrodeConfig if needed ----
-    if not ElectrodeConfig & electrode_config_key:
-        ElectrodeConfig.insert1(
-            {
-                **electrode_config_key,
-                "probe_type": probe_type,
-                "electrode_config_name": electrode_config_name,
-            }
-        )
-        ElectrodeConfig.Electrode.insert(
-            {**electrode_config_key, **electrode} for electrode in electrode_keys
-        )
-
-    return electrode_config_key
