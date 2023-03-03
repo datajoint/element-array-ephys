@@ -169,9 +169,9 @@ class RawData(dj.Imported):
     """
 
     def make(self, key):
-        subject_id = key["experiment_id"]
-        data_dir = get_ephys_root_data_dir()[0] / subject_id
-        data_files = data_dir.glob(f"{subject_id}*.rhs")
+        
+        session_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
+        data_files = session_dir.glob(f"*.rhs")
 
         for file in sorted(list(data_files)):
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
@@ -183,7 +183,7 @@ class RawData(dj.Imported):
                 {
                     **key,
                     "start_time": start_time,
-                    "file_name": file.relative_to(data_dir),
+                    "file_name": file.relative_to(session_dir),
                     "file_path": file,
                 }
             )
