@@ -246,7 +246,7 @@ class LFP(dj.Imported):
             & f"start_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file_path", order_by="start_time")
 
-        TARGET_SAMPLING_RATE = 2000
+        TARGET_SAMPLING_RATE = 2500
         header = {}
         lfp_concat = np.array([], dtype=np.float64)
 
@@ -289,7 +289,7 @@ class LFP(dj.Imported):
 
             # Bandpass filter
             b_butter, a_butter = signal.butter(
-                N=4, Wn=500, btype="lowpass", fs=TARGET_SAMPLING_RATE
+                N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
             )
             lfp = signal.filtfilt(b_butter, a_butter, lfp)
 
