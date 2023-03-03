@@ -134,7 +134,17 @@ class AcquisitionSoftware(dj.Lookup):
 
 @schema
 class EphysSession(dj.Manual):
-    """User defined ephys session for downstream analysis."""
+    """User defined ephys session for downstream analysis.
+        
+        Attributes:
+            Subject (foreign key): Subject primary key.
+            insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
+            start_time (datetime): Start date and time of session used for analysis.
+            end_time (datetime): End date and time of session used for analysis.
+            probe.Probe (foreign key): probe.Probe primary key.
+            probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
+            session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
+    """
 
     definition = """
     -> Subject
