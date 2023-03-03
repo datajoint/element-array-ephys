@@ -377,12 +377,12 @@ class SGLXKilosortPipeline:
         )
 
         for m in self._modules:
-            first_start_time = m["start_time"]
+            first_start_time = modules_status[m]["start_time"]
             if first_start_time is not None:
                 break
 
         for m in self._modules[::-1]:
-            last_completion_time = m["completion_time"]
+            last_completion_time = modules_status[m]["completion_time"]
             if last_completion_time is not None:
                 break
 
@@ -394,9 +394,7 @@ class SGLXKilosortPipeline:
                 last_completion_time,
                 "%Y-%m-%d %H:%M:%S.%f",
             )
-            - datetime.strptime(
-                first_start_time, "%Y-%m-%d %H:%M:%S.%f"
-            )
+            - datetime.strptime(first_start_time, "%Y-%m-%d %H:%M:%S.%f")
         ).total_seconds()
         self._update_module_status(
             {
@@ -680,12 +678,12 @@ class OpenEphysKilosortPipeline:
         )
 
         for m in self._modules:
-            first_start_time = m["start_time"]
+            first_start_time = modules_status[m]["start_time"]
             if first_start_time is not None:
                 break
 
         for m in self._modules[::-1]:
-            last_completion_time = m["completion_time"]
+            last_completion_time = modules_status[m]["completion_time"]
             if last_completion_time is not None:
                 break
 
@@ -697,9 +695,7 @@ class OpenEphysKilosortPipeline:
                 last_completion_time,
                 "%Y-%m-%d %H:%M:%S.%f",
             )
-            - datetime.strptime(
-                first_start_time, "%Y-%m-%d %H:%M:%S.%f"
-            )
+            - datetime.strptime(first_start_time, "%Y-%m-%d %H:%M:%S.%f")
         ).total_seconds()
         self._update_module_status(
             {
