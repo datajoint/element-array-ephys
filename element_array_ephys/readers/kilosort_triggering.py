@@ -375,13 +375,27 @@ class SGLXKilosortPipeline:
             for k, v in modules_status.items()
             if k not in ("cumulative_execution_duration", "total_duration")
         )
+
+        for m in self._modules:
+            first_start_time = m["start_time"]
+            if first_start_time is not None:
+                break
+
+        for m in self._modules[::-1]:
+            last_completion_time = m["completion_time"]
+            if last_completion_time is not None:
+                break
+
+        if first_start_time is None or last_completion_time is None:
+            return
+
         total_duration = (
             datetime.strptime(
-                modules_status[self._modules[-1]]["completion_time"],
+                last_completion_time,
                 "%Y-%m-%d %H:%M:%S.%f",
             )
             - datetime.strptime(
-                modules_status[self._modules[0]]["start_time"], "%Y-%m-%d %H:%M:%S.%f"
+                first_start_time, "%Y-%m-%d %H:%M:%S.%f"
             )
         ).total_seconds()
         self._update_module_status(
@@ -664,13 +678,27 @@ class OpenEphysKilosortPipeline:
             for k, v in modules_status.items()
             if k not in ("cumulative_execution_duration", "total_duration")
         )
+
+        for m in self._modules:
+            first_start_time = m["start_time"]
+            if first_start_time is not None:
+                break
+
+        for m in self._modules[::-1]:
+            last_completion_time = m["completion_time"]
+            if last_completion_time is not None:
+                break
+
+        if first_start_time is None or last_completion_time is None:
+            return
+
         total_duration = (
             datetime.strptime(
-                modules_status[self._modules[-1]]["completion_time"],
+                last_completion_time,
                 "%Y-%m-%d %H:%M:%S.%f",
             )
             - datetime.strptime(
-                modules_status[self._modules[0]]["start_time"], "%Y-%m-%d %H:%M:%S.%f"
+                first_start_time, "%Y-%m-%d %H:%M:%S.%f"
             )
         ).total_seconds()
         self._update_module_status(
