@@ -10,8 +10,7 @@ import datajoint as dj
 import intanrhsreader
 import numpy as np
 import pandas as pd
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -257,12 +256,9 @@ class LFP(dj.Imported):
                     ch["native_channel_name"] for ch in data["amplifier_channels"]
                 ]  # channels with raw ephys traces
 
+            # Concatenate the signal
             lfp = data["amplifier_data"][:, ::downsample_factor]  # downsample
-
-            if lfp_concat.size == 0:
-                lfp_concat = lfp
-            else:
-                lfp_concat = np.hstack((lfp_concat, lfp))
+            lfp_concat = lfp if lfp_concat.size == 0 else np.hstack((lfp_concat, lfp))
             del data, lfp
 
         self.insert1(
