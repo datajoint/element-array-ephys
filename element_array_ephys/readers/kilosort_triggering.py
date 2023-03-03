@@ -229,7 +229,7 @@ class SGLXKilosortPipeline:
             **params,
         )
 
-        self._modules_input_hash = dict_to_uuid(self.ks_input_params)
+        self._modules_input_hash = dict_to_uuid(dict(self._params, KS2ver=self._KS2ver))
 
     def run_modules(self, modules_to_run=None):
         if self._run_CatGT and not self._CatGT_finished:
@@ -515,7 +515,7 @@ class OpenEphysKilosortPipeline:
             **params,
         )
 
-        self._modules_input_hash = dict_to_uuid(self.ks_input_params)
+        self._modules_input_hash = dict_to_uuid(dict(self._params, KS2ver=self._KS2ver))
 
     def run_modules(self, modules_to_run=None):
         print("---- Running Modules ----")
