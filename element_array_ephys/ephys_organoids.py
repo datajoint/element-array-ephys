@@ -169,13 +169,11 @@ class RawData(dj.Imported):
     """
 
     def make(self, key):
-        subject_id = key["induction_id"]
+        subject_id = key["experiment_id"]
         data_dir = get_ephys_root_data_dir()[0] / subject_id
         data_files = data_dir.glob(f"{subject_id}*.rhs")
 
-        # Loop through all the data files.
         for file in sorted(list(data_files)):
-            # Load data
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
             start_time = np.datetime64(
                 datetime.strptime(start_time, "%y%m%d_%H%M%S")
@@ -250,7 +248,7 @@ class LFP(dj.Imported):
 
         TARGET_SAMPLING_RATE = 2000
         header = {}
-        lfp_concat = np.array([], dtype=np.float64)  # initialize array
+        lfp_concat = np.array([], dtype=np.float64)
 
         for file in files:
             data = intanrhsreader.load_file(file)
@@ -291,7 +289,7 @@ class LFP(dj.Imported):
 
             # Bandpass filter
             b_butter, a_butter = signal.butter(
-                N=4, Wn=[0.5, 300], btype="bandpass", fs=TARGET_SAMPLING_RATE
+                N=4, Wn=500, btype="lowpass", fs=TARGET_SAMPLING_RATE
             )
             lfp = signal.filtfilt(b_butter, a_butter, lfp)
 
