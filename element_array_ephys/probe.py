@@ -34,7 +34,9 @@ class ProbeType(dj.Lookup):
 
     definition = """
     # Type of probe, with specific electrodes geometry defined
-    probe_type: varchar(32)  # e.g. neuropixels_1.0
+    probe_type      : varchar(32) # e.g. neuropixels_1.0
+    ---
+    probe_full_name : varchar(64)
     """
 
     class Electrode(dj.Part):
