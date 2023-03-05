@@ -1,4 +1,3 @@
-import gc
 import importlib
 import inspect
 import pathlib
@@ -10,7 +9,8 @@ import datajoint as dj
 import intanrhsreader
 import numpy as np
 import pandas as pd
-from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
+from element_interface.utils import (dict_to_uuid, find_full_path,
+                                     find_root_directory)
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -135,15 +135,15 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class EphysSession(dj.Manual):
     """User defined ephys session for downstream analysis.
-        
-        Attributes:
-            Subject (foreign key): Subject primary key.
-            insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
-            start_time (datetime): Start date and time of session used for analysis.
-            end_time (datetime): End date and time of session used for analysis.
-            probe.Probe (foreign key): probe.Probe primary key.
-            probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
-            session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
+
+    Attributes:
+        Subject (foreign key): Subject primary key.
+        insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
+        start_time (datetime): Start date and time of session used for analysis.
+        end_time (datetime): End date and time of session used for analysis.
+        probe.Probe (foreign key): probe.Probe primary key.
+        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
+        session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
     """
 
     definition = """
@@ -169,8 +169,9 @@ class RawData(dj.Imported):
     """
 
     def make(self, key):
-        
-        session_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
+        session_dir = find_full_path(
+            get_ephys_root_data_dir(), get_session_directory(key)
+        )
         data_files = session_dir.glob(f"*.rhs")
 
         for file in sorted(list(data_files)):
@@ -197,10 +198,6 @@ class EphysSessionInfo(dj.Imported):
     ---
     attribute_blob=null : longblob
     """
-
-    @property
-    def key_source(self):
-        return EphysSession - "session_type='spike_sorting'"
 
     def make(self, key):
         file = (RawData & key).fetch("file_path", order_by="start_time")[0]
@@ -287,7 +284,7 @@ class LFP(dj.Imported):
             )
             lfp = signal.filtfilt(b_notch, a_notch, lfp)
 
-            # Bandpass filter
+            # Lowpass filter
             b_butter, a_butter = signal.butter(
                 N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
             )
