@@ -10,7 +10,7 @@ The follow pipeline features intermediary tables:
     - create recording extractor and link it to a probe
     - bandpass filtering
     - common mode referencing
-2. ClusteringModule - kilosort (MATLAB) - requires GPU and docker/singularity containers
+2. SIClustering - kilosort (MATLAB) - requires GPU and docker/singularity containers
     - supports kilosort 2.0, 2.5 or 3.0 (https://github.com/MouseLand/Kilosort.git)
 3. PostProcessing - for postprocessing steps (no GPU required)
     - create waveform extractor object
@@ -357,7 +357,7 @@ class PostProcessing(dj.Imported):
     """A processing table to handle each clustering task."""
 
     definition = """
-    -> ClusteringModule
+    -> SIClustering
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # (hour) execution duration
@@ -426,11 +426,11 @@ class PostProcessing(dj.Imported):
         elif acq_software == "Open Ephys":
             sorting_file = kilosort_dir / "sorting_kilosort"
             recording_file = kilosort_dir / "sglx_recording_cmr.json"
-            sglx_si_recording = sic.load_extractor(recording_file)
+            oe_si_recording = sic.load_extractor(recording_file)
             sorting_kilosort = sic.load_extractor(sorting_file)
 
             we_kilosort = si.WaveformExtractor.create(
-                sglx_si_recording, sorting_kilosort, "waveforms", remove_if_exists=True
+                oe_si_recording, sorting_kilosort, "waveforms", remove_if_exists=True
             )
             we_kilosort.set_params(ms_before=3.0, ms_after=4.0, max_spikes_per_unit=500)
             we_kilosort.run_extract_waveforms(n_jobs=-1, chunk_size=30000)
@@ -471,6 +471,9 @@ class PostProcessing(dj.Imported):
             sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
             we_savedir = kilosort_dir / "we_kilosort"
             we_kilosort.save(we_savedir, n_jobs=-1, chunk_size=30000)
+
+            metrics_savefile = kilosort_dir / "metrics.csv"
+            metrics.to_csv(metrics_savefile)
 
         self.insert1(
             {
