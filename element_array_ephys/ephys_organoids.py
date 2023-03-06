@@ -159,7 +159,7 @@ class EphysSession(dj.Manual):
 
 
 @schema
-class RawData(dj.Imported):
+class RawData(dj.Manual):
     definition = """
     -> Subject
     start_time        : datetime # date and time of file creation
@@ -167,28 +167,7 @@ class RawData(dj.Imported):
     file_name         : varchar(32) # name of the file
     file_path         : filepath@external-raw  
     """
-
-    def make(self, key):
-        subject_dir = find_full_path(
-            get_ephys_root_data_dir(), get_subject_directory(key)
-        )
-        data_files = subject_dir.glob("*.rhs")
-
-        for file in sorted(list(data_files)):
-            start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
-            start_time = np.datetime64(
-                datetime.strptime(start_time, "%y%m%d_%H%M%S")
-            )  # start time based on the file name
-
-            self.insert1(
-                {
-                    **key,
-                    "start_time": start_time,
-                    "file_name": file.relative_to(subject_dir),
-                    "file_path": file,
-                }
-            )
-
+    
 
 @schema
 class EphysSessionInfo(dj.Imported):
