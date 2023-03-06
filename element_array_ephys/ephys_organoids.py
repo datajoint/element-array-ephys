@@ -169,8 +169,8 @@ class RawData(dj.Imported):
     """
 
     def make(self, key):
-        session_dir = find_full_path(
-            get_ephys_root_data_dir(), get_session_directory(key)
+        subject_dir = find_full_path(
+            get_ephys_root_data_dir(), get_subject_directory(key)
         )
         data_files = session_dir.glob("*.rhs")
 
