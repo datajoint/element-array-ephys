@@ -172,7 +172,7 @@ class RawData(dj.Imported):
         session_dir = find_full_path(
             get_ephys_root_data_dir(), get_session_directory(key)
         )
-        data_files = session_dir.glob(f"*.rhs")
+        data_files = session_dir.glob("*.rhs")
 
         for file in sorted(list(data_files)):
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
