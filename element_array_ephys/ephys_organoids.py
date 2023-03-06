@@ -239,7 +239,7 @@ class LFP(dj.Imported):
 
     def make(self, key):
         files = (
-            RawData
+            RawData & key
             & f"start_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file_path", order_by="start_time")
 
