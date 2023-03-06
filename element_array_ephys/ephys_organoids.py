@@ -46,7 +46,7 @@ def activate(
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
-        get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
+        get_subject_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
     """
 
@@ -92,7 +92,7 @@ def get_ephys_root_data_dir() -> list:
     return root_directories
 
 
-def get_session_directory(session_key: dict) -> str:
+def get_subject_directory(session_key: dict) -> str:
     """Retrieve the session directory with Neuropixels for the given session.
 
     Args:
@@ -101,7 +101,7 @@ def get_session_directory(session_key: dict) -> str:
     Returns:
         A string for the path to the session directory.
     """
-    return _linking_module.get_session_directory(session_key)
+    return _linking_module.get_subject_directory(session_key)
 
 
 def get_processed_root_data_dir() -> str:
@@ -172,7 +172,7 @@ class RawData(dj.Imported):
         subject_dir = find_full_path(
             get_ephys_root_data_dir(), get_subject_directory(key)
         )
-        data_files = session_dir.glob("*.rhs")
+        data_files = subject_dir.glob("*.rhs")
 
         for file in sorted(list(data_files)):
             start_time = re.search(r".*_(\d{6}_\d{6})", file.stem).groups()[0]
@@ -184,7 +184,7 @@ class RawData(dj.Imported):
                 {
                     **key,
                     "start_time": start_time,
-                    "file_name": file.relative_to(session_dir),
+                    "file_name": file.relative_to(subject_dir),
                     "file_path": file,
                 }
             )
@@ -462,11 +462,11 @@ class ClusteringTask(dj.Manual):
 
         Returns:
             Expected clustering_output_dir based on the following convention:
-                processed_dir / session_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
+                processed_dir / subject_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
                 e.g.: sub4/sess1/probe_2/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
-        sess_dir = find_full_path(get_ephys_root_data_dir(), get_session_directory(key))
+        sess_dir = find_full_path(get_ephys_root_data_dir(), get_subject_directory(key))
         root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
 
         method = (
@@ -937,10 +937,10 @@ class WaveformSet(dj.Imported):
                 spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
                 neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             elif acq_software == "Open Ephys":
-                session_dir = find_full_path(
-                    get_ephys_root_data_dir(), get_session_directory(key)
+                subject_dir = find_full_path(
+                    get_ephys_root_data_dir(), get_subject_directory(key)
                 )
-                openephys_dataset = openephys.OpenEphys(session_dir)
+                openephys_dataset = openephys.OpenEphys(subject_dir)
                 neuropixels_recording = openephys_dataset.probes[probe_serial_number]
 
             def yield_unit_waveforms():
