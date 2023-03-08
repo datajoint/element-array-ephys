@@ -139,7 +139,7 @@ class PreProcessing(dj.Imported):
         # params["fs"] = params["sample_rate"]
 
         default_params = si.get_default_sorter_params(sorter_name)
-        preprocess_list = params.pop("PreProcessing_params")
+        # preprocess_list = params.pop("PreProcessing_params")
 
         if acq_software == "SpikeGLX":
             # sglx_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
@@ -173,7 +173,7 @@ class PreProcessing(dj.Imported):
             save_file_path = kilosort_dir / save_file_name
             sglx_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
 
-            sglx_si_recording = run_IBLdestriping(sglx_si_recording)
+            sglx_si_recording = mimic_catGT(sglx_si_recording)
 
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
@@ -208,17 +208,17 @@ class PreProcessing(dj.Imported):
             oe_si_recording.set_probe(probe=si_probe)
 
             # run preprocessing and save results to output folder
-            # Switch case to allow for specified preprocessing steps
-            oe_si_recording_filtered = sip.bandpass_filter(
-                oe_si_recording, freq_min=300, freq_max=6000
-            )
-            oe_recording_cmr = sip.common_reference(
-                oe_si_recording_filtered, reference="global", operator="median"
-            )
-
+            # # Switch case to allow for specified preprocessing steps
+            # oe_si_recording_filtered = sip.bandpass_filter(
+            #     oe_si_recording, freq_min=300, freq_max=6000
+            # )
+            # oe_recording_cmr = sip.common_reference(
+            #     oe_si_recording_filtered, reference="global", operator="median"
+            # )
+            oe_si_recording = mimic_IBLdestriping(oe_si_recording)
             save_file_name = "si_recording.pkl"
             save_file_path = kilosort_dir / save_file_name
-            oe_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
+            oe_si_recording.dump_to_pickle(file_path=save_file_path)
 
         self.insert1(
             {
@@ -506,6 +506,7 @@ def mimic_IBLdestriping_modified(recording):
     recording = si.common_reference(recording, operator="median", reference="global")
     return recording
 
+
 def mimic_IBLdestriping(recording):
     # From International Brain Laboratory. “Spike sorting pipeline for the International Brain Laboratory”. 4 May 2022. 9 Jun 2022.
     recording = si.highpass_filter(recording, freq_min=400.0)
@@ -513,14 +514,20 @@ def mimic_IBLdestriping(recording):
     # For IBL destriping interpolate bad channels
     recording = sip.interpolate_bad_channels(bad_channel_ids)
     recording = si.phase_shift(recording)
-    recording = si.highpass_spatial_filter(recording, operator="median", reference="global")
     # For IBL destriping use highpass_spatial_filter used instead of common reference
+    recording = si.highpass_spatial_filter(
+        recording, operator="median", reference="global"
+    )
     return recording
+
 
 def mimic_catGT(sglx_recording):
     sglx_recording = si.phase_shift(sglx_recording)
-    sglx_recording = si.common_reference(sglx_recording, operator="median", reference="global")
+    sglx_recording = si.common_reference(
+        sglx_recording, operator="median", reference="global"
+    )
     return sglx_recording
+
 
 ## Example SI parameter set
 """
