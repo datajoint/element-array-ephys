@@ -141,45 +141,6 @@ class PreProcessing(dj.Imported):
         default_params = si.get_default_sorter_params(sorter_name)
         preprocess_list = params.pop("PreProcessing_params")
 
-        # If else
-        # need to figure out ordering
-        if preprocess_list["Filter"]:
-            oe_si_recording = sip.FilterRecording(oe_si_recording)
-        elif preprocess_list["BandpassFilter"]:
-            oe_si_recording = sip.BandpassFilterRecording(oe_si_recording)
-        elif preprocess_list["HighpassFilter"]:
-            oe_si_recording = sip.HighpassFilterRecording(oe_si_recording)
-        elif preprocess_list["NormalizeByQuantile"]:
-            oe_si_recording = sip.NormalizeByQuantileRecording(oe_si_recording)
-        elif preprocess_list["Scale"]:
-            oe_si_recording = sip.ScaleRecording(oe_si_recording)
-        elif preprocess_list["Center"]:
-            oe_si_recording = sip.CenterRecording(oe_si_recording)
-        elif preprocess_list["ZScore"]:
-            oe_si_recording = sip.ZScoreRecording(oe_si_recording)
-        elif preprocess_list["Whiten"]:
-            oe_si_recording = sip.WhitenRecording(oe_si_recording)
-        elif preprocess_list["CommonReference"]:
-            oe_si_recording = sip.CommonReferenceRecording(oe_si_recording)
-        elif preprocess_list["PhaseShift"]:
-            oe_si_recording = sip.PhaseShiftRecording(oe_si_recording)
-        elif preprocess_list["Rectify"]:
-            oe_si_recording = sip.RectifyRecording(oe_si_recording)
-        elif preprocess_list["Clip"]:
-            oe_si_recording = sip.ClipRecording(oe_si_recording)
-        elif preprocess_list["BlankSaturation"]:
-            oe_si_recording = sip.BlankSaturationRecording(oe_si_recording)
-        elif preprocess_list["RemoveArtifacts"]:
-            oe_si_recording = sip.RemoveArtifactsRecording(oe_si_recording)
-        elif preprocess_list["RemoveBadChannels"]:
-            oe_si_recording = sip.RemoveBadChannelsRecording(oe_si_recording)
-        elif preprocess_list["ZeroChannelPad"]:
-            oe_si_recording = sip.ZeroChannelPadRecording(oe_si_recording)
-        elif preprocess_list["DeepInterpolation"]:
-            oe_si_recording = sip.DeepInterpolationRecording(oe_si_recording)
-        elif preprocess_list["Resample"]:
-            oe_si_recording = sip.ResampleRecording(oe_si_recording)
-
         if acq_software == "SpikeGLX":
             # sglx_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
             sglx_filepath = ephys.get_spikeglx_meta_filepath(key)
@@ -211,6 +172,8 @@ class PreProcessing(dj.Imported):
             save_file_name = "si_recording.pkl"
             save_file_path = kilosort_dir / save_file_name
             sglx_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
+
+            sglx_si_recording = run_IBLdestriping(sglx_si_recording)
 
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
@@ -491,6 +454,73 @@ class PostProcessing(dj.Imported):
             {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
         )
 
+
+# def runPreProcessList(preprocess_list, recording):
+#     # If else
+#     # need to figure out ordering
+#     if preprocess_list["Filter"]:
+#         recording = sip.FilterRecording(recording)
+#     if preprocess_list["BandpassFilter"]:
+#         recording = sip.BandpassFilterRecording(recording)
+#     if preprocess_list["HighpassFilter"]:
+#         recording = sip.HighpassFilterRecording(recording)
+#     if preprocess_list["NormalizeByQuantile"]:
+#         recording = sip.NormalizeByQuantileRecording(recording)
+#     if preprocess_list["Scale"]:
+#         recording = sip.ScaleRecording(recording)
+#     if preprocess_list["Center"]:
+#         recording = sip.CenterRecording(recording)
+#     if preprocess_list["ZScore"]:
+#         recording = sip.ZScoreRecording(recording)
+#     if preprocess_list["Whiten"]:
+#         recording = sip.WhitenRecording(recording)
+#     if preprocess_list["CommonReference"]:
+#         recording = sip.CommonReferenceRecording(recording)
+#     if preprocess_list["PhaseShift"]:
+#         recording = sip.PhaseShiftRecording(recording)
+#     elif preprocess_list["Rectify"]:
+#         recording = sip.RectifyRecording(recording)
+#     elif preprocess_list["Clip"]:
+#         recording = sip.ClipRecording(recording)
+#     elif preprocess_list["BlankSaturation"]:
+#         recording = sip.BlankSaturationRecording(recording)
+#     elif preprocess_list["RemoveArtifacts"]:
+#         recording = sip.RemoveArtifactsRecording(recording)
+#     elif preprocess_list["RemoveBadChannels"]:
+#         recording = sip.RemoveBadChannelsRecording(recording)
+#     elif preprocess_list["ZeroChannelPad"]:
+#         recording = sip.ZeroChannelPadRecording(recording)
+#     elif preprocess_list["DeepInterpolation"]:
+#         recording = sip.DeepInterpolationRecording(recording)
+#     elif preprocess_list["Resample"]:
+#         recording = sip.ResampleRecording(recording)
+
+
+def mimic_IBLdestriping_modified(recording):
+    # From SpikeInterface Implementation (https://spikeinterface.readthedocs.io/en/latest/how_to/analyse_neuropixels.html)
+    recording = si.highpass_filter(recording, freq_min=400.0)
+    bad_channel_ids, channel_labels = si.detect_bad_channels(recording)
+    # For IBL destriping interpolate bad channels
+    recording = recording.remove_channels(bad_channel_ids)
+    recording = si.phase_shift(recording)
+    recording = si.common_reference(recording, operator="median", reference="global")
+    return recording
+
+def mimic_IBLdestriping(recording):
+    # From International Brain Laboratory. “Spike sorting pipeline for the International Brain Laboratory”. 4 May 2022. 9 Jun 2022.
+    recording = si.highpass_filter(recording, freq_min=400.0)
+    bad_channel_ids, channel_labels = si.detect_bad_channels(recording)
+    # For IBL destriping interpolate bad channels
+    recording = sip.interpolate_bad_channels(bad_channel_ids)
+    recording = si.phase_shift(recording)
+    recording = si.highpass_spatial_filter(recording, operator="median", reference="global")
+    # For IBL destriping use highpass_spatial_filter used instead of common reference
+    return recording
+
+def mimic_catGT(sglx_recording):
+    sglx_recording = si.phase_shift(sglx_recording)
+    sglx_recording = si.common_reference(sglx_recording, operator="median", reference="global")
+    return sglx_recording
 
 ## Example SI parameter set
 """
