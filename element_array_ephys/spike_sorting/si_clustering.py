@@ -138,7 +138,7 @@ class PreProcessing(dj.Imported):
         # params = {**params, **ephys.get_recording_channels_details(key)}
         # params["fs"] = params["sample_rate"]
 
-        default_params = si.get_default_sorter_params(sorter_name)
+        # default_params = si.get_default_sorter_params(sorter_name)
         # preprocess_list = params.pop("PreProcessing_params")
 
         if acq_software == "SpikeGLX":
@@ -163,17 +163,15 @@ class PreProcessing(dj.Imported):
             si_probe.set_device_channel_indices(channels_details["channel_ind"])
             sglx_si_recording.set_probe(probe=si_probe)
 
-            # run preprocessing and save results to output folder
-            sglx_si_recording_filtered = sip.bandpass_filter(
-                sglx_si_recording, freq_min=300, freq_max=6000
-            )
+            # # run preprocessing and save results to output folder
+            # sglx_si_recording_filtered = sip.bandpass_filter(
+            #     sglx_si_recording, freq_min=300, freq_max=6000
+            # )
             # sglx_recording_cmr = sip.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
-
+            sglx_si_recording = mimic_catGT(sglx_si_recording)
             save_file_name = "si_recording.pkl"
             save_file_path = kilosort_dir / save_file_name
-            sglx_si_recording_filtered.dump_to_pickle(file_path=save_file_path)
-
-            sglx_si_recording = mimic_catGT(sglx_si_recording)
+            sglx_si_recording.dump_to_pickle(file_path=save_file_path)
 
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
