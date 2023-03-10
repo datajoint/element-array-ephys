@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.4] - 2023-03-10
+
++ Add - `ipywidgets` as a dependency
+
 ## [0.2.3] - 2023-02-14
 
 + Add - extras_require install options for nwb and development requirement sets
