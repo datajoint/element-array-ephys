@@ -5,3 +5,4 @@ openpyxl
 plotly
 pyopenephys>=1.1.6
 seaborn
+scikit-image
