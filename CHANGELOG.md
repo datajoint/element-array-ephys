@@ -5,7 +5,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## [0.2.4] - 2023-03-10
 
-+ Add - `ipywidgets` as a dependency
++ Update - Requirements with `ipywidgets` and `scikit-image` for plotting widget
 
 ## [0.2.3] - 2023-02-14
 
