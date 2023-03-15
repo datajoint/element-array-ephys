@@ -156,6 +156,9 @@ Tables for storing probe or unit-level visualization results.
 | --- | --- |
 | ProbeLevelReport | A table to store drift map figures generated from each recording probe. |
 | UnitLevelReport | A table to store figures (waveforms, autocorrelogram, peak waveform + neighbors) generated for each unit. |
+| QualityMetricCutoffs | A table to store cut-off values for cluster quality metrics. |
+| QualityMetricSet | A table to store a set of quality metric values for clusters and its cut-offs. |
+| QualityMetricReport | A table to store quality metric figures. |
 
 ## Element Development
 

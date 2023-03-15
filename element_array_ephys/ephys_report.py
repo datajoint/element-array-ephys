@@ -159,7 +159,7 @@ class UnitLevelReport(dj.Computed):
 
 @schema
 class QualityMetricCutoffs(dj.Lookup):
-    """Cut-off values for quality metrics.
+    """Cut-off values for unit quality metrics.
 
     Attributes:
         cutoffs_id (smallint): Unique ID for the cut-off values.
@@ -232,7 +232,7 @@ class QualityMetricSet(dj.Manual):
 
     Attributes:
         ephys.QualityMetrics (foreign key): ephys.QualityMetrics primary key.
-        QualityMetricCutoffs (foreign key): Optional. QualityMetricCutoffs primary key.
+        QualityMetricCutoffs (foreign key): QualityMetricCutoffs primary key.
     """
     
     definition = """
