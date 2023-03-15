@@ -159,6 +159,16 @@ class UnitLevelReport(dj.Computed):
 
 @schema
 class QualityMetricCutoffs(dj.Lookup):
+    """Cut-off values for quality metrics.
+
+    Attributes:
+        cutoffs_id (smallint): Unique ID for the cut-off values.
+        amplitude_cutoff_maximum (float): Optional. Amplitude cut-off.
+        presence_ratio_minimum (float): Optional. Presence ratio cut-off.
+        isi_violations_maximum (float): Optional. ISI violation ratio cut-off.
+        cutoffs_hash (uuid): uuid for the cut-off values.
+    """
+    
     definition = """
     cutoffs_id                    : smallint
     ---
@@ -218,6 +228,13 @@ class QualityMetricCutoffs(dj.Lookup):
 
 @schema
 class QualityMetricSet(dj.Manual):
+    """Set of quality metric values for clusters and its cut-offs.
+
+    Attributes:
+        ephys.QualityMetrics (foreign key): ephys.QualityMetrics primary key.
+        QualityMetricCutoffs (foreign key): Optional. QualityMetricCutoffs primary key.
+    """
+    
     definition = """
     -> ephys.QualityMetrics
     -> QualityMetricCutoffs
@@ -226,6 +243,13 @@ class QualityMetricSet(dj.Manual):
 
 @schema
 class QualityMetricReport(dj.Computed):
+    """Table for storing quality metric figures.
+
+    Attributes:
+        QualityMetricSet (foreign key): QualityMetricSet primary key.
+        plot_grid (longblob): Figure object.
+    """
+    
     definition = """
     -> QualityMetricSet
     ---
