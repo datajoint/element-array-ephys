@@ -8,3 +8,4 @@ seaborn
 scikit-image
 spikeinterface
 spikeextractors
+nbformat>=4.2.0
