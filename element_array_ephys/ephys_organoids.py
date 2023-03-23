@@ -21,6 +21,8 @@ log = get_logger(__name__)
 schema = dj.schema()
 
 _linking_module = None
+EPHYS_STORE = None
+FILE_STORE = None
 
 
 def activate(
@@ -43,6 +45,9 @@ def activate(
     Dependencies:
     Upstream tables:
         Subject: A parent table to EphysSession.
+    External stores:
+        EPHYS_STORE: (str) name of the DataJoint external store for ephys data
+        FILE_STORE: (str) name of the DataJoint external store for ephys raw files
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
@@ -56,8 +61,10 @@ def activate(
         linking_module
     ), "The argument 'dependency' must be a module's name or a module"
 
-    global _linking_module
+    global _linking_module, EPHYS_STORE, FILE_STORE
     _linking_module = linking_module
+    EPHYS_STORE = linking_module.EPHYS_STORE
+    FILE_STORE = linking_module.FILE_STORE
 
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
@@ -133,6 +140,19 @@ class AcquisitionSoftware(dj.Lookup):
 
 
 @schema
+class EphysRawFile(dj.Manual):
+    definition = f""" Catalog of raw ephys files
+    file_path         : varchar(512) # path to the file on the external store
+    ---
+    -> [nullable] Subject
+    file_time         : datetime     #  date and time of the file acquisition
+    parent_folder     : varchar(128) #  parent folder containing the file
+    filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
+    file              : filepath@{FILE_STORE}  
+    """
+
+
+@schema
 class EphysSession(dj.Manual):
     """User defined ephys session for downstream analysis.
 
@@ -156,17 +176,6 @@ class EphysSession(dj.Manual):
     -> probe.ElectrodeConfig 
     session_type                : enum("lfp", "spike_sorting", "both") # analysis method
     """
-
-
-@schema
-class RawData(dj.Manual):
-    definition = """
-    -> Subject
-    start_time        : datetime # date and time of file creation
-    ---
-    file_name         : varchar(32) # name of the file
-    file_path         : filepath@external-raw  
-    """
     
 
 @schema
@@ -179,7 +188,10 @@ class EphysSessionInfo(dj.Imported):
     """
 
     def make(self, key):
-        file = (RawData & key).fetch("file_path", order_by="start_time")[0]
+        file = (
+            EphysRawFile & key
+            & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
+        ).fetch("file", order_by="file_time", limit=1)[0]
         data = intanrhsreader.load_file(file)
         del data["header"], data["t"]
         self.insert(
@@ -205,11 +217,11 @@ class LFP(dj.Imported):
     """
 
     class Trace(dj.Part):
-        definition = """
+        definition = f"""
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@external-raw 
+        lfp              : blob@{EPHYS_STORE} 
         """
 
     @property
@@ -218,9 +230,9 @@ class LFP(dj.Imported):
 
     def make(self, key):
         files = (
-            RawData & key
-            & f"start_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
-        ).fetch("file_path", order_by="start_time")
+            EphysRawFile & key
+            & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
+        ).fetch("file", order_by="file_time")
 
         TARGET_SAMPLING_RATE = 2500
         header = {}
