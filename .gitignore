@@ -102,6 +102,7 @@ ENV/
 
 # mkdocs documentation
 docs/site
+docs/src/tutorials/*ipynb
 
 # mypy
 .mypy_cache/
@@ -119,3 +120,10 @@ docker-compose.y*ml
 
 # include
 !docs/docker-compose.yaml
+
+# vscode settings
+.vscode
+*.code-workspace
+
+# exports/notes
+temp*
