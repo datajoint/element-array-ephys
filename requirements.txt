@@ -7,5 +7,4 @@ pyopenephys>=1.1.6
 seaborn
 scikit-image
 spikeinterface
-spikeextractors
 nbformat>=4.2.0
