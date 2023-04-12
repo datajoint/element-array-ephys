@@ -247,7 +247,7 @@ class QualityMetricReport(dj.Computed):
 
     Attributes:
         QualityMetricSet (foreign key): QualityMetricSet primary key.
-        plot_grid (longblob): Figure object.
+        plot_grid (longblob): Plotly figure object.
     """
     
     definition = """
