@@ -2,12 +2,13 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
+
 ## [0.2.5] - 2023-04-12
 
-+ Add docstrings for quality metric tables.
-+ Fix the docstring errors.
-+ Update `concepts.md`
-+ Update schema diagrams.
++ Add - docstrings for quality metric tables
++ Fix - docstring errors
++ Update - `concepts.md`
++ Update - schema diagrams with quality metrics tables
 
 ## [0.2.4] - 2023-03-10
 
