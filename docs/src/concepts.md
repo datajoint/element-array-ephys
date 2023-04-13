@@ -107,6 +107,10 @@ is a table within the Element or a table connected to the Element.
 
 ![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
 
+### `ephys_no_curation` module
+
+![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
+
 ### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 
 Although not required, most choose to connect the `Session` table to a `Subject` table.
