@@ -1,521 +1,532 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="995pt" height="809pt" viewBox="0.00 0.00 994.52 809.00">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1317pt" height="809pt" viewBox="0.00 0.00 1317.13 809.00">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 805)">
-<polygon fill="white" stroke="transparent" points="-4,4 -4,-805 990.52,-805 990.52,4 -4,4"/>
-<!-- ephys.WaveformSet.Waveform -->
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-805 1313.13,-805 1313.13,4 -4,4"/>
+<!-- `ephysuser_ephys&#45;demo_lab`.`#skull_reference` -->
 <g id="node1" class="node">
-<title>ephys.WaveformSet.Waveform</title>
-<g id="a_node1"><a xlink:title="→ ephys.WaveformSet→ ephys.CuratedClustering.Unit→ probe.ElectrodeConfig.Electrode------------------------------waveform_mean        waveforms=null       ">
-<polygon fill="transparent" stroke="transparent" points="943.75,-20 789,-20 789,0 943.75,0 943.75,-20"/>
-<text text-anchor="middle" x="866.38" y="-7" font-family="arial" font-size="10.00">ephys.WaveformSet.Waveform</text>
+<title>`ephysuser_ephys-demo_lab`.`#skull_reference`</title>
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="231.16,-659 -0.05,-659 -0.05,-624 231.16,-624 231.16,-659"/>
+<text text-anchor="start" x="8" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">`ephysuser_ephys-demo_lab`.`#skull_reference`</text>
+</g>
+<!-- ephys.InsertionLocation -->
+<g id="node14" class="node">
+<title>ephys.InsertionLocation</title>
+<g id="a_node14"><a xlink:title="→ ephys.ProbeInsertion------------------------------→ `ephysuser_ephys-demo_lab`.`#skull_reference`ap_location          ml_location          depth                theta=null           phi=null             beta=null            ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="246.8,-588 104.3,-588 104.3,-553 246.8,-553 246.8,-588"/>
+<text text-anchor="middle" x="175.55" y="-566.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.InsertionLocation</text>
 </a>
 </g>
 </g>
-<!-- probe.ElectrodeConfig -->
+<!-- `ephysuser_ephys&#45;demo_lab`.`#skull_reference`&#45;&gt;ephys.InsertionLocation -->
+<g id="edge1" class="edge">
+<title>`ephysuser_ephys-demo_lab`.`#skull_reference`-&gt;ephys.InsertionLocation</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M130.08,-623.8C139.51,-612.95 151.76,-598.87 161.16,-588.05"/>
+</g>
+<!-- probe.ProbeType.Electrode -->
 <g id="node2" class="node">
-<title>probe.ElectrodeConfig</title>
-<g id="a_node2"><a xlink:title="electrode_config_hash ------------------------------→ probe.ProbeTypeelectrode_config_name ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="888.88,-659 773.87,-659 773.87,-624 888.88,-624 888.88,-659"/>
-<text text-anchor="start" x="781.62" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ElectrodeConfig</text>
+<title>probe.ProbeType.Electrode</title>
+<g id="a_node2"><a xlink:title="→ probe.ProbeTypeelectrode            ------------------------------shank                shank_col            shank_row            x_coord=null         y_coord=null         ">
+<polygon fill="transparent" stroke="transparent" points="759.85,-722.5 621.26,-722.5 621.26,-702.5 759.85,-702.5 759.85,-722.5"/>
+<text text-anchor="start" x="629.41" y="-710.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ProbeType.Electrode</text>
 </a>
 </g>
 </g>
 <!-- probe.ElectrodeConfig.Electrode -->
-<g id="node20" class="node">
+<g id="node19" class="node">
 <title>probe.ElectrodeConfig.Electrode</title>
-<g id="a_node20"><a xlink:title="→ probe.ElectrodeConfig→ probe.ProbeType.Electrode">
-<polygon fill="transparent" stroke="transparent" points="925.41,-580.5 765.34,-580.5 765.34,-560.5 925.41,-560.5 925.41,-580.5"/>
-<text text-anchor="middle" x="845.38" y="-567.5" font-family="arial" font-size="10.00">probe.ElectrodeConfig.Electrode</text>
+<g id="a_node19"><a xlink:title="→ probe.ElectrodeConfig→ probe.ProbeType.Electrode">
+<polygon fill="transparent" stroke="transparent" points="684.59,-580.5 524.52,-580.5 524.52,-560.5 684.59,-560.5 684.59,-580.5"/>
+<text text-anchor="middle" x="604.55" y="-567.5" font-family="arial" font-size="10.00">probe.ElectrodeConfig.Electrode</text>
 </a>
 </g>
 </g>
-<!-- probe.ElectrodeConfig&#45;&gt;probe.ElectrodeConfig.Electrode -->
-<g id="edge1" class="edge">
-<title>probe.ElectrodeConfig-&gt;probe.ElectrodeConfig.Electrode</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M834.76,-623.8C837.52,-610.24 841.29,-591.62 843.52,-580.65"/>
-</g>
-<!-- ephys.EphysRecording -->
-<g id="node32" class="node">
-<title>ephys.EphysRecording</title>
-<g id="a_node32"><a xlink:title="→ ephys.ProbeInsertion------------------------------→ probe.ElectrodeConfig→ ephys.AcquisitionSoftwaresampling_rate        recording_datetime   recording_duration   ">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="251.38" cy="-570.5" rx="90.93" ry="17.5"/>
-<text text-anchor="middle" x="251.38" y="-566.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.EphysRecording</text>
-</a>
-</g>
-</g>
-<!-- probe.ElectrodeConfig&#45;&gt;ephys.EphysRecording -->
+<!-- probe.ProbeType.Electrode&#45;&gt;probe.ElectrodeConfig.Electrode -->
 <g id="edge2" class="edge">
-<title>probe.ElectrodeConfig-&gt;ephys.EphysRecording</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M773.53,-628.01C765.77,-626.54 757.89,-625.16 750.38,-624 749.73,-623.9 469,-594.38 328.95,-579.66"/>
-</g>
-<!-- ephys.LFP.Electrode -->
-<g id="node3" class="node">
-<title>ephys.LFP.Electrode</title>
-<g id="a_node3"><a xlink:title="→ ephys.LFP→ probe.ElectrodeConfig.Electrode------------------------------lfp                  ">
-<polygon fill="transparent" stroke="transparent" points="759.7,-296.5 651.05,-296.5 651.05,-276.5 759.7,-276.5 759.7,-296.5"/>
-<text text-anchor="middle" x="705.38" y="-283.5" font-family="arial" font-size="10.00">ephys.LFP.Electrode</text>
-</a>
-</g>
-</g>
-<!-- ephys.WaveformSet -->
-<g id="node4" class="node">
-<title>ephys.WaveformSet</title>
-<g id="a_node4"><a xlink:title="→ ephys.CuratedClustering">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="723.38" cy="-73.5" rx="80.93" ry="17.5"/>
-<text text-anchor="middle" x="723.38" y="-69.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.WaveformSet</text>
-</a>
-</g>
-</g>
-<!-- ephys.WaveformSet&#45;&gt;ephys.WaveformSet.Waveform -->
-<g id="edge3" class="edge">
-<title>ephys.WaveformSet-&gt;ephys.WaveformSet.Waveform</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M757.99,-57.61C785.27,-45.88 822.41,-29.91 845.37,-20.04"/>
+<title>probe.ProbeType.Electrode-&gt;probe.ElectrodeConfig.Electrode</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M690.55,-702.31C690.14,-685.48 687.32,-649.16 671.55,-624 659.39,-604.59 637.39,-589.44 621.93,-580.51"/>
 </g>
 <!-- ephys.WaveformSet.PeakWaveform -->
-<g id="node13" class="node">
+<g id="node3" class="node">
 <title>ephys.WaveformSet.PeakWaveform</title>
-<g id="a_node13"><a xlink:title="→ ephys.WaveformSet→ ephys.CuratedClustering.Unit------------------------------peak_electrode_waveform ">
-<polygon fill="transparent" stroke="transparent" points="771.04,-20 593.71,-20 593.71,0 771.04,0 771.04,-20"/>
-<text text-anchor="middle" x="682.38" y="-7" font-family="arial" font-size="10.00">ephys.WaveformSet.PeakWaveform</text>
+<g id="a_node3"><a xlink:title="→ ephys.WaveformSet→ ephys.CuratedClustering.Unit------------------------------peak_electrode_waveform ">
+<polygon fill="transparent" stroke="transparent" points="812.22,-20 634.89,-20 634.89,0 812.22,0 812.22,-20"/>
+<text text-anchor="middle" x="723.55" y="-7" font-family="arial" font-size="10.00">ephys.WaveformSet.PeakWaveform</text>
 </a>
 </g>
 </g>
-<!-- ephys.WaveformSet&#45;&gt;ephys.WaveformSet.PeakWaveform -->
-<g id="edge4" class="edge">
-<title>ephys.WaveformSet-&gt;ephys.WaveformSet.PeakWaveform</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M712.39,-56.02C704.7,-44.49 694.73,-29.53 688.43,-20.09"/>
-</g>
-<!-- ephys.PreClusterParamSteps.Step -->
-<g id="node5" class="node">
-<title>ephys.PreClusterParamSteps.Step</title>
-<g id="a_node5"><a xlink:title="→ ephys.PreClusterParamStepsstep_number          ------------------------------→ ephys.PreClusterParamSet">
-<polygon fill="transparent" stroke="transparent" points="761.95,-509.5 590.8,-509.5 590.8,-489.5 761.95,-489.5 761.95,-509.5"/>
-<text text-anchor="start" x="598.84" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterParamSteps.Step</text>
-</a>
-</g>
-</g>
-<!-- ephys.InsertionLocation -->
-<g id="node6" class="node">
-<title>ephys.InsertionLocation</title>
-<g id="a_node6"><a xlink:title="→ ephys.ProbeInsertion------------------------------→ `ephysuser_ephys-demo_lab`.`#skull_reference`ap_location          ml_location          depth                theta=null           phi=null             beta=null            ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="142.63,-588 0.12,-588 0.12,-553 142.63,-553 142.63,-588"/>
-<text text-anchor="middle" x="71.38" y="-566.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.InsertionLocation</text>
+<!-- ephys.CuratedClustering -->
+<g id="node4" class="node">
+<title>ephys.CuratedClustering</title>
+<g id="a_node4"><a xlink:title="→ ephys.Curation">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="677.55" cy="-144.5" rx="96.21" ry="17.5"/>
+<text text-anchor="middle" x="677.55" y="-140.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.CuratedClustering</text>
 </a>
 </g>
 </g>
 <!-- ephys.CuratedClustering.Unit -->
-<g id="node7" class="node">
+<g id="node6" class="node">
 <title>ephys.CuratedClustering.Unit</title>
-<g id="a_node7"><a xlink:title="→ ephys.CuratedClusteringunit                 ------------------------------→ probe.ElectrodeConfig.Electrode→ ephys.ClusterQualityLabelspike_count          spike_times          spike_sites          spike_depths=null    ">
-<polygon fill="transparent" stroke="transparent" points="624.5,-83.5 478.25,-83.5 478.25,-63.5 624.5,-63.5 624.5,-83.5"/>
-<text text-anchor="start" x="486.06" y="-71.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.CuratedClustering.Unit</text>
+<g id="a_node6"><a xlink:title="→ ephys.CuratedClusteringunit                 ------------------------------→ probe.ElectrodeConfig.Electrode→ ephys.ClusterQualityLabelspike_count          spike_times          spike_sites          spike_depths=null    ">
+<polygon fill="transparent" stroke="transparent" points="893.67,-83.5 747.43,-83.5 747.43,-63.5 893.67,-63.5 893.67,-83.5"/>
+<text text-anchor="start" x="755.24" y="-71.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.CuratedClustering.Unit</text>
 </a>
 </g>
 </g>
-<!-- ephys.CuratedClustering.Unit&#45;&gt;ephys.WaveformSet.Waveform -->
+<!-- ephys.CuratedClustering&#45;&gt;ephys.CuratedClustering.Unit -->
+<g id="edge3" class="edge">
+<title>ephys.CuratedClustering-&gt;ephys.CuratedClustering.Unit</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M710,-127.84C738.35,-114.16 778.51,-94.79 801.81,-83.54"/>
+</g>
+<!-- ephys.QualityMetrics -->
+<g id="node8" class="node">
+<title>ephys.QualityMetrics</title>
+<g id="a_node8"><a xlink:title="→ ephys.CuratedClustering">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="994.55" cy="-73.5" rx="82.76" ry="17.5"/>
+<text text-anchor="middle" x="994.55" y="-69.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.QualityMetrics</text>
+</a>
+</g>
+</g>
+<!-- ephys.CuratedClustering&#45;&gt;ephys.QualityMetrics -->
+<g id="edge4" class="edge">
+<title>ephys.CuratedClustering-&gt;ephys.QualityMetrics</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M736.81,-130.6C794.78,-117.98 882.39,-98.91 939.04,-86.58"/>
+</g>
+<!-- ephys.WaveformSet -->
+<g id="node30" class="node">
+<title>ephys.WaveformSet</title>
+<g id="a_node30"><a xlink:title="→ ephys.CuratedClustering">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="648.55" cy="-73.5" rx="80.93" ry="17.5"/>
+<text text-anchor="middle" x="648.55" y="-69.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.WaveformSet</text>
+</a>
+</g>
+</g>
+<!-- ephys.CuratedClustering&#45;&gt;ephys.WaveformSet -->
 <g id="edge5" class="edge">
-<title>ephys.CuratedClustering.Unit-&gt;ephys.WaveformSet.Waveform</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M596.05,-63.45C608.16,-61.01 621.26,-58.39 633.38,-56 697.64,-43.33 771.96,-29.04 819.05,-20.03"/>
+<title>ephys.CuratedClustering-&gt;ephys.WaveformSet</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M670.53,-126.8C665.97,-115.95 660.06,-101.87 655.51,-91.05"/>
+</g>
+<!-- ephys.LFP.Electrode -->
+<g id="node5" class="node">
+<title>ephys.LFP.Electrode</title>
+<g id="a_node5"><a xlink:title="→ ephys.LFP→ probe.ElectrodeConfig.Electrode------------------------------lfp                  ">
+<polygon fill="transparent" stroke="transparent" points="720.88,-296.5 612.23,-296.5 612.23,-276.5 720.88,-276.5 720.88,-296.5"/>
+<text text-anchor="middle" x="666.55" y="-283.5" font-family="arial" font-size="10.00">ephys.LFP.Electrode</text>
+</a>
+</g>
 </g>
 <!-- ephys.CuratedClustering.Unit&#45;&gt;ephys.WaveformSet.PeakWaveform -->
 <g id="edge6" class="edge">
 <title>ephys.CuratedClustering.Unit-&gt;ephys.WaveformSet.PeakWaveform</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M570.7,-63.43C595.47,-51.8 638.16,-31.76 662.97,-20.11"/>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M806.24,-63.43C787.9,-51.8 756.29,-31.76 737.93,-20.11"/>
+</g>
+<!-- ephys.WaveformSet.Waveform -->
+<g id="node15" class="node">
+<title>ephys.WaveformSet.Waveform</title>
+<g id="a_node15"><a xlink:title="→ ephys.WaveformSet→ ephys.CuratedClustering.Unit→ probe.ElectrodeConfig.Electrode------------------------------waveform_mean        waveforms=null       ">
+<polygon fill="transparent" stroke="transparent" points="616.93,-20 462.18,-20 462.18,0 616.93,0 616.93,-20"/>
+<text text-anchor="middle" x="539.55" y="-7" font-family="arial" font-size="10.00">ephys.WaveformSet.Waveform</text>
+</a>
+</g>
+</g>
+<!-- ephys.CuratedClustering.Unit&#45;&gt;ephys.WaveformSet.Waveform -->
+<g id="edge7" class="edge">
+<title>ephys.CuratedClustering.Unit-&gt;ephys.WaveformSet.Waveform</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M779.39,-63.49C726.19,-51.85 634.08,-31.69 580.82,-20.03"/>
 </g>
 <!-- ephys.QualityMetrics.Cluster -->
-<g id="node21" class="node">
+<g id="node23" class="node">
 <title>ephys.QualityMetrics.Cluster</title>
-<g id="a_node21"><a xlink:title="→ ephys.QualityMetrics→ ephys.CuratedClustering.Unit------------------------------firing_rate=null     snr=null             presence_ratio=null  isi_violation=null   number_violation=null amplitude_cutoff=null isolation_distance=null l_ratio=null         d_prime=null         nn_hit_rate=null     nn_miss_rate=null    silhouette_score=null max_drift=null       cumulative_drift=null contamination_rate=null ">
-<polygon fill="transparent" stroke="transparent" points="576.14,-20 432.61,-20 432.61,0 576.14,0 576.14,-20"/>
-<text text-anchor="middle" x="504.38" y="-7" font-family="arial" font-size="10.00">ephys.QualityMetrics.Cluster</text>
+<g id="a_node23"><a xlink:title="→ ephys.QualityMetrics→ ephys.CuratedClustering.Unit------------------------------firing_rate=null     snr=null             presence_ratio=null  isi_violation=null   number_violation=null amplitude_cutoff=null isolation_distance=null l_ratio=null         d_prime=null         nn_hit_rate=null     nn_miss_rate=null    silhouette_score=null max_drift=null       cumulative_drift=null contamination_rate=null ">
+<polygon fill="transparent" stroke="transparent" points="1148.31,-20 1004.79,-20 1004.79,0 1148.31,0 1148.31,-20"/>
+<text text-anchor="middle" x="1076.55" y="-7" font-family="arial" font-size="10.00">ephys.QualityMetrics.Cluster</text>
 </a>
 </g>
 </g>
 <!-- ephys.CuratedClustering.Unit&#45;&gt;ephys.QualityMetrics.Cluster -->
-<g id="edge7" class="edge">
+<g id="edge8" class="edge">
 <title>ephys.CuratedClustering.Unit-&gt;ephys.QualityMetrics.Cluster</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M544.44,-63.43C535.55,-51.8 520.24,-31.76 511.34,-20.11"/>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M858.05,-63.49C906.52,-51.85 990.44,-31.69 1038.95,-20.03"/>
 </g>
 <!-- ephys.QualityMetrics.Waveform -->
 <g id="node33" class="node">
 <title>ephys.QualityMetrics.Waveform</title>
 <g id="a_node33"><a xlink:title="→ ephys.QualityMetrics→ ephys.CuratedClustering.Unit------------------------------amplitude            duration             halfwidth=null       pt_ratio=null        repolarization_slope=null recovery_slope=null  spread=null          velocity_above=null  velocity_below=null  ">
-<polygon fill="transparent" stroke="transparent" points="415.02,-20 257.73,-20 257.73,0 415.02,0 415.02,-20"/>
-<text text-anchor="middle" x="336.38" y="-7" font-family="arial" font-size="10.00">ephys.QualityMetrics.Waveform</text>
+<polygon fill="transparent" stroke="transparent" points="987.2,-20 829.91,-20 829.91,0 987.2,0 987.2,-20"/>
+<text text-anchor="middle" x="908.55" y="-7" font-family="arial" font-size="10.00">ephys.QualityMetrics.Waveform</text>
 </a>
 </g>
 </g>
 <!-- ephys.CuratedClustering.Unit&#45;&gt;ephys.QualityMetrics.Waveform -->
-<g id="edge8" class="edge">
-<title>ephys.CuratedClustering.Unit-&gt;ephys.QualityMetrics.Waveform</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M519.65,-63.43C478.88,-51.76 408.54,-31.64 367.88,-20.01"/>
-</g>
-<!-- subject.Subject -->
-<g id="node8" class="node">
-<title>subject.Subject</title>
-<g id="a_node8"><a xlink:title="subject              ------------------------------subject_nickname=&quot;&quot;  sex                  subject_birth_date   subject_description=&quot;&quot; ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="226.26,-801 128.49,-801 128.49,-766 226.26,-766 226.26,-801"/>
-<text text-anchor="start" x="136.68" y="-780.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">subject.Subject</text>
-</a>
-</g>
-</g>
-<!-- session.Session -->
-<g id="node22" class="node">
-<title>session.Session</title>
-<g id="a_node22"><a xlink:title="→ subject.Subjectsession_datetime     ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="228.59,-730 126.16,-730 126.16,-695 228.59,-695 228.59,-730"/>
-<text text-anchor="start" x="134.02" y="-709.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">session.Session</text>
-</a>
-</g>
-</g>
-<!-- subject.Subject&#45;&gt;session.Session -->
 <g id="edge9" class="edge">
-<title>subject.Subject-&gt;session.Session</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M177.38,-765.8C177.38,-754.95 177.38,-740.87 177.38,-730.05"/>
+<title>ephys.CuratedClustering.Unit-&gt;ephys.QualityMetrics.Waveform</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M833.54,-63.43C850.18,-51.8 878.85,-31.76 895.52,-20.11"/>
 </g>
 <!-- ephys.PreClusterMethod -->
-<g id="node9" class="node">
+<g id="node7" class="node">
 <title>ephys.PreClusterMethod</title>
-<g id="a_node9"><a xlink:title="precluster_method    ------------------------------precluster_method_desc ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="741.43,-659 615.32,-659 615.32,-624 741.43,-624 741.43,-659"/>
-<text text-anchor="start" x="623.35" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterMethod</text>
+<g id="a_node7"><a xlink:title="precluster_method    ------------------------------precluster_method_desc ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="1303.61,-659 1177.5,-659 1177.5,-624 1303.61,-624 1303.61,-659"/>
+<text text-anchor="start" x="1185.53" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterMethod</text>
 </a>
 </g>
 </g>
 <!-- ephys.PreClusterParamSet -->
-<g id="node11" class="node">
+<g id="node20" class="node">
 <title>ephys.PreClusterParamSet</title>
-<g id="a_node11"><a xlink:title="paramset_idx         ------------------------------→ ephys.PreClusterMethodparamset_desc        param_set_hash       params               UNIQUE INDEX (param_set_hash)">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="747.04,-588 609.71,-588 609.71,-553 747.04,-553 747.04,-588"/>
-<text text-anchor="start" x="617.79" y="-568.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterParamSet</text>
+<g id="a_node20"><a xlink:title="paramset_idx         ------------------------------→ ephys.PreClusterMethodparamset_desc        param_set_hash       params               UNIQUE INDEX (param_set_hash)">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="1309.22,-588 1171.89,-588 1171.89,-553 1309.22,-553 1309.22,-588"/>
+<text text-anchor="start" x="1179.97" y="-568.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterParamSet</text>
 </a>
 </g>
 </g>
 <!-- ephys.PreClusterMethod&#45;&gt;ephys.PreClusterParamSet -->
 <g id="edge10" class="edge">
 <title>ephys.PreClusterMethod-&gt;ephys.PreClusterParamSet</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M678.38,-623.8C678.38,-612.95 678.38,-598.87 678.38,-588.05"/>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M1240.55,-623.8C1240.55,-612.95 1240.55,-598.87 1240.55,-588.05"/>
+</g>
+<!-- ephys.QualityMetrics&#45;&gt;ephys.QualityMetrics.Cluster -->
+<g id="edge11" class="edge">
+<title>ephys.QualityMetrics-&gt;ephys.QualityMetrics.Cluster</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M1016.1,-56.34C1031.47,-44.81 1051.6,-29.72 1064.31,-20.19"/>
+</g>
+<!-- ephys.QualityMetrics&#45;&gt;ephys.QualityMetrics.Waveform -->
+<g id="edge12" class="edge">
+<title>ephys.QualityMetrics-&gt;ephys.QualityMetrics.Waveform</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M971.96,-56.34C955.83,-44.81 934.73,-29.72 921.4,-20.19"/>
+</g>
+<!-- probe.ElectrodeConfig -->
+<g id="node9" class="node">
+<title>probe.ElectrodeConfig</title>
+<g id="a_node9"><a xlink:title="electrode_config_hash ------------------------------→ probe.ProbeTypeelectrode_config_name ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="662.06,-659 547.05,-659 547.05,-624 662.06,-624 662.06,-659"/>
+<text text-anchor="start" x="554.8" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ElectrodeConfig</text>
+</a>
+</g>
+</g>
+<!-- ephys.EphysRecording -->
+<g id="node17" class="node">
+<title>ephys.EphysRecording</title>
+<g id="a_node17"><a xlink:title="→ ephys.ProbeInsertion------------------------------→ probe.ElectrodeConfig→ ephys.AcquisitionSoftwaresampling_rate        recording_datetime   recording_duration   ">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="415.55" cy="-570.5" rx="90.93" ry="17.5"/>
+<text text-anchor="middle" x="415.55" y="-566.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.EphysRecording</text>
+</a>
+</g>
+</g>
+<!-- probe.ElectrodeConfig&#45;&gt;ephys.EphysRecording -->
+<g id="edge13" class="edge">
+<title>probe.ElectrodeConfig-&gt;ephys.EphysRecording</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M559.28,-623.97C527.83,-612.49 486.29,-597.32 455.95,-586.25"/>
+</g>
+<!-- probe.ElectrodeConfig&#45;&gt;probe.ElectrodeConfig.Electrode -->
+<g id="edge14" class="edge">
+<title>probe.ElectrodeConfig-&gt;probe.ElectrodeConfig.Electrode</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M604.55,-623.8C604.55,-610.24 604.55,-591.62 604.55,-580.65"/>
 </g>
 <!-- ephys.EphysRecording.EphysFile -->
 <g id="node10" class="node">
 <title>ephys.EphysRecording.EphysFile</title>
 <g id="a_node10"><a xlink:title="→ ephys.EphysRecordingfile_path            ">
-<polygon fill="transparent" stroke="transparent" points="277.9,-509.5 112.85,-509.5 112.85,-489.5 277.9,-489.5 277.9,-509.5"/>
-<text text-anchor="start" x="120.61" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.EphysRecording.EphysFile</text>
-</a>
-</g>
-</g>
-<!-- ephys.PreClusterParamSet&#45;&gt;ephys.PreClusterParamSteps.Step -->
-<g id="edge11" class="edge">
-<title>ephys.PreClusterParamSet-&gt;ephys.PreClusterParamSteps.Step</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M677.89,-552.8C677.5,-539.24 676.96,-520.62 676.64,-509.65"/>
-</g>
-<!-- ephys.LFP -->
-<g id="node12" class="node">
-<title>ephys.LFP</title>
-<g id="a_node12"><a xlink:title="→ ephys.PreCluster------------------------------lfp_sampling_rate    lfp_time_stamps      lfp_mean             ">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="705.38" cy="-357.5" rx="47.98" ry="17.5"/>
-<text text-anchor="middle" x="705.38" y="-353.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.LFP</text>
-</a>
-</g>
-</g>
-<!-- ephys.LFP&#45;&gt;ephys.LFP.Electrode -->
-<g id="edge12" class="edge">
-<title>ephys.LFP-&gt;ephys.LFP.Electrode</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M705.38,-339.8C705.38,-326.24 705.38,-307.62 705.38,-296.65"/>
-</g>
-<!-- ephys.PreClusterParamSteps -->
-<g id="node14" class="node">
-<title>ephys.PreClusterParamSteps</title>
-<g id="a_node14"><a xlink:title="precluster_param_steps_id ------------------------------precluster_param_steps_name precluster_param_steps_desc ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="591.44,-588 417.31,-588 417.31,-553 591.44,-553 591.44,-588"/>
-<text text-anchor="start" x="425.34" y="-567.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.PreClusterParamSteps</text>
-</a>
-</g>
-</g>
-<!-- ephys.PreClusterParamSteps&#45;&gt;ephys.PreClusterParamSteps.Step -->
-<g id="edge13" class="edge">
-<title>ephys.PreClusterParamSteps-&gt;ephys.PreClusterParamSteps.Step</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M545.57,-552.97C579.56,-539.34 626.51,-520.51 653.93,-509.5"/>
-</g>
-<!-- ephys.PreClusterTask -->
-<g id="node15" class="node">
-<title>ephys.PreClusterTask</title>
-<g id="a_node15"><a xlink:title="→ ephys.EphysRecording→ ephys.PreClusterParamSteps------------------------------precluster_output_dir=&quot;&quot; task_mode=&quot;none&quot;     ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="572.42,-517 438.33,-517 438.33,-482 572.42,-482 572.42,-517"/>
-<text text-anchor="middle" x="505.38" y="-495.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.PreClusterTask</text>
-</a>
-</g>
-</g>
-<!-- ephys.PreClusterParamSteps&#45;&gt;ephys.PreClusterTask -->
-<g id="edge14" class="edge">
-<title>ephys.PreClusterParamSteps-&gt;ephys.PreClusterTask</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M504.62,-552.8C504.77,-541.95 504.98,-527.87 505.14,-517.05"/>
-</g>
-<!-- ephys.PreCluster -->
-<g id="node23" class="node">
-<title>ephys.PreCluster</title>
-<g id="a_node23"><a xlink:title="→ ephys.PreClusterTask------------------------------precluster_time      package_version=&quot;&quot;   ">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="534.38" cy="-428.5" rx="70.11" ry="17.5"/>
-<text text-anchor="middle" x="534.38" y="-424.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.PreCluster</text>
-</a>
-</g>
-</g>
-<!-- ephys.PreClusterTask&#45;&gt;ephys.PreCluster -->
-<g id="edge15" class="edge">
-<title>ephys.PreClusterTask-&gt;ephys.PreCluster</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M512.4,-481.8C516.95,-470.95 522.87,-456.87 527.42,-446.05"/>
-</g>
-<!-- ephys.ClusteringTask -->
-<g id="node16" class="node">
-<title>ephys.ClusteringTask</title>
-<g id="a_node16"><a xlink:title="→ ephys.PreCluster→ ephys.ClusteringParamSet------------------------------clustering_output_dir task_mode=&quot;load&quot;     ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="600.26,-375 468.49,-375 468.49,-340 600.26,-340 600.26,-375"/>
-<text text-anchor="middle" x="534.38" y="-353.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.ClusteringTask</text>
+<polygon fill="transparent" stroke="transparent" points="498.08,-509.5 333.03,-509.5 333.03,-489.5 498.08,-489.5 498.08,-509.5"/>
+<text text-anchor="start" x="340.79" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.EphysRecording.EphysFile</text>
 </a>
 </g>
 </g>
 <!-- ephys.Clustering -->
-<g id="node19" class="node">
+<g id="node11" class="node">
 <title>ephys.Clustering</title>
-<g id="a_node19"><a xlink:title="→ ephys.ClusteringTask------------------------------clustering_time      package_version=&quot;&quot;   ">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="544.38" cy="-286.5" rx="68.65" ry="17.5"/>
-<text text-anchor="middle" x="544.38" y="-282.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.Clustering</text>
+<g id="a_node11"><a xlink:title="→ ephys.ClusteringTask------------------------------clustering_time      package_version=&quot;&quot;   ">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="807.55" cy="-286.5" rx="68.65" ry="17.5"/>
+<text text-anchor="middle" x="807.55" y="-282.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.Clustering</text>
 </a>
 </g>
-</g>
-<!-- ephys.ClusteringTask&#45;&gt;ephys.Clustering -->
-<g id="edge16" class="edge">
-<title>ephys.ClusteringTask-&gt;ephys.Clustering</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M536.8,-339.8C538.37,-328.95 540.41,-314.87 541.98,-304.05"/>
-</g>
-<!-- ephys.AcquisitionSoftware -->
-<g id="node17" class="node">
-<title>ephys.AcquisitionSoftware</title>
-<g id="a_node17"><a xlink:title="acq_software         ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="393.16,-659 259.59,-659 259.59,-624 393.16,-624 393.16,-659"/>
-<text text-anchor="start" x="267.73" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.AcquisitionSoftware</text>
-</a>
-</g>
-</g>
-<!-- ephys.AcquisitionSoftware&#45;&gt;ephys.EphysRecording -->
-<g id="edge17" class="edge">
-<title>ephys.AcquisitionSoftware-&gt;ephys.EphysRecording</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M308.22,-623.8C296.34,-612.87 280.9,-598.66 269.1,-587.81"/>
-</g>
-<!-- ephys.QualityMetrics -->
-<g id="node18" class="node">
-<title>ephys.QualityMetrics</title>
-<g id="a_node18"><a xlink:title="→ ephys.CuratedClustering">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="377.38" cy="-73.5" rx="82.76" ry="17.5"/>
-<text text-anchor="middle" x="377.38" y="-69.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.QualityMetrics</text>
-</a>
-</g>
-</g>
-<!-- ephys.QualityMetrics&#45;&gt;ephys.QualityMetrics.Cluster -->
-<g id="edge18" class="edge">
-<title>ephys.QualityMetrics-&gt;ephys.QualityMetrics.Cluster</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M408.77,-57.3C432.86,-45.63 465.32,-29.91 485.54,-20.12"/>
-</g>
-<!-- ephys.QualityMetrics&#45;&gt;ephys.QualityMetrics.Waveform -->
-<g id="edge19" class="edge">
-<title>ephys.QualityMetrics-&gt;ephys.QualityMetrics.Waveform</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M366.39,-56.02C358.7,-44.49 348.73,-29.53 342.43,-20.09"/>
 </g>
 <!-- ephys.Curation -->
-<g id="node27" class="node">
+<g id="node12" class="node">
 <title>ephys.Curation</title>
-<g id="a_node27"><a xlink:title="→ ephys.Clusteringcuration_id          ------------------------------curation_time        curation_output_dir  quality_control      manual_curation      curation_note=&quot;&quot;     ">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="597.59,-233 501.16,-233 501.16,-198 597.59,-198 597.59,-233"/>
-<text text-anchor="start" x="509.02" y="-212.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.Curation</text>
+<g id="a_node12"><a xlink:title="→ ephys.Clusteringcuration_id          ------------------------------curation_time        curation_output_dir  quality_control      manual_curation      curation_note=&quot;&quot;     ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="790.77,-233 694.34,-233 694.34,-198 790.77,-198 790.77,-233"/>
+<text text-anchor="start" x="702.2" y="-212.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.Curation</text>
 </a>
 </g>
 </g>
 <!-- ephys.Clustering&#45;&gt;ephys.Curation -->
-<g id="edge20" class="edge">
+<g id="edge15" class="edge">
 <title>ephys.Clustering-&gt;ephys.Curation</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M545.59,-268.8C546.37,-257.95 547.39,-243.87 548.18,-233.05"/>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M792.15,-269.15C781.94,-258.31 768.58,-244.13 758.3,-233.21"/>
 </g>
-<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.WaveformSet.Waveform -->
-<g id="edge21" class="edge">
-<title>probe.ElectrodeConfig.Electrode-&gt;ephys.WaveformSet.Waveform</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M847.7,-560.4C853.17,-538.19 866.38,-479.39 866.38,-429.5 866.38,-429.5 866.38,-429.5 866.38,-143.5 866.38,-97.26 866.38,-41.95 866.38,-20.32"/>
+<!-- ephys.Curation&#45;&gt;ephys.CuratedClustering -->
+<g id="edge16" class="edge">
+<title>ephys.Curation-&gt;ephys.CuratedClustering</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M726.82,-197.8C716.6,-186.95 703.33,-172.87 693.14,-162.05"/>
 </g>
-<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.LFP.Electrode -->
-<g id="edge22" class="edge">
-<title>probe.ElectrodeConfig.Electrode-&gt;ephys.LFP.Electrode</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M838.92,-560.2C832.07,-549.99 821.29,-532.92 814.38,-517 781.73,-441.79 805.66,-409.64 762.38,-340 751.15,-321.95 732.07,-306.18 719.11,-296.75"/>
+<!-- ephys.PreClusterTask -->
+<g id="node13" class="node">
+<title>ephys.PreClusterTask</title>
+<g id="a_node13"><a xlink:title="→ ephys.EphysRecording→ ephys.PreClusterParamSteps------------------------------precluster_output_dir=&quot;&quot; task_mode=&quot;none&quot;     ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="755.6,-517 621.51,-517 621.51,-482 755.6,-482 755.6,-517"/>
+<text text-anchor="middle" x="688.55" y="-495.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.PreClusterTask</text>
+</a>
 </g>
-<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.CuratedClustering.Unit -->
-<g id="edge23" class="edge">
-<title>probe.ElectrodeConfig.Electrode-&gt;ephys.CuratedClustering.Unit</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M843.49,-560.37C839.06,-538.11 828.38,-479.2 828.38,-429.5 828.38,-429.5 828.38,-429.5 828.38,-214.5 828.38,-174.51 836.12,-154.81 807.38,-127 806.42,-126.07 669.17,-98.27 596.06,-83.51"/>
+</g>
+<!-- ephys.PreCluster -->
+<g id="node34" class="node">
+<title>ephys.PreCluster</title>
+<g id="a_node34"><a xlink:title="→ ephys.PreClusterTask------------------------------precluster_time      package_version=&quot;&quot;   ">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="688.55" cy="-428.5" rx="70.11" ry="17.5"/>
+<text text-anchor="middle" x="688.55" y="-424.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.PreCluster</text>
+</a>
+</g>
+</g>
+<!-- ephys.PreClusterTask&#45;&gt;ephys.PreCluster -->
+<g id="edge17" class="edge">
+<title>ephys.PreClusterTask-&gt;ephys.PreCluster</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M688.55,-481.8C688.55,-470.95 688.55,-456.87 688.55,-446.05"/>
+</g>
+<!-- probe.Probe -->
+<g id="node16" class="node">
+<title>probe.Probe</title>
+<g id="a_node16"><a xlink:title="probe                ------------------------------→ probe.ProbeTypeprobe_comment=&quot;&quot;     ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="510.09,-730 439.01,-730 439.01,-695 510.09,-695 510.09,-730"/>
+<text text-anchor="start" x="447.03" y="-710.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.Probe</text>
+</a>
+</g>
 </g>
 <!-- ephys.ProbeInsertion -->
-<g id="node31" class="node">
+<g id="node25" class="node">
 <title>ephys.ProbeInsertion</title>
-<g id="a_node31"><a xlink:title="→ session.Sessioninsertion_number     ------------------------------→ probe.Probe">
-<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="242.28,-659 112.47,-659 112.47,-624 242.28,-624 242.28,-659"/>
-<text text-anchor="start" x="120.67" y="-638.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.ProbeInsertion</text>
+<g id="a_node25"><a xlink:title="→ session.Sessioninsertion_number     ------------------------------→ probe.Probe">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="378.46,-659 248.65,-659 248.65,-624 378.46,-624 378.46,-659"/>
+<text text-anchor="start" x="256.85" y="-638.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.ProbeInsertion</text>
+</a>
+</g>
+</g>
+<!-- probe.Probe&#45;&gt;ephys.ProbeInsertion -->
+<g id="edge18" class="edge">
+<title>probe.Probe-&gt;ephys.ProbeInsertion</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M438.82,-696.19C413.16,-685.19 378.6,-670.38 352.28,-659.1"/>
+</g>
+<!-- ephys.EphysRecording&#45;&gt;ephys.EphysRecording.EphysFile -->
+<g id="edge19" class="edge">
+<title>ephys.EphysRecording-&gt;ephys.EphysRecording.EphysFile</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M415.55,-552.8C415.55,-539.24 415.55,-520.62 415.55,-509.65"/>
+</g>
+<!-- ephys.EphysRecording&#45;&gt;ephys.PreClusterTask -->
+<g id="edge20" class="edge">
+<title>ephys.EphysRecording-&gt;ephys.PreClusterTask</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M468.19,-556.2C512.35,-545.04 575.63,-529.04 623.05,-517.05"/>
+</g>
+<!-- ephys.PreClusterParamSteps.Step -->
+<g id="node18" class="node">
+<title>ephys.PreClusterParamSteps.Step</title>
+<g id="a_node18"><a xlink:title="→ ephys.PreClusterParamStepsstep_number          ------------------------------→ ephys.PreClusterParamSet">
+<polygon fill="transparent" stroke="transparent" points="1152.13,-509.5 980.98,-509.5 980.98,-489.5 1152.13,-489.5 1152.13,-509.5"/>
+<text text-anchor="start" x="989.02" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.PreClusterParamSteps.Step</text>
+</a>
+</g>
+</g>
+<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.LFP.Electrode -->
+<g id="edge21" class="edge">
+<title>probe.ElectrodeConfig.Electrode-&gt;ephys.LFP.Electrode</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M602.29,-560.19C594.92,-527.9 574.13,-418.46 609.55,-340 618.19,-320.87 637.47,-305.56 651.21,-296.52"/>
+</g>
+<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.CuratedClustering.Unit -->
+<g id="edge22" class="edge">
+<title>probe.ElectrodeConfig.Electrode-&gt;ephys.CuratedClustering.Unit</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M684.74,-564.65C764.75,-558.31 880.65,-544.59 915.55,-517 948.68,-490.81 952.55,-471.72 952.55,-429.5 952.55,-429.5 952.55,-429.5 952.55,-214.5 952.55,-174.7 958.42,-158.07 933.55,-127 915.51,-104.45 885.56,-91.14 861.02,-83.57"/>
+</g>
+<!-- probe.ElectrodeConfig.Electrode&#45;&gt;ephys.WaveformSet.Waveform -->
+<g id="edge23" class="edge">
+<title>probe.ElectrodeConfig.Electrode-&gt;ephys.WaveformSet.Waveform</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M596.84,-560.35C579.62,-538.95 539.55,-483.36 539.55,-429.5 539.55,-429.5 539.55,-429.5 539.55,-143.5 539.55,-97.26 539.55,-41.95 539.55,-20.32"/>
+</g>
+<!-- ephys.PreClusterParamSet&#45;&gt;ephys.PreClusterParamSteps.Step -->
+<g id="edge24" class="edge">
+<title>ephys.PreClusterParamSet-&gt;ephys.PreClusterParamSteps.Step</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M1198.88,-552.97C1164.49,-539.34 1117,-520.51 1089.26,-509.5"/>
+</g>
+<!-- session.Session -->
+<g id="node21" class="node">
+<title>session.Session</title>
+<g id="a_node21"><a xlink:title="→ subject.Subjectsession_datetime     ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="364.77,-730 262.34,-730 262.34,-695 364.77,-695 364.77,-730"/>
+<text text-anchor="start" x="270.2" y="-709.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">session.Session</text>
 </a>
 </g>
 </g>
 <!-- session.Session&#45;&gt;ephys.ProbeInsertion -->
-<g id="edge24" class="edge">
-<title>session.Session-&gt;ephys.ProbeInsertion</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M177.38,-694.8C177.38,-683.95 177.38,-669.87 177.38,-659.05"/>
-</g>
-<!-- ephys.PreCluster&#45;&gt;ephys.LFP -->
 <g id="edge25" class="edge">
-<title>ephys.PreCluster-&gt;ephys.LFP</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M569.81,-413.2C600.72,-400.73 645.11,-382.82 674.58,-370.93"/>
+<title>session.Session-&gt;ephys.ProbeInsertion</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M313.55,-694.8C313.55,-683.95 313.55,-669.87 313.55,-659.05"/>
 </g>
-<!-- ephys.PreCluster&#45;&gt;ephys.ClusteringTask -->
+<!-- ephys.PreClusterParamSteps -->
+<g id="node22" class="node">
+<title>ephys.PreClusterParamSteps</title>
+<g id="a_node22"><a xlink:title="precluster_param_steps_id ------------------------------precluster_param_steps_name precluster_param_steps_desc ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="1153.62,-588 979.49,-588 979.49,-553 1153.62,-553 1153.62,-588"/>
+<text text-anchor="start" x="987.52" y="-567.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">ephys.PreClusterParamSteps</text>
+</a>
+</g>
+</g>
+<!-- ephys.PreClusterParamSteps&#45;&gt;ephys.PreClusterTask -->
 <g id="edge26" class="edge">
-<title>ephys.PreCluster-&gt;ephys.ClusteringTask</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M534.38,-410.8C534.38,-399.95 534.38,-385.87 534.38,-375.05"/>
+<title>ephys.PreClusterParamSteps-&gt;ephys.PreClusterTask</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M979.31,-554.21C921.02,-543.91 842.64,-529.89 773.55,-517 767.79,-515.92 761.81,-514.79 755.81,-513.65"/>
 </g>
-<!-- probe.ProbeType -->
-<g id="node24" class="node">
-<title>probe.ProbeType</title>
-<g id="a_node24"><a xlink:title="probe_type           ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="964.15,-801 870.6,-801 870.6,-766 964.15,-766 964.15,-801"/>
-<text text-anchor="start" x="878.74" y="-781.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ProbeType</text>
-</a>
-</g>
-</g>
-<!-- probe.ProbeType&#45;&gt;probe.ElectrodeConfig -->
+<!-- ephys.PreClusterParamSteps&#45;&gt;ephys.PreClusterParamSteps.Step -->
 <g id="edge27" class="edge">
-<title>probe.ProbeType-&gt;probe.ElectrodeConfig</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M879.13,-765.82C864.21,-757.31 848.53,-745.45 839.38,-730 826.47,-708.21 826.94,-677.89 828.86,-659.26"/>
-</g>
-<!-- probe.ProbeType.Electrode -->
-<g id="node26" class="node">
-<title>probe.ProbeType.Electrode</title>
-<g id="a_node26"><a xlink:title="→ probe.ProbeTypeelectrode            ------------------------------shank                shank_col            shank_row            x_coord=null         y_coord=null         ">
-<polygon fill="transparent" stroke="transparent" points="986.67,-722.5 848.08,-722.5 848.08,-702.5 986.67,-702.5 986.67,-722.5"/>
-<text text-anchor="start" x="856.23" y="-710.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ProbeType.Electrode</text>
-</a>
-</g>
-</g>
-<!-- probe.ProbeType&#45;&gt;probe.ProbeType.Electrode -->
-<g id="edge28" class="edge">
-<title>probe.ProbeType-&gt;probe.ProbeType.Electrode</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M917.38,-765.8C917.38,-752.24 917.38,-733.62 917.38,-722.65"/>
-</g>
-<!-- probe.Probe -->
-<g id="node34" class="node">
-<title>probe.Probe</title>
-<g id="a_node34"><a xlink:title="probe                ------------------------------→ probe.ProbeTypeprobe_comment=&quot;&quot;     ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="598.91,-730 527.84,-730 527.84,-695 598.91,-695 598.91,-730"/>
-<text text-anchor="start" x="535.86" y="-710.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.Probe</text>
-</a>
-</g>
-</g>
-<!-- probe.ProbeType&#45;&gt;probe.Probe -->
-<g id="edge29" class="edge">
-<title>probe.ProbeType-&gt;probe.Probe</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M870.73,-773.41C799.11,-759.45 663.58,-733.03 599.14,-720.47"/>
-</g>
-<!-- ephys.ClusteringParamSet -->
-<g id="node25" class="node">
-<title>ephys.ClusteringParamSet</title>
-<g id="a_node25"><a xlink:title="paramset_idx         ------------------------------→ ephys.ClusteringMethodparamset_desc        param_set_hash       params               UNIQUE INDEX (param_set_hash)">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="444.82,-446 309.93,-446 309.93,-411 444.82,-411 444.82,-446"/>
-<text text-anchor="start" x="317.9" y="-426.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusteringParamSet</text>
-</a>
-</g>
-</g>
-<!-- ephys.ClusteringParamSet&#45;&gt;ephys.ClusteringTask -->
-<g id="edge30" class="edge">
-<title>ephys.ClusteringParamSet-&gt;ephys.ClusteringTask</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M414.98,-410.97C439.75,-400.09 472.05,-385.89 496.8,-375.01"/>
-</g>
-<!-- probe.ProbeType.Electrode&#45;&gt;probe.ElectrodeConfig.Electrode -->
-<g id="edge31" class="edge">
-<title>probe.ProbeType.Electrode-&gt;probe.ElectrodeConfig.Electrode</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M917.09,-702.48C916.21,-685.92 912.66,-650.03 898.38,-624 888.53,-606.06 870.65,-590.27 858.4,-580.8"/>
-</g>
-<!-- ephys.CuratedClustering -->
-<g id="node28" class="node">
-<title>ephys.CuratedClustering</title>
-<g id="a_node28"><a xlink:title="→ ephys.Curation">
-<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="551.38" cy="-144.5" rx="96.21" ry="17.5"/>
-<text text-anchor="middle" x="551.38" y="-140.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.CuratedClustering</text>
-</a>
-</g>
-</g>
-<!-- ephys.Curation&#45;&gt;ephys.CuratedClustering -->
-<g id="edge32" class="edge">
-<title>ephys.Curation-&gt;ephys.CuratedClustering</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M549.86,-197.8C550.17,-186.95 550.58,-172.87 550.9,-162.05"/>
-</g>
-<!-- ephys.CuratedClustering&#45;&gt;ephys.WaveformSet -->
-<g id="edge33" class="edge">
-<title>ephys.CuratedClustering-&gt;ephys.WaveformSet</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M589.12,-128.36C618.19,-116.69 658.15,-100.67 686.9,-89.13"/>
-</g>
-<!-- ephys.CuratedClustering&#45;&gt;ephys.CuratedClustering.Unit -->
-<g id="edge34" class="edge">
-<title>ephys.CuratedClustering-&gt;ephys.CuratedClustering.Unit</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M551.38,-126.8C551.38,-113.24 551.38,-94.62 551.38,-83.65"/>
-</g>
-<!-- ephys.CuratedClustering&#45;&gt;ephys.QualityMetrics -->
-<g id="edge35" class="edge">
-<title>ephys.CuratedClustering-&gt;ephys.QualityMetrics</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M513.19,-128.36C483.88,-116.73 443.64,-100.78 414.57,-89.25"/>
+<title>ephys.PreClusterParamSteps-&gt;ephys.PreClusterParamSteps.Step</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M1066.55,-552.8C1066.55,-539.24 1066.55,-520.62 1066.55,-509.65"/>
 </g>
 <!-- ephys.ClusteringMethod -->
-<g id="node29" class="node">
+<g id="node24" class="node">
 <title>ephys.ClusteringMethod</title>
-<g id="a_node29"><a xlink:title="clustering_method    ------------------------------clustering_method_desc ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="420.21,-517 296.54,-517 296.54,-482 420.21,-482 420.21,-517"/>
-<text text-anchor="start" x="304.46" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusteringMethod</text>
+<g id="a_node24"><a xlink:title="clustering_method    ------------------------------clustering_method_desc ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="906.39,-517 782.72,-517 782.72,-482 906.39,-482 906.39,-517"/>
+<text text-anchor="start" x="790.64" y="-497.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusteringMethod</text>
+</a>
+</g>
+</g>
+<!-- ephys.ClusteringParamSet -->
+<g id="node31" class="node">
+<title>ephys.ClusteringParamSet</title>
+<g id="a_node31"><a xlink:title="paramset_idx         ------------------------------→ ephys.ClusteringMethodparamset_desc        param_set_hash       params               UNIQUE INDEX (param_set_hash)">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="912,-446 777.11,-446 777.11,-411 912,-411 912,-446"/>
+<text text-anchor="start" x="785.08" y="-426.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusteringParamSet</text>
 </a>
 </g>
 </g>
 <!-- ephys.ClusteringMethod&#45;&gt;ephys.ClusteringParamSet -->
-<g id="edge36" class="edge">
+<g id="edge28" class="edge">
 <title>ephys.ClusteringMethod-&gt;ephys.ClusteringParamSet</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M362.97,-481.8C365.96,-470.95 369.84,-456.87 372.82,-446.05"/>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M844.55,-481.8C844.55,-470.95 844.55,-456.87 844.55,-446.05"/>
+</g>
+<!-- ephys.ProbeInsertion&#45;&gt;ephys.InsertionLocation -->
+<g id="edge29" class="edge">
+<title>ephys.ProbeInsertion-&gt;ephys.InsertionLocation</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M280.5,-623.97C258.81,-613.13 230.55,-599 208.82,-588.13"/>
+</g>
+<!-- ephys.ProbeInsertion&#45;&gt;ephys.EphysRecording -->
+<g id="edge30" class="edge">
+<title>ephys.ProbeInsertion-&gt;ephys.EphysRecording</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M337.99,-623.97C354.37,-612.89 375.83,-598.37 392.02,-587.42"/>
+</g>
+<!-- ephys.LFP -->
+<g id="node26" class="node">
+<title>ephys.LFP</title>
+<g id="a_node26"><a xlink:title="→ ephys.PreCluster------------------------------lfp_sampling_rate    lfp_time_stamps      lfp_mean             ">
+<ellipse fill="#00007f" fill-opacity="0.250980" stroke="#00007f" stroke-opacity="0.250980" cx="666.55" cy="-357.5" rx="47.98" ry="17.5"/>
+<text text-anchor="middle" x="666.55" y="-353.9" font-family="arial" font-size="12.00" fill="#00007f" fill-opacity="0.627451">ephys.LFP</text>
+</a>
+</g>
+</g>
+<!-- ephys.LFP&#45;&gt;ephys.LFP.Electrode -->
+<g id="edge31" class="edge">
+<title>ephys.LFP-&gt;ephys.LFP.Electrode</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M666.55,-339.8C666.55,-326.24 666.55,-307.62 666.55,-296.65"/>
+</g>
+<!-- subject.Subject -->
+<g id="node27" class="node">
+<title>subject.Subject</title>
+<g id="a_node27"><a xlink:title="subject              ------------------------------subject_nickname=&quot;&quot;  sex                  subject_birth_date   subject_description=&quot;&quot; ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="362.44,-801 264.67,-801 264.67,-766 362.44,-766 362.44,-801"/>
+<text text-anchor="start" x="272.86" y="-780.9" font-family="arial" text-decoration="underline" font-size="12.00" fill="darkgreen">subject.Subject</text>
+</a>
+</g>
+</g>
+<!-- subject.Subject&#45;&gt;session.Session -->
+<g id="edge32" class="edge">
+<title>subject.Subject-&gt;session.Session</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M313.55,-765.8C313.55,-754.95 313.55,-740.87 313.55,-730.05"/>
 </g>
 <!-- ephys.ClusterQualityLabel -->
-<g id="node30" class="node">
+<g id="node28" class="node">
 <title>ephys.ClusterQualityLabel</title>
-<g id="a_node30"><a xlink:title="cluster_quality_label ------------------------------cluster_quality_description ">
-<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="798.6,-162 666.15,-162 666.15,-127 798.6,-127 798.6,-162"/>
-<text text-anchor="start" x="674.01" y="-142.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusterQualityLabel</text>
+<g id="a_node28"><a xlink:title="cluster_quality_label ------------------------------cluster_quality_description ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="924.78,-162 792.32,-162 792.32,-127 924.78,-127 924.78,-162"/>
+<text text-anchor="start" x="800.19" y="-142.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.ClusterQualityLabel</text>
 </a>
 </g>
 </g>
 <!-- ephys.ClusterQualityLabel&#45;&gt;ephys.CuratedClustering.Unit -->
-<g id="edge37" class="edge">
+<g id="edge33" class="edge">
 <title>ephys.ClusterQualityLabel-&gt;ephys.CuratedClustering.Unit</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M689.02,-126.97C653.25,-113.34 603.85,-94.51 574.99,-83.5"/>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M849.35,-126.8C841.89,-113.24 831.64,-94.62 825.59,-83.65"/>
 </g>
-<!-- ephys.ProbeInsertion&#45;&gt;ephys.InsertionLocation -->
+<!-- ephys.AcquisitionSoftware -->
+<g id="node29" class="node">
+<title>ephys.AcquisitionSoftware</title>
+<g id="a_node29"><a xlink:title="acq_software         ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="529.34,-659 395.77,-659 395.77,-624 529.34,-624 529.34,-659"/>
+<text text-anchor="start" x="403.91" y="-639.5" font-family="arial" text-decoration="underline" font-size="10.00">ephys.AcquisitionSoftware</text>
+</a>
+</g>
+</g>
+<!-- ephys.AcquisitionSoftware&#45;&gt;ephys.EphysRecording -->
+<g id="edge34" class="edge">
+<title>ephys.AcquisitionSoftware-&gt;ephys.EphysRecording</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M451.18,-623.8C443.79,-612.95 434.19,-598.87 426.83,-588.05"/>
+</g>
+<!-- ephys.WaveformSet&#45;&gt;ephys.WaveformSet.PeakWaveform -->
+<g id="edge35" class="edge">
+<title>ephys.WaveformSet-&gt;ephys.WaveformSet.PeakWaveform</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M668.26,-56.34C682.32,-44.81 700.73,-29.72 712.35,-20.19"/>
+</g>
+<!-- ephys.WaveformSet&#45;&gt;ephys.WaveformSet.Waveform -->
+<g id="edge36" class="edge">
+<title>ephys.WaveformSet-&gt;ephys.WaveformSet.Waveform</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M621.05,-56.98C600.36,-45.31 572.73,-29.72 555.55,-20.02"/>
+</g>
+<!-- ephys.ClusteringTask -->
+<g id="node35" class="node">
+<title>ephys.ClusteringTask</title>
+<g id="a_node35"><a xlink:title="→ ephys.PreCluster→ ephys.ClusteringParamSet------------------------------clustering_output_dir task_mode=&quot;load&quot;     ">
+<polygon fill="#00ff00" fill-opacity="0.188235" stroke="#00ff00" stroke-opacity="0.188235" points="873.44,-375 741.67,-375 741.67,-340 873.44,-340 873.44,-375"/>
+<text text-anchor="middle" x="807.55" y="-353.9" font-family="arial" font-size="12.00" fill="darkgreen">ephys.ClusteringTask</text>
+</a>
+</g>
+</g>
+<!-- ephys.ClusteringParamSet&#45;&gt;ephys.ClusteringTask -->
+<g id="edge37" class="edge">
+<title>ephys.ClusteringParamSet-&gt;ephys.ClusteringTask</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M835.6,-410.8C829.78,-399.95 822.23,-385.87 816.43,-375.05"/>
+</g>
+<!-- probe.ProbeType -->
+<g id="node32" class="node">
+<title>probe.ProbeType</title>
+<g id="a_node32"><a xlink:title="probe_type           ">
+<polygon fill="#000000" fill-opacity="0.125490" stroke="transparent" points="737.32,-801 643.78,-801 643.78,-766 737.32,-766 737.32,-801"/>
+<text text-anchor="start" x="651.92" y="-781.5" font-family="arial" text-decoration="underline" font-size="10.00">probe.ProbeType</text>
+</a>
+</g>
+</g>
+<!-- probe.ProbeType&#45;&gt;probe.ProbeType.Electrode -->
 <g id="edge38" class="edge">
-<title>ephys.ProbeInsertion-&gt;ephys.InsertionLocation</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M151.99,-623.97C135.33,-613.13 113.62,-599 96.92,-588.13"/>
+<title>probe.ProbeType-&gt;probe.ProbeType.Electrode</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M690.55,-765.8C690.55,-752.24 690.55,-733.62 690.55,-722.65"/>
 </g>
-<!-- ephys.ProbeInsertion&#45;&gt;ephys.EphysRecording -->
+<!-- probe.ProbeType&#45;&gt;probe.ElectrodeConfig -->
 <g id="edge39" class="edge">
-<title>ephys.ProbeInsertion-&gt;ephys.EphysRecording</title>
-<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M195.29,-623.8C207.01,-612.87 222.25,-598.66 233.88,-587.81"/>
+<title>probe.ProbeType-&gt;probe.ElectrodeConfig</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M652.31,-765.82C637.39,-757.31 621.7,-745.45 612.55,-730 599.65,-708.21 600.12,-677.89 602.04,-659.26"/>
 </g>
-<!-- ephys.EphysRecording&#45;&gt;ephys.EphysRecording.EphysFile -->
+<!-- probe.ProbeType&#45;&gt;probe.Probe -->
 <g id="edge40" class="edge">
-<title>ephys.EphysRecording-&gt;ephys.EphysRecording.EphysFile</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M238.1,-553.15C227.11,-539.6 211.87,-520.83 202.88,-509.75"/>
+<title>probe.ProbeType-&gt;probe.Probe</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M643.68,-767.53C603.61,-754.73 546.79,-736.57 510.3,-724.92"/>
 </g>
-<!-- ephys.EphysRecording&#45;&gt;ephys.PreClusterTask -->
+<!-- ephys.PreCluster&#45;&gt;ephys.LFP -->
 <g id="edge41" class="edge">
-<title>ephys.EphysRecording-&gt;ephys.PreClusterTask</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M301.56,-555.87C342.62,-544.71 400.84,-528.9 444.55,-517.02"/>
+<title>ephys.PreCluster-&gt;ephys.LFP</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M683.23,-410.8C679.77,-399.95 675.28,-385.87 671.83,-375.05"/>
 </g>
-<!-- probe.Probe&#45;&gt;ephys.ProbeInsertion -->
+<!-- ephys.PreCluster&#45;&gt;ephys.ClusteringTask -->
 <g id="edge42" class="edge">
-<title>probe.Probe-&gt;ephys.ProbeInsertion</title>
-<path fill="none" stroke="#000000" stroke-width="0.75" stroke-dasharray="5,2" stroke-opacity="0.250980" d="M527.58,-706.17C469.31,-697.33 350.39,-678.68 250.38,-659 247.7,-658.47 244.97,-657.92 242.21,-657.35"/>
+<title>ephys.PreCluster-&gt;ephys.ClusteringTask</title>
+<path fill="none" stroke="#000000" stroke-width="0.75" stroke-opacity="0.250980" d="M714.96,-412.19C733.86,-401.23 759.29,-386.48 778.72,-375.22"/>
+</g>
+<!-- ephys.ClusteringTask&#45;&gt;ephys.Clustering -->
+<g id="edge43" class="edge">
+<title>ephys.ClusteringTask-&gt;ephys.Clustering</title>
+<path fill="none" stroke="#000000" stroke-width="2" stroke-opacity="0.250980" d="M807.55,-339.8C807.55,-328.95 807.55,-314.87 807.55,-304.05"/>
 </g>
 </g>
 </svg>
