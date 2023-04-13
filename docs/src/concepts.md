@@ -109,7 +109,7 @@ is a table within the Element or a table connected to the Element.
 
 ### `ephys_no_curation` module
 
-![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
+![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_no_curation.svg)
 
 ### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 
