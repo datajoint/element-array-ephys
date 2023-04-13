@@ -8,20 +8,16 @@
       
       
       
-        <link rel="canonical" href="http://localhost/docs/elements/element-array-ephys/0.2/tutorials/06-drop-optional/">
+        <link rel="canonical" href="http://localhost/docs/elements/element-array-ephys/0.2/tutorials/demo_run/">
       
       
-        <link rel="prev" href="../05-explore/">
-      
-      
-        <link rel="next" href="../07-downstream-analysis/">
       
       <link rel="icon" href="../../assets/images/company-logo-blue.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
     
     
       
-        <title>Drop - DataJoint Documentation</title>
+        <title>Demo run - DataJoint Documentation</title>
       
     
     
@@ -89,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#drop-schemas" class="md-skip">
+        <a href="#datajoint-workflow-for-neuropixels-analysis" class="md-skip">
           Skip to content
         </a>
       
@@ -138,7 +134,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Drop
+              Demo run
             
           </span>
         </div>
@@ -311,16 +307,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
       
@@ -329,7 +323,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Tutorials
@@ -438,21 +432,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../06-drop-optional/" class="md-nav__link">
         Drop
       </a>
-      
     </li>
   
 
@@ -2270,10 +2254,9 @@ Licensed under the Apache License, Version 2.0.
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="drop-schemas">Drop schemas<a class="anchor-link" href="#drop-schemas">&#182;</a></h1><ul>
-<li>Schemas are not typically dropped in a production workflow with real data in it.</li>
-<li>At the developmental phase, it might be required for the table redesign.</li>
-<li>When dropping all schemas is needed, the following is the dependency order.</li>
+<h1 id="datajoint-workflow-for-neuropixels-analysis">DataJoint Workflow for Neuropixels Analysis<a class="anchor-link" href="#datajoint-workflow-for-neuropixels-analysis">&#182;</a></h1><ul>
+<li>This notebook demonstrates using the open-source DataJoint Element to build a workflow for extracellular electrophysiology.</li>
+<li>For a detailed tutorial, please see the <a href="./tutorial.ipynb">tutorial notebook</a>.</li>
 </ul>
 
 </div>
@@ -2286,13 +2269,12 @@ Licensed under the Apache License, Version 2.0.
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Change into the parent directory to find the <code>dj_local_conf.json</code> file.</p>
-
+<h3 id="import-dependencies">Import dependencies<a class="anchor-link" href="#import-dependencies">&#182;</a></h3>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
-<div id="cell-id=8eab5470" class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2312,11 +2294,13 @@ Licensed under the Apache License, Version 2.0.
                     </div>
                 </clipboard-copy>
             </div>
-            <div class="highlight-ipynb hl-python "><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="o">==</span> <span class="s2">&quot;notebooks&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+            <div class="highlight-ipynb hl-python "><pre><span></span><span class="kn">import</span> <span class="nn">datajoint</span> <span class="k">as</span> <span class="nn">dj</span>
+<span class="kn">from</span> <span class="nn">workflow_array_ephys.pipeline</span> <span class="kn">import</span> <span class="n">subject</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">probe</span><span class="p">,</span> <span class="n">ephys</span>
+<span class="kn">from</span> <span class="nn">element_array_ephys.plotting.widget</span> <span class="kn">import</span> <span class="n">main</span>
 </pre></div>
-<div id="cell-1" class="clipboard-copy-txt">import os
-if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
+<div id="cell-1" class="clipboard-copy-txt">import datajoint as dj
+from workflow_array_ephys.pipeline import subject, session, probe, ephys
+from element_array_ephys.plotting.widget import main</div>
         
         </div>
     </div>
@@ -2325,13 +2309,24 @@ if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
 </div>
 
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div>
+<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="view-workflow">View workflow<a class="anchor-link" href="#view-workflow">&#182;</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
         
         
         <div class="CodeMirror cm-s-jupyter">
@@ -2346,9 +2341,9 @@ if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
                     </div>
                 </clipboard-copy>
             </div>
-            <div class="highlight-ipynb hl-python "><pre><span></span><span class="kn">from</span> <span class="nn">workflow_array_ephys.pipeline</span> <span class="kn">import</span> <span class="o">*</span>
+            <div class="highlight-ipynb hl-python "><pre><span></span><span class="n">dj</span><span class="o">.</span><span class="n">Diagram</span><span class="p">(</span><span class="n">subject</span><span class="o">.</span><span class="n">Subject</span><span class="p">)</span> <span class="o">+</span> <span class="n">dj</span><span class="o">.</span><span class="n">Diagram</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">)</span> <span class="o">+</span> <span class="n">dj</span><span class="o">.</span><span class="n">Diagram</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span> <span class="o">+</span> <span class="n">dj</span><span class="o">.</span><span class="n">Diagram</span><span class="p">(</span><span class="n">ephys</span><span class="p">)</span>
 </pre></div>
-<div id="cell-2" class="clipboard-copy-txt">from workflow_array_ephys.pipeline import *</div>
+<div id="cell-2" class="clipboard-copy-txt">dj.Diagram(subject.Subject) + dj.Diagram(session.Session) + dj.Diagram(probe) + dj.Diagram(ephys)</div>
         
         </div>
     </div>
@@ -2356,27 +2351,54 @@ if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
 </div>
 </div>
 
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Connecting root@localhost:3306
-</pre>
 </div>
 </div>
+<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="insert-an-entry-in-a-manual-table-by-calling-the-insert-method">Insert an entry in a manual table by calling the <code>insert()</code> method<a class="anchor-link" href="#insert-an-entry-in-a-manual-table-by-calling-the-insert-method">&#182;</a></h3><div class="highlight"><pre><span></span><span class="n">subject</span><span class="o">.</span><span class="n">Subject</span><span class="o">.</span><span class="n">insert1</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="s1">&#39;subject1&#39;</span><span class="p">,</span>
+         <span class="n">subject_birth_date</span><span class="o">=</span><span class="s1">&#39;2023-01-01&#39;</span><span class="p">,</span>
+         <span class="n">sex</span><span class="o">=</span><span class="s1">&#39;U&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
 
 </div>
+</div>
+</div>
+</div>
+<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="automatically-process-data-with-the-populate-method">Automatically process data with the <code>populate()</code> method<a class="anchor-link" href="#automatically-process-data-with-the-populate-method">&#182;</a></h3><ul>
+<li><p>Once data is inserted into manual tables, the <code>populate()</code> function automatically runs the ingestion and processing routines.</p>
+</li>
+<li><p>For example, to run Kilosort processing in the <code>Clustering</code> table:</p>
+<div class="highlight"><pre><span></span><span class="n">ephys</span><span class="o">.</span><span class="n">Clustering</span><span class="o">.</span><span class="n">populate</span><span class="p">()</span>
+</pre></div>
+</li>
+</ul>
 
 </div>
-
+</div>
+</div>
+</div>
+<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="visualize-processed-data">Visualize processed data<a class="anchor-link" href="#visualize-processed-data">&#182;</a></h3>
+</div>
+</div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -2399,17 +2421,9 @@ if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
                     </div>
                 </clipboard-copy>
             </div>
-            <div class="highlight-ipynb hl-python "><pre><span></span><span class="c1"># ephys.schema.drop()</span>
-<span class="c1"># probe.schema.drop()</span>
-<span class="c1"># session.schema.drop()</span>
-<span class="c1"># subject.schema.drop()</span>
-<span class="c1"># lab.schema.drop()</span>
+            <div class="highlight-ipynb hl-python "><pre><span></span><span class="n">main</span><span class="p">(</span><span class="n">ephys</span><span class="p">)</span>
 </pre></div>
-<div id="cell-3" class="clipboard-copy-txt"># ephys.schema.drop()
-# probe.schema.drop()
-# session.schema.drop()
-# subject.schema.drop()
-# lab.schema.drop()</div>
+<div id="cell-3" class="clipboard-copy-txt">main(ephys)</div>
         
         </div>
     </div>
@@ -2417,6 +2431,18 @@ if os.path.basename(os.getcwd()) == "notebooks": os.chdir("..")</div>
 </div>
 </div>
 
+</div>
+</div>
+<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>For an in-depth tutorial please see the <a href="./tutorial.ipynb">tutorial notebook</a>.</p>
+
+</div>
+</div>
 </div>
 </div>
 </div>
