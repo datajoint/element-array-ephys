@@ -937,9 +937,9 @@ class CuratedClustering(dj.Imported):
 
         Attributes:
             CuratedClustering (foreign key): CuratedClustering primary key.
-            unit (foreign key, int): Unique integer identifying a single unit.
-            probe.ElectrodeConfig.Electrode (dict): probe.ElectrodeConfig.Electrode primary key.
-            ClusteringQualityLabel (dict): CLusteringQualityLabel primary key.
+            unit (int): Unique integer identifying a single unit.
+            probe.ElectrodeConfig.Electrode (foreign key): probe.ElectrodeConfig.Electrode primary key.
+            ClusteringQualityLabel (foreign key): CLusteringQualityLabel primary key.
             spike_count (int): Number of spikes in this recording for this unit.
             spike_times (longblob): Spike times of this unit, relative to start time of EphysRecording.
             spike_sites (longblob): Array of electrode associated with each spike.
