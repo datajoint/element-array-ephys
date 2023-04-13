@@ -196,16 +196,20 @@ class KilosortClustering(dj.Imported):
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             spikeglx_recording.validate_file("ap")
-
+            run_CatGT = (
+                params.get("run_CatGT", True)
+                and "_tcat." not in spikeglx_meta_filepath.stem
+            )
+            
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                run_CatGT=True,
+                run_CatGT=run_CatGT,
             )
             modules_to_run = ["kilosort_helper"]
-            run_kilosort._CatGT_finished = True
+            run_kilosort._CatGT_finished = run_CatGT
             run_kilosort.run_modules(modules_to_run)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
@@ -257,18 +261,20 @@ class KilosortPostProcessing(dj.Imported):
         ).fetch1("acq_software", "clustering_method")
 
         params = (KilosortPreProcessing & key).fetch1("params")
-
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             spikeglx_recording.validate_file("ap")
-
+            run_CatGT = (
+                params.get("run_CatGT", True)
+                and "_tcat." not in spikeglx_meta_filepath.stem
+            )
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                run_CatGT=True,
+                run_CatGT=run_CatGT,
             )
             modules_to_run = [
                 "kilosort_postprocessing",
@@ -276,7 +282,7 @@ class KilosortPostProcessing(dj.Imported):
                 "mean_waveforms",
                 "quality_metrics",
             ]
-            run_kilosort._CatGT_finished = True
+            run_kilosort._CatGT_finished = run_CatGT
             run_kilosort.run_modules(modules_to_run)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
