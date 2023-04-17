@@ -1,4 +1,4 @@
-# ---------------------- PROJECT SPECIFIC ---------------------------
+--- # ---------------------- PROJECT SPECIFIC ---------------------------
 
 site_name: DataJoint Documentation
 site_url: http://localhost/docs/elements/element-array-ephys
@@ -7,19 +7,20 @@ repo_name: datajoint/element-array-ephys
 nav:
   - Element Array Ephys: index.md
   - Concepts: concepts.md
-  - Tutorials: 
-    - Overview: tutorials/index.md
-    - Data Download: tutorials/00-data-download-optional.ipynb
-    - Configure: tutorials/01-configure.ipynb
-    - Workflow Structure: tutorials/02-workflow-structure-optional.ipynb
-    - Process: tutorials/03-process.ipynb
-    - Automate: tutorials/04-automate-optional.ipynb
-    - Explore: tutorials/05-explore.ipynb
-    - Drop: tutorials/06-drop-optional.ipynb
-    - Downstream Analysis: tutorials/07-downstream-analysis.ipynb
-    - Visualizations: tutorials/10-data_visualization.ipynb
-    - Electrode Localization: tutorials/08-electrode-localization.ipynb
-    - NWB Export: tutorials/09-NWB-export.ipynb
+  - Tutorials:
+      - Overview: tutorials/index.md
+      - Data Download: tutorials/00-data-download-optional.ipynb
+      - Configure: tutorials/01-configure.ipynb
+      - Workflow Structure: tutorials/02-workflow-structure-optional.ipynb
+      - Process: tutorials/03-process.ipynb
+      - Automate: tutorials/04-automate-optional.ipynb
+      - Explore: tutorials/05-explore.ipynb
+      - Drop: tutorials/06-drop-optional.ipynb
+      - Downstream Analysis: tutorials/07-downstream-analysis.ipynb
+      - Visualizations: tutorials/10-data_visualization.ipynb
+      - Electrode Localization: tutorials/08-electrode-localization.ipynb
+      - NWB Export: tutorials/09-NWB-export.ipynb
+      - Quality Metrics: tutorials/quality_metrics.ipynb
   - Citation: citation.md
   - API: api/ # defer to gen-files + literate-nav
   - Changelog: changelog.md
@@ -35,7 +36,7 @@ nav:
 # 02. Instead of designating codeblocks with bash, use console. For example..
 #     ```console
 #     cd ../my_dir
-#     ``` 
+#     ```
 # 03. Links across docs should ...
 #     A. Not involve line breaks.
 #     B. Use relative paths to docs in the same repo
@@ -63,7 +64,7 @@ nav:
 #     URL in ./docs/src/api/make_pages.py#L19 to your fork.
 # 04. To deploy this site on your fork, 
 #     A. declare a branch called gh-pages
-#     B. go to the your fork > settings > pages 
+#     B. go to the your fork > settings > pages
 #     C. direct pages to render from the gh-pages branch at root
 #     D. push a tag to your fork with the format test*.*.*
 #
@@ -109,7 +110,7 @@ plugins:
             line_length: 88
   - gen-files:
       scripts:
-      - ./src/api/make_pages.py
+        - ./src/api/make_pages.py
   - literate-nav:
       nav_file: navigation.md
   - exclude-search:
@@ -178,4 +179,4 @@ extra_css:
   - assets/stylesheets/extra.css
 
 extra_javascript:
-  - https://js-na1.hs-scripts.com/23133402.js  # HubSpot chatbot
+  - https://js-na1.hs-scripts.com/23133402.js # HubSpot chatbot

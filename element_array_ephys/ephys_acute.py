@@ -1360,8 +1360,7 @@ class QualityMetrics(dj.Imported):
         metrics_df = pd.read_csv(metric_fp)
         metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-        metrics_df.columns = map(str.lower, metrics_df.columns)
-
+        metrics_df.columns = metrics_df.columns.str.lower()
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
