@@ -51,18 +51,6 @@
     <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
-  
-
-
-  
-  
-
-
-  <script id="__analytics">function __md_analytics(){function n(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],n("js",new Date),n("config","G-1Y31YH9H2Q"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&n("event","search",{search_term:this.value})}),document$.subscribe(function(){var a=document.forms.feedback;if(void 0!==a)for(var e of a.querySelectorAll("[type=submit]"))e.addEventListener("click",function(e){e.preventDefault();var t=document.location.pathname,e=this.getAttribute("data-md-value");n("event","feedback",{page:t,data:e}),a.firstElementChild.disabled=!0;e=a.querySelector(".md-feedback__note [data-md-value='"+e+"']");e&&(e.hidden=!1)}),a.hidden=!1}),location$.subscribe(function(e){n("config","G-1Y31YH9H2Q",{page_path:e.pathname})})});var e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-1Y31YH9H2Q",document.getElementById("__analytics").insertAdjacentElement("afterEnd",e)}</script>
-
-  
-    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
-  
 
     
     
@@ -7747,7 +7735,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
         <span class="n">metrics_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metric_fp</span><span class="p">)</span>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
+        <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
             <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">unit_key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">CuratedClustering</span><span class="o">.</span><span class="n">Unit</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;KEY&quot;</span><span class="p">)</span>
@@ -8268,7 +8256,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
     <span class="n">metrics_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metric_fp</span><span class="p">)</span>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
+    <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
         <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">unit_key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">CuratedClustering</span><span class="o">.</span><span class="n">Unit</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;KEY&quot;</span><span class="p">)</span>
@@ -8883,8 +8871,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
 </div>
 
-
-  
 
 
 

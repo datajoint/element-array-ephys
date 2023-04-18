@@ -2,232 +2,232 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/changelog/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/citation/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/concepts/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/make_pages/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>None</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/ephys_acute/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/ephys_chronic/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/ephys_no_curation/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/ephys_precluster/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/ephys_report/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/probe/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/version/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/export/nwb/nwb/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/plotting/corr/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/plotting/probe_level/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/plotting/qc/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/plotting/unit_level/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/plotting/widget/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/readers/kilosort/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/readers/kilosort_triggering/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/readers/openephys/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/readers/spikeglx/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/element_array_ephys/readers/utils/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/analysis/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/export/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/ingest/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/localization/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/paths/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/pipeline/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/process/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/version/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/api/workflow_array_ephys/plotting/plot_psth/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/01-configure/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/02-workflow-structure-optional/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/03-process/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/05-explore/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/06-drop-optional/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/07-downstream-analysis/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/08-electrode-localization/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/09-NWB-export/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/10-data_visualization/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/demo_prepare/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/demo_run/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/elements/element-array-ephys/0.2/tutorials/tutorial/</loc>
-         <lastmod>2023-04-13</lastmod>
+         <lastmod>2023-04-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

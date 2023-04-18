@@ -51,18 +51,6 @@
     <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
-  
-
-
-  
-  
-
-
-  <script id="__analytics">function __md_analytics(){function n(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],n("js",new Date),n("config","G-1Y31YH9H2Q"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&n("event","search",{search_term:this.value})}),document$.subscribe(function(){var a=document.forms.feedback;if(void 0!==a)for(var e of a.querySelectorAll("[type=submit]"))e.addEventListener("click",function(e){e.preventDefault();var t=document.location.pathname,e=this.getAttribute("data-md-value");n("event","feedback",{page:t,data:e}),a.firstElementChild.disabled=!0;e=a.querySelector(".md-feedback__note [data-md-value='"+e+"']");e&&(e.hidden=!1)}),a.hidden=!1}),location$.subscribe(function(e){n("config","G-1Y31YH9H2Q",{page_path:e.pathname})})});var e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-1Y31YH9H2Q",document.getElementById("__analytics").insertAdjacentElement("afterEnd",e)}</script>
-
-  
-    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
-  
 
     
     
@@ -7721,7 +7709,9 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <span class="normal">1284</span>
 <span class="normal">1285</span>
 <span class="normal">1286</span>
-<span class="normal">1287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
+<span class="normal">1287</span>
+<span class="normal">1288</span>
+<span class="normal">1289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
 <span class="k">class</span> <span class="nc">QualityMetrics</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clustering and waveform quality metrics.</span>
 
@@ -7823,6 +7813,8 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
         <span class="n">metrics_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metric_fp</span><span class="p">)</span>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
         <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
             <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
@@ -8330,7 +8322,9 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <span class="normal">1284</span>
 <span class="normal">1285</span>
 <span class="normal">1286</span>
-<span class="normal">1287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="normal">1287</span>
+<span class="normal">1288</span>
+<span class="normal">1289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Populates tables with quality metrics data.&quot;&quot;&quot;</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">ClusteringTask</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch1</span><span class="p">(</span><span class="s2">&quot;clustering_output_dir&quot;</span><span class="p">)</span>
     <span class="n">kilosort_dir</span> <span class="o">=</span> <span class="n">find_full_path</span><span class="p">(</span><span class="n">get_ephys_root_data_dir</span><span class="p">(),</span> <span class="n">output_dir</span><span class="p">)</span>
@@ -8342,6 +8336,8 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
     <span class="n">metrics_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">metric_fp</span><span class="p">)</span>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
     <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
         <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
@@ -8387,9 +8383,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_precluster.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1293</span>
-<span class="normal">1294</span>
-<span class="normal">1295</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1295</span>
 <span class="normal">1296</span>
 <span class="normal">1297</span>
 <span class="normal">1298</span>
@@ -8421,7 +8415,9 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <span class="normal">1324</span>
 <span class="normal">1325</span>
 <span class="normal">1326</span>
-<span class="normal">1327</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_spikeglx_meta_filepath</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1327</span>
+<span class="normal">1328</span>
+<span class="normal">1329</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_spikeglx_meta_filepath</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get spikeGLX data filepath.&quot;&quot;&quot;</span>
     <span class="c1"># attempt to retrieve from EphysRecording.EphysFile</span>
     <span class="n">spikeglx_meta_filepath</span> <span class="o">=</span> <span class="p">(</span>
@@ -8483,9 +8479,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_precluster.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1330</span>
-<span class="normal">1331</span>
-<span class="normal">1332</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1332</span>
 <span class="normal">1333</span>
 <span class="normal">1334</span>
 <span class="normal">1335</span>
@@ -8534,7 +8528,9 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <span class="normal">1378</span>
 <span class="normal">1379</span>
 <span class="normal">1380</span>
-<span class="normal">1381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_neuropixels_channel2electrode_map</span><span class="p">(</span>
+<span class="normal">1381</span>
+<span class="normal">1382</span>
+<span class="normal">1383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_neuropixels_channel2electrode_map</span><span class="p">(</span>
     <span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">acq_software</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the channel map for neuropixels probe.&quot;&quot;&quot;</span>
@@ -8665,9 +8661,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_precluster.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1384</span>
-<span class="normal">1385</span>
-<span class="normal">1386</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1386</span>
 <span class="normal">1387</span>
 <span class="normal">1388</span>
 <span class="normal">1389</span>
@@ -8706,7 +8700,9 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <span class="normal">1422</span>
 <span class="normal">1423</span>
 <span class="normal">1424</span>
-<span class="normal">1425</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_electrode_config</span><span class="p">(</span><span class="n">probe_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">electrode_keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="normal">1425</span>
+<span class="normal">1426</span>
+<span class="normal">1427</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_electrode_config</span><span class="p">(</span><span class="n">probe_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">electrode_keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate and insert new ElectrodeConfig</span>
 
 <span class="sd">    Args:</span>
@@ -8763,8 +8759,6 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 
 </div>
 
-
-  
 
 
 
