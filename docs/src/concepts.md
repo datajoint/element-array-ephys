@@ -168,7 +168,7 @@ Tables for storing probe or unit-level visualization results.
 
 Through our interviews and direct collaboration on the precursor projects, we identified
 the common motifs to create the 
-[Array ElectrophysiologyElement](https://github.com/datajoint/element-array-ephys).
+[Array Electrophysiology Element](https://github.com/datajoint/element-array-ephys).
 
 Major features of the Array Electrophysiology Element include:
 
