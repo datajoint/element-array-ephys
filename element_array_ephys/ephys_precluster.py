@@ -616,7 +616,6 @@ class LFP(dj.Imported):
                 ][recorded_site]
                 electrode_keys.append(probe_electrodes[(shank, shank_col, shank_row)])
         elif acq_software == "Open Ephys":
-
             session_dir = find_full_path(
                 get_ephys_root_data_dir(), get_session_directory(key)
             )
@@ -1270,6 +1269,11 @@ class QualityMetrics(dj.Imported):
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         metric_fp = kilosort_dir / "metrics.csv"
+        rename_dict = {
+            "isi_viol": "isi_violation",
+            "num_viol": "number_violation",
+            "contam_rate": "contamination_rate",
+        }
 
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
@@ -1278,7 +1282,7 @@ class QualityMetrics(dj.Imported):
         metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
         metrics_df.columns = metrics_df.columns.str.lower()
-
+        metrics_df.rename(columns=rename_dict, inplace=True)
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
