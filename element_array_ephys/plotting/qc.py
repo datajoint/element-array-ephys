@@ -198,7 +198,7 @@ class QualityMetricFigs(object):
         return fig.add_trace(
             go.Scatter(
                 x=histogram_bins[:-1],
-                y=gaussian_filter1d(histogram, 1),  
+                y=gaussian_filter1d(histogram, 1),
                 mode="lines",
                 line=dict(color="rgb(0, 160, 223)", width=2 * scale),  # DataJoint Blue
                 hovertemplate="%{x:.2f}<br>%{y:.2f}<extra></extra>",
@@ -354,10 +354,10 @@ class QualityMetricFigs(object):
                     "bins": np.linspace(0, 0.5, 200),
                     "vline": 0.1,
                 },
-                "isi_violation": {  # If linear bins(0, 10, 200). Offset b/c log(0) null
+                "isi_viol": {  # If linear bins(0, 10, 200). Offset b/c log(0) null
                     "xaxis": "ISI violations (log<sub>10</sub>)",
                     "data": np.log10(
-                        self.units.get("isi_violation", self._null_series) + 1e-5
+                        self.units.get("isi_viol", self._null_series) + 1e-5
                     ),
                     "bins": np.linspace(-6, 2.5, 100),
                     "vline": np.log10(0.5),

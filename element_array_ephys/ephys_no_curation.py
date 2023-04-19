@@ -1219,8 +1219,8 @@ class QualityMetrics(dj.Imported):
             firing_rate (float): Firing rate of the unit.
             snr (float): Signal-to-noise ratio for a unit.
             presence_ratio (float): Fraction of time where spikes are present.
-            isi_violation (float): rate of ISI violation as a fraction of overall rate.
-            number_violation (int): Total ISI violations.
+            isi_viol (float): rate of ISI violation as a fraction of overall rate.
+            num_viol (int): Total ISI violations.
             amplitude_cutoff (float): Estimate of miss rate based on amplitude histogram.
             isolation_distance (float): Distance to nearest cluster.
             l_ratio (float): Amount of empty space between a cluster and other spikes in dataset.
@@ -1229,7 +1229,7 @@ class QualityMetrics(dj.Imported):
             nn_miss_rate (float): Fraction of neighbors outside target cluster that are in the target cluster.
             silhouette_core (float): Maximum change in spike depth throughout recording.
             cumulative_drift (float): Cumulative change in spike depth throughout recording.
-            contamination_rate (float): Frequency of spikes in the refractory period.
+            contam_rate (float): Frequency of spikes in the refractory period.
         """
 
         definition = """
@@ -1240,8 +1240,8 @@ class QualityMetrics(dj.Imported):
         firing_rate=null: float # (Hz) firing rate for a unit
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
-        isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
-        number_violation=null: int  # total number of ISI violations
+        isi_viol=null: float   # rate of ISI violation as a fraction of overall rate
+        num_viol=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
         l_ratio=null: float  #
@@ -1251,7 +1251,7 @@ class QualityMetrics(dj.Imported):
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
         cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
-        contamination_rate=null: float #
+        contam_rate=null: float #
         """
 
     class Waveform(dj.Part):
