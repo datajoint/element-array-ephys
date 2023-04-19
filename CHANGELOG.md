@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.7] - 2023-04-19
+
++ Bugfix - A name remapping dictionary was added to ensure consistency between the column names of the `metrics.csv` file and the attribute names of the `QualityMetrics` table
+
 ## [0.2.6] - 2023-04-17
 
 + Fix - Update Pandas DataFrame column name to insert `pt_ratio` in `QualityMetrics.Waveform` table
@@ -101,6 +105,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.2.7]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.7
 [0.2.6]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.6
 [0.2.5]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.5
 [0.2.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.4
