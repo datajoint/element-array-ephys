@@ -7644,7 +7644,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1297</span>
 <span class="normal">1298</span>
 <span class="normal">1299</span>
-<span class="normal">1300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
+<span class="normal">1300</span>
+<span class="normal">1301</span>
+<span class="normal">1302</span>
+<span class="normal">1303</span>
+<span class="normal">1304</span>
+<span class="normal">1305</span>
+<span class="normal">1306</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@schema</span>
 <span class="k">class</span> <span class="nc">QualityMetrics</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clustering and waveform quality metrics.</span>
 
@@ -7740,6 +7746,11 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
         <span class="n">kilosort_dir</span> <span class="o">=</span> <span class="n">find_full_path</span><span class="p">(</span><span class="n">get_ephys_root_data_dir</span><span class="p">(),</span> <span class="n">output_dir</span><span class="p">)</span>
 
         <span class="n">metric_fp</span> <span class="o">=</span> <span class="n">kilosort_dir</span> <span class="o">/</span> <span class="s2">&quot;metrics.csv&quot;</span>
+        <span class="n">rename_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;isi_viol&quot;</span><span class="p">:</span> <span class="s2">&quot;isi_violation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;num_viol&quot;</span><span class="p">:</span> <span class="s2">&quot;number_violation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;contam_rate&quot;</span><span class="p">:</span> <span class="s2">&quot;contamination_rate&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">metric_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QC metrics file not found: </span><span class="si">{</span><span class="n">metric_fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -7748,6 +7759,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">metrics_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename_dict</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
             <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">unit_key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">CuratedClustering</span><span class="o">.</span><span class="n">Unit</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;KEY&quot;</span><span class="p">)</span>
@@ -8255,12 +8267,23 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1297</span>
 <span class="normal">1298</span>
 <span class="normal">1299</span>
-<span class="normal">1300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="normal">1300</span>
+<span class="normal">1301</span>
+<span class="normal">1302</span>
+<span class="normal">1303</span>
+<span class="normal">1304</span>
+<span class="normal">1305</span>
+<span class="normal">1306</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Populates tables with quality metrics data.&quot;&quot;&quot;</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">ClusteringTask</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch1</span><span class="p">(</span><span class="s2">&quot;clustering_output_dir&quot;</span><span class="p">)</span>
     <span class="n">kilosort_dir</span> <span class="o">=</span> <span class="n">find_full_path</span><span class="p">(</span><span class="n">get_ephys_root_data_dir</span><span class="p">(),</span> <span class="n">output_dir</span><span class="p">)</span>
 
     <span class="n">metric_fp</span> <span class="o">=</span> <span class="n">kilosort_dir</span> <span class="o">/</span> <span class="s2">&quot;metrics.csv&quot;</span>
+    <span class="n">rename_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;isi_viol&quot;</span><span class="p">:</span> <span class="s2">&quot;isi_violation&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_viol&quot;</span><span class="p">:</span> <span class="s2">&quot;number_violation&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;contam_rate&quot;</span><span class="p">:</span> <span class="s2">&quot;contamination_rate&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">metric_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QC metrics file not found: </span><span class="si">{</span><span class="n">metric_fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -8269,6 +8292,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">metrics_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">metrics_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename_dict</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">metrics_list</span> <span class="o">=</span> <span class="p">[</span>
         <span class="nb">dict</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">unit_key</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]],</span> <span class="o">**</span><span class="n">unit_key</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">unit_key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">CuratedClustering</span><span class="o">.</span><span class="n">Unit</span> <span class="o">&amp;</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;KEY&quot;</span><span class="p">)</span>
@@ -8313,13 +8337,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_chronic.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1306</span>
-<span class="normal">1307</span>
-<span class="normal">1308</span>
-<span class="normal">1309</span>
-<span class="normal">1310</span>
-<span class="normal">1311</span>
-<span class="normal">1312</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1312</span>
 <span class="normal">1313</span>
 <span class="normal">1314</span>
 <span class="normal">1315</span>
@@ -8351,7 +8369,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1341</span>
 <span class="normal">1342</span>
 <span class="normal">1343</span>
-<span class="normal">1344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_spikeglx_meta_filepath</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1344</span>
+<span class="normal">1345</span>
+<span class="normal">1346</span>
+<span class="normal">1347</span>
+<span class="normal">1348</span>
+<span class="normal">1349</span>
+<span class="normal">1350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_spikeglx_meta_filepath</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get spikeGLX data filepath.&quot;&quot;&quot;</span>
     <span class="c1"># attempt to retrieve from EphysRecording.EphysFile</span>
     <span class="n">spikeglx_meta_filepath</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span>
@@ -8417,13 +8441,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_chronic.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1347</span>
-<span class="normal">1348</span>
-<span class="normal">1349</span>
-<span class="normal">1350</span>
-<span class="normal">1351</span>
-<span class="normal">1352</span>
-<span class="normal">1353</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1353</span>
 <span class="normal">1354</span>
 <span class="normal">1355</span>
 <span class="normal">1356</span>
@@ -8433,7 +8451,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1360</span>
 <span class="normal">1361</span>
 <span class="normal">1362</span>
-<span class="normal">1363</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_openephys_probe_data</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="normal">1363</span>
+<span class="normal">1364</span>
+<span class="normal">1365</span>
+<span class="normal">1366</span>
+<span class="normal">1367</span>
+<span class="normal">1368</span>
+<span class="normal">1369</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_openephys_probe_data</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get OpenEphys probe data from file.&quot;&quot;&quot;</span>
     <span class="n">inserted_probe_serial_number</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">ProbeInsertion</span> <span class="o">*</span> <span class="n">probe</span><span class="o">.</span><span class="n">Probe</span> <span class="o">&amp;</span> <span class="n">ephys_recording_key</span>
@@ -8477,13 +8501,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_chronic.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1366</span>
-<span class="normal">1367</span>
-<span class="normal">1368</span>
-<span class="normal">1369</span>
-<span class="normal">1370</span>
-<span class="normal">1371</span>
-<span class="normal">1372</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1372</span>
 <span class="normal">1373</span>
 <span class="normal">1374</span>
 <span class="normal">1375</span>
@@ -8523,7 +8541,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1409</span>
 <span class="normal">1410</span>
 <span class="normal">1411</span>
-<span class="normal">1412</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_neuropixels_channel2electrode_map</span><span class="p">(</span>
+<span class="normal">1412</span>
+<span class="normal">1413</span>
+<span class="normal">1414</span>
+<span class="normal">1415</span>
+<span class="normal">1416</span>
+<span class="normal">1417</span>
+<span class="normal">1418</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_neuropixels_channel2electrode_map</span><span class="p">(</span>
     <span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">acq_software</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the channel map for neuropixels probe.&quot;&quot;&quot;</span>
@@ -8649,13 +8673,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_chronic.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1415</span>
-<span class="normal">1416</span>
-<span class="normal">1417</span>
-<span class="normal">1418</span>
-<span class="normal">1419</span>
-<span class="normal">1420</span>
-<span class="normal">1421</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1421</span>
 <span class="normal">1422</span>
 <span class="normal">1423</span>
 <span class="normal">1424</span>
@@ -8690,7 +8708,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1453</span>
 <span class="normal">1454</span>
 <span class="normal">1455</span>
-<span class="normal">1456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_electrode_config</span><span class="p">(</span><span class="n">probe_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">electrode_keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="normal">1456</span>
+<span class="normal">1457</span>
+<span class="normal">1458</span>
+<span class="normal">1459</span>
+<span class="normal">1460</span>
+<span class="normal">1461</span>
+<span class="normal">1462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_electrode_config</span><span class="p">(</span><span class="n">probe_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">electrode_keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate and insert new ElectrodeConfig</span>
 
 <span class="sd">    Args:</span>
@@ -8759,13 +8783,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/ephys_chronic.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1459</span>
-<span class="normal">1460</span>
-<span class="normal">1461</span>
-<span class="normal">1462</span>
-<span class="normal">1463</span>
-<span class="normal">1464</span>
-<span class="normal">1465</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1465</span>
 <span class="normal">1466</span>
 <span class="normal">1467</span>
 <span class="normal">1468</span>
@@ -8813,7 +8831,13 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p></td>
 <span class="normal">1510</span>
 <span class="normal">1511</span>
 <span class="normal">1512</span>
-<span class="normal">1513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_recording_channels_details</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="normal">1513</span>
+<span class="normal">1514</span>
+<span class="normal">1515</span>
+<span class="normal">1516</span>
+<span class="normal">1517</span>
+<span class="normal">1518</span>
+<span class="normal">1519</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_recording_channels_details</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get details of recording channels for a given recording.&quot;&quot;&quot;</span>
     <span class="n">channels_details</span> <span class="o">=</span> <span class="p">{}</span>
 
