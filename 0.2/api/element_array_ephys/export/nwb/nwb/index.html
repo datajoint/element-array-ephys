@@ -17,7 +17,7 @@
         <link rel="next" href="../../../plotting/corr/">
       
       <link rel="icon" href="../../../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.11">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -1372,6 +1372,14 @@
 
 
 
+
+
+
+
+
+
+
+
 <div class="doc doc-object doc-class">
 
 
@@ -1661,7 +1669,7 @@ space where data are stored contiguously and compressed.</p></td>
       <p>Add electrodes table to NWBFile.</p>
 <p>This is needed for any ElectricalSeries, including raw source data and LFP.</p>
 
-<details class="mapping">
+<details class="mapping" open>
   <summary>Mapping</summary>
   <p>ephys.InsertionLocation -&gt; ElectrodeGroup.location</p>
 <p>probe.Probe::probe -&gt; device.name
@@ -1917,7 +1925,7 @@ probe.ProbeType.Electrode::shank_row -&gt; electrodes["shank_row"]</p>
   <div class="doc doc-contents ">
   
 
-<details class="mapping">
+<details class="mapping" open>
   <summary>Mapping</summary>
   <p>ephys.CuratedClustering.Unit::unit -&gt; units.id
 ephys.CuratedClustering.Unit::spike_times -&gt; units["spike_times"]
@@ -2180,7 +2188,7 @@ alternative curations.</p>
 <p>Use <code>primary_clustering_paramset_idx</code> to indicate which clustering is primary. All
 others will be stored in /processing/ecephys/.</p>
 
-<details class="mapping">
+<details class="mapping" open>
   <summary>Mapping</summary>
   <p>ephys.CuratedClustering.Unit::unit -&gt; units.id
 ephys.CuratedClustering.Unit::spike_times -&gt; units["spike_times"]
@@ -2489,7 +2497,7 @@ electrode index as value</p></td>
   
       <p>This handles three different cases for gains. See below</p>
 
-<details class="cases">
+<details class="cases" open>
   <summary>Cases</summary>
   <ol>
 <li>gains are all 1. In this case, return conversion=1e-6, which applies to all
@@ -2620,7 +2628,7 @@ electrode index as value</p></td>
 smaller than the original, without data loss. Currently supports Neuropixels data
 acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the data.</p>
 
-<details class="mapping">
+<details class="mapping" open>
   <summary>Mapping</summary>
   <p>source data -&gt; acquisition["ElectricalSeries"]</p>
 </details>
@@ -2856,7 +2864,7 @@ acquired with SpikeGLX or Open Ephys, and relies on SpikeInterface to read the d
   
       <p>Read LFP data from the data in element-array-ephys</p>
 
-<details class="mapping">
+<details class="mapping" open>
   <summary>Mapping</summary>
   <p>ephys.LFP.Electrode::lfp -&gt;
     processing["ecephys"].lfp.electrical_series[
@@ -3738,7 +3746,7 @@ ensure that it can be read.</p></td>
     <script id="__config" type="application/json">{"base": "../../../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
         <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
       

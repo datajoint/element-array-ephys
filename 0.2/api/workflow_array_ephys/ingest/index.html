@@ -17,7 +17,7 @@
         <link rel="next" href="../localization/">
       
       <link rel="icon" href="../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.11">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -1084,6 +1084,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#workflow_array_ephys.ingest.get_ephys_root_data_dir" class="md-nav__link">
+    get_ephys_root_data_dir()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#workflow_array_ephys.ingest.ingest_lab" class="md-nav__link">
     ingest_lab()
   </a>
@@ -1300,6 +1307,84 @@
 
   <div class="doc doc-children">
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="workflow_array_ephys.ingest.get_ephys_root_data_dir" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_ephys_root_data_dir</span><span class="p">()</span></code>
+
+<a href="#workflow_array_ephys.ingest.get_ephys_root_data_dir" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return root directory for ephys from 'ephys_root_data_dir' in dj.config</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>path</code></td>          <td>
+                <code>any</code>
+          </td>
+          <td><p>List of path(s) if available or None</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>workflow_array_ephys/paths.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_ephys_root_data_dir</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return root directory for ephys from &#39;ephys_root_data_dir&#39; in dj.config</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        path (any): List of path(s) if available or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_dir</span> <span class="o">=</span> <span class="n">dj</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ephys_root_data_dir&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">data_dir</span> <span class="k">else</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
 
 
 
@@ -2090,7 +2175,7 @@ implemented - SpikeGLX and OpenEphys</p></td>
   
       <p>Ingest each level of experiment hierarchy for element-trial</p>
 
-<details class="ingestion-hierarchy-includes">
+<details class="ingestion-hierarchy-includes" open>
   <summary>Ingestion hierarchy includes</summary>
   <p>recording, block (i.e., phases of trials), trials (repeated units),
 events (optionally 0-duration occurrences within trial).</p>
@@ -2554,7 +2639,7 @@ Defaults to True.</p></td>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
         <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
       
