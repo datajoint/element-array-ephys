@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.9] - 2023-05-11
+
++ Fix - `.ipynb` dark mode output for all notebooks.
+
 ## [0.2.8] - 2023-04-28
 
 + Fix - `.ipynb` output in tutorials is not visible in dark mode.
@@ -109,6 +113,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.2.9]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.9
 [0.2.8]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.8
 [0.2.7]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.7
 [0.2.6]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.6
