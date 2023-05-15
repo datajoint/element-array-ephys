@@ -6,8 +6,7 @@ import re
 import numpy as np
 import pyopenephys
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger("datajoint")
 
 """
 The Open Ephys Record Node saves Neuropixels data in binary format according to the following the directory structure:
