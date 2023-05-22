@@ -9,3 +9,5 @@ Resource Identifier (RRID):
 
 + DataJoint Elements ([RRID:SCR_021894](https://scicrunch.org/resolver/SCR_021894)) -
   Element Array Electrophysiology (version {{ PATCH_VERSION }})
+
+If your work uses Kilosort, please cite the respective [manuscripts](https://github.com/MouseLand/Kilosort#citation-requirement).
