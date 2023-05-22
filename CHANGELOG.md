@@ -6,6 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.2.10] - 2023-05-22
 
 + Add - Kilosort citation
++ Update - mkdocs.yaml
 
 ## [0.2.9] - 2023-05-11
 
