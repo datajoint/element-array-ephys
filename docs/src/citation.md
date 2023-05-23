@@ -11,3 +11,9 @@ If your work uses the following resources, please cite the respective manuscript
 
 + Kilosort
   + [Manuscripts](https://github.com/MouseLand/Kilosort#citation-requirement).
+
++ NWB
+  + [Manuscript](https://www.nwb.org/publications/)
+
++ DANDI
+  + [Citation options](https://www.dandiarchive.org/handbook/10_using_dandi/#citing-dandi)
