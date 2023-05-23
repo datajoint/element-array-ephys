@@ -97,9 +97,6 @@ theme:
 plugins:
   - markdownextradata: {}
   - search
-  # - redirects: # OPTIONAL REDIRECTS
-  #     redirect_maps:
-  #       "index.md": "getting_started.md"
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -118,6 +115,7 @@ plugins:
         - "*/navigation.md"
   - mkdocs-jupyter:
       ignore_h1_titles: True
+  - section-index
 markdown_extensions:
   - attr_list
   - toc:
