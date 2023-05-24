@@ -1,6 +1,8 @@
 datajoint>=0.13
 element-interface>=0.4.0
+ipywidgets
 openpyxl
 plotly
-pyopenephys @ git+https://github.com/datajoint-company/pyopenephys.git
+pyopenephys>=1.1.6
 seaborn
+scikit-image

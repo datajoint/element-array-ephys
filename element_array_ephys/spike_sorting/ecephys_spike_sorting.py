@@ -156,15 +156,18 @@ class KilosortPreProcessing(dj.Imported):
             modules_to_run = ["depth_estimation", "median_subtraction"]
             run_kilosort.run_modules(modules_to_run)
 
+        logged_exec_dur, _ = _get_execution_duration(
+            run_kilosort._modules_input_hash_fp, modules_to_run
+        )
+        exec_dur = (datetime.utcnow() - execution_time).total_seconds()
+        exec_dur = max(exec_dur, logged_exec_dur) / 3600
+
         self.insert1(
             {
                 **key,
                 "params": params,
                 "execution_time": execution_time,
-                "execution_duration": (
-                    datetime.utcnow() - execution_time
-                ).total_seconds()
-                / 3600,
+                "execution_duration": exec_dur,
             }
         )
 
@@ -191,6 +194,7 @@ class KilosortClustering(dj.Imported):
         ).fetch1("acq_software", "clustering_method")
 
         params = (KilosortPreProcessing & key).fetch1("params")
+        modules_to_run = ["kilosort_helper"]
 
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
@@ -200,7 +204,6 @@ class KilosortClustering(dj.Imported):
                 params.get("run_CatGT", True)
                 and "_tcat." not in spikeglx_meta_filepath.stem
             )
-            
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
@@ -223,17 +226,20 @@ class KilosortClustering(dj.Imported):
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
             )
-            modules_to_run = ["kilosort_helper"]
             run_kilosort.run_modules(modules_to_run)
+
+        # retrieve execution duration from logfile
+        logged_exec_dur, _ = _get_execution_duration(
+            run_kilosort._modules_input_hash_fp, modules_to_run
+        )
+        exec_dur = (datetime.utcnow() - execution_time).total_seconds()
+        exec_dur = max(exec_dur, logged_exec_dur) / 3600
 
         self.insert1(
             {
                 **key,
                 "execution_time": execution_time,
-                "execution_duration": (
-                    datetime.utcnow() - execution_time
-                ).total_seconds()
-                / 3600,
+                "execution_duration": exec_dur,
             }
         )
 
@@ -261,6 +267,13 @@ class KilosortPostProcessing(dj.Imported):
         ).fetch1("acq_software", "clustering_method")
 
         params = (KilosortPreProcessing & key).fetch1("params")
+        modules_to_run = [
+            "kilosort_postprocessing",
+            "noise_templates",
+            "mean_waveforms",
+            "quality_metrics",
+        ]
+
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
@@ -276,14 +289,9 @@ class KilosortPostProcessing(dj.Imported):
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
                 run_CatGT=run_CatGT,
             )
-            modules_to_run = [
-                "kilosort_postprocessing",
-                "noise_templates",
-                "mean_waveforms",
-                "quality_metrics",
-            ]
             run_kilosort._CatGT_finished = run_CatGT
             run_kilosort.run_modules(modules_to_run)
+
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
 
@@ -296,30 +304,38 @@ class KilosortPostProcessing(dj.Imported):
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
             )
-            modules_to_run = [
-                "kilosort_postprocessing",
-                "noise_templates",
-                "mean_waveforms",
-                "quality_metrics",
-            ]
             run_kilosort.run_modules(modules_to_run)
 
-        with open(run_kilosort._modules_input_hash_fp) as f:
-            modules_status = json.load(f)
-
-        self.insert1(
-            {
-                **key,
-                "modules_status": modules_status,
-                "execution_time": execution_time,
-                "execution_duration": (
-                    datetime.utcnow() - execution_time
-                ).total_seconds()
-                / 3600,
-            }
+        # retrieve execution duration from logfile
+        logged_exec_dur, modules_status = _get_execution_duration(
+            run_kilosort._modules_input_hash_fp, modules_to_run
         )
 
         # all finished, insert this `key` into ephys.Clustering
         ephys.Clustering.insert1(
             {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
         )
+
+        exec_dur = (datetime.utcnow() - execution_time).total_seconds()
+        exec_dur = max(exec_dur, logged_exec_dur) / 3600
+        self.insert1(
+            {
+                **key,
+                "modules_status": modules_status,
+                "execution_time": execution_time,
+                "execution_duration": exec_dur,
+            }
+        )
+
+
+def _get_execution_duration(modules_input_hash_fp, modules_to_run):
+    # retrieve execution duration from logfile
+    with open(modules_input_hash_fp) as f:
+        modules_status = json.load(f)
+
+    logged_exec_dur = 0
+    for m in modules_to_run:
+        dur = modules_status[m]["duration"] or 0
+        logged_exec_dur += int(dur)
+
+    return logged_exec_dur, modules_status
