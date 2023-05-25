@@ -157,11 +157,15 @@ class KilosortPreProcessing(dj.Imported):
             modules_to_run = ["depth_estimation", "median_subtraction"]
             run_kilosort.run_modules(modules_to_run)
 
-        logged_exec_dur, _ = _get_execution_duration(
-            run_kilosort._modules_input_hash_fp, modules_to_run
-        )
+            logged_exec_dur, _ = _get_execution_duration(
+                run_kilosort._modules_input_hash_fp, modules_to_run
+            )
         exec_dur = (datetime.utcnow() - execution_time).total_seconds()
-        exec_dur = max(exec_dur, logged_exec_dur) / 3600
+        exec_dur = (
+            max(exec_dur, logged_exec_dur) / 3600
+            if logged_exec_dur
+            else exec_dur / 3600
+        )
 
         self.insert1(
             {
