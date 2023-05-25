@@ -122,7 +122,7 @@ class KilosortPreProcessing(dj.Imported):
         # add additional probe-recording and channels details into `params`
         params = {**params, **ephys.get_recording_channels_details(key)}
         params["fs"] = params["sample_rate"]
-
+        logged_exec_dur = None
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
@@ -163,7 +163,7 @@ class KilosortPreProcessing(dj.Imported):
         exec_dur = (datetime.utcnow() - execution_time).total_seconds()
         exec_dur = (
             max(exec_dur, logged_exec_dur) / 3600
-            if logged_exec_dur
+            if logged_exec_dur is not None
             else exec_dur / 3600
         )
 
