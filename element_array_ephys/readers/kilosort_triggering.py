@@ -50,9 +50,10 @@ class SGLXKilosortPipeline:
         "catGT_car_mode": "gblcar",
         "catGT_loccar_min_um": 40,
         "catGT_loccar_max_um": 160,
-        "catGT_cmd_string": "-prb_fld -out_prb_fld -gfix=0.4,0.10,0.02",
+        "catGT_cmd_string": "-prb_fld -out_prb_fld -apfilter=butter,12,300,10000 -lffilter=butter,12,1,500 -gfix=0.4,0.10,0.02",
         "ni_present": False,
-        "ni_extract_string": "-XA=0,1,3,500 -iXA=1,3,3,0  -XD=-1,1,50 -XD=-1,2,1.7 -XD=-1,3,5 -iXD=-1,3,5",
+        "process_lf": True,
+        "ni_extract_string": "-xa=0,0,0,1,3,500 -xia=0,0,1,3,3,0 -xd=0,0,-1,1,50 -xid=0,0,-1,2,1.7 -xid=0,0,-1,3,5 -xid=0,0,-1,3,5",
     }
 
     _input_json_args = list(inspect.signature(createInputJson).parameters)
@@ -74,7 +75,6 @@ class SGLXKilosortPipeline:
 
         self._params = params
         self._KS2ver = KS2ver
-        self._run_CatGT = run_CatGT
         self._run_CatGT = run_CatGT
         self._default_catgt_params["ni_present"] = ni_present
         self._default_catgt_params["ni_extract_string"] = (
@@ -126,8 +126,14 @@ class SGLXKilosortPipeline:
         ni_extract_string = catgt_params.pop("ni_extract_string")
 
         catgt_params["catGT_stream_string"] = "-ap -ni" if ni_present else "-ap"
-        sync_extract = "-SY=" + probe_str + ",-1,6,500"
-        extract_string = sync_extract + (f" {ni_extract_string}" if ni_present else "")
+
+        extract_string = ni_extract_string if ni_present else ""
+        # sync_extract = "-SY=" + probe_str + ",-1,6,500"
+        # extract_string = sync_extract + (f" {ni_extract_string}" if ni_present else "")
+
+        if catgt_params["process_lf"]:
+            catgt_params["catGT_cmd_string"] += " -lf"
+
         catgt_params["catGT_cmd_string"] += f" {extract_string}"
 
         input_meta_fullpath, continuous_file = self._get_raw_data_filepaths()
