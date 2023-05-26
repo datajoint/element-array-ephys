@@ -11,13 +11,13 @@
         <link rel="canonical" href="http://localhost/docs/elements/element-array-ephys/0.2/tutorials/10-data_visualization/">
       
       
-        <link rel="prev" href="../07-downstream-analysis/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../08-electrode-localization/">
+        <link rel="next" href="../quality_metrics/">
       
       <link rel="icon" href="../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.11">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
@@ -364,7 +364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../01-configure/" class="md-nav__link">
+      <a href="../01-configure.ipynb" class="md-nav__link">
         Configure
       </a>
     </li>
@@ -378,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../02-workflow-structure-optional/" class="md-nav__link">
+      <a href="../02-workflow-structure-optional.ipynb" class="md-nav__link">
         Workflow Structure
       </a>
     </li>
@@ -392,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../03-process/" class="md-nav__link">
+      <a href="../03-process.ipynb" class="md-nav__link">
         Process
       </a>
     </li>
@@ -420,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../05-explore/" class="md-nav__link">
+      <a href="../05-explore.ipynb" class="md-nav__link">
         Explore
       </a>
     </li>
@@ -434,7 +434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../06-drop-optional/" class="md-nav__link">
+      <a href="../06-drop-optional.ipynb" class="md-nav__link">
         Drop
       </a>
     </li>
@@ -448,7 +448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../07-downstream-analysis/" class="md-nav__link">
+      <a href="../07-downstream-analysis.ipynb" class="md-nav__link">
         Downstream Analysis
       </a>
     </li>
@@ -578,7 +578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../08-electrode-localization/" class="md-nav__link">
+      <a href="../08-electrode-localization.ipynb" class="md-nav__link">
         Electrode Localization
       </a>
     </li>
@@ -592,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../09-NWB-export/" class="md-nav__link">
+      <a href="../09-NWB-export.ipynb" class="md-nav__link">
         NWB Export
       </a>
     </li>
@@ -2412,7 +2412,7 @@ if os.path.basename(os.getcwd()) == "notebooks":
 
 </div>
 </div>
-<div id="cell-id=238cef58" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=aca43a0f" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2706,7 +2706,7 @@ ephys.CuratedClustering.Unit & unit_key
 </div>
 </div>
 </div>
-<div id="cell-id=d49aeb7a" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=0e79ba83" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2902,7 +2902,7 @@ plot_auto_correlogram(spike_times=spike_times, bin_size=0.001, window_size=1)
 </div>
 </div>
 </div>
-<div id="cell-id=6de92270" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=b4480916" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2969,7 +2969,7 @@ plot_depth_waveforms(ephys, unit_key=unit_key, y_range=60)
 
 </div>
 </div>
-<div id="cell-id=8b7a0ccb" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=b5ae37db" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2980,7 +2980,7 @@ plot_depth_waveforms(ephys, unit_key=unit_key, y_range=60)
 </div>
 </div>
 </div>
-<div id="cell-id=184ae74f" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=d9742c3f" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3036,7 +3036,7 @@ plot_depth_waveforms(ephys, unit_key=unit_key, y_range=60)
 </div>
 </div>
 </div>
-<div id="cell-id=c44ec94a" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div id="cell-id=1190d57e" class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -4187,7 +4187,7 @@ HTML(qm.units.iloc[0:3].to_html(index=False))  # First few rows only
     <script id="__config" type="application/json">{"base": "../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.fac441b0.min.js"></script>
+      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
       
         <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
       
