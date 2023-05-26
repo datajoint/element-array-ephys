@@ -10,7 +10,7 @@ If your work uses the following resources, please cite the respective manuscript
   + [RRID:SCR_021894](https://scicrunch.org/resolver/SCR_021894)
 
 + Kilosort
-  + [Manuscripts](https://github.com/MouseLand/Kilosort#citation-requirement).
+  + [Manuscripts](https://github.com/MouseLand/Kilosort#citation-requirement)
 
 + NWB
   + [Manuscript](https://www.nwb.org/publications/)
