@@ -3,9 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.2.10] - 2023-05-22
+## [0.2.10] - 2023-05-26
 
 + Add - Kilosort, NWB, and DANDI citations
++ Fix - CSS to improve readability of tables in dark mode
 + Update - mkdocs.yaml
 
 ## [0.2.9] - 2023-05-11
