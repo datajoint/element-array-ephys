@@ -32,19 +32,19 @@ def activate(
         schema_name, create_schema=create_schema, create_tables=create_tables
     )
 
-    # Add neuropixels probes
-    for probe_type in (
-        "neuropixels 1.0 - 3A",
-        "neuropixels 1.0 - 3B",
-        "neuropixels UHD",
-        "neuropixels 2.0 - SS",
-        "neuropixels 2.0 - MS",
-    ):
-        if not (ProbeType & {"probe_type": probe_type}):
-            try:
-                ProbeType.create_neuropixels_probe(probe_type)
-            except dj.errors.DataJointError as e:
-                print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
+    # # Add neuropixels probes
+    # for probe_type in (
+    #     "neuropixels 1.0 - 3A",
+    #     "neuropixels 1.0 - 3B",
+    #     "neuropixels UHD",
+    #     "neuropixels 2.0 - SS",
+    #     "neuropixels 2.0 - MS",
+    # ):
+    #     if not (ProbeType & {"probe_type": probe_type}):
+    #         try:
+    #             ProbeType.create_neuropixels_probe(probe_type)
+    #         except dj.errors.DataJointError as e:
+    #             print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
 
 
 @schema
