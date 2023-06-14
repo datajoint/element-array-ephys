@@ -146,7 +146,12 @@ class PreProcessing(dj.Imported):
             sglx_filepath = ephys.get_spikeglx_meta_filepath(key)
 
             # Create SI recording extractor object
-            sglx_si_recording = se.read_spikeglx(folder_path=sglx_filepath.parent)
+            stream_name = sglx_filepath.stem.split(".", 1)[1]
+            sglx_si_recording = se.read_spikeglx(
+                folder_path=sglx_filepath.parent,
+                stream_name=stream_name,
+                stream_id=stream_name,
+            )
 
             channels_details = ephys.get_recording_channels_details(key)
             xy_coords = [
