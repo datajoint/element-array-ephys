@@ -45,7 +45,7 @@ def activate(
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
-        get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
+        get_processed_root_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
 
     """
 
@@ -742,13 +742,19 @@ class ClusteringTask(dj.Manual):
             get_ephys_root_data_dir(), get_session_directory(key)
         )
         root_dir = find_root_directory(get_ephys_root_data_dir(), session_dir)
-
         method = (
             (ClusteringParamSet * ClusteringMethod & key)
             .fetch1("clustering_method")
             .replace(".", "-")
         )
-
+        # Create separate (Non-s3 mounted 'local' outbox path)
+        local_processed_dir = processed_dir.parent / "local_outbox"
+        local_output_dir = (
+            local_processed_dir
+            / session_dir.relative_to(root_dir)
+            / f'probe_{key["insertion_number"]}'
+            / f'{method}_{key["paramset_idx"]}'
+        )
         output_dir = (
             processed_dir
             / session_dir.relative_to(root_dir)
@@ -757,8 +763,10 @@ class ClusteringTask(dj.Manual):
         )
 
         if mkdir:
+            local_output_dir.mkdir(parents=True, exist_ok=True)
             output_dir.mkdir(parents=True, exist_ok=True)
             log.info(f"{output_dir} created!")
+            log.info(f"{local_output_dir} created!")
 
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
@@ -826,7 +834,9 @@ class Clustering(dj.Imported):
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
 
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        processed_root_dir = pathlib.Path(get_processed_root_data_dir())
+        local_processed_root_dir = processed_root_dir.parent / "local_outbox"
+        kilosort_dir = find_full_path(local_processed_root_dir, output_dir)
 
         if task_mode == "load":
             kilosort.Kilosort(
