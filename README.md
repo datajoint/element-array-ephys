@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/element-array-ephys.svg)](http://badge.fury.io/py/element-array-ephys)
+
 # DataJoint Element - Array Electrophysiology
 
 DataJoint Element for extracellular array electrophysiology. DataJoint Elements
