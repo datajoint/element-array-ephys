@@ -1,5 +1,14 @@
-datajoint>=0.13
-element-interface>=0.4.0
+datajoint>=0.13.0
+element-animal>=0.1.5
+element-array-ephys>=0.2.7
+element-electrode-localization>=0.1.2
+element-event>=0.1.2
+element-interface>=0.5.0
+element-lab>=0.2.0
+element-session>=0.1.2
+ipykernel>=6.0.1
+neuroconv>=0.2.0
+graphviz
 ipywidgets
 openpyxl
 plotly

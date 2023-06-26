@@ -1,0 +1,5 @@
+subject,session_datetime,block_id,block_start_time,block_stop_time,attribute_name,attribute_value
+subject6,2021-01-15 11:16:38,1,0,476,type,light
+subject6,2021-01-15 11:16:38,2,476,952,type,dark
+subject6,2021-01-15 11:16:38,3,952,1428,type,light
+subject6,2021-01-15 11:16:38,4,1428,1904,type,dark

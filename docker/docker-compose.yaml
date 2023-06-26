@@ -1,0 +1,63 @@
+# .env file. Careful that vscode black does not add spaces around '='
+#   COMPOSE_PROJECT_NAME='ephys'
+#   EPHYS_MODE
+#   TEST_DATA_DIR=<local dir for data>
+#   GITHUB_USERNAME=datajoint
+#   INSTALL_OPTION=local-all, local-ephys, or git
+#   TEST_CMD="pytest" # pytest options, see pyproject.toml. To do nothing, set as "True"
+# export COMPOSE_DOCKER_CLI_BUILD=0 # some machines need for smooth --build
+# docker compose --env-file ./docker/.env -f ./docker/docker-compose.yaml up --build --force-recreate
+# docker exec -it workflow-array-ephys /bin/bash
+# docker compose -f ./docker/docker-compose.yaml down --volumes
+
+version: "2.4"
+
+services:
+  db:
+    networks:
+      ephys:
+    image: datajoint/mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: simple
+    container_name: workflow-array-ephys-db
+
+  workflow:
+    networks:
+      ephys:
+    build:
+      context: ../../
+      dockerfile: ./workflow-array-ephys/docker/Dockerfile
+      args:
+        - GITHUB_USERNAME=${GITHUB_USERNAME}
+    image: workflow-array-ephys:0.2.1
+    container_name: workflow-array-ephys
+    environment:
+      - DJ_HOST=db
+      - DJ_USER=root
+      - DJ_PASS=simple
+      - EPHYS_ROOT_DATA_DIR=/main/test_data/workflow_ephys_data1,/main/test_data/workflow_ephys_data2
+      - DATABASE_PREFIX=test_
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+      - GITHUB_USERNAME=${GITHUB_USERNAME}
+      - INSTALL_OPTION=${INSTALL_OPTION}
+      - TEST_CMD=${TEST_CMD}
+    command:
+      - bash
+      - -c
+      - |
+        eval ${TEST_CMD}
+        tail -f /dev/null
+    volumes:
+      - ${TEST_DATA_DIR}:/main/test_data/
+      - ../../workflow-array-ephys/docker/apt_requirements.txt:/tmp/apt_requirements.txt
+      - ../../element-lab:/main/element-lab
+      - ../../element-animal:/main/element-animal
+      - ../../element-session:/main/element-session
+      - ../../element-array-ephys:/main/element-array-ephys
+      - ../../workflow-array-ephys:/main/workflow-array-ephys
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  ephys:

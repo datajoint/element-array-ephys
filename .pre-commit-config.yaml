@@ -1,5 +1,5 @@
 default_stages: [commit, push]
-exclude: (^.github/|^docs/|^images/)
+exclude: (^.github/|^docs/|^images/|^notebooks/)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

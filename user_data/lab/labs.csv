@@ -1,0 +1,3 @@
+lab,lab_name,organization,org_name,address,time_zone,location,location_description
+LabA,The Example Lab,Uni1,Example Uni,"221B Baker St,London NW1 6XE,UK",UTC+0,Example Building,2nd floor lab dedicated to all fictional experiments.
+LabB,The Other Lab,Uni2,Other Uni,"Oxford OX1 2JD, United Kingdom",UTC+0,Other Building,fictional campus dedicated to imaginary experiments.

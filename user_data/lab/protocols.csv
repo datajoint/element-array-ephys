@@ -1,0 +1,3 @@
+protocol,protocol_type,protocol_description
+ProtA,IRB expedited review,Protocol for managing data ingestion
+ProtB,Alternative Method,Limited protocol for piloting only

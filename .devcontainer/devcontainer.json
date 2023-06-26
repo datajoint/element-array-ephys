@@ -1,0 +1,29 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+	"name": "Demo with remote data",
+	"dockerComposeFile": "docker-compose.yaml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	// Use this environment variable if you need to bind mount your local source code into a new container.
+	"remoteEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+	// https://containers.dev/features
+	"onCreateCommand": "mkdir -p ${DJ_PUBLIC_S3_MOUNT_PATH} && pip install -e . && MYSQL_VER=8.0 docker compose down && MYSQL_VER=8.0 docker compose up --build --wait",
+	"postStartCommand": "docker volume prune -f && s3fs ${DJ_PUBLIC_S3_LOCATION} ${DJ_PUBLIC_S3_MOUNT_PATH} -o nonempty,multipart_size=530,endpoint=us-east-1,url=http://s3.amazonaws.com,public_bucket=1",
+	"hostRequirements": {
+		"cpus": 4,
+		"memory": "8gb",
+		"storage": "32gb"
+	},
+	"forwardPorts": [
+		3306
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python"
+			]
+		}
+	}
+}
