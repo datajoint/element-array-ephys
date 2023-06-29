@@ -198,7 +198,7 @@ class QualityMetricFigs(object):
         return fig.add_trace(
             go.Scatter(
                 x=histogram_bins[:-1],
-                y=gaussian_filter1d(histogram, 1),  
+                y=gaussian_filter1d(histogram, 1),
                 mode="lines",
                 line=dict(color="rgb(0, 160, 223)", width=2 * scale),  # DataJoint Blue
                 hovertemplate="%{x:.2f}<br>%{y:.2f}<extra></extra>",

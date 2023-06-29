@@ -53,7 +53,6 @@ class ProbeLevelReport(dj.Computed):
     """
 
     def make(self, key):
-
         from .plotting.probe_level import plot_driftmap
 
         save_dir = _make_save_dir()
@@ -63,7 +62,6 @@ class ProbeLevelReport(dj.Computed):
         shanks = set((probe.ProbeType.Electrode & units).fetch("shank"))
 
         for shank_no in shanks:
-
             table = units * ephys.ProbeInsertion * probe.ProbeType.Electrode & {
                 "shank": shank_no
             }
@@ -120,7 +118,6 @@ class UnitLevelReport(dj.Computed):
     """
 
     def make(self, key):
-
         from .plotting.unit_level import (
             plot_auto_correlogram,
             plot_depth_waveforms,
@@ -168,7 +165,7 @@ class QualityMetricCutoffs(dj.Lookup):
         isi_violations_maximum (float): Optional. ISI violation ratio cut-off.
         cutoffs_hash (uuid): uuid for the cut-off values.
     """
-    
+
     definition = """
     cutoffs_id                    : smallint
     ---
@@ -234,7 +231,7 @@ class QualityMetricSet(dj.Manual):
         ephys.QualityMetrics (foreign key): ephys.QualityMetrics primary key.
         QualityMetricCutoffs (foreign key): QualityMetricCutoffs primary key.
     """
-    
+
     definition = """
     -> ephys.QualityMetrics
     -> QualityMetricCutoffs
@@ -249,7 +246,7 @@ class QualityMetricReport(dj.Computed):
         QualityMetricSet (foreign key): QualityMetricSet primary key.
         plot_grid (longblob): Plotly figure object.
     """
-    
+
     definition = """
     -> QualityMetricSet
     ---

@@ -219,7 +219,6 @@ def create_units_table(
         (ephys.CuratedClustering.Unit & clustering_query.proj()).fetch(as_dict=True),
         desc=f"creating units table for paramset {paramset_record['paramset_idx']}",
     ):
-
         probe_id, shank_num = (
             ephys.ProbeInsertion
             * ephys.CuratedClustering.Unit
