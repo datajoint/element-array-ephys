@@ -20,7 +20,7 @@ to assemble a fully functional pipeline.
 
 ## Data Pipeline Diagram
 
-![datajoint](https://raw.githubusercontent.com/datajoint/workflow-array-ephys/main/images/attached_array_ephys_element.svg)
+![datajoint](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
 
 
 ## Getting Started
