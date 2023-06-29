@@ -6,7 +6,7 @@ DataJoint Element for extracellular array electrophysiology that processes data
 acquired with a polytrode probe
 (e.g. [Neuropixels](https://www.neuropixels.org), Neuralynx) using the
 [SpikeGLX](https://github.com/billkarsh/SpikeGLX) or
-[OpenEphys](https://open-ephys.org/gui) acquisition software and processed with
+[OpenEphys](https://open-ephys.org/gui) acquisition software and 
 [MATLAB-based Kilosort](https://github.com/MouseLand/Kilosort) or [python-based
 Kilosort](https://github.com/MouseLand/pykilosort) spike sorting software. DataJoint 
 Elements collectively standardize and automate data collection and analysis for 
