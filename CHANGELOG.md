@@ -7,6 +7,8 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Update - Improve kilosort triggering routine - better logging, remove temporary files, robust resumable processing
 + Add - Null value for `package_version` to patch bug
++ Update - GitHub Actions workflows
++ Update - README instructions
 
 ## [0.2.10] - 2023-05-26
 
