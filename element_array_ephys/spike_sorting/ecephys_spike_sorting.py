@@ -138,7 +138,6 @@ class KilosortPreProcessing(dj.Imported):
                 run_CatGT=run_CatGT,
             )
             logged_exec_dur = 0
-            modules_to_run = []
             if run_CatGT:
                 run_kilosort.run_CatGT()
         elif acq_software == "Open Ephys":
@@ -211,6 +210,7 @@ class KilosortClustering(dj.Imported):
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
                 run_CatGT=run_CatGT,
             )
+            # Include so catGT is not rerun when modules are run
             run_kilosort._CatGT_finished = True
             run_kilosort.run_modules(modules_to_run)
         elif acq_software == "Open Ephys":
