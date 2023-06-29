@@ -824,8 +824,7 @@ class Clustering(dj.Imported):
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
 
-        processed_root_dir = pathlib.Path(get_processed_root_data_dir())
-        kilosort_dir = find_full_path(processed_root_dir, output_dir)
+        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         if task_mode == "load":
             kilosort.Kilosort(
