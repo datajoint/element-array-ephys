@@ -135,7 +135,6 @@ class OpenEphys:
                     probes[probe.probe_SN] = probe
 
         for probe_index, probe_SN in enumerate(probes):
-
             probe = probes[probe_SN]
 
             for rec in self.experiment.recordings:

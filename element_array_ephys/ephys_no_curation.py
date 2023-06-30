@@ -916,7 +916,7 @@ class Clustering(dj.Imported):
             raise ValueError(f"Unknown task mode: {task_mode}")
 
         creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
-        self.insert1({**key, "clustering_time": creation_time})
+        self.insert1({**key, "clustering_time": creation_time, "package_version": ""})
 
 
 @schema

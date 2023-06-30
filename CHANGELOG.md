@@ -3,9 +3,12 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [Unreleased] - 2023-06-23
+## [0.2.11] - 2023-06-29
 
 + Update - Improve kilosort triggering routine - better logging, remove temporary files, robust resumable processing
++ Add - Null value for `package_version` to patch bug
++ Update - GitHub Actions workflows
++ Update - README instructions
 
 ## [0.2.10] - 2023-05-26
 

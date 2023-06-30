@@ -183,7 +183,6 @@ def plot_depth_waveforms(
     # Plot figure
     fig = go.Figure()
     for electrode, wf, coord in zip(electrodes_to_plot, waveforms, coords):
-
         wf_scaled = wf * y_scale_factor
         wf_scaled -= wf_scaled.mean()
         color = "red" if electrode == peak_electrode else "rgb(51, 76.5, 204)"
