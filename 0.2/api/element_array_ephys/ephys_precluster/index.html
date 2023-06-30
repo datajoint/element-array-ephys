@@ -17,7 +17,7 @@
         <link rel="next" href="../ephys_report/">
       
       <link rel="icon" href="../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -1667,7 +1667,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>A string containing the name of the ephys schema.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A string containing the name of the ephys schema.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1677,7 +1681,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>A string containing the name of the probe schema.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A string containing the name of the probe schema.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -1687,7 +1695,11 @@
           <td>
                 <code>bool</code>
           </td>
-          <td><p>If True, schema will be created in the database.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>If True, schema will be created in the database.</p>
+            </div>
+          </td>
           <td>
                 <code>True</code>
           </td>
@@ -1697,7 +1709,11 @@
           <td>
                 <code>bool</code>
           </td>
-          <td><p>If True, tables related to the schema will be created in the database.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>If True, tables related to the schema will be created in the database.</p>
+            </div>
+          </td>
           <td>
                 <code>True</code>
           </td>
@@ -1707,7 +1723,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>A string containing the module name or module containing the required dependencies to activate the schema.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A string containing the module name or module containing the required dependencies to activate the schema.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -1858,7 +1878,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>list</code>
           </td>
-          <td><p>A list of the absolute path(s) to ephys data directories.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A list of the absolute path(s) to ephys data directories.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -1923,7 +1947,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>dict</code>
           </td>
-          <td><p>A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary mapping subject to an entry in the subject table, and session_datetime corresponding to a session in the database.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1944,7 +1972,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>str</code>
           </td>
-          <td><p>A string for the path to the session directory.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A string for the path to the session directory.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2014,7 +2046,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code> varchar(24) </code>
           </td>
-          <td><p>Acquisition software, e.g,. SpikeGLX, OpenEphys</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Acquisition software, e.g,. SpikeGLX, OpenEphys</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2100,21 +2136,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Session primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Session primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>insertion_number</code></td>
           <td>
                 <code>foreign key, str</code>
           </td>
-          <td><p>Unique insertion number for each probe insertion for a given session.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique insertion number for each probe insertion for a given session.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>probe.Probe</code></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>probe.Probe primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe.Probe primary key.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2210,49 +2258,77 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>ProbeInsertion primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ProbeInsertion primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>SkullReference</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>SkullReference primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>SkullReference primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ap_location</code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
-          <td><p>Anterior-posterior location in micrometers. Reference is 0 with anterior values positive.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Anterior-posterior location in micrometers. Reference is 0 with anterior values positive.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ml_location</code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
-          <td><p>Medial-lateral location in micrometers. Reference is zero with right side values positive.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Medial-lateral location in micrometers. Reference is zero with right side values positive.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>depth</code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
-          <td><p>Manipulator depth relative to the surface of the brain at zero. Ventral is negative.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Manipulator depth relative to the surface of the brain at zero. Ventral is negative.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>Theta</code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
-          <td><p>elevation - rotation about the ml-axis in degrees relative to positive z-axis.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>elevation - rotation about the ml-axis in degrees relative to positive z-axis.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>phi</code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
-          <td><p>azimuth - rotation about the dv-axis in degrees relative to the positive x-axis</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>azimuth - rotation about the dv-axis in degrees relative to the positive x-axis</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2368,42 +2444,66 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>ProbeInsertion primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ProbeInsertion primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>probe.ElectrodeConfig</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>probe.ElectrodeConfig primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe.ElectrodeConfig primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>AcquisitionSoftware</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>AcquisitionSoftware primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>AcquisitionSoftware primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>sampling_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>sampling rate of the recording in Hertz (Hz).</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>sampling rate of the recording in Hertz (Hz).</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>recording_datetime</code></td>
           <td>
                 <code>datetime</code>
           </td>
-          <td><p>datetime of the recording from this probe.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>datetime of the recording from this probe.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>recording_duration</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>duration of the entire recording from this probe in seconds.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>duration of the entire recording from this probe in seconds.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2800,14 +2900,22 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>EphysRecording primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>EphysRecording primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>file_path</code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
-          <td><p>relative file path for electrophysiology recording.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>relative file path for electrophysiology recording.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3198,13 +3306,21 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key, varchar(16) </code>
           </td>
-          <td><p>Pre-clustering method for the dataset.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Pre-clustering method for the dataset.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>precluster_method_desc(varchar(1000)</code></td>
           <td>
           </td>
-          <td><p>Pre-clustering method description.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Pre-clustering method description.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3300,35 +3416,55 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Unique parameter set ID.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique parameter set ID.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>PreClusterMethod</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>PreClusterMethod query for this dataset.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PreClusterMethod query for this dataset.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>paramset_desc</code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
-          <td><p>Description for the pre-clustering parameter set.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Description for the pre-clustering parameter set.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>param_set_hash</code></td>
           <td>
                 <code>uuid</code>
           </td>
-          <td><p>Unique hash for parameter set.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique hash for parameter set.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>params</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>All parameters for the pre-clustering method.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>All parameters for the pre-clustering method.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3488,21 +3624,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Unique ID for the pre-clustering parameter sets to be run.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique ID for the pre-clustering parameter sets to be run.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>precluster_param_steps_name</code></td>
           <td>
                 <code>varchar(32)</code>
           </td>
-          <td><p>User-friendly name for the parameter steps.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>User-friendly name for the parameter steps.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>precluster_param_steps_desc</code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
-          <td><p>Description of the parameter steps.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Description of the parameter steps.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3623,21 +3771,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>PreClusterParamSteps primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PreClusterParamSteps primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>step_number</code></td>
           <td>
                 <code>foreign key, smallint</code>
           </td>
-          <td><p>Order of operations.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Order of operations.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>PreClusterParamSet</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>PreClusterParamSet to be used in pre-clustering.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PreClusterParamSet to be used in pre-clustering.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3738,28 +3898,44 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>EphysRecording primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>EphysRecording primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>PreclusterParamSteps</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>PreClusterParam Steps primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PreClusterParam Steps primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>precluster_output_dir</code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
-          <td><p>relative path to directory for storing results of pre-clustering.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>relative path to directory for storing results of pre-clustering.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>task_mode</code></td>
           <td>
                 <code>enum</code>
           </td>
-          <td><p><code>none</code> (no pre-clustering), <code>load</code> results from file, or <code>trigger</code> automated pre-clustering.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p><code>none</code> (no pre-clustering), <code>load</code> results from file, or <code>trigger</code> automated pre-clustering.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3863,21 +4039,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>PreClusterTask primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PreClusterTask primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>precluster_time</code></td>
           <td>
                 <code>datetime</code>
           </td>
-          <td><p>Time of generation of this set of pre-clustering results.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Time of generation of this set of pre-clustering results.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>package_version</code></td>
           <td>
                 <code>varchar(16)</code>
           </td>
-          <td><p>Package version used for performing pre-clustering.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Package version used for performing pre-clustering.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -4007,7 +4195,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown task mode: </span><span class="si">{</span><span class="n">task_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;precluster_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;precluster_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">,</span> <span class="s2">&quot;package_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -4123,7 +4311,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown task mode: </span><span class="si">{</span><span class="n">task_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;precluster_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">})</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;precluster_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">,</span> <span class="s2">&quot;package_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -4177,28 +4365,44 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>EphysRecording primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>EphysRecording primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>lfp_sampling_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Sampling rate for LFPs in Hz.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sampling rate for LFPs in Hz.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>lfp_time_stamps</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Time stamps with respect to the start of the recording.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Time stamps with respect to the start of the recording.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>lfp_mean</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Overall mean LFP across electrodes.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Overall mean LFP across electrodes.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -4539,21 +4743,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>LFP primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>LFP primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>probe.ElectrodeConfig.Electrode</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>probe.ElectrodeConfig.Electrode primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe.ElectrodeConfig.Electrode primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>lfp</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>LFP recording at this electrode in microvolts.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>LFP recording at this electrode in microvolts.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -4888,14 +5104,22 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key, varchar(16) </code>
           </td>
-          <td><p>Kilosort clustering method.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Kilosort clustering method.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>clustering_methods_desc</code></td>
           <td>
                 <code>varchar(1000)</code>
           </td>
-          <td><p>Additional description of the clustering method.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Additional description of the clustering method.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -4997,35 +5221,55 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Unique ID for the clustering parameter set.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique ID for the clustering parameter set.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ClusteringMethod</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>ClusteringMethod primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ClusteringMethod primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>paramset_desc</code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
-          <td><p>Description of the clustering parameter set.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Description of the clustering parameter set.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>param_set_hash</code></td>
           <td>
                 <code>uuid</code>
           </td>
-          <td><p>UUID hash for the parameter set.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>UUID hash for the parameter set.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>params</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Paramset, dictionary of all applicable parameters.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Paramset, dictionary of all applicable parameters.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -5193,7 +5437,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>str</code>
           </td>
-          <td><p>name of the clustering method.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>name of the clustering method.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5203,7 +5451,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>str</code>
           </td>
-          <td><p>description of the parameter set</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>description of the parameter set</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5213,7 +5465,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>dict</code>
           </td>
-          <td><p>clustering parameters</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>clustering parameters</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5223,7 +5479,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>int</code>
           </td>
-          <td><p>Unique parameter set ID. Defaults to None.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique parameter set ID. Defaults to None.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5353,14 +5613,22 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key, varchar(100) </code>
           </td>
-          <td><p>Cluster quality type.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cluster quality type.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>cluster_quality_description</code></td>
           <td>
                 <code>varchar(4000)</code>
           </td>
-          <td><p>Description of the cluster quality type.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Description of the cluster quality type.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -5464,28 +5732,44 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>EphysRecording primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>EphysRecording primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ClusteringParamSet</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>ClusteringParamSet primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ClusteringParamSet primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>clustering_outdir_dir</code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
-          <td><p>Relative path to output clustering results.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Relative path to output clustering results.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>task_mode</code></td>
           <td>
                 <code>enum</code>
           </td>
-          <td><p><code>Trigger</code> computes clustering or and <code>load</code> imports existing data.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p><code>Trigger</code> computes clustering or and <code>load</code> imports existing data.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -5585,21 +5869,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>ClusteringTask primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ClusteringTask primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>clustering_time</code></td>
           <td>
                 <code>datetime</code>
           </td>
-          <td><p>Time when clustering results are generated.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Time when clustering results are generated.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>package_version</code></td>
           <td>
                 <code>varchar(16)</code>
           </td>
-          <td><p>Package version used for a clustering analysis.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Package version used for a clustering analysis.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -5681,7 +5977,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown task mode: </span><span class="si">{</span><span class="n">task_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;clustering_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;clustering_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">,</span> <span class="s2">&quot;package_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -5749,7 +6045,7 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown task mode: </span><span class="si">{</span><span class="n">task_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;clustering_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">})</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insert1</span><span class="p">({</span><span class="o">**</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;clustering_time&quot;</span><span class="p">:</span> <span class="n">creation_time</span><span class="p">,</span> <span class="s2">&quot;package_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -5803,49 +6099,77 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Clustering primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Clustering primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>curation_id</code></td>
           <td>
                 <code>foreign key, int</code>
           </td>
-          <td><p>Unique curation ID.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique curation ID.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>curation_time</code></td>
           <td>
                 <code>datetime</code>
           </td>
-          <td><p>Time when curation results are generated.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Time when curation results are generated.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>curation_output_dir</code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
-          <td><p>Output directory of the curated results.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Output directory of the curated results.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>quality_control</code></td>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>If True, this clustering result has undergone quality control.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>If True, this clustering result has undergone quality control.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>manual_curation</code></td>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>If True, manual curation has been performed on this clustering result.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>If True, manual curation has been performed on this clustering result.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>curation_note</code></td>
           <td>
                 <code>varchar(2000)</code>
           </td>
-          <td><p>Notes about the curation task.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Notes about the curation task.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -6122,7 +6446,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Curation primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Curation primary key.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -6399,56 +6727,88 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>unit</code></td>
           <td>
                 <code>foreign key, int</code>
           </td>
-          <td><p>Unique integer identifying a single unit.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unique integer identifying a single unit.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>probe.ElectrodeConfig.Electrode</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>probe.ElectrodeConfig.Electrode primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe.ElectrodeConfig.Electrode primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ClusteringQualityLabel</code></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>CLusteringQualityLabel primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CLusteringQualityLabel primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>spike_count</code></td>
           <td>
                 <code>int</code>
           </td>
-          <td><p>Number of spikes in this recording for this unit.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of spikes in this recording for this unit.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>spike_times</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Spike times of this unit, relative to start time of EphysRecording.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Spike times of this unit, relative to start time of EphysRecording.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>spike_sites</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Array of electrode associated with each spike.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Array of electrode associated with each spike.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>spike_depths</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Array of depths associated with each spike, relative to each spike.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Array of depths associated with each spike, relative to each spike.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -6741,7 +7101,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering primary key.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -7114,21 +7478,33 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>WaveformSet primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>WaveformSet primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering.Unit primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering.Unit primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>peak_electrode_waveform</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>Mean waveform for a given unit at its representative electrode.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Mean waveform for a given unit at its representative electrode.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -7222,35 +7598,55 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>WaveformSet primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>WaveformSet primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering.Unit primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering.Unit primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>probe.ElectrodeConfig.Electrode</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>probe.ElectrodeConfig.Electrode primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe.ElectrodeConfig.Electrode primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>waveform_mean</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>mean waveform across spikes of the unit in microvolts.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>mean waveform across spikes of the unit in microvolts.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>waveforms</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>waveforms of a sampling of spikes at the given electrode and unit.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>waveforms of a sampling of spikes at the given electrode and unit.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -7605,7 +8001,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering primary key.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -7894,112 +8294,176 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>QualityMetrics primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>QualityMetrics primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering.Unit primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering.Unit primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>firing_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Firing rate of the unit.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Firing rate of the unit.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>snr</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Signal-to-noise ratio for a unit.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Signal-to-noise ratio for a unit.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>presence_ratio</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Fraction of time where spikes are present.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Fraction of time where spikes are present.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>isi_violation</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>rate of ISI violation as a fraction of overall rate.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>rate of ISI violation as a fraction of overall rate.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>number_violation</code></td>
           <td>
                 <code>int</code>
           </td>
-          <td><p>Total ISI violations.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Total ISI violations.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>amplitude_cutoff</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Estimate of miss rate based on amplitude histogram.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Estimate of miss rate based on amplitude histogram.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>isolation_distance</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Distance to nearest cluster.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Distance to nearest cluster.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>l_ratio</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Amount of empty space between a cluster and other spikes in dataset.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Amount of empty space between a cluster and other spikes in dataset.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>d_prime</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Classification accuracy based on LDA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Classification accuracy based on LDA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>nn_hit_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Fraction of neighbors for target cluster that are also in target cluster.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Fraction of neighbors for target cluster that are also in target cluster.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>nn_miss_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Fraction of neighbors outside target cluster that are in the target cluster.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Fraction of neighbors outside target cluster that are in the target cluster.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>silhouette_core</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Maximum change in spike depth throughout recording.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Maximum change in spike depth throughout recording.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>cumulative_drift</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Cumulative change in spike depth throughout recording.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cumulative change in spike depth throughout recording.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>contamination_rate</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Frequency of spikes in the refractory period.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Frequency of spikes in the refractory period.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -8147,77 +8611,121 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>QualityMetrics primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>QualityMetrics primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering.Unit primary key.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering.Unit primary key.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>amplitude</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Absolute difference between waveform peak and trough in microvolts.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Absolute difference between waveform peak and trough in microvolts.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>duration</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Time between waveform peak and trough in milliseconds.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Time between waveform peak and trough in milliseconds.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>halfwidth</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Spike width at half max amplitude.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Spike width at half max amplitude.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>pt_ratio</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Absolute amplitude of peak divided by absolute amplitude of trough relative to 0.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Absolute amplitude of peak divided by absolute amplitude of trough relative to 0.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>repolarization_slope</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Slope of the regression line fit to first 30 microseconds from trough to peak.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Slope of the regression line fit to first 30 microseconds from trough to peak.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>recovery_slope</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Slope of the regression line fit to first 30 microseconds from peak to tail.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Slope of the regression line fit to first 30 microseconds from peak to tail.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>spread</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>The range with amplitude over 12-percent of maximum amplitude along the probe.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The range with amplitude over 12-percent of maximum amplitude along the probe.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>velocity_above</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>inverse velocity of waveform propagation from soma to the top of the probe.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>inverse velocity of waveform propagation from soma to the top of the probe.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>velocity_below</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>inverse velocity of waveform propagation from soma toward the bottom of the probe.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>inverse velocity of waveform propagation from soma toward the bottom of the probe.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -8657,7 +9165,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>str</code>
           </td>
-          <td><p>probe type (e.g. neuropixels 2.0 - SS)</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>probe type (e.g. neuropixels 2.0 - SS)</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -8667,7 +9179,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
           <td>
                 <code>list</code>
           </td>
-          <td><p>list of keys of the probe.ProbeType.Electrode table</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>list of keys of the probe.ProbeType.Electrode table</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -8688,7 +9204,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
 <td><code>dict</code></td>          <td>
                 <code>dict</code>
           </td>
-          <td><p>representing a key of the probe.ElectrodeConfig table</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>representing a key of the probe.ElectrodeConfig table</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -8913,9 +9433,11 @@ get_session_direction(session_key: dict): Returns path to electrophysiology data
     <script id="__config" type="application/json">{"base": "../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
-        <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
+          <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
       
     
   </body>

@@ -17,7 +17,7 @@
         <link rel="next" href="../spikeglx/">
       
       <link rel="icon" href="../../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -1599,8 +1599,7 @@
 <span class="normal">236</span>
 <span class="normal">237</span>
 <span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphys</span><span class="p">:</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphys</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_dir</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">experiment_dir</span><span class="p">)</span>
 
@@ -1702,7 +1701,6 @@
                     <span class="n">probes</span><span class="p">[</span><span class="n">probe</span><span class="o">.</span><span class="n">probe_SN</span><span class="p">]</span> <span class="o">=</span> <span class="n">probe</span>
 
         <span class="k">for</span> <span class="n">probe_index</span><span class="p">,</span> <span class="n">probe_SN</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probes</span><span class="p">):</span>
-
             <span class="n">probe</span> <span class="o">=</span> <span class="n">probes</span><span class="p">[</span><span class="n">probe_SN</span><span class="p">]</span>
 
             <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">recordings</span><span class="p">:</span>
@@ -2000,8 +1998,7 @@
 <span class="normal">236</span>
 <span class="normal">237</span>
 <span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">load_probe_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">load_probe_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loop through all Open Ephys &quot;signalchains/processors&quot;, identify the processor for</span>
 <span class="sd">     the Neuropixels probe(s), extract probe info</span>
@@ -2061,7 +2058,6 @@
                 <span class="n">probes</span><span class="p">[</span><span class="n">probe</span><span class="o">.</span><span class="n">probe_SN</span><span class="p">]</span> <span class="o">=</span> <span class="n">probe</span>
 
     <span class="k">for</span> <span class="n">probe_index</span><span class="p">,</span> <span class="n">probe_SN</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probes</span><span class="p">):</span>
-
         <span class="n">probe</span> <span class="o">=</span> <span class="n">probes</span><span class="p">[</span><span class="n">probe_SN</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">recordings</span><span class="p">:</span>
@@ -2201,7 +2197,8 @@
 
         <details class="quote">
           <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">258</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">257</span>
+<span class="normal">258</span>
 <span class="normal">259</span>
 <span class="normal">260</span>
 <span class="normal">261</span>
@@ -2429,8 +2426,7 @@
 <span class="normal">483</span>
 <span class="normal">484</span>
 <span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Probe</span><span class="p">:</span>
+<span class="normal">486</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Probe</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor</span><span class="p">,</span> <span class="n">probe_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="n">processor_node_id</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;@nodeId&quot;</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;@NodeId&quot;</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">processor_node_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2749,7 +2745,8 @@ Data are stored as int16 - to convert to microvolts,
 
       <details class="quote">
         <summary>Source code in <code>element_array_ephys/readers/openephys.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">372</span>
+<span class="normal">373</span>
 <span class="normal">374</span>
 <span class="normal">375</span>
 <span class="normal">376</span>
@@ -2784,8 +2781,7 @@ Data are stored as int16 - to convert to microvolts,
 <span class="normal">405</span>
 <span class="normal">406</span>
 <span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">extract_spike_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikes</span><span class="p">,</span> <span class="n">channel_ind</span><span class="p">,</span> <span class="n">n_wf</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">wf_win</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)):</span>
+<span class="normal">408</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">extract_spike_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikes</span><span class="p">,</span> <span class="n">channel_ind</span><span class="p">,</span> <span class="n">n_wf</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">wf_win</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param spikes: spike times (in second) to extract waveforms</span>
 <span class="sd">    :param channel_ind: channel indices (of meta[&#39;channels_ids&#39;]) to extract waveforms</span>
@@ -2966,9 +2962,11 @@ Data are stored as int16 - to convert to microvolts,
     <script id="__config" type="application/json">{"base": "../../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
-        <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
+          <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
       
     
   </body>

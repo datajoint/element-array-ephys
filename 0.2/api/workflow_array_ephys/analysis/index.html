@@ -17,7 +17,7 @@
         <link rel="next" href="../export/">
       
       <link rel="icon" href="../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -1369,7 +1369,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>schema name on the database server</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>schema name on the database server</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1379,8 +1383,12 @@
           <td>
                 <code>bool</code>
           </td>
-          <td><p>when True (default), create schema in the database if it
-                does not yet exist.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>when True (default), create schema in the database if it
+                does not yet exist.</p>
+            </div>
+          </td>
           <td>
                 <code>True</code>
           </td>
@@ -1390,8 +1398,12 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>when True (default), create schema tables in the database
-                 if they do not yet exist.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>when True (default), create schema tables in the database
+                 if they do not yet exist.</p>
+            </div>
+          </td>
           <td>
                 <code>True</code>
           </td>
@@ -1401,7 +1413,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>a module (or name) containing the required dependencies.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>a module (or name) containing the required dependencies.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -1510,36 +1526,56 @@
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>CuratedClustering foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>CuratedClustering foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>event.AlignmentEvent</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>AlignmentEvent foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>AlignmentEvent foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>trial_condition</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>varchar(128) # user-friendly name of condition</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>varchar(128) # user-friendly name of condition</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>condition_description</code></td>
           <td>
                 <code> varchar(1000), nullable</code>
           </td>
-          <td><p>condition description</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>condition description</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>bin_size</code></td>
           <td>
                 <code>float</code>
           </td>
-          <td><p>Bin-size (in second) used to compute the PSTH
-Default 0.04</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Bin-size (in second) used to compute the PSTH
+Default 0.04</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2044,28 +2080,44 @@ Default 0.04</p></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Trial foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Trial foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ephys.CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Unit foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unit foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>SpikesAlignmentCondition.Trial</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Trial foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Trial foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>aligned_spike_times</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>(s) spike times relative to alignment event</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>(s) spike times relative to alignment event</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2161,28 +2213,44 @@ Default 0.04</p></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>SpikesAlignment foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>SpikesAlignment foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>ephys.CuratedClustering.Unit</code></td>
           <td>
                 <code>foreign key</code>
           </td>
-          <td><p>Unit foreign key</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Unit foreign key</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>psth</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>event-aligned spike peristimulus time histogram (PSTH)</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>event-aligned spike peristimulus time histogram (PSTH)</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>psth_edges</code></td>
           <td>
                 <code>longblob</code>
           </td>
-          <td><p>set of PSTH edges</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>set of PSTH edges</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2275,7 +2343,11 @@ Default 0.04</p></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>Dict uniquely identifying one SpikesAlignmentCondition</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict uniquely identifying one SpikesAlignmentCondition</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2455,7 +2527,11 @@ Default 0.04</p></td>
           <td>
                 <code>dict</code>
           </td>
-          <td><p>key of SpikesAlignmentCondition master table</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>key of SpikesAlignmentCondition master table</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2465,7 +2541,11 @@ Default 0.04</p></td>
           <td>
                 <code>int</code>
           </td>
-          <td><p>ID of ephys.CuratedClustering.Unit table</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ID of ephys.CuratedClustering.Unit table</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2475,8 +2555,12 @@ Default 0.04</p></td>
           <td>
                 <code>tuple</code>
           </td>
-          <td><p>Definition of axes for plot.
-Default is plt.subplots(2, 1, figsize=(12, 8))</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Definition of axes for plot.
+Default is plt.subplots(2, 1, figsize=(12, 8))</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2497,7 +2581,11 @@ Default is plt.subplots(2, 1, figsize=(12, 8))</p></td>
 <td><code>fig</code></td>          <td>
                 <code>matplotlib.<span title="matplotlib.figure">figure</span>.<span title="matplotlib.figure.Figure">Figure</span></code>
           </td>
-          <td><p>Plot event-aligned and trial-averaged spikes</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Plot event-aligned and trial-averaged spikes</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2723,9 +2811,11 @@ Default is plt.subplots(2, 1, figsize=(12, 8))</p></td>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
-        <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
+          <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
       
     
   </body>

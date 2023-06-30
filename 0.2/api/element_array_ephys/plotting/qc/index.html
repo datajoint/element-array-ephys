@@ -17,7 +17,7 @@
         <link rel="next" href="../unit_level/">
       
       <link rel="icon" href="../../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -1940,7 +1940,7 @@
         <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
             <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
                 <span class="n">x</span><span class="o">=</span><span class="n">histogram_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">y</span><span class="o">=</span><span class="n">gaussian_filter1d</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  
+                <span class="n">y</span><span class="o">=</span><span class="n">gaussian_filter1d</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
                 <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;rgb(0, 160, 223)&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">scale</span><span class="p">),</span>  <span class="c1"># DataJoint Blue</span>
                 <span class="n">hovertemplate</span><span class="o">=</span><span class="s2">&quot;%</span><span class="si">{x:.2f}</span><span class="s2">&lt;br&gt;%</span><span class="si">{y:.2f}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
@@ -2185,7 +2185,11 @@
           <td>
                 <code>module</code>
           </td>
-          <td><p>datajoint module with a QualityMetric table</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>datajoint module with a QualityMetric table</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2195,7 +2199,11 @@
           <td>
                 <code>dict</code>
           </td>
-          <td><p>key from ephys.QualityMetric table. Defaults to None.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>key from ephys.QualityMetric table. Defaults to None.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2205,7 +2213,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Scale at which to render figure. Defaults to 1.4.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Scale at which to render figure. Defaults to 1.4.</p>
+            </div>
+          </td>
           <td>
                 <code>1</code>
           </td>
@@ -2215,7 +2227,11 @@
           <td>
                 <code>int</code>
           </td>
-          <td><p>Figure width in pixels. Defaults to 800.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Figure width in pixels. Defaults to 800.</p>
+            </div>
+          </td>
           <td>
                 <code>800</code>
           </td>
@@ -2225,7 +2241,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Cutoff for unit amplitude in visualizations. Defaults to None.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cutoff for unit amplitude in visualizations. Defaults to None.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2235,7 +2255,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Cutoff for presence ratio in visualizations. Defaults to None.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cutoff for presence ratio in visualizations. Defaults to None.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2245,7 +2269,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Cutoff for isi violations in visualizations. Defaults to None.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cutoff for isi violations in visualizations. Defaults to None.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2255,7 +2283,11 @@
           <td>
                 <code>bool</code>
           </td>
-          <td><p>Set background to black, foreground white. Default False, black on white.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set background to black, foreground white. Default False, black on white.</p>
+            </div>
+          </td>
           <td>
                 <code>False</code>
           </td>
@@ -2357,9 +2389,9 @@
 <code class="highlight language-python"><span class="n">key</span><span class="p">:</span> <span class="nb">dict</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-deletable"><code>deletable</code></small>
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
       <small class="doc doc-label doc-label-writable"><code>writable</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-deletable"><code>deletable</code></small>
   </span>
 
 <a href="#element_array_ephys.plotting.qc.QualityMetricFigs.key" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2385,8 +2417,8 @@
 <code class="highlight language-python"><span class="n">cutoffs</span><span class="p">:</span> <span class="nb">dict</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
       <small class="doc doc-label doc-label-writable"><code>writable</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
 <a href="#element_array_ephys.plotting.qc.QualityMetricFigs.cutoffs" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2460,7 +2492,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of figure to be rendered</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of figure to be rendered</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2470,7 +2506,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Scale to render fig. Defaults to scale at class init, 1.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Scale to render fig. Defaults to scale at class init, 1.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2491,7 +2531,11 @@
           <td>
                 <code><span title="plotly.graph_objs">go</span>.<span title="plotly.graph_objs.Figure">Figure</span></code>
           </td>
-          <td><p>go.Figure: Histogram plot</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>go.Figure: Histogram plot</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -2610,7 +2654,11 @@
           <td>
                 <code>int</code>
           </td>
-          <td><p>Number of column in grid. Defaults to 4.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of column in grid. Defaults to 4.</p>
+            </div>
+          </td>
           <td>
                 <code>4</code>
           </td>
@@ -2620,7 +2668,11 @@
           <td>
                 <code>float</code>
           </td>
-          <td><p>Scale to render fig. Defaults to scale at class init, 1.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Scale to render fig. Defaults to scale at class init, 1.</p>
+            </div>
+          </td>
           <td>
                 <code>1.0</code>
           </td>
@@ -2641,7 +2693,11 @@
           <td>
                 <code><span title="plotly.graph_objs">go</span>.<span title="plotly.graph_objs.Figure">Figure</span></code>
           </td>
-          <td><p>go.Figure: grid of available plots</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>go.Figure: grid of available plots</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
@@ -3013,9 +3069,11 @@
     <script id="__config" type="application/json">{"base": "../../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
-        <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
+          <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
       
     
   </body>

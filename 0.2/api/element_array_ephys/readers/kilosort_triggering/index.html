@@ -17,7 +17,7 @@
         <link rel="next" href="../openephys/">
       
       <link rel="icon" href="../../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -1665,7 +1665,23 @@
 <span class="normal">385</span>
 <span class="normal">386</span>
 <span class="normal">387</span>
-<span class="normal">388</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SGLXKilosortPipeline</span><span class="p">:</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SGLXKilosortPipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object of SGLXKilosortPipeline manages the state of the Kilosort data processing pipeline</span>
 <span class="sd">     for one Neuropixels probe in one recording session using the Spike GLX acquisition software.</span>
@@ -1703,7 +1719,6 @@
         <span class="n">ni_present</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">ni_extract_string</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">npx_input_dir</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">ks_output_dir</span><span class="p">)</span>
@@ -1720,6 +1735,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">/</span> <span class="s2">&quot;json_configs&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-input.json&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-run_modules-log.txt&quot;</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_CatGT_finished</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ks_input_params</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1859,20 +1881,20 @@
             <span class="o">**</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash</span> <span class="o">=</span> <span class="n">dict_to_uuid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ks_input_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash</span> <span class="o">=</span> <span class="n">dict_to_uuid</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">,</span> <span class="n">KS2ver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_KS2ver</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">run_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modules_to_run</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_CatGT</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CatGT_finished</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run_CatGT</span><span class="p">()</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---- Running Modules ----&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generate_modules_input_json</span><span class="p">()</span>
         <span class="n">module_input_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-        <span class="n">module_logfile</span> <span class="o">=</span> <span class="n">module_input_json</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-            <span class="s2">&quot;-input.json&quot;</span><span class="p">,</span> <span class="s2">&quot;-run_modules-log.txt&quot;</span>
-        <span class="p">)</span>
+        <span class="n">module_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
+        <span class="n">modules</span> <span class="o">=</span> <span class="n">modules_to_run</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
             <span class="n">module_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_status</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">module_status</span><span class="p">[</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -1948,13 +1970,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># handle cases of processing rerun on different parameters (the hash changes)</span>
             <span class="c1"># delete outdated files</span>
-            <span class="n">outdated_files</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">f</span>
+            <span class="p">[</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
                 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">name</span>
             <span class="p">]</span>
-            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">outdated_files</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;completion_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
@@ -2007,14 +2027,26 @@
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">modules_status</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cumulative_execution_duration&quot;</span><span class="p">,</span> <span class="s2">&quot;total_duration&quot;</span><span class="p">)</span>
         <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
+            <span class="n">first_start_time</span> <span class="o">=</span> <span class="n">modules_status</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">first_start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">last_completion_time</span> <span class="o">=</span> <span class="n">modules_status</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">last_completion_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">first_start_time</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">last_completion_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="n">total_duration</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
-                <span class="n">modules_status</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;completion_time&quot;</span><span class="p">],</span>
+                <span class="n">last_completion_time</span><span class="p">,</span>
                 <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
-                <span class="n">modules_status</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">first_start_time</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_module_status</span><span class="p">(</span>
             <span class="p">{</span>
@@ -2068,23 +2100,7 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
 
         <details class="quote">
           <summary>Source code in <code>element_array_ephys/readers/kilosort_triggering.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">407</span>
 <span class="normal">408</span>
 <span class="normal">409</span>
 <span class="normal">410</span>
@@ -2367,7 +2383,42 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
 <span class="normal">687</span>
 <span class="normal">688</span>
 <span class="normal">689</span>
-<span class="normal">690</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphysKilosortPipeline</span><span class="p">:</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OpenEphysKilosortPipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object of OpenEphysKilosortPipeline manages the state of the Kilosort data processing pipeline</span>
 <span class="sd">     for one Neuropixels probe in one recording session using the Open Ephys acquisition software.</span>
@@ -2393,7 +2444,6 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">npx_input_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ks_output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">KS2ver</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">):</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">npx_input_dir</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">ks_output_dir</span><span class="p">)</span>
@@ -2405,7 +2455,13 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
         <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">/</span> <span class="s2">&quot;json_configs&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_median_subtraction_status</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-input.json&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-run_modules-log.txt&quot;</span>
+        <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">ks_input_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash_fp</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2430,9 +2486,6 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
 
     <span class="k">def</span> <span class="nf">generate_modules_input_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_chanmap_file</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-input.json&quot;</span>
-        <span class="p">)</span>
 
         <span class="n">continuous_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_raw_data_filepaths</span><span class="p">()</span>
 
@@ -2476,35 +2529,37 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
             <span class="o">**</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash</span> <span class="o">=</span> <span class="n">dict_to_uuid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ks_input_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modules_input_hash</span> <span class="o">=</span> <span class="n">dict_to_uuid</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">,</span> <span class="n">KS2ver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_KS2ver</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">run_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modules_to_run</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---- Running Modules ----&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generate_modules_input_json</span><span class="p">()</span>
         <span class="n">module_input_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-        <span class="n">module_logfile</span> <span class="o">=</span> <span class="n">module_input_json</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-            <span class="s2">&quot;-input.json&quot;</span><span class="p">,</span> <span class="s2">&quot;-run_modules-log.txt&quot;</span>
-        <span class="p">)</span>
+        <span class="n">module_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
+        <span class="n">modules</span> <span class="o">=</span> <span class="n">modules_to_run</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
             <span class="n">module_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_status</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">module_status</span><span class="p">[</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="n">module</span> <span class="o">==</span> <span class="s2">&quot;median_subtraction&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_median_subtraction_status</span><span class="p">:</span>
-                <span class="n">median_subtraction_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_status</span><span class="p">(</span>
-                    <span class="s2">&quot;median_subtraction&quot;</span>
+            <span class="k">if</span> <span class="n">module</span> <span class="o">==</span> <span class="s2">&quot;median_subtraction&quot;</span><span class="p">:</span>
+                <span class="n">median_subtraction_duration</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_median_subtraction_duration_from_log</span><span class="p">()</span>
                 <span class="p">)</span>
-                <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_median_subtraction_status</span><span class="p">[</span>
-                    <span class="s2">&quot;duration&quot;</span>
-                <span class="p">]</span>
-                <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
-                    <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span>
-                <span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">])</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_update_module_status</span><span class="p">(</span>
-                    <span class="p">{</span><span class="s2">&quot;median_subtraction&quot;</span><span class="p">:</span> <span class="n">median_subtraction_status</span><span class="p">}</span>
-                <span class="p">)</span>
-                <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">median_subtraction_duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">median_subtraction_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_status</span><span class="p">(</span>
+                        <span class="s2">&quot;median_subtraction&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">median_subtraction_duration</span>
+                    <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+                        <span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_module_status</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;median_subtraction&quot;</span><span class="p">:</span> <span class="n">median_subtraction_status</span><span class="p">}</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
 
             <span class="n">module_output_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_output_json_filename</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
@@ -2555,26 +2610,11 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
         <span class="k">assert</span> <span class="s2">&quot;depth_estimation&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>
         <span class="n">continuous_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">/</span> <span class="s2">&quot;continuous.dat&quot;</span>
         <span class="k">if</span> <span class="n">continuous_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">raw_ap_fp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&lt;</span> <span class="n">continuous_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
-                <span class="c1"># if the copied continuous.dat was actually modified,</span>
-                <span class="c1"># median_subtraction may have been completed - let&#39;s check</span>
-                <span class="n">module_input_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-                <span class="n">module_logfile</span> <span class="o">=</span> <span class="n">module_input_json</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-                    <span class="s2">&quot;-input.json&quot;</span><span class="p">,</span> <span class="s2">&quot;-run_modules-log.txt&quot;</span>
-                <span class="p">)</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">module_logfile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                    <span class="n">previous_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
-                            <span class="s2">&quot;ecephys spike sorting: median subtraction module&quot;</span>
-                        <span class="p">)</span> <span class="ow">and</span> <span class="n">previous_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Total processing time:&quot;</span><span class="p">):</span>
-                            <span class="c1"># regex to search for the processing duration - a float value</span>
-                            <span class="n">duration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                                <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;\d+\.?\d+&quot;</span><span class="p">,</span> <span class="n">previous_line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
-                            <span class="p">)</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_median_subtraction_status</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">duration</span>
-                            <span class="k">return</span> <span class="n">continuous_file</span>
-                        <span class="n">previous_line</span> <span class="o">=</span> <span class="n">line</span>
+            <span class="k">if</span> <span class="n">raw_ap_fp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">==</span> <span class="n">continuous_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">continuous_file</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">continuous_file</span>
 
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">raw_ap_fp</span><span class="p">,</span> <span class="n">continuous_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">continuous_file</span>
@@ -2593,13 +2633,11 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># handle cases of processing rerun on different parameters (the hash changes)</span>
             <span class="c1"># delete outdated files</span>
-            <span class="n">outdated_files</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">f</span>
+            <span class="p">[</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
                 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_input_json</span><span class="o">.</span><span class="n">name</span>
             <span class="p">]</span>
-            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">outdated_files</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
             <span class="n">modules_status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;completion_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
@@ -2652,14 +2690,26 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">modules_status</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cumulative_execution_duration&quot;</span><span class="p">,</span> <span class="s2">&quot;total_duration&quot;</span><span class="p">)</span>
         <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
+            <span class="n">first_start_time</span> <span class="o">=</span> <span class="n">modules_status</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">first_start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">last_completion_time</span> <span class="o">=</span> <span class="n">modules_status</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="s2">&quot;completion_time&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">last_completion_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">first_start_time</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">last_completion_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="n">total_duration</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
-                <span class="n">modules_status</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;completion_time&quot;</span><span class="p">],</span>
+                <span class="n">last_completion_time</span><span class="p">,</span>
                 <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
-                <span class="n">modules_status</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">first_start_time</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_module_status</span><span class="p">(</span>
             <span class="p">{</span>
@@ -2667,6 +2717,26 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
                 <span class="s2">&quot;total_duration&quot;</span><span class="p">:</span> <span class="n">total_duration</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_median_subtraction_duration_from_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">raw_ap_fp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npx_input_dir</span> <span class="o">/</span> <span class="s2">&quot;continuous.dat&quot;</span>
+        <span class="n">continuous_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ks_output_dir</span> <span class="o">/</span> <span class="s2">&quot;continuous.dat&quot;</span>
+        <span class="k">if</span> <span class="n">raw_ap_fp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&lt;</span> <span class="n">continuous_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
+            <span class="c1"># if the copied continuous.dat was actually modified,</span>
+            <span class="c1"># median_subtraction may have been completed - let&#39;s check</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_module_logfile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">previous_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                            <span class="s2">&quot;ecephys spike sorting: median subtraction module&quot;</span>
+                        <span class="p">)</span> <span class="ow">and</span> <span class="n">previous_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Total processing time:&quot;</span><span class="p">):</span>
+                            <span class="c1"># regex to search for the processing duration - a float value</span>
+                            <span class="n">duration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                                <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;\d+\.?\d+&quot;</span><span class="p">,</span> <span class="n">previous_line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+                            <span class="p">)</span>
+                            <span class="k">return</span> <span class="n">duration</span>
+                        <span class="n">previous_line</span> <span class="o">=</span> <span class="n">line</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -2813,9 +2883,11 @@ Which is based on <code>ecephys_spike_sorting</code> routines from Allen Institu
     <script id="__config" type="application/json">{"base": "../../../..", "features": ["toc.integrate", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
-        <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
+          <script src="https://js-na1.hs-scripts.com/23133402.js"></script>
+        
       
     
   </body>
