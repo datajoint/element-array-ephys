@@ -17,6 +17,7 @@ to assemble a fully functional pipeline.
 ## Experiment flowchart
 
 ![flowchart](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/diagram_flowchart.svg)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdatajoint%2Felement-array-ephys.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdatajoint%2Felement-array-ephys?ref=badge_shield)
 
 ## Data Pipeline Diagram
 
@@ -38,3 +39,7 @@ to assemble a fully functional pipeline.
 ## Support
 
 + If you need help getting started or run into any errors, please contact our team by email at support@datajoint.com.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdatajoint%2Felement-array-ephys.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdatajoint%2Felement-array-ephys?ref=badge_large)
