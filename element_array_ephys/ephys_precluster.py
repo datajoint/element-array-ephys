@@ -518,7 +518,7 @@ class PreCluster(dj.Imported):
         else:
             raise ValueError(f"Unknown task mode: {task_mode}")
 
-        self.insert1({**key, "precluster_time": creation_time})
+        self.insert1({**key, "precluster_time": creation_time, "package_version": ""})
 
 
 @schema
@@ -832,7 +832,7 @@ class Clustering(dj.Imported):
         else:
             raise ValueError(f"Unknown task mode: {task_mode}")
 
-        self.insert1({**key, "clustering_time": creation_time})
+        self.insert1({**key, "clustering_time": creation_time, "package_version": ""})
 
 
 @schema

@@ -218,7 +218,6 @@ def build_electrode_layouts(
     shank_spacing: float = None,
     y_origin="bottom",
 ) -> list[dict]:
-
     """Builds electrode layouts.
 
     Args:
