@@ -31,6 +31,8 @@ To get started, see below for an [interactive tutorial](#interactive-tutorial) o
 
 ![datajoint](https://raw.githubusercontent.com/datajoint/workflow-array-ephys/main/images/attached_array_ephys_element.svg)
 
++ We have designed four variations of the pipeline to handle different use cases. Displayed above is the default `ephys_acute` schema.  Details on all of the `ephys_*` schemas can be found in the [Data Pipeline](https://datajoint.com/docs/elements/element-array-ephys/latest/pipeline/) documentation page.
+
 ## Interactive Tutorial on GitHub Codespaces
 
 The easiest way to learn about DataJoint Elements is to use the tutorial notebooks within the included interactive environment configured using [DevContainer](https://containers.dev/).
