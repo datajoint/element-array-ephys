@@ -9,8 +9,7 @@ import datajoint as dj
 import intanrhsreader
 import numpy as np
 import pandas as pd
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -176,7 +175,7 @@ class EphysSession(dj.Manual):
     -> probe.ElectrodeConfig 
     session_type                : enum("lfp", "spike_sorting", "both") # analysis method
     """
-    
+
 
 @schema
 class EphysSessionInfo(dj.Imported):
@@ -189,7 +188,8 @@ class EphysSessionInfo(dj.Imported):
 
     def make(self, key):
         file = (
-            EphysRawFile & key
+            EphysRawFile
+            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time", limit=1)[0]
         data = intanrhsreader.load_file(file)
@@ -230,7 +230,8 @@ class LFP(dj.Imported):
 
     def make(self, key):
         files = (
-            EphysRawFile & key
+            EphysRawFile
+            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time")
 
