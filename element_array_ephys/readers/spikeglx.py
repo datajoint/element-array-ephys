@@ -318,6 +318,9 @@ class SpikeGLXMeta:
             else None
         )
 
+        if self.shankmap is None and self.geommap is not None:
+            self.shankmap = self._transform_geom_to_shank()
+
         # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
         self.recording_channels = np.arange(len(self.imroTbl["data"]))[
             self.get_recording_channels_indices(exclude_sync=True)
