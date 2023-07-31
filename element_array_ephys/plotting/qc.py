@@ -28,14 +28,10 @@ class QualityMetricFigs(object):
             key (dict, optional): key from ephys.QualityMetric table. Defaults to None.
             scale (float, optional): Scale at which to render figure. Defaults to 1.4.
             fig_width (int, optional): Figure width in pixels. Defaults to 800.
-            amplitude_cutoff_maximum (float, optional): Cutoff for unit amplitude in
-                visualizations. Defaults to None.
-            presence_ratio_minimum (float, optional): Cutoff for presence ratio in
-                visualizations. Defaults to None.
-            isi_violations_maximum (float, optional): Cutoff for isi violations in
-                visualizations. Defaults to None.
-            dark_mode (bool, optional): Set background to black, foreground white.
-                Default False, black on white.
+            amplitude_cutoff_maximum (float, optional): Cutoff for unit amplitude in visualizations. Defaults to None.
+            presence_ratio_minimum (float, optional): Cutoff for presence ratio in visualizations. Defaults to None.
+            isi_violations_maximum (float, optional): Cutoff for isi violations in visualizations. Defaults to None.
+            dark_mode (bool, optional): Set background to black, foreground white. Default False, black on white.
         """
         self._ephys = ephys
         self._key = key
@@ -134,7 +130,7 @@ class QualityMetricFigs(object):
                 Figure to apply formatting. Defaults to empty.
             scale (float, optional): Scale to render figure. Defaults to scale from
                 class init, 1.
-            ratio (float, optional): Figure aspect ratio width/height . Defaults to 1.
+            ratio (float, optional): Figure aspect ratio width/height. Defaults to 1.
 
         Returns:
             go.Figure: Formatted figure
@@ -202,7 +198,7 @@ class QualityMetricFigs(object):
         return fig.add_trace(
             go.Scatter(
                 x=histogram_bins[:-1],
-                y=gaussian_filter1d(histogram, 1),  # TODO: remove smoothing
+                y=gaussian_filter1d(histogram, 1),
                 mode="lines",
                 line=dict(color="rgb(0, 160, 223)", width=2 * scale),  # DataJoint Blue
                 hovertemplate="%{x:.2f}<br>%{y:.2f}<extra></extra>",
@@ -215,8 +211,7 @@ class QualityMetricFigs(object):
 
         Args:
             fig_name (str): Name of figure to be rendered
-            scale (float, optional): Scale to render fig. Defaults to scale at class
-                init, 1.
+            scale (float, optional): Scale to render fig. Defaults to scale at class init, 1.
 
         Returns:
             go.Figure: Histogram plot
@@ -253,8 +248,7 @@ class QualityMetricFigs(object):
 
         Args:
             n_columns (int, optional): Number of column in grid. Defaults to 4.
-            scale (float, optional): Scale to render fig. Defaults to scale at class
-                init, 1.
+            scale (float, optional): Scale to render fig. Defaults to scale at class init, 1.
 
         Returns:
             go.Figure: grid of available plots
