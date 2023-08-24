@@ -160,8 +160,6 @@ class EphysSession(dj.Manual):
         insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
         start_time (datetime): Start date and time of session used for analysis.
         end_time (datetime): End date and time of session used for analysis.
-        probe.Probe (foreign key): probe.Probe primary key.
-        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
         session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
     """
 
@@ -171,9 +169,25 @@ class EphysSession(dj.Manual):
     start_time                  : datetime
     end_time                    : datetime
     ---
+    session_type                : enum("lfp", "spike_sorting", "both") # analysis method
+    """
+
+
+@schema
+class EphysSessionProbe(dj.Manual):
+    """User defined probe for each ephys session.
+
+    Attributes:
+        EphysSession (foreign key): EphysSession primary key.
+        probe.Probe (foreign key): probe.Probe primary key.
+        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
+    """
+
+    definition = """
+    -> EphysSession
+    ---
     -> probe.Probe 
     -> probe.ElectrodeConfig 
-    session_type                : enum("lfp", "spike_sorting", "both") # analysis method
     """
 
 
@@ -226,7 +240,7 @@ class LFP(dj.Imported):
 
     @property
     def key_source(self):
-        return EphysSession - "session_type='spike_sorting'"
+        return EphysSessionProbe - "session_type='spike_sorting'"
 
     def make(self, key):
         files = (
@@ -266,7 +280,7 @@ class LFP(dj.Imported):
             }
         )
 
-        electrode_query = EphysSession * probe.ElectrodeConfig.Electrode & key
+        electrode_query = EphysSessionProbe * probe.ElectrodeConfig.Electrode & key
 
         # Single insert in loop to mitigate potential memory issue.
         for ch, lfp in zip(channels, lfp_concat):
