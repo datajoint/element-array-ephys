@@ -268,7 +268,7 @@ class LFP(dj.Imported):
                 ]  # channels with raw ephys traces
 
             # Concatenate the signal
-            lfp = data["amplifier_data"][:, ::downsample_factor]  # downsample
+            lfp = data["amplifier_data"][:, :]
             lfp_concat = lfp if lfp_concat.size == 0 else np.hstack((lfp_concat, lfp))
             del data, lfp
 
@@ -295,6 +295,9 @@ class LFP(dj.Imported):
                 N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
             )
             lfp = signal.filtfilt(b_butter, a_butter, lfp)
+
+            # Downsample the signal
+            lfp = lfp[:, ::downsample_factor]
 
             econf_hash, probe_type, electrode = (
                 electrode_query & f"channel='{ch}'"
