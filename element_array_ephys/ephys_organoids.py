@@ -471,8 +471,8 @@ class ClusteringTask(dj.Manual):
 
         Returns:
             Expected clustering_output_dir based on the following convention:
-                processed_dir / subject_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
-                e.g.: sub4/sess1/probe_2/kilosort2_0
+                processed_dir / subject_dir / {clustering_method}_{paramset_idx}
+                e.g.: sub4/sess1/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
         sess_dir = find_full_path(get_ephys_root_data_dir(), get_subject_directory(key))
@@ -487,7 +487,6 @@ class ClusteringTask(dj.Manual):
         output_dir = (
             processed_dir
             / sess_dir.relative_to(root_dir)
-            / f'probe_{key["insertion_number"]}'
             / f'{method}_{key["paramset_idx"]}'
         )
 
