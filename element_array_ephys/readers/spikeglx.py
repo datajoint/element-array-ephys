@@ -404,7 +404,7 @@ class SpikeGLXMeta:
 
             {'shape': [x,y,z], 'data': [[a,b,c,d],...]}
         """
-        res = {"shape": None, "data": []}
+        res = {"header": None, "data": []}
 
         for u in (i.rstrip(")") for i in raw.split("(") if i != ""):
             if "," in u:
@@ -459,12 +459,17 @@ class SpikeGLXMeta:
         probe_params["probe_type"] = self.probe_PN
         elec_pos_df = probe_geometry.build_npx_probe(**probe_params)
 
-        res = {"shape": self.geommap["shape"], "data": []}
+        res = {"shape": self.geommap["header"], "data": []}
         for shank, x_coord, y_coord, is_used in self.geommap["data"]:
+            # offset shank pitch
+            x_coord += probe_params["shankPitch"] * shank
             matched_elec = elec_pos_df.query(
                 f"x_coord=={x_coord} & y_coord=={y_coord} & shank=={shank}"
             )
-            shank_col, shank_row = matched_elec.shank_col, matched_elec.shank_row
+            shank_col, shank_row = (
+                matched_elec.shank_col.iloc[0],
+                matched_elec.shank_row.iloc[0],
+            )
             res["data"].append([shank, shank_col, shank_row, is_used])
 
         return res
