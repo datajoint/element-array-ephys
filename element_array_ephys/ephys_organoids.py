@@ -144,6 +144,7 @@ class EphysRawFile(dj.Manual):
     file_path         : varchar(512) # path to the file on the external store
     ---
     -> [nullable] Subject
+    -> AcquisitionSoftware
     file_time         : datetime     #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
