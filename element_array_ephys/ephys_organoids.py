@@ -236,7 +236,7 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@{EPHYS_STORE} 
+        lfp              : blob@{EPHYS_STORE}
         """
 
     @property
