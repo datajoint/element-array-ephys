@@ -6,3 +6,4 @@ plotly
 pyopenephys>=1.1.6
 seaborn
 intanrhsreader @ git+https://github.com/datajoint/intanrhsreader.git
+intanrhdreader @ git+https://github.com/datajoint/intanrhdreader.git

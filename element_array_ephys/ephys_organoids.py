@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
-import intanrhsreader
+import intanrhdreader
 import numpy as np
 import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
@@ -207,7 +207,7 @@ class EphysSessionInfo(dj.Imported):
             & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time", limit=1)[0]
-        data = intanrhsreader.load_file(file)
+        data = intanrhdreader.load_file(file)
         del data["header"], data["t"]
         self.insert(
             [
@@ -255,7 +255,7 @@ class LFP(dj.Imported):
         lfp_concat = np.array([], dtype=np.float64)
 
         for file in files:
-            data = intanrhsreader.load_file(file)
+            data = intanrhdreader.load_file(file)
 
             if not header:
                 # Fetch this from the first file
