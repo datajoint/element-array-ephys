@@ -40,12 +40,12 @@ def activate(
     Dependencies:
     Upstream tables:
         Session: A parent table to ProbeInsertion
-        Probe: A parent table to EphysRecording. Probe information is required before electrophysiology data is imported.
+        Probe: A parent table to EphysRecording. Probe information is required to import electrophysiology data.
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
-        get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
-        get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
+        get_session_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
+        get_processed_root_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
 
     """
 
@@ -742,13 +742,11 @@ class ClusteringTask(dj.Manual):
             get_ephys_root_data_dir(), get_session_directory(key)
         )
         root_dir = find_root_directory(get_ephys_root_data_dir(), session_dir)
-
         method = (
             (ClusteringParamSet * ClusteringMethod & key)
             .fetch1("clustering_method")
             .replace(".", "-")
         )
-
         output_dir = (
             processed_dir
             / session_dir.relative_to(root_dir)

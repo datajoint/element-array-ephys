@@ -122,7 +122,6 @@ class KilosortPreProcessing(dj.Imported):
         # add additional probe-recording and channels details into `params`
         params = {**params, **ephys.get_recording_channels_details(key)}
         params["fs"] = params["sample_rate"]
-
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
@@ -131,7 +130,6 @@ class KilosortPreProcessing(dj.Imported):
                 params.get("run_CatGT", True)
                 and "_tcat." not in spikeglx_meta_filepath.stem
             )
-
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
@@ -139,8 +137,9 @@ class KilosortPreProcessing(dj.Imported):
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
                 run_CatGT=run_CatGT,
             )
-            modules_to_run = []
-            run_kilosort.run_CatGT()
+            logged_exec_dur = 0
+            if run_CatGT:
+                run_kilosort.run_CatGT()
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
 
@@ -156,9 +155,9 @@ class KilosortPreProcessing(dj.Imported):
             modules_to_run = ["depth_estimation", "median_subtraction"]
             run_kilosort.run_modules(modules_to_run)
 
-        logged_exec_dur, _ = _get_execution_duration(
-            run_kilosort._modules_input_hash_fp, modules_to_run
-        )
+            logged_exec_dur, _ = _get_execution_duration(
+                run_kilosort._modules_input_hash_fp, modules_to_run
+            )
         exec_dur = (datetime.utcnow() - execution_time).total_seconds()
         exec_dur = max(exec_dur, logged_exec_dur) / 3600
 
@@ -200,15 +199,19 @@ class KilosortClustering(dj.Imported):
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             spikeglx_recording.validate_file("ap")
-
+            run_CatGT = (
+                params.get("run_CatGT", True)
+                and "_tcat." not in spikeglx_meta_filepath.stem
+            )
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                run_CatGT=True,
+                run_CatGT=run_CatGT,
             )
-            run_kilosort._CatGT_finished = True
+            # Include so catGT is not rerun when modules are run
+            run_kilosort._CatGT_finished = run_CatGT
             run_kilosort.run_modules(modules_to_run)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
@@ -274,16 +277,20 @@ class KilosortPostProcessing(dj.Imported):
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
             spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             spikeglx_recording.validate_file("ap")
-
+            run_CatGT = (
+                params.get("run_CatGT", True)
+                and "_tcat." not in spikeglx_meta_filepath.stem
+            )
             run_kilosort = kilosort_triggering.SGLXKilosortPipeline(
                 npx_input_dir=spikeglx_meta_filepath.parent,
                 ks_output_dir=kilosort_dir,
                 params=params,
                 KS2ver=f'{Decimal(clustering_method.replace("kilosort", "")):.1f}',
-                run_CatGT=True,
+                run_CatGT=run_CatGT,
             )
-            run_kilosort._CatGT_finished = True
+            run_kilosort._CatGT_finished = run_CatGT
             run_kilosort.run_modules(modules_to_run)
+
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
 
