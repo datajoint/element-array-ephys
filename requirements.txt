@@ -6,3 +6,5 @@ plotly
 pyopenephys>=1.1.6
 seaborn
 scikit-image
+spikeinterface
+nbformat>=4.2.0

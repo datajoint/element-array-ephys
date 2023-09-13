@@ -3,6 +3,42 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.2.11] - 2023-06-29
+
++ Update - Improve kilosort triggering routine - better logging, remove temporary files, robust resumable processing
++ Add - Null value for `package_version` to patch bug
++ Update - GitHub Actions workflows
++ Update - README instructions
+
+## [0.2.10] - 2023-05-26
+
++ Add - Kilosort, NWB, and DANDI citations
++ Fix - CSS to improve readability of tables in dark mode
++ Update - mkdocs.yaml
+
+## [0.2.9] - 2023-05-11
+
++ Fix - `.ipynb` dark mode output for all notebooks.
+
+## [0.2.8] - 2023-04-28
+
++ Fix - `.ipynb` output in tutorials is not visible in dark mode.
+
+## [0.2.7] - 2023-04-19
+
++ Bugfix - A name remapping dictionary was added to ensure consistency between the column names of the `metrics.csv` file and the attribute names of the `QualityMetrics` table
+
+## [0.2.6] - 2023-04-17
+
++ Fix - Update Pandas DataFrame column name to insert `pt_ratio` in `QualityMetrics.Waveform` table
+
+## [0.2.5] - 2023-04-12
+
++ Add - docstrings for quality metric tables
++ Fix - docstring errors
++ Update - `concepts.md`
++ Update - schema diagrams with quality metrics tables
+
 ## [0.2.4] - 2023-03-10
 
 + Update - Requirements with `ipywidgets` and `scikit-image` for plotting widget
@@ -90,6 +126,12 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.2.10]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.10
+[0.2.9]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.9
+[0.2.8]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.8
+[0.2.7]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.7
+[0.2.6]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.6
+[0.2.5]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.5
 [0.2.4]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.4
 [0.2.3]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.3
 [0.2.2]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.2
