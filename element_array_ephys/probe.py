@@ -107,13 +107,10 @@ class ProbeType(dj.Lookup):
         npx_probes_config["neuropixels 2.0 - MS"] = npx_probes_config["NP2010"]
 
         probe_type = {"probe_type": probe_type}
-        probe_params = {
-            n: v
-            for n, v in zip(
+        probe_params = dict(zip(
                 probe_geometry.geom_param_names,
-                npx_probes_config[probe_type["probe_type"]],
-            )
-        }
+                npx_probes_config[probe_type["probe_type"]]
+            ))
         electrode_layouts = probe_geometry.build_npx_probe(
             **{**probe_params, **probe_type}
         )
