@@ -140,7 +140,7 @@ class AcquisitionSoftware(dj.Lookup):
 
 @schema
 class EphysRawFile(dj.Manual):
-    definition = f""" Catalog of raw ephys files
+    definition = f""" # Catalog of raw ephys files
     file_path         : varchar(512) # path to the file on the external store
     ---
     -> [nullable] Subject
