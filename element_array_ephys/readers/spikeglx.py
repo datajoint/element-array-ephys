@@ -293,10 +293,18 @@ class SpikeGLXMeta:
                 "Probe Serial Number not found in"
                 ' either "imProbeSN" or "imDatPrb_sn"'
             )
+        # Get probe part number
+        self.probe_PN = self.meta.get("imDatPrb_pn", "3A")
 
+        # Parse channel info
         self.chanmap = (
             self._parse_chanmap(self.meta["~snsChanMap"])
             if "~snsChanMap" in self.meta
+            else None
+        )
+        self.geommap = (
+            self._parse_geommap(self.meta["~snsGeomMap"])
+            if "~snsGeomMap" in self.meta
             else None
         )
         self.shankmap = (
@@ -309,6 +317,9 @@ class SpikeGLXMeta:
             if "~imroTbl" in self.meta
             else None
         )
+
+        if self.shankmap is None and self.geommap is not None:
+            self.shankmap = self._transform_geom_to_shank()
 
         # Channels being recorded, exclude Sync channels - basically a 1-1 mapping to shankmap
         self.recording_channels = np.arange(len(self.imroTbl["data"]))[
@@ -371,6 +382,39 @@ class SpikeGLXMeta:
         return res
 
     @staticmethod
+    def _parse_geommap(raw):
+        """
+        The shankmap contains details on the shank info
+            for each electrode sites of the sites being recorded only
+        Parsing from the `~snsGeomMap` (available with SpikeGLX 20230202-phase30 and later)
+
+        https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/Metadata_30.md
+        Parse shank map header structure. Converts:
+
+            '(x,y,z)(a:b:c:d)...(a:b:c:d)'
+            a: zero-based shank #
+            b: x-coordinate (um) of elecrode center
+            c: z-coordinate (um) of elecrode center
+            d: 0/1 `used` flag (included in spatial average or not)
+        e.g:
+
+            '(1,2,480)(0:0:192:1)...(0:1:191:1)'
+
+        into dict of form:
+
+            {'shape': [x,y,z], 'data': [[a,b,c,d],...]}
+        """
+        res = {"header": None, "data": []}
+
+        for u in (i.rstrip(")") for i in raw.split("(") if i != ""):
+            if "," in u:
+                res["header"] = [d for d in u.split(",")]
+            else:
+                res["data"].append([int(d) for d in u.split(":")])
+
+        return res
+
+    @staticmethod
     def _parse_imrotbl(raw):
         """
         The imro table contains info for all electrode sites (no sync)
@@ -397,6 +441,36 @@ class SpikeGLXMeta:
                 res["shape"] = [int(d) for d in u.split(",")]
             else:
                 res["data"].append([int(d) for d in u.split(" ")])
+
+        return res
+
+    def _transform_geom_to_shank(self):
+        if self.geommap is None:
+            raise ValueError("Geometry Map not available")
+
+        from . import probe_geometry
+
+        probe_params = dict(
+            zip(
+                probe_geometry.geom_param_names, 
+                probe_geometry.M[self.probe_PN]
+            )
+        )
+        probe_params["probe_type"] = self.probe_PN
+        elec_pos_df = probe_geometry.build_npx_probe(**probe_params)
+
+        res = {"shape": self.geommap["header"], "data": []}
+        for shank, x_coord, y_coord, is_used in self.geommap["data"]:
+            # offset shank pitch
+            x_coord += probe_params["shankPitch"] * shank
+            matched_elec = elec_pos_df.query(
+                f"x_coord=={x_coord} & y_coord=={y_coord} & shank=={shank}"
+            )
+            shank_col, shank_row = (
+                matched_elec.shank_col.iloc[0],
+                matched_elec.shank_row.iloc[0],
+            )
+            res["data"].append([shank, shank_col, shank_row, is_used])
 
         return res
 
