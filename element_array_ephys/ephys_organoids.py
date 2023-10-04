@@ -9,8 +9,7 @@ import datajoint as dj
 import intanrhdreader
 import numpy as np
 import pandas as pd
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
 
 from . import ephys_report, get_logger, probe
@@ -141,10 +140,11 @@ class AcquisitionSoftware(dj.Lookup):
 
 @schema
 class EphysRawFile(dj.Manual):
-    definition = f""" Catalog of raw ephys files
+    definition = f""" # Catalog of raw ephys files
     file_path         : varchar(512) # path to the file on the external store
     ---
     -> [nullable] Subject
+    -> AcquisitionSoftware
     file_time         : datetime     #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
@@ -161,8 +161,6 @@ class EphysSession(dj.Manual):
         insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
         start_time (datetime): Start date and time of session used for analysis.
         end_time (datetime): End date and time of session used for analysis.
-        probe.Probe (foreign key): probe.Probe primary key.
-        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
         session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
     """
 
@@ -172,11 +170,27 @@ class EphysSession(dj.Manual):
     start_time                  : datetime
     end_time                    : datetime
     ---
-    -> probe.Probe 
-    -> probe.ElectrodeConfig 
     session_type                : enum("lfp", "spike_sorting", "both") # analysis method
     """
-    
+
+
+@schema
+class EphysSessionProbe(dj.Manual):
+    """User defined probe for each ephys session.
+
+    Attributes:
+        EphysSession (foreign key): EphysSession primary key.
+        probe.Probe (foreign key): probe.Probe primary key.
+        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
+    """
+
+    definition = """
+    -> EphysSession
+    ---
+    -> probe.Probe 
+    -> probe.ElectrodeConfig 
+    """
+
 
 @schema
 class EphysSessionInfo(dj.Imported):
@@ -189,7 +203,8 @@ class EphysSessionInfo(dj.Imported):
 
     def make(self, key):
         file = (
-            EphysRawFile & key
+            EphysRawFile
+            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time", limit=1)[0]
         data = intanrhdreader.load_file(file)
@@ -221,16 +236,17 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@{EPHYS_STORE} 
+        lfp              : blob@{EPHYS_STORE}
         """
 
     @property
     def key_source(self):
-        return EphysSession - "session_type='spike_sorting'"
+        return EphysSessionProbe - "session_type='spike_sorting'"
 
     def make(self, key):
         files = (
-            EphysRawFile & key
+            EphysRawFile
+            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time")
 
@@ -253,7 +269,7 @@ class LFP(dj.Imported):
                 ]  # channels with raw ephys traces
 
             # Concatenate the signal
-            lfp = data["amplifier_data"][:, ::downsample_factor]  # downsample
+            lfp = data["amplifier_data"][:, :]
             lfp_concat = lfp if lfp_concat.size == 0 else np.hstack((lfp_concat, lfp))
             del data, lfp
 
@@ -265,7 +281,7 @@ class LFP(dj.Imported):
             }
         )
 
-        electrode_query = EphysSession * probe.ElectrodeConfig.Electrode & key
+        electrode_query = EphysSessionProbe * probe.ElectrodeConfig.Electrode & key
 
         # Single insert in loop to mitigate potential memory issue.
         for ch, lfp in zip(channels, lfp_concat):
@@ -280,6 +296,9 @@ class LFP(dj.Imported):
                 N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
             )
             lfp = signal.filtfilt(b_butter, a_butter, lfp)
+
+            # Downsample the signal
+            lfp = lfp[:, ::downsample_factor]
 
             econf_hash, probe_type, electrode = (
                 electrode_query & f"channel='{ch}'"
@@ -453,8 +472,8 @@ class ClusteringTask(dj.Manual):
 
         Returns:
             Expected clustering_output_dir based on the following convention:
-                processed_dir / subject_dir / probe_{insertion_number} / {clustering_method}_{paramset_idx}
-                e.g.: sub4/sess1/probe_2/kilosort2_0
+                processed_dir / subject_dir / {clustering_method}_{paramset_idx}
+                e.g.: sub4/sess1/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
         sess_dir = find_full_path(get_ephys_root_data_dir(), get_subject_directory(key))
@@ -469,7 +488,6 @@ class ClusteringTask(dj.Manual):
         output_dir = (
             processed_dir
             / sess_dir.relative_to(root_dir)
-            / f'probe_{key["insertion_number"]}'
             / f'{method}_{key["paramset_idx"]}'
         )
 
@@ -632,7 +650,7 @@ class Clustering(dj.Imported):
             raise ValueError(f"Unknown task mode: {task_mode}")
 
         creation_time, _, _ = kilosort.extract_clustering_info(kilosort_dir)
-        self.insert1({**key, "clustering_time": creation_time})
+        self.insert1({**key, "clustering_time": creation_time, "package_version": ""})
 
 
 @schema
@@ -1075,6 +1093,11 @@ class QualityMetrics(dj.Imported):
         kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         metric_fp = kilosort_dir / "metrics.csv"
+        rename_dict = {
+            "isi_viol": "isi_violation",
+            "num_viol": "number_violation",
+            "contam_rate": "contamination_rate",
+        }
 
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
@@ -1082,7 +1105,8 @@ class QualityMetrics(dj.Imported):
         metrics_df = pd.read_csv(metric_fp)
         metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
+        metrics_df.columns = metrics_df.columns.str.lower()
+        metrics_df.rename(columns=rename_dict, inplace=True)
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")

@@ -11,7 +11,6 @@ from .. import ephys_report
 
 
 def main(ephys: types.ModuleType) -> widgets:
-
     # Build dropdown widgets
     probe_dropdown_wg = widgets.Dropdown(
         options=ephys.CuratedClustering & ephys_report.ProbeLevelReport,
@@ -66,7 +65,6 @@ def main(ephys: types.ModuleType) -> widgets:
         )
 
     def plot_probe_widget(probe_key, shank):
-
         fig_name = (
             ephys_report.ProbeLevelReport & probe_key & f"shank={shank}"
         ).fetch1("drift_map_plot")
@@ -92,7 +90,6 @@ def main(ephys: types.ModuleType) -> widgets:
         display(go.FigureWidget(probe_fig))
 
     def plot_unit_widget(unit):
-
         waveform_fig, autocorrelogram_fig, depth_waveform_fig = (
             ephys_report.UnitLevelReport & probe_dropdown_wg.value & f"unit={unit}"
         ).fetch1("waveform_plotly", "autocorrelogram_plotly", "depth_waveform_plotly")
