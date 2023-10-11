@@ -22,6 +22,7 @@ with open(path.join(here, pkg_name, "version.py")) as f:
 
 setup(
     name=pkg_name.replace("_", "-"),
+    python_requires='>=3.7, <3.11',
     version=__version__,  # noqa F821
     description="DataJoint Element for Extracellular Array Electrophysiology",
     long_description=long_description,

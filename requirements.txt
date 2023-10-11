@@ -1,9 +1,10 @@
 datajoint>=0.13
 element-interface>=0.4.0
 ipywidgets
+nbformat>=4.2.0
 openpyxl
 plotly
 pyopenephys>=1.1.6
 seaborn
 scikit-image
-nbformat>=4.2.0
+spikeinterface
