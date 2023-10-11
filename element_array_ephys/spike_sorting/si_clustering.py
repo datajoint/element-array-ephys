@@ -16,16 +16,12 @@ The follow pipeline features intermediary tables:
     - create waveform extractor object
     - extract templates, waveforms and snrs
     - quality_metrics
-
-
 """
+
 import datajoint as dj
 import os
 from element_array_ephys import get_logger
-from decimal import Decimal
-import json
-import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from element_interface.utils import find_full_path
 from element_array_ephys.readers import (
@@ -34,13 +30,7 @@ from element_array_ephys.readers import (
 )
 import element_array_ephys.probe as probe
 
-import spikeinterface
-import spikeinterface.full as si
-import spikeinterface.core as sic
-import spikeinterface.extractors as se
-import spikeinterface.exporters as sie
-import spikeinterface.sorters as ss
-import spikeinterface.preprocessing as sip
+import spikeinterface as si
 import probeinterface as pi
 
 log = get_logger(__name__)
@@ -138,7 +128,7 @@ class PreProcessing(dj.Imported):
         # params = {**params, **ephys.get_recording_channels_details(key)}
         # params["fs"] = params["sample_rate"]
 
-        # default_params = si.get_default_sorter_params(sorter_name)
+        # default_params = si.full.get_default_sorter_params(sorter_name)
         # preprocess_list = params.pop("PreProcessing_params")
 
         if acq_software == "SpikeGLX":
@@ -147,7 +137,7 @@ class PreProcessing(dj.Imported):
 
             # Create SI recording extractor object
             stream_name = sglx_filepath.stem.split(".", 1)[1]
-            sglx_si_recording = se.read_spikeglx(
+            sglx_si_recording = si.extractors.read_spikeglx(
                 folder_path=sglx_filepath.parent,
                 stream_name=stream_name,
                 stream_id=stream_name,
@@ -169,10 +159,10 @@ class PreProcessing(dj.Imported):
             sglx_si_recording.set_probe(probe=si_probe)
 
             # # run preprocessing and save results to output folder
-            # sglx_si_recording_filtered = sip.bandpass_filter(
+            # sglx_si_recording_filtered = si.preprocessing.bandpass_filter(
             #     sglx_si_recording, freq_min=300, freq_max=6000
             # )
-            # sglx_recording_cmr = sip.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
+            # sglx_recording_cmr = si.preprocessing.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
             sglx_si_recording = mimic_catGT(sglx_si_recording)
             save_file_name = "si_recording.pkl"
             save_file_path = kilosort_dir / save_file_name
@@ -190,8 +180,8 @@ class PreProcessing(dj.Imported):
             ]
 
             # Create SI recording extractor object
-            # oe_si_recording = se.OpenEphysBinaryRecordingExtractor(folder_path=oe_full_path, stream_name=stream_name)
-            oe_si_recording = se.read_openephys(
+            # oe_si_recording = si.extractors.OpenEphysBinaryRecordingExtractor(folder_path=oe_full_path, stream_name=stream_name)
+            oe_si_recording = si.extractors.read_openephys(
                 folder_path=oe_session_full_path, stream_name=stream_name
             )
 
@@ -212,10 +202,10 @@ class PreProcessing(dj.Imported):
 
             # run preprocessing and save results to output folder
             # # Switch case to allow for specified preprocessing steps
-            # oe_si_recording_filtered = sip.bandpass_filter(
+            # oe_si_recording_filtered = si.preprocessing.bandpass_filter(
             #     oe_si_recording, freq_min=300, freq_max=6000
             # )
-            # oe_recording_cmr = sip.common_reference(
+            # oe_recording_cmr = si.preprocessing.common_reference(
             #     oe_si_recording_filtered, reference="global", operator="median"
             # )
             oe_si_recording = mimic_IBLdestriping(oe_si_recording)
@@ -265,8 +255,8 @@ class SIClustering(dj.Imported):
         if acq_software == "SpikeGLX":
             # sglx_probe = ephys.get_openephys_probe_data(key)
             recording_fullpath = kilosort_dir / recording_filename
-            # sglx_si_recording = se.load_from_folder(recording_file)
-            sglx_si_recording = sic.load_extractor(recording_fullpath)
+            # sglx_si_recording = si.extractors.load_from_folder(recording_file)
+            sglx_si_recording = si.core.load_extractor(recording_fullpath)
             # assert len(oe_probe.recording_info["recording_files"]) == 1
 
             ## Assume that the worker process will trigger this sorting step
@@ -278,7 +268,7 @@ class SIClustering(dj.Imported):
                 sorter_name = "kilosort2_5"
             else:
                 sorter_name = clustering_method
-            sorting_kilosort = si.run_sorter(
+            sorting_kilosort = si.full.run_sorter(
                 sorter_name=sorter_name,
                 recording=sglx_si_recording,
                 output_folder=kilosort_dir,
@@ -289,13 +279,13 @@ class SIClustering(dj.Imported):
             sorting_kilosort.dump_to_pickle(sorting_save_path)
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
-            oe_si_recording = sic.load_extractor(recording_fullpath)
+            oe_si_recording = si.core.load_extractor(recording_fullpath)
             assert len(oe_probe.recording_info["recording_files"]) == 1
             if clustering_method.startswith("kilosort2.5"):
                 sorter_name = "kilosort2_5"
             else:
                 sorter_name = clustering_method
-            sorting_kilosort = si.run_sorter(
+            sorting_kilosort = si.full.run_sorter(
                 sorter_name=sorter_name,
                 recording=oe_si_recording,
                 output_folder=kilosort_dir,
@@ -345,10 +335,10 @@ class PostProcessing(dj.Imported):
             recording_filename = (PreProcessing & key).fetch1("recording_filename")
             sorting_file = kilosort_dir / "sorting_kilosort"
             filtered_recording_file = kilosort_dir / recording_filename
-            sglx_si_recording_filtered = sic.load_extractor(recording_file)
-            sorting_kilosort = sic.load_extractor(sorting_file)
+            sglx_si_recording_filtered = si.core.load_extractor(recording_file)
+            sorting_kilosort = si.core.load_extractor(sorting_file)
 
-            we_kilosort = si.WaveformExtractor.create(
+            we_kilosort = si.full.WaveformExtractor.create(
                 sglx_si_recording_filtered,
                 sorting_kilosort,
                 "waveforms",
@@ -359,15 +349,15 @@ class PostProcessing(dj.Imported):
             unit_id0 = sorting_kilosort.unit_ids[0]
             waveforms = we_kilosort.get_waveforms(unit_id0)
             template = we_kilosort.get_template(unit_id0)
-            snrs = si.compute_snrs(we_kilosort)
+            snrs = si.full.compute_snrs(we_kilosort)
 
             # QC Metrics
             (
                 si_violations_ratio,
                 isi_violations_rate,
                 isi_violations_count,
-            ) = si.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
-            metrics = si.compute_quality_metrics(
+            ) = si.full.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
+            metrics = si.full.compute_quality_metrics(
                 we_kilosort,
                 metric_names=[
                     "firing_rate",
@@ -382,7 +372,9 @@ class PostProcessing(dj.Imported):
                     "drift",
                 ],
             )
-            sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
+            si.exporters.export_report(
+                we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000
+            )
             # ["firing_rate","snr","presence_ratio","isi_violation",
             # "number_violation","amplitude_cutoff","isolation_distance","l_ratio","d_prime","nn_hit_rate",
             # "nn_miss_rate","silhouette_core","cumulative_drift","contamination_rate"])
@@ -392,10 +384,10 @@ class PostProcessing(dj.Imported):
         elif acq_software == "Open Ephys":
             sorting_file = kilosort_dir / "sorting_kilosort"
             recording_file = kilosort_dir / "sglx_recording_cmr.json"
-            oe_si_recording = sic.load_extractor(recording_file)
-            sorting_kilosort = sic.load_extractor(sorting_file)
+            oe_si_recording = si.core.load_extractor(recording_file)
+            sorting_kilosort = si.core.load_extractor(sorting_file)
 
-            we_kilosort = si.WaveformExtractor.create(
+            we_kilosort = si.full.WaveformExtractor.create(
                 oe_si_recording, sorting_kilosort, "waveforms", remove_if_exists=True
             )
             we_kilosort.set_params(ms_before=3.0, ms_after=4.0, max_spikes_per_unit=500)
@@ -403,23 +395,24 @@ class PostProcessing(dj.Imported):
             unit_id0 = sorting_kilosort.unit_ids[0]
             waveforms = we_kilosort.get_waveforms(unit_id0)
             template = we_kilosort.get_template(unit_id0)
-            snrs = si.compute_snrs(we_kilosort)
+            snrs = si.full.compute_snrs(we_kilosort)
 
             # QC Metrics
             # Apply waveform extractor extensions
-            _ = si.compute_spike_locations(we_kilosort)
-            _ = si.compute_spike_amplitudes(we_kilosort)
-            _ = si.compute_unit_locations(we_kilosort)
-            _ = si.compute_template_metrics(we_kilosort)
-            _ = si.compute_noise_levels(we_kilosort)
-            _ = si.compute_principal_components(we_kilosort)
-            _ = si.compute_drift_metrics(we_kilosort)
-            _ = si.compute_tempoate_similarity(we_kilosort)
-            (isi_violations_ratio, isi_violations_count) = si.compute_isi_violations(
-                we_kilosort, isi_threshold_ms=1.5
-            )
-            (isi_histograms, bins) = si.compute_isi_histograms(we_kilosort)
-            metrics = si.compute_quality_metrics(
+            _ = si.full.compute_spike_locations(we_kilosort)
+            _ = si.full.compute_spike_amplitudes(we_kilosort)
+            _ = si.full.compute_unit_locations(we_kilosort)
+            _ = si.full.compute_template_metrics(we_kilosort)
+            _ = si.full.compute_noise_levels(we_kilosort)
+            _ = si.full.compute_principal_components(we_kilosort)
+            _ = si.full.compute_drift_metrics(we_kilosort)
+            _ = si.full.compute_tempoate_similarity(we_kilosort)
+            (
+                isi_violations_ratio,
+                isi_violations_count,
+            ) = si.full.compute_isi_violations(we_kilosort, isi_threshold_ms=1.5)
+            (isi_histograms, bins) = si.full.compute_isi_histograms(we_kilosort)
+            metrics = si.full.compute_quality_metrics(
                 we_kilosort,
                 metric_names=[
                     "firing_rate",
@@ -434,7 +427,9 @@ class PostProcessing(dj.Imported):
                     "drift",
                 ],
             )
-            sie.export_report(we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000)
+            si.exporters.export_report(
+                we_kilosort, kilosort_dir, n_jobs=-1, chunk_size=30000
+            )
             we_savedir = kilosort_dir / "we_kilosort"
             we_kilosort.save(we_savedir, n_jobs=-1, chunk_size=30000)
 
@@ -462,71 +457,73 @@ class PostProcessing(dj.Imported):
 #     # If else
 #     # need to figure out ordering
 #     if preprocess_list["Filter"]:
-#         recording = sip.FilterRecording(recording)
+#         recording = si.preprocessing.FilterRecording(recording)
 #     if preprocess_list["BandpassFilter"]:
-#         recording = sip.BandpassFilterRecording(recording)
+#         recording = si.preprocessing.BandpassFilterRecording(recording)
 #     if preprocess_list["HighpassFilter"]:
-#         recording = sip.HighpassFilterRecording(recording)
+#         recording = si.preprocessing.HighpassFilterRecording(recording)
 #     if preprocess_list["NormalizeByQuantile"]:
-#         recording = sip.NormalizeByQuantileRecording(recording)
+#         recording = si.preprocessing.NormalizeByQuantileRecording(recording)
 #     if preprocess_list["Scale"]:
-#         recording = sip.ScaleRecording(recording)
+#         recording = si.preprocessing.ScaleRecording(recording)
 #     if preprocess_list["Center"]:
-#         recording = sip.CenterRecording(recording)
+#         recording = si.preprocessing.CenterRecording(recording)
 #     if preprocess_list["ZScore"]:
-#         recording = sip.ZScoreRecording(recording)
+#         recording = si.preprocessing.ZScoreRecording(recording)
 #     if preprocess_list["Whiten"]:
-#         recording = sip.WhitenRecording(recording)
+#         recording = si.preprocessing.WhitenRecording(recording)
 #     if preprocess_list["CommonReference"]:
-#         recording = sip.CommonReferenceRecording(recording)
+#         recording = si.preprocessing.CommonReferenceRecording(recording)
 #     if preprocess_list["PhaseShift"]:
-#         recording = sip.PhaseShiftRecording(recording)
+#         recording = si.preprocessing.PhaseShiftRecording(recording)
 #     elif preprocess_list["Rectify"]:
-#         recording = sip.RectifyRecording(recording)
+#         recording = si.preprocessing.RectifyRecording(recording)
 #     elif preprocess_list["Clip"]:
-#         recording = sip.ClipRecording(recording)
+#         recording = si.preprocessing.ClipRecording(recording)
 #     elif preprocess_list["BlankSaturation"]:
-#         recording = sip.BlankSaturationRecording(recording)
+#         recording = si.preprocessing.BlankSaturationRecording(recording)
 #     elif preprocess_list["RemoveArtifacts"]:
-#         recording = sip.RemoveArtifactsRecording(recording)
+#         recording = si.preprocessing.RemoveArtifactsRecording(recording)
 #     elif preprocess_list["RemoveBadChannels"]:
-#         recording = sip.RemoveBadChannelsRecording(recording)
+#         recording = si.preprocessing.RemoveBadChannelsRecording(recording)
 #     elif preprocess_list["ZeroChannelPad"]:
-#         recording = sip.ZeroChannelPadRecording(recording)
+#         recording = si.preprocessing.ZeroChannelPadRecording(recording)
 #     elif preprocess_list["DeepInterpolation"]:
-#         recording = sip.DeepInterpolationRecording(recording)
+#         recording = si.preprocessing.DeepInterpolationRecording(recording)
 #     elif preprocess_list["Resample"]:
-#         recording = sip.ResampleRecording(recording)
+#         recording = si.preprocessing.ResampleRecording(recording)
 
 
 def mimic_IBLdestriping_modified(recording):
     # From SpikeInterface Implementation (https://spikeinterface.readthedocs.io/en/latest/how_to/analyse_neuropixels.html)
-    recording = si.highpass_filter(recording, freq_min=400.0)
-    bad_channel_ids, channel_labels = si.detect_bad_channels(recording)
+    recording = si.full.highpass_filter(recording, freq_min=400.0)
+    bad_channel_ids, channel_labels = si.full.detect_bad_channels(recording)
     # For IBL destriping interpolate bad channels
     recording = recording.remove_channels(bad_channel_ids)
-    recording = si.phase_shift(recording)
-    recording = si.common_reference(recording, operator="median", reference="global")
+    recording = si.full.phase_shift(recording)
+    recording = si.full.common_reference(
+        recording, operator="median", reference="global"
+    )
     return recording
 
 
 def mimic_IBLdestriping(recording):
     # From International Brain Laboratory. “Spike sorting pipeline for the International Brain Laboratory”. 4 May 2022. 9 Jun 2022.
-    recording = si.highpass_filter(recording, freq_min=400.0)
-    bad_channel_ids, channel_labels = si.detect_bad_channels(recording)
+    recording = si.full.highpass_filter(recording, freq_min=400.0)
+    bad_channel_ids, channel_labels = si.full.detect_bad_channels(recording)
     # For IBL destriping interpolate bad channels
-    recording = sip.interpolate_bad_channels(bad_channel_ids)
-    recording = si.phase_shift(recording)
+    recording = si.preprocessing.interpolate_bad_channels(bad_channel_ids)
+    recording = si.full.phase_shift(recording)
     # For IBL destriping use highpass_spatial_filter used instead of common reference
-    recording = si.highpass_spatial_filter(
+    recording = si.full.highpass_spatial_filter(
         recording, operator="median", reference="global"
     )
     return recording
 
 
 def mimic_catGT(sglx_recording):
-    sglx_recording = si.phase_shift(sglx_recording)
-    sglx_recording = si.common_reference(
+    sglx_recording = si.full.phase_shift(sglx_recording)
+    sglx_recording = si.full.common_reference(
         sglx_recording, operator="median", reference="global"
     )
     return sglx_recording
