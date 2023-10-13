@@ -85,11 +85,11 @@ class PreProcessing(dj.Imported):
 
     @property
     def key_source(self):
-        return (
+        return ((
             ephys.ClusteringTask * ephys.ClusteringParamSet
             & {"task_mode": "trigger"}
             & 'clustering_method in ("kilosort2", "kilosort2.5", "kilosort3")'
-        ) - ephys.Clustering
+        ) - ephys.Clustering).proj()
 
     def make(self, key):
         """Triggers or imports clustering analysis."""
