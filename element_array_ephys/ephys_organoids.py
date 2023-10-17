@@ -141,7 +141,7 @@ class AcquisitionSoftware(dj.Lookup):
 @schema
 class EphysRawFile(dj.Manual):
     definition = f""" # Catalog of raw ephys files
-    file_path         : varchar(512) # path to the file on the external store
+    file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
     -> [nullable] Subject
     -> AcquisitionSoftware
@@ -194,30 +194,29 @@ class EphysSessionProbe(dj.Manual):
 
 @schema
 class EphysSessionInfo(dj.Imported):
-    definition = """
+    definition = """  # Store header information from the first session file.
     -> EphysSession
-    attribute_name      : varchar(32)
     ---
-    attribute_blob=null : longblob
+    session_info: longblob  # Session header info from intan .rhd file. Get this from the first session file.
     """
 
     def make(self, key):
-        file = (
+        first_file = (
             EphysRawFile
-            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time", limit=1)[0]
-        data = intanrhdreader.load_file(file)
-        del data["header"], data["t"]
+        
+        # Read file header
+        with open(first_file, "rb") as f:
+            header = intanrhdreader.read_header(f)
+            del header["spike_triggers"],  header["aux_input_channels"]
+            
         self.insert(
             [
                 {
                     **key,
-                    "attribute_name": k,
-                    "attribute_blob": v,
+                    "session_info": header,
                 }
-                for k, v in data.items()
-                if "data" not in k
             ]
         )
 
