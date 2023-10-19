@@ -43,7 +43,7 @@ def activate(
 
     Dependencies:
     Upstream tables:
-        Subject: A parent table to EphysSession.
+        culture.Experiment: A parent table to EphysSession.
     External stores:
         EPHYS_STORE: (str) name of the DataJoint external store for ephys data
         FILE_STORE: (str) name of the DataJoint external store for ephys raw files
@@ -151,7 +151,7 @@ class EphysRawFile(dj.Manual):
     definition = f""" # Catalog of raw ephys files
     file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
-    -> [nullable] Subject
+    -> [nullable] culture.Experiment
     -> AcquisitionSoftware
     file_time         : datetime     #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
@@ -165,7 +165,7 @@ class EphysSession(dj.Manual):
     """User defined ephys session for downstream analysis.
 
     Attributes:
-        Subject (foreign key): Subject primary key.
+        culture.Experiment (foreign key): culture.Experiment primary key.
         insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
         start_time (datetime): Start date and time of session used for analysis.
         end_time (datetime): End date and time of session used for analysis.
@@ -173,8 +173,7 @@ class EphysSession(dj.Manual):
     """
 
     definition = """
-    -> Subject
-    insertion_number            : tinyint unsigned
+    -> culture.Experiment
     start_time                  : datetime
     end_time                    : datetime
     ---
