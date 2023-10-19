@@ -139,6 +139,14 @@ class AcquisitionSoftware(dj.Lookup):
 
 
 @schema
+class Port(dj.Lookup):
+    definition = """  # Port ID of the Intan acquisition system
+    port_id     : char(2)
+    """
+    contents = zip(["A", "B", "C", "D"])
+
+
+@schema
 class EphysRawFile(dj.Manual):
     definition = f""" # Catalog of raw ephys files
     file_path         : varchar(512) # path to the file on the external store relative to the root directory
