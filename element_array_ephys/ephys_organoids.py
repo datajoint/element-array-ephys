@@ -12,12 +12,12 @@ import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
 
-from . import ephys_report, get_logger, probe
+from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
 
-log = get_logger(__name__)
-
 schema = dj.schema()
+
+logger = dj.logger
 
 _linking_module = None
 EPHYS_STORE = None
@@ -208,6 +208,7 @@ class EphysSessionInfo(dj.Imported):
     """
 
     def make(self, key):
+        logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
         first_file = (
             EphysRawFile
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
