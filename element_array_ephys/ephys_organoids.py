@@ -20,8 +20,6 @@ schema = dj.schema()
 logger = dj.logger
 
 _linking_module = None
-EPHYS_STORE = None
-FILE_STORE = None
 
 
 def activate(
@@ -43,10 +41,7 @@ def activate(
 
     Dependencies:
     Upstream tables:
-        culture.Experiment: A parent table to EphysSession.
-    External stores:
-        EPHYS_STORE: (str) name of the DataJoint external store for ephys data
-        FILE_STORE: (str) name of the DataJoint external store for ephys raw files
+        culture.Organoid: A parent table to EphysSession.
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
@@ -60,10 +55,8 @@ def activate(
         linking_module
     ), "The argument 'dependency' must be a module's name or a module"
 
-    global _linking_module, EPHYS_STORE, FILE_STORE
+    global _linking_module
     _linking_module = linking_module
-    EPHYS_STORE = linking_module.EPHYS_STORE
-    FILE_STORE = linking_module.FILE_STORE
 
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
@@ -156,7 +149,7 @@ class EphysRawFile(dj.Manual):
     file_time         : datetime     #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
-    file              : filepath@{FILE_STORE}  
+    file              : filepath@data-root
     """
 
 
@@ -243,7 +236,7 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@{EPHYS_STORE}
+        lfp              : blob@ephys-store
         """
 
     @property
