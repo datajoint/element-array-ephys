@@ -211,16 +211,16 @@ class EphysSessionInfo(dj.Imported):
 
 @schema
 class LFP(dj.Imported):
-    definition = """
-    -> EphysSession
+    definition = """ # Store pre-processed LFP traces per electrode. Only the LFPs collected from a pre-defined recording session.
+    -> EphysSession.OrganoidRecording
     ---
-    lfp_sampling_rate    : float # (Hz) down-sampled sampling rate.
-    header               : longblob
+    lfp_sampling_rate    : float # Down-sampled sampling rate (Hz).
     """
 
     class Trace(dj.Part):
-        definition = f"""
+        definition = """
         -> master
+        -> EphysRawFile
         -> probe.ElectrodeConfig.Electrode
         ---
         lfp              : blob@ephys-store
@@ -228,7 +228,7 @@ class LFP(dj.Imported):
 
     @property
     def key_source(self):
-        return EphysSessionProbe - "session_type='spike_sorting'"
+        return EphysSession - "session_type='spike_sorting'"
 
     def make(self, key):
         files = (
@@ -237,7 +237,8 @@ class LFP(dj.Imported):
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         ).fetch("file", order_by="file_time")
 
-        TARGET_SAMPLING_RATE = 2500
+        TARGET_SAMPLING_RATE = 2500  # Hz
+        POWERLINE_NOISE_FREQ = 60  # Hz
         header = {}
         lfp_concat = np.array([], dtype=np.float64)
 
