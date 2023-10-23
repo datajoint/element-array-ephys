@@ -165,23 +165,14 @@ class EphysSession(dj.Manual):
     drug_concentration=null     : float # concentration in uM
     """
 
-
-@schema
-class EphysSessionProbe(dj.Manual):
-    """User defined probe for each ephys session.
-
-    Attributes:
-        EphysSession (foreign key): EphysSession primary key.
-        probe.Probe (foreign key): probe.Probe primary key.
-        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
-    """
-
-    definition = """
-    -> EphysSession
-    ---
-    -> probe.Probe 
-    -> probe.ElectrodeConfig 
-    """
+    class OrganoidRecording(dj.Part):
+        definition = """  # User defined probe for each ephys session.
+        -> master
+        -> culture.Organoid
+        ---
+        -> probe.Probe
+        -> Port  # port ID where the probe was connected to.
+        """
 
 
 @schema
