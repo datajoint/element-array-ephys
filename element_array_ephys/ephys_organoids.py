@@ -177,32 +177,36 @@ class EphysSession(dj.Manual):
 
 @schema
 class EphysSessionInfo(dj.Imported):
-    definition = """  # Store header information from the first session file.
+    definition = """ # Store header information from the first session file.
     -> EphysSession
     ---
     session_info: longblob  # Session header info from intan .rhd file. Get this from the first session file.
     """
 
     def make(self, key):
-        logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
-        first_file = (
+        query = (
             EphysRawFile
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
-        ).fetch("file", order_by="file_time", limit=1)[0]
-        
-        # Read file header
-        with open(first_file, "rb") as f:
-            header = intanrhdreader.read_header(f)
-            del header["spike_triggers"],  header["aux_input_channels"]
-            
-        self.insert(
-            [
-                {
-                    **key,
-                    "session_info": header,
-                }
-            ]
         )
+
+        if query:
+            first_file = (query).fetch("file", order_by="file_time", limit=1)[0]
+
+            # Read file header
+            with open(first_file, "rb") as f:
+                header = intanrhdreader.read_header(f)
+                del header["spike_triggers"], header["aux_input_channels"]
+
+            logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
+
+            self.insert(
+                [
+                    {
+                        **key,
+                        "session_info": header,
+                    }
+                ]
+            )
 
 
 @schema
