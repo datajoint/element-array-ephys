@@ -141,12 +141,12 @@ class Port(dj.Lookup):
 
 @schema
 class EphysRawFile(dj.Manual):
-    definition = f""" # Catalog of raw ephys files
+    definition = """ # Catalog of all raw ephys files
     file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
-    -> [nullable] culture.Experiment
+    -> [nullable] culture.OrganoidCulture
     -> AcquisitionSoftware
-    file_time         : datetime     #  date and time of the file acquisition
+    file_time         : datetime #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
     file              : filepath@data-root
