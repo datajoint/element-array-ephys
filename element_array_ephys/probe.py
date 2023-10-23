@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datajoint as dj
 import numpy as np
+import pandas as pd
 
 schema = dj.schema()
 
@@ -35,9 +36,9 @@ class ProbeType(dj.Lookup):
 
     definition = """
     # Type of probe, with specific electrodes geometry defined
-    probe_type      : varchar(32) # e.g. neuropixels_1.0
+    probe_type           : varchar(32) # e.g. neuropixels_1.0
     ---
-    probe_full_name : varchar(64) # full, non-abbreviated name of the probe 
+    probe_full_name=null : varchar(64) # full, non-abbreviated name of the probe 
     """
 
     class Electrode(dj.Part):
@@ -124,11 +125,12 @@ def build_electrode_layouts(
     site_count_per_shank: int,
     col_spacing: float = None,
     row_spacing: float = None,
-    white_spacing: float = None,
+    row_offset: list = None,
     col_count_per_shank: int = 1,
     shank_count: int = 1,
     shank_spacing: float = None,
     y_origin="bottom",
+    as_dataframe=False,
 ) -> list[dict]:
     """Builds electrode layouts.
 
@@ -137,11 +139,12 @@ def build_electrode_layouts(
         site_count_per_shank (int): site count per shank.
         col_spacing (float): (um) horizontal spacing between sites. Defaults to None (single column).
         row_spacing (float): (um) vertical spacing between columns. Defaults to None (single row).
-        white_spacing (float): (um) offset spacing. Defaults to None.
+        row_offset (list): (um) per-row offset spacing. Defaults to None.
         col_count_per_shank (int): number of column per shank. Defaults to 1 (single column).
         shank_count (int): number of shank. Defaults to 1 (single shank).
         shank_spacing (float): (um) spacing between shanks. Defaults to None (single shank).
         y_origin (str): {"bottom", "top"}. y value decrements if "top". Defaults to "bottom".
+        as_dataframe (bool): if True, returns as pandas DataFrame, otherwise as list of dict
     """
     row_count = int(site_count_per_shank / col_count_per_shank)
     x_coords = np.tile(
@@ -150,16 +153,17 @@ def build_electrode_layouts(
     )
     y_coords = np.repeat(np.arange(row_count) * (row_spacing or 1), col_count_per_shank)
 
-    if white_spacing:
-        x_white_spaces = np.tile(
-            [white_spacing, white_spacing, 0, 0], int(row_count / 2)
-        )
-        x_coords = x_coords + x_white_spaces
+    if row_offset is None:
+        row_offset = np.zeros_like(x_coords)
+    else:
+        assert len(row_offset) == row_count
+        row_offset = np.tile(row_offset, col_count_per_shank)
+    x_coords = x_coords + row_offset
 
     shank_cols = np.tile(range(col_count_per_shank), row_count)
     shank_rows = np.repeat(range(row_count), col_count_per_shank)
 
-    return [
+    electrode_layout = [
         {
             "probe_type": probe_type,
             "electrode": (site_count_per_shank * shank_no) + e_id,
@@ -174,3 +178,5 @@ def build_electrode_layouts(
             zip(shank_cols, shank_rows, x_coords, y_coords)
         )
     ]
+
+    return pd.DataFrame(electrode_layout) if as_dataframe else electrode_layout
