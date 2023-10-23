@@ -155,22 +155,14 @@ class EphysRawFile(dj.Manual):
 
 @schema
 class EphysSession(dj.Manual):
-    """User defined ephys session for downstream analysis.
-
-    Attributes:
-        culture.Experiment (foreign key): culture.Experiment primary key.
-        insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
-        start_time (datetime): Start date and time of session used for analysis.
-        end_time (datetime): End date and time of session used for analysis.
-        session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
-    """
-
-    definition = """
-    -> culture.Experiment
+    definition = """ # User defined ephys session for downstream analysis.
+    -> culture.OrganoidCulture
     start_time                  : datetime
     end_time                    : datetime
     ---
     session_type                : enum("lfp", "spike_sorting", "both") # analysis method
+    -> [nullable] culture.Drug
+    drug_concentration=null     : float # concentration in uM
     """
 
 
