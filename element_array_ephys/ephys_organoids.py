@@ -50,7 +50,7 @@ def activate(
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
-        get_subject_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
+        get_organoid_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
     """
 
@@ -98,7 +98,7 @@ def get_ephys_root_data_dir() -> list:
     return root_directories
 
 
-def get_subject_directory(session_key: dict) -> str:
+def get_organoid_directory(session_key: dict) -> str:
     """Retrieve the session directory with Neuropixels for the given session.
 
     Args:
@@ -107,7 +107,7 @@ def get_subject_directory(session_key: dict) -> str:
     Returns:
         A string for the path to the session directory.
     """
-    return _linking_module.get_subject_directory(session_key)
+    return _linking_module.get_organoid_directory(session_key)
 
 
 def get_processed_root_data_dir() -> str:
@@ -483,7 +483,9 @@ class ClusteringTask(dj.Manual):
                 e.g.: sub4/sess1/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
-        sess_dir = find_full_path(get_ephys_root_data_dir(), get_subject_directory(key))
+        sess_dir = find_full_path(
+            get_ephys_root_data_dir(), get_organoid_directory(key)
+        )
         root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
 
         method = (
@@ -954,7 +956,7 @@ class WaveformSet(dj.Imported):
                 neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             elif acq_software == "Open Ephys":
                 subject_dir = find_full_path(
-                    get_ephys_root_data_dir(), get_subject_directory(key)
+                    get_ephys_root_data_dir(), get_organoid_directory(key)
                 )
                 openephys_dataset = openephys.OpenEphys(subject_dir)
                 neuropixels_recording = openephys_dataset.probes[probe_serial_number]
