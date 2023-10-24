@@ -172,6 +172,7 @@ class EphysSession(dj.Manual):
         ---
         -> probe.Probe
         -> Port  # port ID where the probe was connected to.
+        used_electrodes=null     : longblob  # list of electrode IDs used in this session (if null, all electrodes are used)
         """
 
 
