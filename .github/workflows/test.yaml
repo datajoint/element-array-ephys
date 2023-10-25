@@ -4,8 +4,8 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  # devcontainer-build:
-  #   uses: datajoint/.github/.github/workflows/devcontainer-build.yaml@main
+  devcontainer-build:
+    uses: datajoint/.github/.github/workflows/devcontainer-build.yaml@main
   tests:
     runs-on: ubuntu-latest
     strategy:
