@@ -144,7 +144,7 @@ class EphysRawFile(dj.Manual):
     definition = """ # Catalog of all raw ephys files
     file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
-    -> [nullable] culture.OrganoidCulture
+    -> [nullable] culture.Experiment
     -> AcquisitionSoftware
     file_time         : datetime #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
@@ -156,7 +156,8 @@ class EphysRawFile(dj.Manual):
 @schema
 class EphysSession(dj.Manual):
     definition = """ # User defined ephys session for downstream analysis.
-    -> culture.OrganoidCulture
+    -> culture.Experiment
+    insertion_number            : tinyint unsigned
     start_time                  : datetime
     end_time                    : datetime
     ---
@@ -165,15 +166,23 @@ class EphysSession(dj.Manual):
     drug_concentration=null     : float # concentration in uM
     """
 
-    class OrganoidRecording(dj.Part):
-        definition = """  # User defined probe for each ephys session.
-        -> master
-        -> culture.Organoid
-        ---
-        -> probe.Probe
-        -> Port  # port ID where the probe was connected to.
-        used_electrodes=null     : longblob  # list of electrode IDs used in this session (if null, all electrodes are used)
-        """
+
+@schema
+class EphysSessionProbe(dj.Manual):
+    """User defined probe for each ephys session.
+    Attributes:
+        EphysSession (foreign key): EphysSession primary key.
+        probe.Probe (foreign key): probe.Probe primary key.
+        probe.ElectrodeConfig (foreign key): probe.ElectrodeConfig primary key.
+    """
+
+    definition = """
+    -> EphysSession
+    ---
+    -> probe.Probe 
+    -> Port  # port ID where the probe was connected to.
+    used_electrodes=null     : longblob  # list of electrode IDs used in this session (if null, all electrodes are used)
+    """
 
 
 @schema
