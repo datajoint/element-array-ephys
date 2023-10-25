@@ -451,10 +451,7 @@ class SpikeGLXMeta:
         from . import probe_geometry
 
         probe_params = dict(
-            zip(
-                probe_geometry.geom_param_names, 
-                probe_geometry.M[self.probe_PN]
-            )
+            zip(probe_geometry.geom_param_names, probe_geometry.M[self.probe_PN])
         )
         probe_params["probe_type"] = self.probe_PN
         elec_pos_df = probe_geometry.build_npx_probe(**probe_params)
