@@ -282,11 +282,6 @@ class LFP(dj.Imported):
                         header["notch_filter_frequency"] or POWERLINE_NOISE_FREQ
                     )  # in Hz
                     downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
-                    channels = [
-                        ch["custom_channel_name"]
-                        for ch in data["amplifier_channels"]
-                        if ch["port_prefix"] == probe_info["port_id"]
-                    ]  # channels with raw ephys traces
 
                     # Get LFP indices (row index of the LFP matrix to be used)
                     lfp_indices = np.array(electrode_query.fetch("channel"), dtype=int)
