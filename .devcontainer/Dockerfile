@@ -41,7 +41,7 @@ ENV DJ_HOST fakeservices.datajoint.io
 ENV DJ_USER root
 ENV DJ_PASS simple
 
-ENV IMAGING_ROOT_DATA_DIR /workspaces/element-array-ephys/example_data
+ENV EPHYS_ROOT_DATA_DIR /workspaces/element-array-ephys/example_data
 ENV DATABASE_PREFIX neuro_
 
 USER vscode
