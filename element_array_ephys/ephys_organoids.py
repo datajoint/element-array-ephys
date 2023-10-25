@@ -230,7 +230,6 @@ class LFP(dj.Imported):
     class Trace(dj.Part):
         definition = """
         -> master
-        -> EphysSession.OrganoidRecording
         -> probe.ElectrodeConfig.Electrode
         ---
         lfp              : blob@ephys-store
@@ -243,89 +242,123 @@ class LFP(dj.Imported):
     def make(self, key):
         TARGET_SAMPLING_RATE = 2500  # Hz
         POWERLINE_NOISE_FREQ = 60  # Hz
-        lfp_sampling_rate = None
         query = (
             EphysRawFile
-            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         )
-        if query:
+        if not query:
+            logger.info(
+                f"No raw data file found. Skip populating ephys.LFP for <{key}>"
+            )
+        else:
+            logger.info(f"Populating ephys.LFP for <{key}>")
+
+            # Get probe info
+            probe_info = (EphysSessionProbe & key).fetch1()
+            probe_type = (probe.Probe & {"probe": probe_info["probe"]}).fetch1(
+                "probe_type"
+            )
+
+            electrode_query = probe.ElectrodeConfig.Electrode & (
+                probe.ElectrodeConfig & {"probe_type": probe_type}
+            )
+
+            # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
+            if probe_info["used_electrodes"] is not None:
+                electrode_query &= (
+                    f'electrode IN {tuple(probe_info["used_electrodes"])}'
+                )
+
+            header = {}
+            lfp_concat = np.array([], dtype=np.float64)
+
             for file in query.fetch("file", order_by="file_time"):
                 data = intanrhdreader.load_file(file)
-                if lfp_sampling_rate is None:
-                    lfp_sampling_rate = data["header"]["sample_rate"]
+
+                if not header:
+                    header = data.pop("header")
+                    lfp_sampling_rate = header["sample_rate"]
                     powerline_noise_freq = (
-                        data["header"]["notch_filter_frequency"] or POWERLINE_NOISE_FREQ
+                        header["notch_filter_frequency"] or POWERLINE_NOISE_FREQ
                     )  # in Hz
                     downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
                     channels = [
-                        ch["native_channel_name"] for ch in data["amplifier_channels"]
+                        ch["custom_channel_name"]
+                        for ch in data["amplifier_channels"]
+                        if ch["port_prefix"] == probe_info["port_id"]
                     ]  # channels with raw ephys traces
 
-                lfps = data["amplifier_data"]  # nb of channels x data points
-                del data
+                    # Get LFP indices (row index of the LFP matrix to be used)
+                    lfp_indices = np.array(electrode_query.fetch("channel"), dtype=int)
+                    port_indices = np.array(
+                        [
+                            ind
+                            for ind, ch in enumerate(data["amplifier_channels"])
+                            if ch["port_prefix"] == probe_info["port_id"]
+                        ]
+                    )
+                    lfp_indices = np.sort(port_indices[lfp_indices])
 
-                self.insert1(
-                    {
-                        **key,
-                        "lfp_sampling_rate": TARGET_SAMPLING_RATE,
-                    }
-                )
-
-                for organoid_info in EphysSession.OrganoidRecording & key:
-                    probe_type = (
-                        probe.Probe & {"probe": organoid_info["probe"]}
-                    ).fetch1("probe_type")
-
-                    electrode_query = probe.ElectrodeConfig.Electrode & (
-                        probe.ElectrodeConfig() & {"probe_type": probe_type}
+                    self.insert1(
+                        {
+                            **key,
+                            "lfp_sampling_rate": TARGET_SAMPLING_RATE,
+                        }
                     )
 
-                    # Single insert in loop to mitigate potential memory issue.
-                    for ch, lfp in zip(channels, lfps):
-                        # Powerline noise removal
-                        b_notch, a_notch = signal.iirnotch(
-                            w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
-                        )
-                        lfp = signal.filtfilt(b_notch, a_notch, lfp)
+                    channels = np.array(
+                        [
+                            ch["native_channel_name"]
+                            for ch in data["amplifier_channels"]
+                            if ch["port_prefix"]
+                        ]
+                    )[lfp_indices]
 
-                        # Lowpass filter
-                        b_butter, a_butter = signal.butter(
-                            N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
-                        )
-                        lfp = signal.filtfilt(b_butter, a_butter, lfp)
+                    electrode_df = electrode_query.fetch(format="frame").reset_index()
 
-                        # Downsample the signal
-                        lfp = lfp[::downsample_factor]
+                    channel_to_electrode_map = dict(
+                        zip(electrode_df["channel"], electrode_df["electrode"])
+                    )
 
-                        electrode_df = electrode_query.fetch(
-                            format="frame"
-                        ).reset_index()
+                    channel_to_electrode_map = {
+                        f'{probe_info["port_id"]}-{int(channel):03d}': electrode
+                        for channel, electrode in channel_to_electrode_map.items()
+                    }
 
-                        channel_to_electrode_map = dict(
-                            zip(electrode_df["channel"], electrode_df["electrode"])
-                        )
+                lfps = data.pop("amplifier_data")[lfp_indices]
+                lfp_concat = (
+                    lfps if lfp_concat.size == 0 else np.hstack((lfp_concat, lfps))
+                )
+                del data
 
-                        channel_to_electrode_map = {
-                            f'{organoid_info["port_id"]}-{int(channel):03d}': electrode
-                            for channel, electrode in channel_to_electrode_map.items()
-                        }
+            # Single insert in loop to mitigate potential memory issue.
+            for ch, lfp in zip(channels, lfp_concat):
+                # Powerline noise removal
+                b_notch, a_notch = signal.iirnotch(
+                    w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
+                )
+                lfp = signal.filtfilt(b_notch, a_notch, lfp)
 
-                        self.Trace.insert1(
-                            {
-                                **key,
-                                "organoid_id": organoid_info["organoid_id"],
-                                "file_path": pathlib.Path(file)
-                                .relative_to(get_ephys_root_data_dir()[0])
-                                .as_posix(),
-                                "electrode_config_hash": electrode_df[
-                                    "electrode_config_hash"
-                                ][0],
-                                "probe_type": electrode_df["probe_type"][0],
-                                "electrode": channel_to_electrode_map[ch],
-                                "lfp": lfp,
-                            }
-                        )
+                # Lowpass filter
+                b_butter, a_butter = signal.butter(
+                    N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
+                )
+                lfp = signal.filtfilt(b_butter, a_butter, lfp)
+
+                # Downsample the signal
+                lfp = lfp[::downsample_factor]
+
+                self.Trace.insert1(
+                    {
+                        **key,
+                        "electrode_config_hash": electrode_df["electrode_config_hash"][
+                            0
+                        ],
+                        "probe_type": electrode_df["probe_type"][0],
+                        "electrode": channel_to_electrode_map[ch],
+                        "lfp": lfp,
+                    }
+                )
 
 
 # ------------ Clustering --------------
