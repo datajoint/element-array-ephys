@@ -6,7 +6,7 @@ from element_lab import lab
 from element_lab.lab import Lab, Location, Project, Protocol, Source, User
 from element_lab.lab import Device as Equipment
 from element_lab.lab import User as Experimenter
-from element_session import session_with_id as session
+from element_session import session_with_datetime as session
 from element_session.session_with_datetime import Session
 import element_interface
 import pathlib
