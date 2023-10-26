@@ -30,4 +30,17 @@ def get_ephys_root_data_dir():
 lab.activate(db_prefix + "lab")
 subject.activate(db_prefix + "subject", linking_module=__name__)
 session.activate(db_prefix + "session", linking_module=__name__)
+
+@lab.schema
+class SkullReference(dj.Lookup):
+    definition = """
+    skull_reference   : varchar(60)
+    """
+    contents = zip(["Bregma", "Lambda"])
+
+def get_session_directory(session_key):
+    session_directory = (session.SessionDirectory & session_key).fetch1("session_dir")
+    return pathlib.Path(session_directory)
+
+
 ephys.activate(db_prefix + "ephys", db_prefix + "probe", linking_module=__name__)
