@@ -31,12 +31,14 @@ lab.activate(db_prefix + "lab")
 subject.activate(db_prefix + "subject", linking_module=__name__)
 session.activate(db_prefix + "session", linking_module=__name__)
 
+
 @lab.schema
 class SkullReference(dj.Lookup):
     definition = """
     skull_reference   : varchar(60)
     """
     contents = zip(["Bregma", "Lambda"])
+
 
 def get_session_directory(session_key):
     session_directory = (session.SessionDirectory & session_key).fetch1("session_dir")
