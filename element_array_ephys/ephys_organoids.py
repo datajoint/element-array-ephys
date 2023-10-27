@@ -41,7 +41,7 @@ def activate(
 
     Dependencies:
     Upstream tables:
-        culture.Organoid: A parent table to EphysSession.
+        culture.Experiment: A parent table to EphysSession.
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
