@@ -131,6 +131,7 @@ def build_electrode_layouts(
     shank_spacing: float = None,
     y_origin="bottom",
     as_dataframe=False,
+    **kwargs,
 ) -> list[dict]:
     """Builds electrode layouts.
 
