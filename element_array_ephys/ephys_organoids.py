@@ -237,7 +237,7 @@ class LFP(dj.Imported):
 
     @property
     def key_source(self):
-        return EphysSession - "session_type='spike_sorting'"
+        return EphysSession & EphysSessionProbe - "session_type='spike_sorting'"
 
     def make(self, key):
         TARGET_SAMPLING_RATE = 2500  # Hz
