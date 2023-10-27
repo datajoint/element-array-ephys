@@ -144,7 +144,6 @@ class EphysRawFile(dj.Manual):
     definition = """ # Catalog of all raw ephys files
     file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
-    -> [nullable] culture.Experiment
     -> AcquisitionSoftware
     file_time         : datetime #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
