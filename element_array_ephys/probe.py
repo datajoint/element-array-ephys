@@ -30,15 +30,15 @@ class ProbeType(dj.Lookup):
     """Type of probe.
 
     Attributes:
-        probe_type (foreign key, varchar (32) ): Name of the probe type.
-        probe_full_name ( varchar (64) ): Full name of the probe type.
+        probe_type (foreign key, varchar (64) ): Name of the probe type.
+        probe_comment ( varchar(1000) ): Comment about this model of probe.
     """
 
     definition = """
     # Type of probe, with specific electrodes geometry defined
-    probe_type           : varchar(32) # e.g. neuropixels_1.0
+    probe_type           : varchar(64) # e.g. A1x32-6mm-100-177-H32_21mm
     ---
-    probe_full_name=null : varchar(64) # full, non-abbreviated name of the probe 
+    probe_comment ( varchar(1000) ): Comment about this model of probe.
     """
 
     class Electrode(dj.Part):
