@@ -157,12 +157,8 @@ class EphysSession(dj.Manual):
     definition = """ # User defined ephys session for downstream analysis.
     -> culture.Experiment
     insertion_number            : tinyint unsigned
-    start_time                  : datetime
-    end_time                    : datetime
     ---
-    session_type                : enum("lfp", "spike_sorting", "both") # analysis method
-    -> [nullable] culture.Drug
-    drug_concentration=null     : float # concentration in uM
+    session_type                : enum("lfp", "spike_sorting", "both") # 
     """
 
 
