@@ -12,16 +12,14 @@ import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
 
-from . import ephys_report, get_logger, probe
+from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
-
-log = get_logger(__name__)
 
 schema = dj.schema()
 
+logger = dj.logger
+
 _linking_module = None
-EPHYS_STORE = None
-FILE_STORE = None
 
 
 def activate(
@@ -43,14 +41,11 @@ def activate(
 
     Dependencies:
     Upstream tables:
-        Subject: A parent table to EphysSession.
-    External stores:
-        EPHYS_STORE: (str) name of the DataJoint external store for ephys data
-        FILE_STORE: (str) name of the DataJoint external store for ephys raw files
+        culture.Experiment: A parent table to EphysSession.
 
     Functions:
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
-        get_subject_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
+        get_organoid_directory(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
     """
 
@@ -60,10 +55,8 @@ def activate(
         linking_module
     ), "The argument 'dependency' must be a module's name or a module"
 
-    global _linking_module, EPHYS_STORE, FILE_STORE
+    global _linking_module
     _linking_module = linking_module
-    EPHYS_STORE = linking_module.EPHYS_STORE
-    FILE_STORE = linking_module.FILE_STORE
 
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
@@ -98,7 +91,7 @@ def get_ephys_root_data_dir() -> list:
     return root_directories
 
 
-def get_subject_directory(session_key: dict) -> str:
+def get_organoid_directory(session_key: dict) -> str:
     """Retrieve the session directory with Neuropixels for the given session.
 
     Args:
@@ -107,7 +100,7 @@ def get_subject_directory(session_key: dict) -> str:
     Returns:
         A string for the path to the session directory.
     """
-    return _linking_module.get_subject_directory(session_key)
+    return _linking_module.get_organoid_directory(session_key)
 
 
 def get_processed_root_data_dir() -> str:
@@ -139,45 +132,41 @@ class AcquisitionSoftware(dj.Lookup):
 
 
 @schema
+class Port(dj.Lookup):
+    definition = """  # Port ID of the Intan acquisition system
+    port_id     : char(2)
+    """
+    contents = zip(["A", "B", "C", "D"])
+
+
+@schema
 class EphysRawFile(dj.Manual):
-    definition = f""" # Catalog of raw ephys files
-    file_path         : varchar(512) # path to the file on the external store
+    definition = """ # Catalog of all raw ephys files
+    file_path         : varchar(512) # path to the file on the external store relative to the root directory
     ---
-    -> [nullable] Subject
     -> AcquisitionSoftware
-    file_time         : datetime     #  date and time of the file acquisition
+    file_time         : datetime #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
-    file              : filepath@{FILE_STORE}  
+    file              : filepath@data-root
     """
 
 
 @schema
 class EphysSession(dj.Manual):
-    """User defined ephys session for downstream analysis.
-
-    Attributes:
-        Subject (foreign key): Subject primary key.
-        insertion_number (tinyint, unsigned): Unique insertion number for each probe and electrode configuration for a given subject.
-        start_time (datetime): Start date and time of session used for analysis.
-        end_time (datetime): End date and time of session used for analysis.
-        session_type (enum): Downstream analysis method to be performed ("lfp", "spike_sorting", "both").
-    """
-
-    definition = """
-    -> Subject
+    definition = """ # User defined ephys session for downstream analysis.
+    -> culture.Experiment
     insertion_number            : tinyint unsigned
     start_time                  : datetime
     end_time                    : datetime
     ---
-    session_type                : enum("lfp", "spike_sorting", "both") # analysis method
+    session_type                : enum("lfp", "spike_sorting", "both") # 
     """
 
 
 @schema
 class EphysSessionProbe(dj.Manual):
     """User defined probe for each ephys session.
-
     Attributes:
         EphysSession (foreign key): EphysSession primary key.
         probe.Probe (foreign key): probe.Probe primary key.
@@ -188,131 +177,180 @@ class EphysSessionProbe(dj.Manual):
     -> EphysSession
     ---
     -> probe.Probe 
-    -> probe.ElectrodeConfig 
+    -> Port  # port ID where the probe was connected to.
+    used_electrodes=null     : longblob  # list of electrode IDs used in this session (if null, all electrodes are used)
     """
 
 
 @schema
 class EphysSessionInfo(dj.Imported):
-    definition = """
+    definition = """ # Store header information from the first session file.
     -> EphysSession
-    attribute_name      : varchar(32)
     ---
-    attribute_blob=null : longblob
+    session_info: longblob  # Session header info from intan .rhd file. Get this from the first session file.
     """
 
     def make(self, key):
-        file = (
+        query = (
             EphysRawFile
-            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
-        ).fetch("file", order_by="file_time", limit=1)[0]
-        data = intanrhdreader.load_file(file)
-        del data["header"], data["t"]
-        self.insert(
-            [
-                {
-                    **key,
-                    "attribute_name": k,
-                    "attribute_blob": v,
-                }
-                for k, v in data.items()
-                if "data" not in k
-            ]
         )
+
+        if query:
+            first_file = (query).fetch("file", order_by="file_time", limit=1)[0]
+
+            # Read file header
+            with open(first_file, "rb") as f:
+                header = intanrhdreader.read_header(f)
+                del header["spike_triggers"], header["aux_input_channels"]
+
+            logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
+
+            self.insert(
+                [
+                    {
+                        **key,
+                        "session_info": header,
+                    }
+                ]
+            )
 
 
 @schema
 class LFP(dj.Imported):
-    definition = """
+    definition = """ # Store pre-processed LFP traces per electrode. Only the LFPs collected from a pre-defined recording session.
     -> EphysSession
     ---
-    lfp_sampling_rate    : float # (Hz) down-sampled sampling rate.
-    header               : longblob
+    lfp_sampling_rate    : float # Down-sampled sampling rate (Hz).
     """
 
     class Trace(dj.Part):
-        definition = f"""
+        definition = """
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@{EPHYS_STORE}
+        lfp              : blob@ephys-store
         """
 
     @property
     def key_source(self):
-        return EphysSessionProbe - "session_type='spike_sorting'"
+        return EphysSession & EphysSessionProbe - "session_type='spike_sorting'"
 
     def make(self, key):
-        files = (
+        TARGET_SAMPLING_RATE = 2500  # Hz
+        POWERLINE_NOISE_FREQ = 60  # Hz
+        query = (
             EphysRawFile
-            & key
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
-        ).fetch("file", order_by="file_time")
-
-        TARGET_SAMPLING_RATE = 2500
-        header = {}
-        lfp_concat = np.array([], dtype=np.float64)
-
-        for file in files:
-            data = intanrhdreader.load_file(file)
-
-            if not header:
-                # Fetch this from the first file
-                header = data.pop("header")
-                lfp_sampling_rate = header["sample_rate"]
-                powerline_noise_freq = header["notch_filter_frequency"]  # in Hz
-                downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
-
-                channels = [
-                    ch["native_channel_name"] for ch in data["amplifier_channels"]
-                ]  # channels with raw ephys traces
-
-            # Concatenate the signal
-            lfp = data["amplifier_data"][:, :]
-            lfp_concat = lfp if lfp_concat.size == 0 else np.hstack((lfp_concat, lfp))
-            del data, lfp
-
-        self.insert1(
-            {
-                **key,
-                "lfp_sampling_rate": TARGET_SAMPLING_RATE,
-                "header": header,
-            }
         )
-
-        electrode_query = EphysSessionProbe * probe.ElectrodeConfig.Electrode & key
-
-        # Single insert in loop to mitigate potential memory issue.
-        for ch, lfp in zip(channels, lfp_concat):
-            # Powerline noise removal
-            b_notch, a_notch = signal.iirnotch(
-                w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
+        if not query:
+            logger.info(
+                f"No raw data file found. Skip populating ephys.LFP for <{key}>"
             )
-            lfp = signal.filtfilt(b_notch, a_notch, lfp)
+        else:
+            logger.info(f"Populating ephys.LFP for <{key}>")
 
-            # Lowpass filter
-            b_butter, a_butter = signal.butter(
-                N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
+            # Get probe info
+            probe_info = (EphysSessionProbe & key).fetch1()
+            probe_type = (probe.Probe & {"probe": probe_info["probe"]}).fetch1(
+                "probe_type"
             )
-            lfp = signal.filtfilt(b_butter, a_butter, lfp)
 
-            # Downsample the signal
-            lfp = lfp[:, ::downsample_factor]
-
-            econf_hash, probe_type, electrode = (
-                electrode_query & f"channel='{ch}'"
-            ).fetch1("electrode_config_hash", "probe_type", "electrode")
-
-            self.Trace.insert1(
-                {
-                    **key,
-                    "electrode_config_hash": econf_hash,
-                    "probe_type": probe_type,
-                    "electrode": electrode,
-                    "lfp": lfp,
-                }
+            electrode_query = probe.ElectrodeConfig.Electrode & (
+                probe.ElectrodeConfig & {"probe_type": probe_type}
             )
+
+            # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
+            if probe_info["used_electrodes"] is not None:
+                electrode_query &= (
+                    f'electrode IN {tuple(probe_info["used_electrodes"])}'
+                )
+
+            header = {}
+            lfp_concat = np.array([], dtype=np.float64)
+
+            for file in query.fetch("file", order_by="file_time"):
+                data = intanrhdreader.load_file(file)
+
+                if not header:
+                    header = data.pop("header")
+                    lfp_sampling_rate = header["sample_rate"]
+                    powerline_noise_freq = (
+                        header["notch_filter_frequency"] or POWERLINE_NOISE_FREQ
+                    )  # in Hz
+                    downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
+
+                    # Get LFP indices (row index of the LFP matrix to be used)
+                    lfp_indices = np.array(electrode_query.fetch("channel"), dtype=int)
+                    port_indices = np.array(
+                        [
+                            ind
+                            for ind, ch in enumerate(data["amplifier_channels"])
+                            if ch["port_prefix"] == probe_info["port_id"]
+                        ]
+                    )
+                    lfp_indices = np.sort(port_indices[lfp_indices])
+
+                    self.insert1(
+                        {
+                            **key,
+                            "lfp_sampling_rate": TARGET_SAMPLING_RATE,
+                        }
+                    )
+
+                    channels = np.array(
+                        [
+                            ch["native_channel_name"]
+                            for ch in data["amplifier_channels"]
+                            if ch["port_prefix"]
+                        ]
+                    )[lfp_indices]
+
+                    electrode_df = electrode_query.fetch(format="frame").reset_index()
+
+                    channel_to_electrode_map = dict(
+                        zip(electrode_df["channel"], electrode_df["electrode"])
+                    )
+
+                    channel_to_electrode_map = {
+                        f'{probe_info["port_id"]}-{int(channel):03d}': electrode
+                        for channel, electrode in channel_to_electrode_map.items()
+                    }
+
+                lfps = data.pop("amplifier_data")[lfp_indices]
+                lfp_concat = (
+                    lfps if lfp_concat.size == 0 else np.hstack((lfp_concat, lfps))
+                )
+                del data
+
+            # Single insert in loop to mitigate potential memory issue.
+            for ch, lfp in zip(channels, lfp_concat):
+                # Powerline noise removal
+                b_notch, a_notch = signal.iirnotch(
+                    w0=powerline_noise_freq, Q=30, fs=TARGET_SAMPLING_RATE
+                )
+                lfp = signal.filtfilt(b_notch, a_notch, lfp)
+
+                # Lowpass filter
+                b_butter, a_butter = signal.butter(
+                    N=4, Wn=1000, btype="lowpass", fs=TARGET_SAMPLING_RATE
+                )
+                lfp = signal.filtfilt(b_butter, a_butter, lfp)
+
+                # Downsample the signal
+                lfp = lfp[::downsample_factor]
+
+                self.Trace.insert1(
+                    {
+                        **key,
+                        "electrode_config_hash": electrode_df["electrode_config_hash"][
+                            0
+                        ],
+                        "probe_type": electrode_df["probe_type"][0],
+                        "electrode": channel_to_electrode_map[ch],
+                        "lfp": lfp,
+                    }
+                )
 
 
 # ------------ Clustering --------------
@@ -476,7 +514,9 @@ class ClusteringTask(dj.Manual):
                 e.g.: sub4/sess1/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
-        sess_dir = find_full_path(get_ephys_root_data_dir(), get_subject_directory(key))
+        sess_dir = find_full_path(
+            get_ephys_root_data_dir(), get_organoid_directory(key)
+        )
         root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
 
         method = (
@@ -947,7 +987,7 @@ class WaveformSet(dj.Imported):
                 neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
             elif acq_software == "Open Ephys":
                 subject_dir = find_full_path(
-                    get_ephys_root_data_dir(), get_subject_directory(key)
+                    get_ephys_root_data_dir(), get_organoid_directory(key)
                 )
                 openephys_dataset = openephys.OpenEphys(subject_dir)
                 neuropixels_recording = openephys_dataset.probes[probe_serial_number]
