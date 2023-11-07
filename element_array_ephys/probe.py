@@ -31,14 +31,14 @@ class ProbeType(dj.Lookup):
 
     Attributes:
         probe_type (foreign key, varchar (64) ): Name of the probe type.
-        probe_comment ( varchar(1000) ): Comment about this model of probe.
+        probe_full_name ( varchar(100) ): full, non-abbreviated name of the probe.
     """
 
     definition = """
     # Type of probe, with specific electrodes geometry defined
     probe_type           : varchar(64) # e.g. A1x32-6mm-100-177-H32_21mm
     ---
-    probe_comment ( varchar(1000) ): Comment about this model of probe.
+    probe_full_name=null : varchar(100) # full, non-abbreviated name of the probe 
     """
 
     class Electrode(dj.Part):
