@@ -10,10 +10,10 @@ import numpy as np
 import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from . import ephys_report, get_logger, probe
+from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
 
-log = get_logger(__name__)
+log = dj.logger
 
 schema = dj.schema()
 
