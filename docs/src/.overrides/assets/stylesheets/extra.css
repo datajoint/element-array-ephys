@@ -92,21 +92,6 @@ html a[title="YouTube"].md-social__link svg {
     /* --md-footer-fg-color: var(--dj-white); */
 }
 
-table {
-    border-collapse: collapse;
-}
-
-tr {
-    border-left: 1px solid var(--dj-black);
-    border-right: 1px solid var(--dj-black);
-}
-
-td, th {
-    border-top: 1px solid var(--dj-black);
-    border-bottom: 1px solid var(--dj-black);
-}
-
-[data-md-color-scheme="slate"] td, th {
-    background-color: var(--dj-white);
+[data-md-color-scheme="slate"] .jupyter-wrapper .Table Td {
     color: var(--dj-black);
 }
