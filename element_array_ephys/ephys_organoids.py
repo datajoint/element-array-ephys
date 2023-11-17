@@ -160,7 +160,7 @@ class EphysSession(dj.Manual):
     start_time                  : datetime
     end_time                    : datetime
     ---
-    session_type                : enum("lfp", "spike_sorting", "both") # 
+    session_type                : enum("lfp", "spike_sorting", "both") 
     """
 
 
@@ -229,7 +229,7 @@ class LFP(dj.Imported):
         -> master
         -> probe.ElectrodeConfig.Electrode
         ---
-        lfp              : blob@ephys-store
+        lfp              : blob@datajoint-blob
         """
 
     @property
