@@ -28,7 +28,9 @@ environment and notebooks to learn the pipeline.
 ## Getting Started
 
 + Please fork this repository.
+
 + Clone the repository to your computer.
+
 ```bash
      git clone https://github.com/<enter_github_username>/element-array-ephys.git
 ```
@@ -38,6 +40,7 @@ environment and notebooks to learn the pipeline.
      ```bash
      pip install -e .
      ```
+     
 + [Interactive tutorial on GitHub
   Codespaces](https://github.com/datajoint/element-array-ephys#interactive-tutorial)
 
