@@ -41,7 +41,7 @@ setup(
     ],
     extras_require={
         "elements": [
-            "elemment-animal @ git+https://github.com/datajoint/element-animal.git",
+            "element-animal @ git+https://github.com/datajoint/element-animal.git",
             "element-event @ git+https://github.com/datajoint/element-event.git",
             "element-interface @ git+https://github.com/datajoint/element-interface.git",
             "element-lab @ git+https://github.com/datajoint/element-lab.git",
