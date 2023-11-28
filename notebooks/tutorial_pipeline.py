@@ -28,6 +28,7 @@ dj.config["custom"]["ephys_root_data_dir"] = os.getenv(
 
 db_prefix = dj.config["custom"].get("database.prefix", "")
 
+
 # Declare functions for retrieving data
 def get_ephys_root_data_dir():
     """Retrieve ephys root data directory."""
