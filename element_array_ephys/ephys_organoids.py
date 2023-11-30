@@ -1,7 +1,6 @@
 import importlib
 import inspect
 import pathlib
-import re
 from datetime import datetime
 from decimal import Decimal
 
@@ -142,13 +141,12 @@ class Port(dj.Lookup):
 @schema
 class EphysRawFile(dj.Manual):
     definition = """ # Catalog of all raw ephys files
-    file_path         : varchar(512) # path to the file on the external store relative to the root directory
+    file_path         : varchar(512) # path to the file relative to the root directory
     ---
     -> AcquisitionSoftware
     file_time         : datetime #  date and time of the file acquisition
     parent_folder     : varchar(128) #  parent folder containing the file
     filename_prefix   : varchar(64)  #  filename prefix, if any, excluding the datetime information
-    file              : filepath@data-root
     """
 
 
@@ -197,7 +195,9 @@ class EphysSessionInfo(dj.Imported):
         )
 
         if query:
-            first_file = (query).fetch("file", order_by="file_time", limit=1)[0]
+            first_file = (query).fetch("file_path", order_by="file_time", limit=1)[0]
+
+            first_file = find_full_path(get_ephys_root_data_dir(), first_file)
 
             # Read file header
             with open(first_file, "rb") as f:
@@ -269,7 +269,8 @@ class LFP(dj.Imported):
             header = {}
             lfp_concat = np.array([], dtype=np.float64)
 
-            for file in query.fetch("file", order_by="file_time"):
+            for file_relpath in query.fetch("file_path", order_by="file_time"):
+                file = find_full_path(get_ephys_root_data_dir(), file_relpath)
                 data = intanrhdreader.load_file(file)
 
                 if not header:
