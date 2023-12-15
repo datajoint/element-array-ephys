@@ -31,7 +31,16 @@ from element_array_ephys.readers import (
 import element_array_ephys.probe as probe
 
 import spikeinterface as si
-import probeinterface as pi
+from element_interface.utils import find_full_path, find_root_directory
+from spikeinterface import sorters
+
+from element_array_ephys import get_logger, probe, readers
+
+from .preprocessing import (
+    mimic_catGT,
+    mimic_IBLdestriping,
+    mimic_IBLdestriping_modified,
+)
 
 log = get_logger(__name__)
 
