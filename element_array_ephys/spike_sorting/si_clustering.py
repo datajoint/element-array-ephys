@@ -76,34 +76,31 @@ SI_READERS = {
 
 @schema
 class PreProcessing(dj.Imported):
-    """A table to handle preprocessing of each clustering task."""
+    """A table to handle preprocessing of each clustering task. The output will be serialized and stored as a si_recording.pkl in the output directory."""
 
     definition = """
     -> ephys.ClusteringTask
     ---
-    recording_filename: varchar(30)     # filename where recording object is saved to
-    params: longblob           # finalized parameterset for this run
     execution_time: datetime   # datetime of the start of this step
-    execution_duration: float  # (hour) execution duration
+    execution_duration: float  # execution duration in hours
     """
 
     @property
     def key_source(self):
-        return ((
+        return (
             ephys.ClusteringTask * ephys.ClusteringParamSet
             & {"task_mode": "trigger"}
-            & 'clustering_method in ("kilosort2", "kilosort2.5", "kilosort3")'
-        ) - ephys.Clustering).proj()
+            & f"clustering_method in {tuple(SI_SORTERS)}"
+        ) - ephys.Clustering
 
     def make(self, key):
         """Triggers or imports clustering analysis."""
         execution_time = datetime.utcnow()
 
-        task_mode, output_dir = (ephys.ClusteringTask & key).fetch1(
-            "task_mode", "clustering_output_dir"
-        )
-
-        assert task_mode == "trigger", 'Supporting "trigger" task_mode only'
+        # Set the output directory
+        acq_software, output_dir = (
+            ephys.ClusteringTask * ephys.EphysRecording & key
+        ).fetch1("acq_software", "clustering_output_dir")
 
         if not output_dir:
             output_dir = ephys.ClusteringTask.infer_output_dir(
@@ -113,115 +110,43 @@ class PreProcessing(dj.Imported):
             ephys.ClusteringTask.update1(
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
+        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
 
-        kilosort_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        # Create SI recording extractor object
+        si_recording: si.BaseRecording = SI_READERS[acq_software](
+            folder_path=output_dir
+        )
 
-        acq_software, clustering_method, params = (
-            ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
-        ).fetch1("acq_software", "clustering_method", "params")
-
-        assert (
-            clustering_method in _supported_kilosort_versions
-        ), f'Clustering_method "{clustering_method}" is not supported'
-
-        if clustering_method.startswith("kilosort2.5"):
-            sorter_name = "kilosort2_5"
-        else:
-            sorter_name = clustering_method
-        # add additional probe-recording and channels details into `params`
-        # params = {**params, **ephys.get_recording_channels_details(key)}
-        # params["fs"] = params["sample_rate"]
-
-        # default_params = si.full.get_default_sorter_params(sorter_name)
-        # preprocess_list = params.pop("PreProcessing_params")
-
-        if acq_software == "SpikeGLX":
-            # sglx_session_full_path = find_full_path(ephys.get_ephys_root_data_dir(),ephys.get_session_directory(key))
-            sglx_filepath = ephys.get_spikeglx_meta_filepath(key)
-
-            # Create SI recording extractor object
-            stream_name = sglx_filepath.stem.split(".", 1)[1]
-            sglx_si_recording = si.extractors.read_spikeglx(
-                folder_path=sglx_filepath.parent,
-                stream_name=stream_name,
-                stream_id=stream_name,
+        # Add probe information to recording object
+        electrode_config_key = (
+            probe.ElectrodeConfig * ephys.EphysRecording & key
+        ).fetch1("KEY")
+        electrodes_df = (
+            (
+                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                & electrode_config_key
             )
+            .fetch(format="frame")
+            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+        )
 
-            channels_details = ephys.get_recording_channels_details(key)
-            xy_coords = [
-                list(i)
-                for i in zip(channels_details["x_coords"], channels_details["y_coords"])
-            ]
+        # Create SI probe object
+        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
+        si_recording.set_probe(probe=si_probe, in_place=True)
 
-            # Create SI probe object
-            si_probe = pi.Probe(ndim=2, si_units="um")
-            si_probe.set_contacts(
-                positions=xy_coords, shapes="square", shape_params={"width": 12}
-            )
-            si_probe.create_auto_shape(probe_type="tip")
-            si_probe.set_device_channel_indices(channels_details["channel_ind"])
-            sglx_si_recording.set_probe(probe=si_probe)
-
-            # # run preprocessing and save results to output folder
-            # sglx_si_recording_filtered = si.preprocessing.bandpass_filter(
-            #     sglx_si_recording, freq_min=300, freq_max=6000
-            # )
-            # sglx_recording_cmr = si.preprocessing.common_reference(sglx_si_recording_filtered, reference="global", operator="median")
-            sglx_si_recording = mimic_catGT(sglx_si_recording)
-            save_file_name = "si_recording.pkl"
-            save_file_path = kilosort_dir / save_file_name
-            sglx_si_recording.dump_to_pickle(file_path=save_file_path)
-
-        elif acq_software == "Open Ephys":
-            oe_probe = ephys.get_openephys_probe_data(key)
-            oe_session_full_path = find_full_path(
-                ephys.get_ephys_root_data_dir(), ephys.get_session_directory(key)
-            )
-
-            assert len(oe_probe.recording_info["recording_files"]) == 1
-            stream_name = os.path.split(oe_probe.recording_info["recording_files"][0])[
-                1
-            ]
-
-            # Create SI recording extractor object
-            # oe_si_recording = si.extractors.OpenEphysBinaryRecordingExtractor(folder_path=oe_full_path, stream_name=stream_name)
-            oe_si_recording = si.extractors.read_openephys(
-                folder_path=oe_session_full_path, stream_name=stream_name
-            )
-
-            channels_details = ephys.get_recording_channels_details(key)
-            xy_coords = [
-                list(i)
-                for i in zip(channels_details["x_coords"], channels_details["y_coords"])
-            ]
-
-            # Create SI probe object
-            si_probe = pi.Probe(ndim=2, si_units="um")
-            si_probe.set_contacts(
-                positions=xy_coords, shapes="square", shape_params={"width": 12}
-            )
-            si_probe.create_auto_shape(probe_type="tip")
-            si_probe.set_device_channel_indices(channels_details["channel_ind"])
-            oe_si_recording.set_probe(probe=si_probe)
-
-            # run preprocessing and save results to output folder
-            # # Switch case to allow for specified preprocessing steps
-            # oe_si_recording_filtered = si.preprocessing.bandpass_filter(
-            #     oe_si_recording, freq_min=300, freq_max=6000
-            # )
-            # oe_recording_cmr = si.preprocessing.common_reference(
-            #     oe_si_recording_filtered, reference="global", operator="median"
-            # )
-            oe_si_recording = mimic_IBLdestriping(oe_si_recording)
-            save_file_name = "si_recording.pkl"
-            save_file_path = kilosort_dir / save_file_name
-            oe_si_recording.dump_to_pickle(file_path=save_file_path)
+        # Run preprocessing and save results to output folder
+        preprocessing_method = "catGT"  # where to load this info?
+        si_recording = {
+            "catGT": mimic_catGT,
+            "IBLdestriping": mimic_IBLdestriping,
+            "IBLdestriping_modified": mimic_IBLdestriping_modified,
+        }[preprocessing_method](si_recording)
+        recording_file_name = output_dir / "si_recording.pkl"
+        si_recording.dump_to_pickle(file_path=recording_file_name)
 
         self.insert1(
             {
                 **key,
-                "recording_filename": save_file_name,
-                "params": params,
                 "execution_time": execution_time,
                 "execution_duration": (
                     datetime.utcnow() - execution_time
