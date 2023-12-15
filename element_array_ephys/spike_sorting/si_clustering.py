@@ -18,18 +18,10 @@ The follow pipeline features intermediary tables:
     - quality_metrics
 """
 
-import datajoint as dj
-import os
-from element_array_ephys import get_logger
 from datetime import datetime
 
-from element_interface.utils import find_full_path
-from element_array_ephys.readers import (
-    spikeglx,
-    kilosort_triggering,
-)
-import element_array_ephys.probe as probe
-
+import datajoint as dj
+import probeinterface as pi
 import spikeinterface as si
 from element_interface.utils import find_full_path, find_root_directory
 from spikeinterface import sorters
@@ -47,12 +39,6 @@ log = get_logger(__name__)
 schema = dj.schema()
 
 ephys = None
-
-_supported_kilosort_versions = [
-    "kilosort2",
-    "kilosort2.5",
-    "kilosort3",
-]
 
 
 def activate(
@@ -77,6 +63,15 @@ def activate(
         create_tables=create_tables,
         add_objects=ephys.__dict__,
     )
+
+
+SI_SORTERS = [s.replace(".", "_") for s in si.sorters.sorter_dict.keys()]
+
+SI_READERS = {
+    "Open Ephys": si.extractors.read_openephys,
+    "SpikeGLX": si.extractors.read_spikeglx,
+    "Intan": si.extractors.read_intan,
+}
 
 
 @schema
