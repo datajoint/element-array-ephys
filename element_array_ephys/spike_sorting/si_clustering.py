@@ -21,10 +21,11 @@ The follow pipeline features intermediary tables:
 from datetime import datetime
 
 import datajoint as dj
+import pandas as pd
 import probeinterface as pi
 import spikeinterface as si
 from element_interface.utils import find_full_path, find_root_directory
-from spikeinterface import sorters
+from spikeinterface import exporters, qualitymetrics, sorters
 
 from element_array_ephys import get_logger, probe, readers
 
@@ -65,7 +66,7 @@ def activate(
     )
 
 
-SI_SORTERS = [s.replace(".", "_") for s in si.sorters.sorter_dict.keys()]
+SI_SORTERS = [s.replace("_", ".") for s in si.sorters.sorter_dict.keys()]
 
 SI_READERS = {
     "Open Ephys": si.extractors.read_openephys,
@@ -141,8 +142,8 @@ class PreProcessing(dj.Imported):
             "IBLdestriping": mimic_IBLdestriping,
             "IBLdestriping_modified": mimic_IBLdestriping_modified,
         }[preprocessing_method](si_recording)
-        recording_file_name = output_dir / "si_recording.pkl"
-        si_recording.dump_to_pickle(file_path=recording_file_name)
+        recording_file = output_dir / "si_recording.pkl"
+        si_recording.dump_to_pickle(file_path=recording_file)
 
         self.insert1(
             {
@@ -162,72 +163,48 @@ class SIClustering(dj.Imported):
 
     definition = """
     -> PreProcessing
+    sorter_name: varchar(30)        # name of the sorter used
     ---
-    sorting_filename: varchar(30)   # filename of saved sorting object
-    execution_time: datetime    # datetime of the start of this step
-    execution_duration: float   # (hour) execution duration
+    execution_time: datetime        # datetime of the start of this step
+    execution_duration: float       # execution duration in hours
     """
 
     def make(self, key):
         execution_time = datetime.utcnow()
 
+        # Load recording object.
         output_dir = (ephys.ClusteringTask & key).fetch1("clustering_output_dir")
-        kilosort_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        recording_file = output_dir / "si_recording.pkl"
+        si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
-        acq_software, clustering_method = (
-            ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
-        ).fetch1("acq_software", "clustering_method")
+        # Get sorter method and create output directory.
+        clustering_method, params = (
+            ephys.ClusteringTask * ephys.ClusteringParamSet & key
+        ).fetch1("clustering_method", "params")
+        sorter_name = (
+            "kilosort_2_5" if clustering_method == "kilsort2.5" else clustering_method
+        )
+        sorter_dir = output_dir / sorter_name
 
-        params = (PreProcessing & key).fetch1("params")
-        recording_filename = (PreProcessing & key).fetch1("recording_filename")
+        # Run sorting
+        si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
+            sorter_name=sorter_name,
+            recording=si_recording,
+            output_folder=sorter_dir,
+            verbse=True,
+            docker_image=True,
+            **params,
+        )
 
-        if acq_software == "SpikeGLX":
-            # sglx_probe = ephys.get_openephys_probe_data(key)
-            recording_fullpath = kilosort_dir / recording_filename
-            # sglx_si_recording = si.extractors.load_from_folder(recording_file)
-            sglx_si_recording = si.core.load_extractor(recording_fullpath)
-            # assert len(oe_probe.recording_info["recording_files"]) == 1
-
-            ## Assume that the worker process will trigger this sorting step
-            # - Will need to store/load the sorter_name, sglx_si_recording object etc.
-            # - Store in shared EC2 space accessible by all containers (needs to be mounted)
-            # - Load into the cloud init script, and
-            # - Option A: Can call this function within a separate container within spike_sorting_worker
-            if clustering_method.startswith("kilosort2.5"):
-                sorter_name = "kilosort2_5"
-            else:
-                sorter_name = clustering_method
-            sorting_kilosort = si.full.run_sorter(
-                sorter_name=sorter_name,
-                recording=sglx_si_recording,
-                output_folder=kilosort_dir,
-                docker_image=f"spikeinterface/{sorter_name}-compiled-base:latest",
-                **params,
-            )
-            sorting_save_path = kilosort_dir / "sorting_kilosort.pkl"
-            sorting_kilosort.dump_to_pickle(sorting_save_path)
-        elif acq_software == "Open Ephys":
-            oe_probe = ephys.get_openephys_probe_data(key)
-            oe_si_recording = si.core.load_extractor(recording_fullpath)
-            assert len(oe_probe.recording_info["recording_files"]) == 1
-            if clustering_method.startswith("kilosort2.5"):
-                sorter_name = "kilosort2_5"
-            else:
-                sorter_name = clustering_method
-            sorting_kilosort = si.full.run_sorter(
-                sorter_name=sorter_name,
-                recording=oe_si_recording,
-                output_folder=kilosort_dir,
-                docker_image=f"spikeinterface/{sorter_name}-compiled-base:latest",
-                **params,
-            )
-            sorting_save_path = kilosort_dir / "sorting_kilosort.pkl"
-            sorting_kilosort.dump_to_pickle(sorting_save_path)
+        # Run sorting
+        sorting_save_path = sorter_dir / "si_sorting.pkl"
+        si_sorting.dump_to_pickle(sorting_save_path)
 
         self.insert1(
             {
                 **key,
-                "sorting_filename": list(sorting_save_path.parts)[-1],
+                "sorter_name": sorter_name,
                 "execution_time": execution_time,
                 "execution_duration": (
                     datetime.utcnow() - execution_time
