@@ -41,11 +41,11 @@ setup(
     ],
     extras_require={
         "elements": [
-            "element-animal>=0.1.8",
-            "element-event>=0.2.3",
-            "element-interface>=0.4.0",
-            "element-lab>=0.3.0",
-            "element-session>=0.1.5",
+            "element-animal @ git+https://github.com/datajoint/element-animal.git",
+            "element-event @ git+https://github.com/datajoint/element-event.git",
+            "element-interface @ git+https://github.com/datajoint/element-interface.git",
+            "element-lab @ git+https://github.com/datajoint/element-lab.git",
+            "element-session @ git+https://github.com/datajoint/element-session.git",
         ],
         "nwb": ["dandi", "neuroconv[ecephys]", "pynwb"],
         "tests": ["pre-commit", "pytest", "pytest-cov"],
