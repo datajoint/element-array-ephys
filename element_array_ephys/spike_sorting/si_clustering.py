@@ -25,7 +25,7 @@ import datajoint as dj
 import pandas as pd
 import probeinterface as pi
 import spikeinterface as si
-from element_interface.utils import find_full_path, find_root_directory
+from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from element_array_ephys import get_logger, probe, readers
@@ -112,58 +112,65 @@ class PreProcessing(dj.Imported):
             ephys.ClusteringTask.update1(
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
+        output_dir = pathlib.Path(output_dir)
         output_full_dir = find_full_path(
-            ephys.get_ephys_root_data_dir(), output_dir
-        )  # output directory in the processed data directory
+            ephys.get_ephys_root_data_dir(), output_dir.parent
+        )  # recording object will be stored in the parent dir since it can be re-used for multiple sorters
 
-        # Create SI recording extractor object
-        data_dir = (
-            ephys.get_ephys_root_data_dir()[0] / pathlib.Path(output_dir).parent
-        )  # raw data directory
-        stream_names, stream_ids = si.extractors.get_neo_streams(
-            acq_software.strip().lower(), folder_path=data_dir
-        )
-        si_recording: si.BaseRecording = SI_READERS[acq_software](
-            folder_path=data_dir, stream_name=stream_names[0]
-        )
+        recording_file = (
+            output_full_dir / "si_recording.pkl"
+        )  # recording cache to be created for each key
 
-        # Add probe information to recording object
-        electrode_config_key = (
-            probe.ElectrodeConfig * ephys.EphysRecording & key
-        ).fetch1("KEY")
-        electrodes_df = (
-            (
-                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                & electrode_config_key
+        if not recording_file.exists():  # skip if si_recording.pkl already exists
+            # Create SI recording extractor object
+            data_dir = (
+                ephys.get_ephys_root_data_dir()[0] / output_dir.parent
+            )  # raw data directory
+            stream_names, stream_ids = si.extractors.get_neo_streams(
+                acq_software.strip().lower(), folder_path=data_dir
             )
-            .fetch(format="frame")
-            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
-        )
+            si_recording: si.BaseRecording = SI_READERS[acq_software](
+                folder_path=data_dir, stream_name=stream_names[0]
+            )
 
-        # Create SI probe object
-        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_recording.set_probe(probe=si_probe, in_place=True)
+            # Add probe information to recording object
+            electrode_config_key = (
+                probe.ElectrodeConfig * ephys.EphysRecording & key
+            ).fetch1("KEY")
+            electrodes_df = (
+                (
+                    probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                    & electrode_config_key
+                )
+                .fetch(format="frame")
+                .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+            )
+            channels_details = ephys.get_recording_channels_details(key)
 
-        # Run preprocessing and save results to output folder
-        preprocessing_method = "catGT"  # where to load this info?
-        si_recording = {
-            "catGT": mimic_catGT,
-            "IBLdestriping": mimic_IBLdestriping,
-            "IBLdestriping_modified": mimic_IBLdestriping_modified,
-        }[preprocessing_method](si_recording)
-        recording_file = output_full_dir / "si_recording.pkl"
-        si_recording.dump_to_pickle(file_path=recording_file)
+            # Create SI probe object
+            si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
+            si_probe.set_device_channel_indices(channels_details["channel_ind"])
+            si_recording.set_probe(probe=si_probe, in_place=True)
 
-        self.insert1(
-            {
-                **key,
-                "execution_time": execution_time,
-                "execution_duration": (
-                    datetime.utcnow() - execution_time
-                ).total_seconds()
-                / 3600,
-            }
-        )
+            # Run preprocessing and save results to output folder
+            preprocessing_method = "catGT"  # where to load this info?
+            si_recording = {
+                "catGT": mimic_catGT,
+                "IBLdestriping": mimic_IBLdestriping,
+                "IBLdestriping_modified": mimic_IBLdestriping_modified,
+            }[preprocessing_method](si_recording)
+            si_recording.dump_to_pickle(file_path=recording_file)
+
+            self.insert1(
+                {
+                    **key,
+                    "execution_time": execution_time,
+                    "execution_duration": (
+                        datetime.utcnow() - execution_time
+                    ).total_seconds()
+                    / 3600,
+                }
+            )
 
 
 @schema
