@@ -18,6 +18,7 @@ The follow pipeline features intermediary tables:
     - quality_metrics
 """
 
+import pathlib
 from datetime import datetime
 
 import datajoint as dj
@@ -111,11 +112,19 @@ class PreProcessing(dj.Imported):
             ephys.ClusteringTask.update1(
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
-        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        output_full_dir = find_full_path(
+            ephys.get_ephys_root_data_dir(), output_dir
+        )  # output directory in the processed data directory
 
         # Create SI recording extractor object
+        data_dir = (
+            ephys.get_ephys_root_data_dir()[0] / pathlib.Path(output_dir).parent
+        )  # raw data directory
+        stream_names, stream_ids = si.extractors.get_neo_streams(
+            acq_software.strip().lower(), folder_path=data_dir
+        )
         si_recording: si.BaseRecording = SI_READERS[acq_software](
-            folder_path=output_dir
+            folder_path=data_dir, stream_name=stream_names[0]
         )
 
         # Add probe information to recording object
@@ -142,7 +151,7 @@ class PreProcessing(dj.Imported):
             "IBLdestriping": mimic_IBLdestriping,
             "IBLdestriping_modified": mimic_IBLdestriping_modified,
         }[preprocessing_method](si_recording)
-        recording_file = output_dir / "si_recording.pkl"
+        recording_file = output_full_dir / "si_recording.pkl"
         si_recording.dump_to_pickle(file_path=recording_file)
 
         self.insert1(
