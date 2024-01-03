@@ -190,8 +190,8 @@ class SIClustering(dj.Imported):
 
         # Load recording object.
         output_dir = (ephys.ClusteringTask & key).fetch1("clustering_output_dir")
-        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-        recording_file = output_dir / "si_recording.pkl"
+        output_full_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        recording_file = output_full_dir.parent / "si_recording.pkl"
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
         # Get sorter method and create output directory.
@@ -199,9 +199,9 @@ class SIClustering(dj.Imported):
             ephys.ClusteringTask * ephys.ClusteringParamSet & key
         ).fetch1("clustering_method", "params")
         sorter_name = (
-            "kilosort_2_5" if clustering_method == "kilsort2.5" else clustering_method
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
-        sorter_dir = output_dir / sorter_name
+        sorter_dir = output_full_dir / sorter_name
 
         # Run sorting
         si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
