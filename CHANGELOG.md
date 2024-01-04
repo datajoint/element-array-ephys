@@ -3,6 +3,12 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.3.1] - 2023-11-28
++ Update - Flowchart borders for consistency with other DataJoint Elements
++ Fix - `dj.config()` setup moved to `tutorial_pipeline.py` instead of `__init__.py`
++ Update - Elements installed directly from GitHub instead of PyPI 
++ Update - Structure of the tutorial notebook
+
 ## [0.3.0] - 2023-10-25
 
 + Add - DevContainer for codespaces
