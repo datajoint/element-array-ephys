@@ -37,7 +37,7 @@ def mimic_IBLdestriping_modified(recording):
     return recording
 
 
-_preprocessing_function = {
+preprocessing_function_mapping = {
     "catGT": mimic_catGT,
     "IBLdestriping": mimic_IBLdestriping,
     "IBLdestriping_modified": mimic_IBLdestriping_modified,

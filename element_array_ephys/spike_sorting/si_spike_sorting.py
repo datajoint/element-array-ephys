@@ -30,11 +30,7 @@ from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from element_array_ephys import get_logger, probe, readers
 
-from .preprocessing import (
-    mimic_catGT,
-    mimic_IBLdestriping,
-    mimic_IBLdestriping_modified,
-)
+from . import si_preprocessing
 
 log = get_logger(__name__)
 
@@ -100,9 +96,13 @@ class PreProcessing(dj.Imported):
         execution_time = datetime.utcnow()
 
         # Set the output directory
-        acq_software, output_dir = (
-            ephys.ClusteringTask * ephys.EphysRecording & key
-        ).fetch1("acq_software", "clustering_output_dir")
+        acq_software, clustering_method, params = (
+            ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
+        ).fetch1("acq_software", "clustering_method", "params")
+
+        for req_key in ("SI_PREPROCESSING_METHOD", "SI_SORTING_PARAMS", "SI_WAVEFORM_EXTRACTION_PARAMS", "SI_QUALITY_METRICS_PARAMS"):
+            if req_key not in params:
+                raise ValueError(f"{req_key} must be defined in ClusteringParamSet for SpikeInterface execution")
 
         if not output_dir:
             output_dir = ephys.ClusteringTask.infer_output_dir(
@@ -114,63 +114,68 @@ class PreProcessing(dj.Imported):
             )
         output_dir = pathlib.Path(output_dir)
         output_full_dir = find_full_path(
-            ephys.get_ephys_root_data_dir(), output_dir.parent
-        )  # recording object will be stored in the parent dir since it can be re-used for multiple sorters
+            ephys.get_ephys_root_data_dir(), output_dir
+        ) 
 
         recording_file = (
             output_full_dir / "si_recording.pkl"
         )  # recording cache to be created for each key
 
-        if not recording_file.exists():  # skip if si_recording.pkl already exists
-            # Create SI recording extractor object
-            data_dir = (
-                ephys.get_ephys_root_data_dir()[0] / output_dir.parent
-            )  # raw data directory
-            stream_names, stream_ids = si.extractors.get_neo_streams(
-                acq_software.strip().lower(), folder_path=data_dir
-            )
-            si_recording: si.BaseRecording = SI_READERS[acq_software](
-                folder_path=data_dir, stream_name=stream_names[0]
-            )
+        # Create SI recording extractor object
+        if acq_software == "SpikeGLX":
+            spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
+            spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
+            spikeglx_recording.validate_file("ap")
+            data_dir = spikeglx_meta_filepath.parent
+        elif acq_software == "Open Ephys":
+            oe_probe = ephys.get_openephys_probe_data(key)
+            assert len(oe_probe.recording_info["recording_files"]) == 1
+            data_dir = oe_probe.recording_info["recording_files"][0]
+        else:
+            raise NotImplementedError(f"Not implemented for {acq_software}")
 
-            # Add probe information to recording object
-            electrode_config_key = (
-                probe.ElectrodeConfig * ephys.EphysRecording & key
-            ).fetch1("KEY")
-            electrodes_df = (
-                (
-                    probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                    & electrode_config_key
-                )
-                .fetch(format="frame")
-                .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+        stream_names, stream_ids = si.extractors.get_neo_streams(
+            acq_software.strip().lower(), folder_path=data_dir
+        )
+        si_recording: si.BaseRecording = SI_READERS[acq_software](
+            folder_path=data_dir, stream_name=stream_names[0]
+        )
+
+        # Add probe information to recording object
+        electrode_config_key = (
+            probe.ElectrodeConfig * ephys.EphysRecording & key
+        ).fetch1("KEY")
+        electrodes_df = (
+            (
+                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                & electrode_config_key
             )
-            channels_details = ephys.get_recording_channels_details(key)
+            .fetch(format="frame")
+            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+        )
+        channels_details = ephys.get_recording_channels_details(key)
 
-            # Create SI probe object
-            si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-            si_probe.set_device_channel_indices(channels_details["channel_ind"])
-            si_recording.set_probe(probe=si_probe, in_place=True)
+        # Create SI probe object
+        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
+        si_probe.set_device_channel_indices(channels_details["channel_ind"])
+        si_recording.set_probe(probe=si_probe, in_place=True)
 
-            # Run preprocessing and save results to output folder
-            preprocessing_method = "catGT"  # where to load this info?
-            si_recording = {
-                "catGT": mimic_catGT,
-                "IBLdestriping": mimic_IBLdestriping,
-                "IBLdestriping_modified": mimic_IBLdestriping_modified,
-            }[preprocessing_method](si_recording)
-            si_recording.dump_to_pickle(file_path=recording_file)
+        # Run preprocessing and save results to output folder
+        preprocessing_method = params["SI_PREPROCESSING_METHOD"]
+        si_preproc_func = si_preprocessing.preprocessing_function_mapping[preprocessing_method]
+        si_recording = si_preproc_func(si_recording)
+        si_recording.dump_to_pickle(file_path=recording_file)
 
-            self.insert1(
-                {
-                    **key,
-                    "execution_time": execution_time,
-                    "execution_duration": (
-                        datetime.utcnow() - execution_time
-                    ).total_seconds()
-                    / 3600,
-                }
-            )
+        self.insert1(
+            {
+                **key,
+                "execution_time": execution_time,
+                "execution_duration": (
+                    datetime.utcnow() - execution_time
+                ).total_seconds()
+                / 3600,
+            }
+        )
 
 
 @schema
@@ -203,6 +208,8 @@ class SIClustering(dj.Imported):
         )
         sorter_dir = output_full_dir / sorter_name
 
+        si_sorting_params = params["SI_SORTING_PARAMS"]
+
         # Run sorting
         si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
             sorter_name=sorter_name,
@@ -210,7 +217,7 @@ class SIClustering(dj.Imported):
             output_folder=sorter_dir,
             verbse=True,
             docker_image=True,
-            **params,
+            **si_sorting_params,
         )
 
         # Run sorting
@@ -255,14 +262,14 @@ class PostProcessing(dj.Imported):
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
         si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file)
 
+        si_waveform_extraction_params = params["SI_WAVEFORM_EXTRACTION_PARAMS"]
+
         # Extract waveforms
         we: si.WaveformExtractor = si.extract_waveforms(
             si_recording,
             si_sorting,
             folder=sorter_dir / "waveform",  # The folder where waveforms are cached
-            ms_before=3.0,
-            ms_after=4.0,
-            max_spikes_per_unit=500,
+            **si_waveform_extraction_params
             overwrite=True,
             **JOB_KWARGS,
         )
