@@ -379,7 +379,6 @@
 
 
 
-
 <h2 id="element_array_ephys.ephys_precluster.activate" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">activate</span><span class="p">(</span><span class="n">ephys_schema_name</span><span class="p">,</span> <span class="n">probe_schema_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linking_module</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -492,7 +491,7 @@ Upstream tables:
     </thead>
     <tbody>
           <tr>
-            <td><code>get_ephys_root_data_dir</code></td>
+            <td><code><span title="element_array_ephys.ephys_precluster.activate.get_ephys_root_data_dir">get_ephys_root_data_dir</span></code></td>
             <td>
               <div class="doc-md-description">
                 <p>Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).</p>
@@ -500,7 +499,7 @@ Upstream tables:
             </td>
           </tr>
           <tr>
-            <td><code>get_session_direction</code></td>
+            <td><code><span title="element_array_ephys.ephys_precluster.activate.get_session_direction">get_session_direction</span></code></td>
             <td>
               <div class="doc-md-description">
                 <p>dict): Returns path to electrophysiology data for the a particular session as a list of strings.</p>
@@ -619,7 +618,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.ephys_precluster.get_ephys_root_data_dir" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">get_ephys_root_data_dir</span><span class="p">()</span></code>
 
@@ -687,7 +685,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -791,7 +788,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.ephys_precluster.AcquisitionSoftware" class="doc doc-heading">
           <code>AcquisitionSoftware</code>
 
@@ -819,7 +815,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>acq_software</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.AcquisitionSoftware.acq_software">acq_software</span></code></td>
           <td>
                 <code> varchar(24) </code>
           </td>
@@ -872,6 +868,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -880,7 +877,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -911,7 +907,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>Session</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ProbeInsertion.Session">Session</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -922,7 +918,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>insertion_number</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ProbeInsertion.insertion_number">insertion_number</span></code></td>
           <td>
                 <code>foreign key, str</code>
           </td>
@@ -933,7 +929,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.Probe</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ProbeInsertion.probe.Probe">probe.Probe</span></code></td>
           <td>
                 <code>str</code>
           </td>
@@ -996,6 +992,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -1004,7 +1001,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1035,7 +1031,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ProbeInsertion</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.ProbeInsertion">ProbeInsertion</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1046,7 +1042,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>SkullReference</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.SkullReference">SkullReference</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1057,7 +1053,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ap_location</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.ap_location">ap_location</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1068,7 +1064,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ml_location</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.ml_location">ml_location</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1079,7 +1075,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>depth</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.depth">depth</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1090,7 +1086,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>Theta</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.Theta">Theta</span></code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
@@ -1101,7 +1097,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>phi</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.InsertionLocation.phi">phi</span></code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
@@ -1184,6 +1180,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -1192,7 +1189,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1223,7 +1219,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ProbeInsertion</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.ProbeInsertion">ProbeInsertion</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1234,7 +1230,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.probe.ElectrodeConfig">probe.ElectrodeConfig</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1245,7 +1241,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>AcquisitionSoftware</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.AcquisitionSoftware">AcquisitionSoftware</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1256,7 +1252,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>sampling_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.sampling_rate">sampling_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -1267,7 +1263,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>recording_datetime</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.recording_datetime">recording_datetime</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -1278,7 +1274,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>recording_duration</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.recording_duration">recording_duration</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -1653,7 +1649,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.EphysRecording.EphysFile" class="doc doc-heading">
           <code>EphysFile</code>
 
@@ -1681,7 +1676,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.EphysFile.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1692,7 +1687,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>file_path</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.EphysRecording.EphysFile.file_path">file_path</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -1747,6 +1742,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -1756,7 +1752,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -2052,6 +2047,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2060,7 +2056,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2091,7 +2086,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>precluster_method</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterMethod.precluster_method">precluster_method</span></code></td>
           <td>
                 <code>foreign key, varchar(16) </code>
           </td>
@@ -2102,7 +2097,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>precluster_method_desc(varchar(1000)</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterMethod.precluster_method_desc(varchar(1000)">precluster_method_desc(varchar(1000)</span></code></td>
           <td>
           </td>
           <td>
@@ -2164,6 +2159,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2172,7 +2168,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2203,7 +2198,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>paramset_idx</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSet.paramset_idx">paramset_idx</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2214,7 +2209,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>PreClusterMethod</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSet.PreClusterMethod">PreClusterMethod</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -2225,7 +2220,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>paramset_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSet.paramset_desc">paramset_desc</span></code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
@@ -2236,7 +2231,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>param_set_hash</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSet.param_set_hash">param_set_hash</span></code></td>
           <td>
                 <code>uuid</code>
           </td>
@@ -2247,7 +2242,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>params</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSet.params">params</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -2374,6 +2369,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2382,7 +2378,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2413,7 +2408,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>precluster_param_steps_id</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.precluster_param_steps_id">precluster_param_steps_id</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2424,7 +2419,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>precluster_param_steps_name</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.precluster_param_steps_name">precluster_param_steps_name</span></code></td>
           <td>
                 <code>varchar(32)</code>
           </td>
@@ -2435,7 +2430,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>precluster_param_steps_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.precluster_param_steps_desc">precluster_param_steps_desc</span></code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
@@ -2534,7 +2529,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.PreClusterParamSteps.Step" class="doc doc-heading">
           <code>Step</code>
 
@@ -2562,7 +2556,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>PreClusterParamSteps</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.Step.PreClusterParamSteps">PreClusterParamSteps</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2573,7 +2567,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>step_number</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.Step.step_number">step_number</span></code></td>
           <td>
                 <code>foreign key, smallint</code>
           </td>
@@ -2584,7 +2578,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>PreClusterParamSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterParamSteps.Step.PreClusterParamSet">PreClusterParamSet</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -2643,6 +2637,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2651,6 +2646,7 @@ Upstream tables:
   </div>
 
   </div>
+
 
 </div>
 
@@ -2660,7 +2656,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2691,7 +2686,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterTask.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2702,7 +2697,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>PreclusterParamSteps</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterTask.PreclusterParamSteps">PreclusterParamSteps</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2713,7 +2708,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>precluster_output_dir</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterTask.precluster_output_dir">precluster_output_dir</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -2724,7 +2719,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>task_mode</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreClusterTask.task_mode">task_mode</span></code></td>
           <td>
                 <code>enum</code>
           </td>
@@ -2795,6 +2790,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2803,7 +2799,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2834,7 +2829,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>PreClusterTask</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreCluster.PreClusterTask">PreClusterTask</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2845,7 +2840,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>precluster_time</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreCluster.precluster_time">precluster_time</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -2856,7 +2851,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>package_version</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.PreCluster.package_version">package_version</span></code></td>
           <td>
                 <code>varchar(16)</code>
           </td>
@@ -3012,7 +3007,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.PreCluster.make" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">make</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
 
@@ -3125,6 +3119,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3133,7 +3128,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3164,7 +3158,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -3175,7 +3169,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_sampling_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.lfp_sampling_rate">lfp_sampling_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -3186,7 +3180,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_time_stamps</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.lfp_time_stamps">lfp_time_stamps</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -3197,7 +3191,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_mean</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.lfp_mean">lfp_mean</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -3516,7 +3510,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.LFP.Electrode" class="doc doc-heading">
           <code>Electrode</code>
 
@@ -3544,7 +3537,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>LFP</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.Electrode.LFP">LFP</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -3555,7 +3548,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.Electrode.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -3566,7 +3559,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.LFP.Electrode.lfp">lfp</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -3625,6 +3618,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3634,7 +3628,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -3870,6 +3863,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3878,7 +3872,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3909,7 +3902,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>clustering_method</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringMethod.clustering_method">clustering_method</span></code></td>
           <td>
                 <code>foreign key, varchar(16) </code>
           </td>
@@ -3920,7 +3913,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>clustering_methods_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringMethod.clustering_methods_desc">clustering_methods_desc</span></code></td>
           <td>
                 <code>varchar(1000)</code>
           </td>
@@ -3989,6 +3982,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3997,7 +3991,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4028,7 +4021,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>paramset_idx</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringParamSet.paramset_idx">paramset_idx</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4039,7 +4032,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringMethod</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringParamSet.ClusteringMethod">ClusteringMethod</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -4050,7 +4043,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>paramset_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringParamSet.paramset_desc">paramset_desc</span></code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
@@ -4061,7 +4054,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>param_set_hash</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringParamSet.param_set_hash">param_set_hash</span></code></td>
           <td>
                 <code>uuid</code>
           </td>
@@ -4072,7 +4065,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>params</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringParamSet.params">params</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -4215,7 +4208,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -4387,6 +4379,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -4395,7 +4388,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4426,7 +4418,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>cluster_quality_label</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusterQualityLabel.cluster_quality_label">cluster_quality_label</span></code></td>
           <td>
                 <code>foreign key, varchar(100) </code>
           </td>
@@ -4437,7 +4429,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>cluster_quality_description</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusterQualityLabel.cluster_quality_description">cluster_quality_description</span></code></td>
           <td>
                 <code>varchar(4000)</code>
           </td>
@@ -4508,6 +4500,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -4516,7 +4509,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4547,7 +4539,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringTask.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4558,7 +4550,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringParamSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringTask.ClusteringParamSet">ClusteringParamSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4569,7 +4561,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>clustering_outdir_dir</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringTask.clustering_outdir_dir">clustering_outdir_dir</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -4580,7 +4572,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>task_mode</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.ClusteringTask.task_mode">task_mode</span></code></td>
           <td>
                 <code>enum</code>
           </td>
@@ -4647,6 +4639,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -4655,7 +4648,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4686,7 +4678,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ClusteringTask</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Clustering.ClusteringTask">ClusteringTask</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4697,7 +4689,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>clustering_time</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Clustering.clustering_time">clustering_time</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -4708,7 +4700,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>package_version</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Clustering.package_version">package_version</span></code></td>
           <td>
                 <code>varchar(16)</code>
           </td>
@@ -4816,7 +4808,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.Clustering.make" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">make</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
 
@@ -4881,6 +4872,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -4889,7 +4881,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4920,7 +4911,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>Clustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.Clustering">Clustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4931,7 +4922,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>curation_id</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.curation_id">curation_id</span></code></td>
           <td>
                 <code>foreign key, int</code>
           </td>
@@ -4942,7 +4933,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>curation_time</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.curation_time">curation_time</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -4953,7 +4944,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>curation_output_dir</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.curation_output_dir">curation_output_dir</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -4964,7 +4955,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>quality_control</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.quality_control">quality_control</span></code></td>
           <td>
                 <code>bool</code>
           </td>
@@ -4975,7 +4966,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>manual_curation</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.manual_curation">manual_curation</span></code></td>
           <td>
                 <code>bool</code>
           </td>
@@ -4986,7 +4977,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>curation_note</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.Curation.curation_note">curation_note</span></code></td>
           <td>
                 <code>varchar(2000)</code>
           </td>
@@ -5138,7 +5129,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.Curation.create1_from_clustering_task" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">create1_from_clustering_task</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">curation_note</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
 
@@ -5232,6 +5222,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -5240,7 +5231,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -5271,7 +5261,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>Curation</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Curation">Curation</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5526,7 +5516,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.CuratedClustering.Unit" class="doc doc-heading">
           <code>Unit</code>
 
@@ -5554,7 +5543,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5565,7 +5554,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.unit">unit</span></code></td>
           <td>
                 <code>foreign key, int</code>
           </td>
@@ -5576,7 +5565,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -5587,7 +5576,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringQualityLabel</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.ClusteringQualityLabel">ClusteringQualityLabel</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -5598,7 +5587,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>spike_count</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.spike_count">spike_count</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -5609,7 +5598,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>spike_times</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.spike_times">spike_times</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5620,7 +5609,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>spike_sites</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.spike_sites">spike_sites</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5631,7 +5620,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>spike_depths</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.CuratedClustering.Unit.spike_depths">spike_depths</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5712,6 +5701,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -5721,7 +5711,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -5893,6 +5882,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -5901,7 +5891,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -5932,7 +5921,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6283,7 +6272,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.WaveformSet.PeakWaveform" class="doc doc-heading">
           <code>PeakWaveform</code>
 
@@ -6311,7 +6299,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>WaveformSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.PeakWaveform.WaveformSet">WaveformSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6322,7 +6310,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.PeakWaveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6333,7 +6321,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>peak_electrode_waveform</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.PeakWaveform.peak_electrode_waveform">peak_electrode_waveform</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6394,6 +6382,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -6402,7 +6391,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -6433,7 +6421,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>WaveformSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.Waveform.WaveformSet">WaveformSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6444,7 +6432,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.Waveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6455,7 +6443,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.Waveform.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6466,7 +6454,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>waveform_mean</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.Waveform.waveform_mean">waveform_mean</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6477,7 +6465,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>waveforms</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.WaveformSet.Waveform.waveforms">waveforms</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6546,6 +6534,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -6555,7 +6544,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -6801,6 +6789,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -6809,7 +6798,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -6840,7 +6828,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7107,7 +7095,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_precluster.QualityMetrics.Cluster" class="doc doc-heading">
           <code>Cluster</code>
 
@@ -7135,7 +7122,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>QualityMetrics</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.QualityMetrics">QualityMetrics</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7146,7 +7133,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7157,7 +7144,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>firing_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.firing_rate">firing_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7168,7 +7155,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>snr</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.snr">snr</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7179,7 +7166,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>presence_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.presence_ratio">presence_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7190,7 +7177,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>isi_violation</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.isi_violation">isi_violation</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7201,7 +7188,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>number_violation</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.number_violation">number_violation</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -7212,7 +7199,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>amplitude_cutoff</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.amplitude_cutoff">amplitude_cutoff</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7223,7 +7210,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>isolation_distance</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.isolation_distance">isolation_distance</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7234,7 +7221,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>l_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.l_ratio">l_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7245,7 +7232,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>d_prime</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.d_prime">d_prime</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7256,7 +7243,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>nn_hit_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.nn_hit_rate">nn_hit_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7267,7 +7254,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>nn_miss_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.nn_miss_rate">nn_miss_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7278,7 +7265,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>silhouette_core</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.silhouette_core">silhouette_core</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7289,7 +7276,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>cumulative_drift</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.cumulative_drift">cumulative_drift</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7300,7 +7287,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>contamination_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Cluster.contamination_rate">contamination_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7415,6 +7402,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -7423,7 +7411,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -7454,7 +7441,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>QualityMetrics</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.QualityMetrics">QualityMetrics</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7465,7 +7452,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7476,7 +7463,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>amplitude</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.amplitude">amplitude</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7487,7 +7474,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>duration</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.duration">duration</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7498,7 +7485,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>halfwidth</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.halfwidth">halfwidth</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7509,7 +7496,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>pt_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.pt_ratio">pt_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7520,7 +7507,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>repolarization_slope</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.repolarization_slope">repolarization_slope</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7531,7 +7518,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>recovery_slope</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.recovery_slope">recovery_slope</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7542,7 +7529,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>spread</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.spread">spread</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7553,7 +7540,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>velocity_above</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.velocity_above">velocity_above</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7564,7 +7551,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>velocity_below</code></td>
+          <td><code><span title="element_array_ephys.ephys_precluster.QualityMetrics.Waveform.velocity_below">velocity_below</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7657,6 +7644,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -7666,7 +7654,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7750,6 +7737,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -7759,7 +7747,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7857,7 +7844,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7989,7 +7975,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 

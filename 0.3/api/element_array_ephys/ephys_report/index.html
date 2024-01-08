@@ -363,7 +363,6 @@
 
 
 
-
 <h2 id="element_array_ephys.ephys_report.activate" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">activate</span><span class="p">(</span><span class="n">schema_name</span><span class="p">,</span> <span class="n">ephys_schema_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
@@ -501,7 +500,6 @@
 
 
 
-
 <h2 id="element_array_ephys.ephys_report.ProbeLevelReport" class="doc doc-heading">
           <code>ProbeLevelReport</code>
 
@@ -529,7 +527,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>ephys.CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.ProbeLevelReport.ephys.CuratedClustering">ephys.CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -540,7 +538,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>shank</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.ProbeLevelReport.shank">shank</span></code></td>
           <td>
                 <code>tinyint unsigned</code>
           </td>
@@ -551,7 +549,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>drift_map_plot</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.ProbeLevelReport.drift_map_plot">drift_map_plot</span></code></td>
           <td>
                 <code>attach</code>
           </td>
@@ -698,6 +696,7 @@
 
   </div>
 
+
 </div>
 
 
@@ -706,7 +705,6 @@
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -737,7 +735,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>ephys.CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.UnitLevelReport.ephys.CuratedClustering.Unit">ephys.CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -748,7 +746,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>ephys.ClusterQualityLabel</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.UnitLevelReport.ephys.ClusterQualityLabel">ephys.ClusterQualityLabel</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -759,7 +757,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>waveform_plotly</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.UnitLevelReport.waveform_plotly">waveform_plotly</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -770,7 +768,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>autocorrelogram_plotly</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.UnitLevelReport.autocorrelogram_plotly">autocorrelogram_plotly</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -781,7 +779,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>depth_waveform_plotly</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.UnitLevelReport.depth_waveform_plotly">depth_waveform_plotly</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -922,6 +920,7 @@
 
   </div>
 
+
 </div>
 
 
@@ -930,7 +929,6 @@
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -961,7 +959,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>cutoffs_id</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricCutoffs.cutoffs_id">cutoffs_id</span></code></td>
           <td>
                 <code>smallint</code>
           </td>
@@ -972,7 +970,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>amplitude_cutoff_maximum</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricCutoffs.amplitude_cutoff_maximum">amplitude_cutoff_maximum</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -983,7 +981,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>presence_ratio_minimum</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricCutoffs.presence_ratio_minimum">presence_ratio_minimum</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -994,7 +992,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>isi_violations_maximum</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricCutoffs.isi_violations_maximum">isi_violations_maximum</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -1005,7 +1003,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>cutoffs_hash</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricCutoffs.cutoffs_hash">cutoffs_hash</span></code></td>
           <td>
                 <code>uuid</code>
           </td>
@@ -1168,6 +1166,7 @@
 
   </div>
 
+
 </div>
 
 
@@ -1176,7 +1175,6 @@
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1207,7 +1205,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>ephys.QualityMetrics</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricSet.ephys.QualityMetrics">ephys.QualityMetrics</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1218,7 +1216,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>QualityMetricCutoffs</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricSet.QualityMetricCutoffs">QualityMetricCutoffs</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1273,6 +1271,7 @@
 
   </div>
 
+
 </div>
 
 
@@ -1281,7 +1280,6 @@
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1312,7 +1310,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>QualityMetricSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricReport.QualityMetricSet">QualityMetricSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1323,7 +1321,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>plot_grid</code></td>
+          <td><code><span title="element_array_ephys.ephys_report.QualityMetricReport.plot_grid">plot_grid</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -1403,6 +1401,7 @@
   </div>
 
   </div>
+
 
 </div>
 

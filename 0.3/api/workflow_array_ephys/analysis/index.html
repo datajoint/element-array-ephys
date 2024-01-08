@@ -359,7 +359,6 @@
 
 
 
-
 <h2 id="workflow_array_ephys.analysis.activate" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">activate</span><span class="p">(</span><span class="n">schema_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linking_module</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -516,7 +515,6 @@
 
 
 
-
 <h2 id="workflow_array_ephys.analysis.SpikesAlignmentCondition" class="doc doc-heading">
           <code>SpikesAlignmentCondition</code>
 
@@ -544,7 +542,7 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>ephys.CuratedClustering</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignmentCondition.ephys.CuratedClustering">ephys.CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -555,7 +553,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>event.AlignmentEvent</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignmentCondition.event.AlignmentEvent">event.AlignmentEvent</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -566,7 +564,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>trial_condition</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignmentCondition.trial_condition">trial_condition</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -577,7 +575,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>condition_description</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignmentCondition.condition_description">condition_description</span></code></td>
           <td>
                 <code> varchar(1000), nullable</code>
           </td>
@@ -588,7 +586,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>bin_size</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignmentCondition.bin_size">bin_size</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -678,7 +676,6 @@ Default 0.04</p>
 
 
 
-
 <h3 id="workflow_array_ephys.analysis.SpikesAlignmentCondition.Trial" class="doc doc-heading">
           <code>Trial</code>
 
@@ -723,6 +720,7 @@ Default 0.04</p>
 
   </div>
 
+
 </div>
 
 
@@ -731,6 +729,7 @@ Default 0.04</p>
   </div>
 
   </div>
+
 
 </div>
 
@@ -740,7 +739,6 @@ Default 0.04</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1072,7 +1070,6 @@ Default 0.04</p>
 
 
 
-
 <h3 id="workflow_array_ephys.analysis.SpikesAlignment.AlignedTrialSpikes" class="doc doc-heading">
           <code>AlignedTrialSpikes</code>
 
@@ -1100,7 +1097,7 @@ Default 0.04</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>SpikesAlignmentCondition.Trial</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.AlignedTrialSpikes.SpikesAlignmentCondition.Trial">SpikesAlignmentCondition.Trial</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1111,7 +1108,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>ephys.CuratedClustering.Unit</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.AlignedTrialSpikes.ephys.CuratedClustering.Unit">ephys.CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1122,7 +1119,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>SpikesAlignmentCondition.Trial</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.AlignedTrialSpikes.SpikesAlignmentCondition.Trial">SpikesAlignmentCondition.Trial</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1133,7 +1130,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>aligned_spike_times</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.AlignedTrialSpikes.aligned_spike_times">aligned_spike_times</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -1196,6 +1193,7 @@ Default 0.04</p>
 
   </div>
 
+
 </div>
 
 
@@ -1204,7 +1202,6 @@ Default 0.04</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1235,7 +1232,7 @@ Default 0.04</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>SpikesAlignment</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.UnitPSTH.SpikesAlignment">SpikesAlignment</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1246,7 +1243,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>ephys.CuratedClustering.Unit</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.UnitPSTH.ephys.CuratedClustering.Unit">ephys.CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1257,7 +1254,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>psth</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.UnitPSTH.psth">psth</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -1268,7 +1265,7 @@ Default 0.04</p>
           </td>
         </tr>
         <tr>
-          <td><code>psth_edges</code></td>
+          <td><code><span title="workflow_array_ephys.analysis.SpikesAlignment.UnitPSTH.psth_edges">psth_edges</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -1331,6 +1328,7 @@ Default 0.04</p>
 
   </div>
 
+
 </div>
 
 
@@ -1340,7 +1338,6 @@ Default 0.04</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -1531,7 +1528,6 @@ Default 0.04</p>
 
 
 
-
 <h3 id="workflow_array_ephys.analysis.SpikesAlignment.plot" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">plot</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">axs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -1714,6 +1710,7 @@ Default is plt.subplots(2, 1, figsize=(12, 8))</p>
   </div>
 
   </div>
+
 
 </div>
 

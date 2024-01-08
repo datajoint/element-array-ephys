@@ -379,7 +379,6 @@
 
 
 
-
 <h2 id="element_array_ephys.ephys_no_curation.activate" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">activate</span><span class="p">(</span><span class="n">ephys_schema_name</span><span class="p">,</span> <span class="n">probe_schema_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linking_module</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -492,7 +491,7 @@ Upstream tables:
     </thead>
     <tbody>
           <tr>
-            <td><code>get_ephys_root_data_dir</code></td>
+            <td><code><span title="element_array_ephys.ephys_no_curation.activate.get_ephys_root_data_dir">get_ephys_root_data_dir</span></code></td>
             <td>
               <div class="doc-md-description">
                 <p>Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).</p>
@@ -500,7 +499,7 @@ Upstream tables:
             </td>
           </tr>
           <tr>
-            <td><code>get_session_direction</code></td>
+            <td><code><span title="element_array_ephys.ephys_no_curation.activate.get_session_direction">get_session_direction</span></code></td>
             <td>
               <div class="doc-md-description">
                 <p>dict): Returns path to electrophysiology data for the a particular session as a list of strings.</p>
@@ -508,7 +507,7 @@ Upstream tables:
             </td>
           </tr>
           <tr>
-            <td><code>get_processed_data_dir</code></td>
+            <td><code><span title="element_array_ephys.ephys_no_curation.activate.get_processed_data_dir">get_processed_data_dir</span></code></td>
             <td>
               <div class="doc-md-description">
                 <p>Optional. Returns absolute path for processed data. Defaults to root directory.</p>
@@ -633,7 +632,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.ephys_no_curation.get_ephys_root_data_dir" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">get_ephys_root_data_dir</span><span class="p">()</span></code>
 
@@ -715,7 +713,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -820,7 +817,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.ephys_no_curation.get_processed_root_data_dir" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">get_processed_root_data_dir</span><span class="p">()</span></code>
 
@@ -893,7 +889,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.ephys_no_curation.AcquisitionSoftware" class="doc doc-heading">
           <code>AcquisitionSoftware</code>
 
@@ -921,7 +916,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>acq_software</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.AcquisitionSoftware.acq_software">acq_software</span></code></td>
           <td>
                 <code> varchar(24) </code>
           </td>
@@ -974,6 +969,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -982,7 +978,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1013,7 +1008,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>Session</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ProbeInsertion.Session">Session</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1024,7 +1019,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>insertion_number</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ProbeInsertion.insertion_number">insertion_number</span></code></td>
           <td>
                 <code>foreign key, str</code>
           </td>
@@ -1035,7 +1030,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.Probe</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ProbeInsertion.probe.Probe">probe.Probe</span></code></td>
           <td>
                 <code>str</code>
           </td>
@@ -1251,7 +1246,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.ProbeInsertion.auto_generate_entries" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">auto_generate_entries</span><span class="p">(</span><span class="n">session_key</span><span class="p">)</span></code>
   
@@ -1428,6 +1422,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -1436,7 +1431,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1467,7 +1461,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ProbeInsertion</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.ProbeInsertion">ProbeInsertion</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1478,7 +1472,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>SkullReference</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.SkullReference">SkullReference</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1489,7 +1483,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ap_location</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.ap_location">ap_location</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1500,7 +1494,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ml_location</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.ml_location">ml_location</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1511,7 +1505,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>depth</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.depth">depth</span></code></td>
           <td>
                 <code>decimal(6, 2)</code>
           </td>
@@ -1522,7 +1516,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>Theta</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.Theta">Theta</span></code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
@@ -1533,7 +1527,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>phi</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.InsertionLocation.phi">phi</span></code></td>
           <td>
                 <code>decimal(5, 2)</code>
           </td>
@@ -1616,6 +1610,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -1624,7 +1619,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1655,7 +1649,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ProbeInsertion</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.ProbeInsertion">ProbeInsertion</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1666,7 +1660,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.probe.ElectrodeConfig">probe.ElectrodeConfig</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1677,7 +1671,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>AcquisitionSoftware</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.AcquisitionSoftware">AcquisitionSoftware</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1688,7 +1682,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>sampling_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.sampling_rate">sampling_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -1699,7 +1693,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>recording_datetime</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.recording_datetime">recording_datetime</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -1710,7 +1704,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>recording_duration</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.recording_duration">recording_duration</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -2103,7 +2097,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.EphysRecording.EphysFile" class="doc doc-heading">
           <code>EphysFile</code>
 
@@ -2131,7 +2124,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.EphysFile.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2142,7 +2135,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>file_path</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.EphysRecording.EphysFile.file_path">file_path</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -2197,6 +2190,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2206,7 +2200,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -2520,6 +2513,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -2528,7 +2522,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -2559,7 +2552,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2570,7 +2563,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_sampling_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.lfp_sampling_rate">lfp_sampling_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -2581,7 +2574,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_time_stamps</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.lfp_time_stamps">lfp_time_stamps</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -2592,7 +2585,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp_mean</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.lfp_mean">lfp_mean</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -2897,7 +2890,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.LFP.Electrode" class="doc doc-heading">
           <code>Electrode</code>
 
@@ -2925,7 +2917,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>LFP</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.Electrode.LFP">LFP</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2936,7 +2928,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.Electrode.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -2947,7 +2939,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>lfp</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.LFP.Electrode.lfp">lfp</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -3006,6 +2998,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3015,7 +3008,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -3237,6 +3229,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3245,7 +3238,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3276,7 +3268,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>clustering_method</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringMethod.clustering_method">clustering_method</span></code></td>
           <td>
                 <code>foreign key, varchar(16) </code>
           </td>
@@ -3287,7 +3279,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>clustering_methods_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringMethod.clustering_methods_desc">clustering_methods_desc</span></code></td>
           <td>
                 <code>varchar(1000)</code>
           </td>
@@ -3358,6 +3350,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3366,7 +3359,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3397,7 +3389,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>paramset_idx</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringParamSet.paramset_idx">paramset_idx</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -3408,7 +3400,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringMethod</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringParamSet.ClusteringMethod">ClusteringMethod</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -3419,7 +3411,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>paramset_desc</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringParamSet.paramset_desc">paramset_desc</span></code></td>
           <td>
                 <code>varchar(128)</code>
           </td>
@@ -3430,7 +3422,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>param_set_hash</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringParamSet.param_set_hash">param_set_hash</span></code></td>
           <td>
                 <code>uuid</code>
           </td>
@@ -3441,7 +3433,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>params</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringParamSet.params">params</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -3616,7 +3608,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -3820,6 +3811,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3828,7 +3820,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3859,7 +3850,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>cluster_quality_label</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusterQualityLabel.cluster_quality_label">cluster_quality_label</span></code></td>
           <td>
                 <code>foreign key, varchar(100) </code>
           </td>
@@ -3870,7 +3861,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>cluster_quality_description</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusterQualityLabel.cluster_quality_description">cluster_quality_description</span></code></td>
           <td>
                 <code>varchar(4000)</code>
           </td>
@@ -3941,6 +3932,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -3949,7 +3941,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3980,7 +3971,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>EphysRecording</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringTask.EphysRecording">EphysRecording</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -3991,7 +3982,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringParamSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringTask.ClusteringParamSet">ClusteringParamSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4002,7 +3993,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>clustering_outdir_dir</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringTask.clustering_outdir_dir">clustering_outdir_dir</span></code></td>
           <td>
                 <code>varchar(255)</code>
           </td>
@@ -4013,7 +4004,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>task_mode</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.ClusteringTask.task_mode">task_mode</span></code></td>
           <td>
                 <code>enum</code>
           </td>
@@ -4225,7 +4216,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.ClusteringTask.infer_output_dir" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">infer_output_dir</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">relative</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mkdir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
   
@@ -4389,7 +4379,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.ClusteringTask.auto_generate_entries" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">auto_generate_entries</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">,</span> <span class="n">paramset_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></code>
   
@@ -4524,6 +4513,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -4532,7 +4522,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -4563,7 +4552,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>ClusteringTask</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.Clustering.ClusteringTask">ClusteringTask</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -4574,7 +4563,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>clustering_time</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.Clustering.clustering_time">clustering_time</span></code></td>
           <td>
                 <code>datetime</code>
           </td>
@@ -4585,7 +4574,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>package_version</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.Clustering.package_version">package_version</span></code></td>
           <td>
                 <code>varchar(16)</code>
           </td>
@@ -4861,7 +4850,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.Clustering.make" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">make</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
 
@@ -5094,6 +5082,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -5102,7 +5091,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -5133,7 +5121,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>Clustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Clustering">Clustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5392,7 +5380,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.CuratedClustering.Unit" class="doc doc-heading">
           <code>Unit</code>
 
@@ -5420,7 +5407,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5431,7 +5418,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.unit">unit</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -5442,7 +5429,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5453,7 +5440,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>ClusteringQualityLabel</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.ClusteringQualityLabel">ClusteringQualityLabel</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -5464,7 +5451,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>spike_count</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.spike_count">spike_count</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -5475,7 +5462,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>spike_times</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.spike_times">spike_times</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5486,7 +5473,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>spike_sites</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.spike_sites">spike_sites</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5497,7 +5484,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>spike_depths</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.CuratedClustering.Unit.spike_depths">spike_depths</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -5578,6 +5565,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -5587,7 +5575,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -5763,6 +5750,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -5771,7 +5759,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -5802,7 +5789,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6153,7 +6140,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.WaveformSet.PeakWaveform" class="doc doc-heading">
           <code>PeakWaveform</code>
 
@@ -6181,7 +6167,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>WaveformSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.PeakWaveform.WaveformSet">WaveformSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6192,7 +6178,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.PeakWaveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6203,7 +6189,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>peak_electrode_waveform</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.PeakWaveform.peak_electrode_waveform">peak_electrode_waveform</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6264,6 +6250,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -6272,7 +6259,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -6303,7 +6289,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>WaveformSet</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.Waveform.WaveformSet">WaveformSet</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6314,7 +6300,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.Waveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6325,7 +6311,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>probe.ElectrodeConfig.Electrode</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.Waveform.probe.ElectrodeConfig.Electrode">probe.ElectrodeConfig.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6336,7 +6322,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>waveform_mean</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.Waveform.waveform_mean">waveform_mean</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6347,7 +6333,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>waveforms</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.WaveformSet.Waveform.waveforms">waveforms</span></code></td>
           <td>
                 <code>longblob</code>
           </td>
@@ -6416,6 +6402,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -6425,7 +6412,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -6671,6 +6657,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -6679,7 +6666,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -6710,7 +6696,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>CuratedClustering</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.CuratedClustering">CuratedClustering</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -6977,7 +6963,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h3 id="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster" class="doc doc-heading">
           <code>Cluster</code>
 
@@ -7005,7 +6990,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>QualityMetrics</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.QualityMetrics">QualityMetrics</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7016,7 +7001,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7027,7 +7012,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>firing_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.firing_rate">firing_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7038,7 +7023,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>snr</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.snr">snr</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7049,7 +7034,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>presence_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.presence_ratio">presence_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7060,7 +7045,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>isi_violation</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.isi_violation">isi_violation</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7071,7 +7056,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>number_violation</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.number_violation">number_violation</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -7082,7 +7067,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>amplitude_cutoff</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.amplitude_cutoff">amplitude_cutoff</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7093,7 +7078,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>isolation_distance</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.isolation_distance">isolation_distance</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7104,7 +7089,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>l_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.l_ratio">l_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7115,7 +7100,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>d_prime</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.d_prime">d_prime</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7126,7 +7111,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>nn_hit_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.nn_hit_rate">nn_hit_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7137,7 +7122,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>nn_miss_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.nn_miss_rate">nn_miss_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7148,7 +7133,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>silhouette_core</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.silhouette_core">silhouette_core</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7159,7 +7144,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>cumulative_drift</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.cumulative_drift">cumulative_drift</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7170,7 +7155,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>contamination_rate</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Cluster.contamination_rate">contamination_rate</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7285,6 +7270,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -7293,7 +7279,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -7324,7 +7309,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>QualityMetrics</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.QualityMetrics">QualityMetrics</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7335,7 +7320,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>CuratedClustering.Unit</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.CuratedClustering.Unit">CuratedClustering.Unit</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -7346,7 +7331,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>amplitude</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.amplitude">amplitude</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7357,7 +7342,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>duration</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.duration">duration</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7368,7 +7353,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>halfwidth</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.halfwidth">halfwidth</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7379,7 +7364,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>pt_ratio</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.pt_ratio">pt_ratio</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7390,7 +7375,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>repolarization_slope</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.repolarization_slope">repolarization_slope</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7401,7 +7386,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>recovery_slope</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.recovery_slope">recovery_slope</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7412,7 +7397,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>spread</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.spread">spread</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7423,7 +7408,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>velocity_above</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.velocity_above">velocity_above</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7434,7 +7419,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
           </td>
         </tr>
         <tr>
-          <td><code>velocity_below</code></td>
+          <td><code><span title="element_array_ephys.ephys_no_curation.QualityMetrics.Waveform.velocity_below">velocity_below</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -7527,6 +7512,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -7536,7 +7522,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7620,6 +7605,7 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
   </div>
 
+
 </div>
 
 
@@ -7629,7 +7615,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7738,7 +7723,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 
-
 <h2 id="element_array_ephys.ephys_no_curation.get_openephys_probe_data" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">get_openephys_probe_data</span><span class="p">(</span><span class="n">ephys_recording_key</span><span class="p">)</span></code>
 
@@ -7797,7 +7781,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -7919,7 +7902,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -8099,7 +8081,6 @@ e.g.: sub4/sess1/probe_2/kilosort2_0</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 

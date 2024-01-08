@@ -369,7 +369,6 @@
 
 
 
-
 <h2 id="element_array_ephys.probe.activate" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">activate</span><span class="p">(</span><span class="n">schema_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
@@ -530,7 +529,6 @@ Upstream tables:
 
 
 
-
 <h2 id="element_array_ephys.probe.ProbeType" class="doc doc-heading">
           <code>ProbeType</code>
 
@@ -558,7 +556,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>probe_type</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.probe_type">probe_type</span></code></td>
           <td>
                 <code>foreign key, varchar (32) </code>
           </td>
@@ -733,7 +731,6 @@ Upstream tables:
 
 
 
-
 <h3 id="element_array_ephys.probe.ProbeType.Electrode" class="doc doc-heading">
           <code>Electrode</code>
 
@@ -761,7 +758,7 @@ Upstream tables:
     </thead>
     <tbody>
         <tr>
-          <td><code>ProbeType</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.ProbeType">ProbeType</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -772,7 +769,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>electrode</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.electrode">electrode</span></code></td>
           <td>
                 <code>foreign key, int</code>
           </td>
@@ -783,7 +780,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>shank</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.shank">shank</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -794,7 +791,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>shank_col</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.shank_col">shank_col</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -805,7 +802,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>shank_row</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.shank_row">shank_row</span></code></td>
           <td>
                 <code>int</code>
           </td>
@@ -816,7 +813,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>x_coord</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.x_coord">x_coord</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -827,7 +824,7 @@ Upstream tables:
           </td>
         </tr>
         <tr>
-          <td><code>y_coord</code></td>
+          <td><code><span title="element_array_ephys.probe.ProbeType.Electrode.y_coord">y_coord</span></code></td>
           <td>
                 <code>float</code>
           </td>
@@ -902,6 +899,7 @@ Upstream tables:
 
   </div>
 
+
 </div>
 
 
@@ -911,7 +909,6 @@ Upstream tables:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -1021,6 +1018,7 @@ Electrode numbering is 0-indexing</p>
 
   </div>
 
+
 </div>
 
 
@@ -1029,7 +1027,6 @@ Electrode numbering is 0-indexing</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1060,7 +1057,7 @@ Electrode numbering is 0-indexing</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>probe</code></td>
+          <td><code><span title="element_array_ephys.probe.Probe.probe">probe</span></code></td>
           <td>
                 <code>foreign key, varchar(32) </code>
           </td>
@@ -1071,7 +1068,7 @@ Electrode numbering is 0-indexing</p>
           </td>
         </tr>
         <tr>
-          <td><code>ProbeType</code></td>
+          <td><code><span title="element_array_ephys.probe.Probe.ProbeType">ProbeType</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1082,7 +1079,7 @@ Electrode numbering is 0-indexing</p>
           </td>
         </tr>
         <tr>
-          <td><code>probe_comment</code></td>
+          <td><code><span title="element_array_ephys.probe.Probe.probe_comment">probe_comment</span></code></td>
           <td>
                 <code> varchar(1000) </code>
           </td>
@@ -1145,6 +1142,7 @@ Electrode numbering is 0-indexing</p>
 
   </div>
 
+
 </div>
 
 
@@ -1153,7 +1151,6 @@ Electrode numbering is 0-indexing</p>
 
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1184,7 +1181,7 @@ Electrode numbering is 0-indexing</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>electrode_config_hash</code></td>
+          <td><code><span title="element_array_ephys.probe.ElectrodeConfig.electrode_config_hash">electrode_config_hash</span></code></td>
           <td>
                 <code>foreign key, uuid</code>
           </td>
@@ -1195,7 +1192,7 @@ Electrode numbering is 0-indexing</p>
           </td>
         </tr>
         <tr>
-          <td><code>ProbeType</code></td>
+          <td><code><span title="element_array_ephys.probe.ElectrodeConfig.ProbeType">ProbeType</span></code></td>
           <td>
                 <code>dict</code>
           </td>
@@ -1206,7 +1203,7 @@ Electrode numbering is 0-indexing</p>
           </td>
         </tr>
         <tr>
-          <td><code>electrode_config_name</code></td>
+          <td><code><span title="element_array_ephys.probe.ElectrodeConfig.electrode_config_name">electrode_config_name</span></code></td>
           <td>
                 <code> varchar(4000) </code>
           </td>
@@ -1297,7 +1294,6 @@ Electrode numbering is 0-indexing</p>
 
 
 
-
 <h3 id="element_array_ephys.probe.ElectrodeConfig.Electrode" class="doc doc-heading">
           <code>Electrode</code>
 
@@ -1325,7 +1321,7 @@ Electrode numbering is 0-indexing</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>ElectrodeConfig</code></td>
+          <td><code><span title="element_array_ephys.probe.ElectrodeConfig.Electrode.ElectrodeConfig">ElectrodeConfig</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1336,7 +1332,7 @@ Electrode numbering is 0-indexing</p>
           </td>
         </tr>
         <tr>
-          <td><code>ProbeType.Electrode</code></td>
+          <td><code><span title="element_array_ephys.probe.ElectrodeConfig.Electrode.ProbeType.Electrode">ProbeType.Electrode</span></code></td>
           <td>
                 <code>foreign key</code>
           </td>
@@ -1389,6 +1385,7 @@ Electrode numbering is 0-indexing</p>
 
   </div>
 
+
 </div>
 
 
@@ -1397,6 +1394,7 @@ Electrode numbering is 0-indexing</p>
   </div>
 
   </div>
+
 
 </div>
 
