@@ -1593,4 +1593,3 @@ def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
         )
 
     return channels_details
-    
