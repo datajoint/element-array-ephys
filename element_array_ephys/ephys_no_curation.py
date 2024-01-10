@@ -58,7 +58,6 @@ def activate(
     global _linking_module
     _linking_module = linking_module
 
-    # activate
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
     )
@@ -315,8 +314,9 @@ class EphysRecording(dj.Imported):
                 break
         else:
             raise FileNotFoundError(
-                "Ephys recording data not found!"
-                " Neither SpikeGLX nor Open Ephys recording files found"
+                f"Ephys recording data not found!"
+                f" Neither SpikeGLX nor Open Ephys recording files found"
+                f" in {session_dir}"
             )
 
         supported_probe_types = probe.ProbeType.fetch("probe_type")

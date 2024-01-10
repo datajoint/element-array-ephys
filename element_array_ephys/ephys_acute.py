@@ -126,7 +126,7 @@ class AcquisitionSoftware(dj.Lookup):
         acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys
     """
 
-    definition = """  # Software used for recording of neuropixels probes
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
@@ -180,7 +180,10 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": spikeglx_meta.probe_model,
                     "probe": spikeglx_meta.probe_SN,
                 }
-                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
+                if (
+                    probe_key["probe"] not in [p["probe"] for p in probe_list]
+                    and probe_key not in probe.Probe()
+                ):
                     probe_list.append(probe_key)
 
                 probe_dir = meta_filepath.parent
@@ -204,7 +207,10 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": oe_probe.probe_model,
                     "probe": oe_probe.probe_SN,
                 }
-                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
+                if (
+                    probe_key["probe"] not in [p["probe"] for p in probe_list]
+                    and probe_key not in probe.Probe()
+                ):
                     probe_list.append(probe_key)
                 probe_insertion_list.append(
                     {
@@ -533,7 +539,6 @@ class LFP(dj.Imported):
                 - 1 : 0 : -self._skip_channel_counts
             ]
 
-            # (sample x channel)
             lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
             lfp = (
                 lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
