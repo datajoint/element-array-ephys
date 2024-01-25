@@ -5,11 +5,12 @@ from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
-import intanrhdreader
 import numpy as np
 import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
+
+import intanrhdreader
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
@@ -261,7 +262,7 @@ class LFP(dj.Imported):
             )
 
             # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
-            if probe_info["used_electrodes"] is not None:
+            if probe_info["used_electrodes"]:
                 electrode_query &= (
                     f'electrode IN {tuple(probe_info["used_electrodes"])}'
                 )
@@ -323,6 +324,15 @@ class LFP(dj.Imported):
                     lfps if lfp_concat.size == 0 else np.hstack((lfp_concat, lfps))
                 )
                 del data
+
+            # Check for missing files or short trace durations in min
+            trace_duration = lfp_concat.shape[1] / TARGET_SAMPLING_RATE / 60  # in min
+            if trace_duration != (EphysSession & key).proj(
+                duration="TIMESTAMPDIFF(MINUTE, start_time, end_time)"
+            ).fetch1("duration"):
+                raise ValueError(
+                    f"Trace legnth ({trace_duration} min) is less than session duration"
+                )
 
             # Single insert in loop to mitigate potential memory issue.
             for ch, lfp in zip(channels, lfp_concat):
