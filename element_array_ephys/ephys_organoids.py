@@ -262,10 +262,10 @@ class LFP(dj.Imported):
             )
 
             # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
-            probe_info["used_electrodes"] = probe_info["used_electrodes"] or list(
-                range(len(electrode_query))
-            )
-            electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
+            if probe_info["used_electrodes"]:
+                electrode_query &= (
+                    f'electrode IN {tuple(probe_info["used_electrodes"])}'
+                )
 
             header = {}
             lfp_concat = np.array([], dtype=np.float64)
