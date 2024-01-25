@@ -5,11 +5,12 @@ from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
-import intanrhdreader
 import numpy as np
 import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from scipy import signal
+
+import intanrhdreader
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
@@ -261,10 +262,10 @@ class LFP(dj.Imported):
             )
 
             # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
-            if probe_info["used_electrodes"] is not None:
-                electrode_query &= (
-                    f'electrode IN {tuple(probe_info["used_electrodes"])}'
-                )
+            probe_info["used_electrodes"] = probe_info["used_electrodes"] or list(
+                range(len(electrode_query))
+            )
+            electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
 
             header = {}
             lfp_concat = np.array([], dtype=np.float64)
