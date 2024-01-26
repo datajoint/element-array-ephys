@@ -272,7 +272,11 @@ class LFP(dj.Imported):
 
             for file_relpath in query.fetch("file_path", order_by="file_time"):
                 file = find_full_path(get_ephys_root_data_dir(), file_relpath)
-                data = intanrhdreader.load_file(file)
+
+                try:
+                    data = intanrhdreader.load_file(file)
+                except OSError:
+                    raise OSError(f"OS error occured when loading file {file.name}")
 
                 if not header:
                     header = data.pop("header")
