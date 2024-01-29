@@ -240,6 +240,16 @@ class LFP(dj.Imported):
     def make(self, key):
         TARGET_SAMPLING_RATE = 2500  # Hz
         POWERLINE_NOISE_FREQ = 60  # Hz
+        LFP_DURATION = 30  # minutes
+
+        start_time = datetime.strptime(key["start_time"], "%Y-%m-%d %H:%M:%S")
+        end_time = datetime.strptime(key["end_time"], "%Y-%m-%d %H:%M:%S")
+        duration = (end_time - start_time).total_seconds() / 60  # minutes
+
+        assert (
+            duration <= LFP_DURATION
+        ), f"LFP sessions cannot exceeds {LFP_DURATION} minutes in duration."
+
         query = (
             EphysRawFile
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
