@@ -1358,24 +1358,34 @@ class QualityMetrics(dj.Imported):
 
     def make(self, key):
         """Populates tables with quality metrics data."""
+        # Load metrics.csv
         output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        metric_fp = kilosort_dir / "metrics.csv"
-        rename_dict = {
-            "isi_viol": "isi_violation",
-            "num_viol": "number_violation",
-            "contam_rate": "contamination_rate",
-        }
-
+        output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        metric_fp = output_dir / "metrics.csv"
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
-
         metrics_df = pd.read_csv(metric_fp)
-        metrics_df.set_index("cluster_id", inplace=True)
+        
+        # Conform the dataframe to match the table definition
+        if "cluster_id" in metrics_df.columns:
+            metrics_df.set_index("cluster_id", inplace=True)
+        else:
+            metrics_df.rename(
+                columns={metrics_df.columns[0]: "cluster_id"}, inplace=True
+            )
+            metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
         metrics_df.columns = metrics_df.columns.str.lower()
-        metrics_df.rename(columns=rename_dict, inplace=True)
+
+        metrics_df.rename(
+            columns={
+                "isi_viol": "isi_violation",
+                "num_viol": "number_violation",
+                "contam_rate": "contamination_rate",
+            },
+            inplace=True,
+        )
+
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
