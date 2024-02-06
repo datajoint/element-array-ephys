@@ -96,13 +96,20 @@ class PreProcessing(dj.Imported):
         execution_time = datetime.utcnow()
 
         # Set the output directory
-        acq_software, clustering_method, params = (
+        acq_software, output_dir, params = (
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
-        ).fetch1("acq_software", "clustering_method", "params")
+        ).fetch1("acq_software", "clustering_output_dir", "params")
 
-        for req_key in ("SI_PREPROCESSING_METHOD", "SI_SORTING_PARAMS", "SI_WAVEFORM_EXTRACTION_PARAMS", "SI_QUALITY_METRICS_PARAMS"):
+        for req_key in (
+            "SI_SORTING_PARAMS",
+            "SI_PREPROCESSING_METHOD",
+            "SI_WAVEFORM_EXTRACTION_PARAMS",
+            "SI_QUALITY_METRICS_PARAMS",
+        ):
             if req_key not in params:
-                raise ValueError(f"{req_key} must be defined in ClusteringParamSet for SpikeInterface execution")
+                raise ValueError(
+                    f"{req_key} must be defined in ClusteringParamSet for SpikeInterface execution"
+                )
 
         if not output_dir:
             output_dir = ephys.ClusteringTask.infer_output_dir(
@@ -113,9 +120,7 @@ class PreProcessing(dj.Imported):
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
         output_dir = pathlib.Path(output_dir)
-        output_full_dir = find_full_path(
-            ephys.get_ephys_root_data_dir(), output_dir
-        ) 
+        output_full_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
 
         recording_file = (
             output_full_dir / "si_recording.pkl"
@@ -124,7 +129,9 @@ class PreProcessing(dj.Imported):
         # Create SI recording extractor object
         if acq_software == "SpikeGLX":
             spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
-            spikeglx_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
+            spikeglx_recording = readers.spikeglx.SpikeGLX(
+                spikeglx_meta_filepath.parent
+            )
             spikeglx_recording.validate_file("ap")
             data_dir = spikeglx_meta_filepath.parent
         elif acq_software == "Open Ephys":
@@ -161,8 +168,9 @@ class PreProcessing(dj.Imported):
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
-        preprocessing_method = params["SI_PREPROCESSING_METHOD"]
-        si_preproc_func = si_preprocessing.preprocessing_function_mapping[preprocessing_method]
+        si_preproc_func = si_preprocessing.preprocessing_function_mapping[
+            params["SI_PREPROCESSING_METHOD"]
+        ]
         si_recording = si_preproc_func(si_recording)
         si_recording.dump_to_pickle(file_path=recording_file)
 
