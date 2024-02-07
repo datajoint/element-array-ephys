@@ -703,6 +703,7 @@ class ClusterQualityLabel(dj.Lookup):
         ("ok", "probably a single unit, but could be contaminated"),
         ("mua", "multi-unit activity"),
         ("noise", "bad unit"),
+        ("n.a.", "not available"),
     ]
 
 
