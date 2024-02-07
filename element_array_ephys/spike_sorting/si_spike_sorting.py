@@ -271,6 +271,7 @@ class PostProcessing(dj.Imported):
             si_recording,
             si_sorting,
             folder=output_dir / "waveform",  # The folder where waveforms are cached
+            max_spikes_per_unit=None,
             overwrite=True,
             **params.get("SI_WAVEFORM_EXTRACTION_PARAMS", {}),
             **params.get("SI_JOB_KWARGS", {"n_jobs": -1, "chunk_size": 30000}),
