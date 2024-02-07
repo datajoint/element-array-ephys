@@ -25,10 +25,9 @@ import datajoint as dj
 import pandas as pd
 import probeinterface as pi
 import spikeinterface as si
+from element_array_ephys import get_logger, probe, readers
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
-
-from element_array_ephys import get_logger, probe, readers
 
 from . import si_preprocessing
 
@@ -202,34 +201,31 @@ class SIClustering(dj.Imported):
         execution_time = datetime.utcnow()
 
         # Load recording object.
-        output_dir = (ephys.ClusteringTask & key).fetch1("clustering_output_dir")
-        output_full_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-        recording_file = output_full_dir.parent / "si_recording.pkl"
+        clustering_method, output_dir, params = (
+            ephys.ClusteringTask * ephys.ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir", "params")
+        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        recording_file = output_dir / "si_recording.pkl"
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
         # Get sorter method and create output directory.
-        clustering_method, params = (
-            ephys.ClusteringTask * ephys.ClusteringParamSet & key
-        ).fetch1("clustering_method", "params")
         sorter_name = (
             "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
-        sorter_dir = output_full_dir / sorter_name
-
-        si_sorting_params = params["SI_SORTING_PARAMS"]
 
         # Run sorting
         si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
             sorter_name=sorter_name,
             recording=si_recording,
-            output_folder=sorter_dir,
-            verbse=True,
+            output_folder=output_dir / sorter_name,
+            remove_existing_folder=True,
+            verbose=True,
             docker_image=True,
-            **si_sorting_params,
+            **params.get("SI_SORTING_PARAMS", {}),
         )
 
         # Run sorting
-        sorting_save_path = sorter_dir / "si_sorting.pkl"
+        sorting_save_path = output_dir / "si_sorting.pkl"
         si_sorting.dump_to_pickle(sorting_save_path)
 
         self.insert1(
