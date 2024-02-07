@@ -254,28 +254,26 @@ class PostProcessing(dj.Imported):
 
     def make(self, key):
         execution_time = datetime.utcnow()
-        JOB_KWARGS = dict(n_jobs=-1, chunk_size=30000)
 
         # Load sorting & recording object.
-        output_dir = (ephys.ClusteringTask & key).fetch1("clustering_output_dir")
+        output_dir, params = (ephys.ClusteringTask & key).fetch1(
+            "clustering_output_dir", "params"
+        )
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         recording_file = output_dir / "si_recording.pkl"
-        sorter_dir = output_dir / key["sorter_name"]
-        sorting_file = sorter_dir / "si_sorting.pkl"
+        sorting_file = output_dir / "si_sorting.pkl"
 
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
         si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file)
-
-        si_waveform_extraction_params = params["SI_WAVEFORM_EXTRACTION_PARAMS"]
 
         # Extract waveforms
         we: si.WaveformExtractor = si.extract_waveforms(
             si_recording,
             si_sorting,
-            folder=sorter_dir / "waveform",  # The folder where waveforms are cached
-            **si_waveform_extraction_params
+            folder=output_dir / "waveform",  # The folder where waveforms are cached
             overwrite=True,
-            **JOB_KWARGS,
+            **params.get("SI_WAVEFORM_EXTRACTION_PARAMS", {}),
+            **params.get("SI_JOB_KWARGS", {"n_jobs": -1, "chunk_size": 30000}),
         )
 
         # Calculate QC Metrics
@@ -296,9 +294,11 @@ class PostProcessing(dj.Imported):
         )
         # Add PCA based metrics. These will be added to the metrics dataframe above.
         _ = si.postprocessing.compute_principal_components(
-            waveform_extractor=we, n_components=5, mode="by_channel_local"
-        )  # TODO: the parameters need to be checked
+            waveform_extractor=we, **params.get("SI_QUALITY_METRICS_PARAMS", None)
+        )
+        # Save the output (metrics.csv to the output dir)
         metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
+        metrics.to_csv(output_dir / "metrics.csv")
 
         # Save results
         self.insert1(
@@ -312,7 +312,7 @@ class PostProcessing(dj.Imported):
             }
         )
 
-        # all finished, insert this `key` into ephys.Clustering
+        # Once finished, insert this `key` into ephys.Clustering
         ephys.Clustering.insert1(
             {**key, "clustering_time": datetime.utcnow()}, allow_direct_insert=True
         )
