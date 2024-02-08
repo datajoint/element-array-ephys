@@ -194,27 +194,28 @@ class EphysSessionInfo(dj.Imported):
             EphysRawFile
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         )
+        if not query:
+            raise FileNotFoundError(f"No EphysRawFile found BETWEEN '{key['start_time']}' AND '{key['end_time']}'")
 
-        if query:
-            first_file = (query).fetch("file_path", order_by="file_time", limit=1)[0]
+        first_file = query.fetch("file_path", order_by="file_time", limit=1)[0]
 
-            first_file = find_full_path(get_ephys_root_data_dir(), first_file)
+        first_file = find_full_path(get_ephys_root_data_dir(), first_file)
 
-            # Read file header
-            with open(first_file, "rb") as f:
-                header = intanrhdreader.read_header(f)
-                del header["spike_triggers"], header["aux_input_channels"]
+        # Read file header
+        with open(first_file, "rb") as f:
+            header = intanrhdreader.read_header(f)
+            del header["spike_triggers"], header["aux_input_channels"]
 
-            logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
+        logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
 
-            self.insert(
-                [
-                    {
-                        **key,
-                        "session_info": header,
-                    }
-                ]
-            )
+        self.insert(
+            [
+                {
+                    **key,
+                    "session_info": header,
+                }
+            ]
+        )
 
 
 @schema
