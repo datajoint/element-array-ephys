@@ -959,74 +959,155 @@ class CuratedClustering(dj.Imported):
     def make(self, key):
         """Automated population of Unit information."""
         output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
-        kilosort_dataset = kilosort.Kilosort(kilosort_dir)
-        acq_software, sample_rate = (EphysRecording & key).fetch1(
-            "acq_software", "sampling_rate"
-        )
+        if (output_dir / "waveform").exists():  # read from spikeinterface outputs
+            we: si.WaveformExtractor = si.load_waveforms(
+                output_dir / "waveform", with_recording=False
+            )
+            si_sorting: si.sorters.BaseSorter = si.load_extractor(
+                output_dir / "sorting.pkl"
+            )
 
-        sample_rate = kilosort_dataset.data["params"].get("sample_rate", sample_rate)
+            unit_peak_channel_map: dict[int, int] = si.get_template_extremum_channel(
+                we, outputs="index"
+            )  # {unit: peak_channel_index}
 
-        # ---------- Unit ----------
-        # -- Remove 0-spike units
-        withspike_idx = [
-            i
-            for i, u in enumerate(kilosort_dataset.data["cluster_ids"])
-            if (kilosort_dataset.data["spike_clusters"] == u).any()
-        ]
-        valid_units = kilosort_dataset.data["cluster_ids"][withspike_idx]
-        valid_unit_labels = kilosort_dataset.data["cluster_groups"][withspike_idx]
-        # -- Get channel and electrode-site mapping
-        channel2electrodes = get_neuropixels_channel2electrode_map(key, acq_software)
+            spike_count_dict = dict[int, int] = si_sorting.count_num_spikes_per_unit()
+            # {unit: spike_count}
 
-        # -- Spike-times --
-        # spike_times_sec_adj > spike_times_sec > spike_times
-        spike_time_key = (
-            "spike_times_sec_adj"
-            if "spike_times_sec_adj" in kilosort_dataset.data
-            else "spike_times_sec"
-            if "spike_times_sec" in kilosort_dataset.data
-            else "spike_times"
-        )
-        spike_times = kilosort_dataset.data[spike_time_key]
-        kilosort_dataset.extract_spike_depths()
+            spikes = si_sorting.to_spike_vector(
+                extremum_channel_inds=unit_peak_channel_map
+            )
 
-        # -- Spike-sites and Spike-depths --
-        spike_sites = np.array(
-            [
-                channel2electrodes[s]["electrode"]
-                for s in kilosort_dataset.data["spike_sites"]
-            ]
-        )
-        spike_depths = kilosort_dataset.data["spike_depths"]
+            # Get electrode info
+            electrode_config_key = (
+                EphysRecording * probe.ElectrodeConfig & key
+            ).fetch1("KEY")
 
-        # -- Insert unit, label, peak-chn
-        units = []
-        for unit, unit_lbl in zip(valid_units, valid_unit_labels):
-            if (kilosort_dataset.data["spike_clusters"] == unit).any():
-                unit_channel, _ = kilosort_dataset.get_best_channel(unit)
-                unit_spike_times = (
-                    spike_times[kilosort_dataset.data["spike_clusters"] == unit]
-                    / sample_rate
-                )
-                spike_count = len(unit_spike_times)
+            electrode_query = (
+                probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
+                & electrode_config_key
+            )
+            channel2electrode_map = dict(
+                zip(*electrode_query.fetch("channel", "electrode"))
+            )
 
+            # Get channel to electrode mapping
+            channel2depth_map = dict(zip(*electrode_query.fetch("channel", "y_coord")))
+
+            peak_electrode_ind = np.array(
+                [
+                    channel2electrode_map[unit_peak_channel_map[unit_id]]
+                    for unit_id in si_sorting.unit_ids
+                ]
+            )
+
+            # Get channel to depth mapping
+            electrode_depth_ind = np.array(
+                [
+                    channel2depth_map[unit_peak_channel_map[unit_id]]
+                    for unit_id in si_sorting.unit_ids
+                ]
+            )
+            spikes["electrode"] = peak_electrode_ind[spikes["unit_index"]]
+            spikes["depth"] = electrode_depth_ind[spikes["unit_index"]]
+
+            units = []
+
+            for unit_id in si_sorting.unit_ids:
+                unit_id = int(unit_id)
                 units.append(
                     {
-                        "unit": unit,
-                        "cluster_quality_label": unit_lbl,
-                        **channel2electrodes[unit_channel],
-                        "spike_times": unit_spike_times,
-                        "spike_count": spike_count,
-                        "spike_sites": spike_sites[
-                            kilosort_dataset.data["spike_clusters"] == unit
+                        "unit": unit_id,
+                        "cluster_quality_label": "n.a.",
+                        "spike_times": si_sorting.get_unit_spike_train(
+                            unit_id, return_times=True
+                        ),
+                        "spike_count": spike_count_dict[unit_id],
+                        "spike_sites": spikes["electrode"][
+                            spikes["unit_index"] == unit_id
                         ],
-                        "spike_depths": spike_depths[
-                            kilosort_dataset.data["spike_clusters"] == unit
+                        "spike_depths": spikes["depth"][
+                            spikes["unit_index"] == unit_id
                         ],
                     }
                 )
+
+        else:
+            kilosort_dataset = kilosort.Kilosort(output_dir)
+            acq_software, sample_rate = (EphysRecording & key).fetch1(
+                "acq_software", "sampling_rate"
+            )
+
+            sample_rate = kilosort_dataset.data["params"].get(
+                "sample_rate", sample_rate
+            )
+
+            # ---------- Unit ----------
+            # -- Remove 0-spike units
+            withspike_idx = [
+                i
+                for i, u in enumerate(kilosort_dataset.data["cluster_ids"])
+                if (kilosort_dataset.data["spike_clusters"] == u).any()
+            ]
+            valid_units = kilosort_dataset.data["cluster_ids"][withspike_idx]
+            valid_unit_labels = kilosort_dataset.data["cluster_groups"][withspike_idx]
+
+            # -- Spike-times --
+            # spike_times_sec_adj > spike_times_sec > spike_times
+            spike_time_key = (
+                "spike_times_sec_adj"
+                if "spike_times_sec_adj" in kilosort_dataset.data
+                else (
+                    "spike_times_sec"
+                    if "spike_times_sec" in kilosort_dataset.data
+                    else "spike_times"
+                )
+            )
+            spike_times = kilosort_dataset.data[spike_time_key]
+            kilosort_dataset.extract_spike_depths()
+
+            # Get channel and electrode-site mapping
+            channel2electrodes = get_neuropixels_channel2electrode_map(
+                key, acq_software
+            )
+
+            # -- Spike-sites and Spike-depths --
+            spike_sites = np.array(
+                [
+                    channel2electrodes[s]["electrode"]
+                    for s in kilosort_dataset.data["spike_sites"]
+                ]
+            )
+            spike_depths = kilosort_dataset.data["spike_depths"]
+
+            # -- Insert unit, label, peak-chn
+            units = []
+            for unit, unit_lbl in zip(valid_units, valid_unit_labels):
+                if (kilosort_dataset.data["spike_clusters"] == unit).any():
+                    unit_channel, _ = kilosort_dataset.get_best_channel(unit)
+                    unit_spike_times = (
+                        spike_times[kilosort_dataset.data["spike_clusters"] == unit]
+                        / sample_rate
+                    )
+                    spike_count = len(unit_spike_times)
+
+                    units.append(
+                        {
+                            "unit": unit,
+                            "cluster_quality_label": unit_lbl,
+                            **channel2electrodes[unit_channel],
+                            "spike_times": unit_spike_times,
+                            "spike_count": spike_count,
+                            "spike_sites": spike_sites[
+                                kilosort_dataset.data["spike_clusters"] == unit
+                            ],
+                            "spike_depths": spike_depths[
+                                kilosort_dataset.data["spike_clusters"] == unit
+                            ],
+                        }
+                    )
 
         self.insert1(key)
         self.Unit.insert([{**key, **u} for u in units])
