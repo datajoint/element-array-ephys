@@ -319,8 +319,8 @@ class EphysRecording(dj.Imported):
                 break
         else:
             raise FileNotFoundError(
-                f"Ephys recording data not found!"
-                f" Neither SpikeGLX nor Open Ephys recording files found"
+                "Ephys recording data not found!"
+                "Neither SpikeGLX nor Open Ephys recording files found"
             )
 
         supported_probe_types = probe.ProbeType.fetch("probe_type")
