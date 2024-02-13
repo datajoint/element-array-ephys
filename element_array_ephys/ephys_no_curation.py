@@ -1488,7 +1488,7 @@ class QualityMetrics(dj.Imported):
             recovery_slope (float): Slope of the regression line fit to first 30 microseconds from peak to tail.
             spread (float): The range with amplitude over 12-percent of maximum amplitude along the probe.
             velocity_above (float): inverse velocity of waveform propagation from soma to the top of the probe.
-            velocity_below (float) inverse velocity of waveform propagation from soma toward the bottom of the probe.
+            velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
         definition = """   
