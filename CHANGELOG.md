@@ -3,6 +3,19 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.3.1] - 2023-11-28
++ Update - Flowchart borders for consistency with other DataJoint Elements
++ Fix - `dj.config()` setup moved to `tutorial_pipeline.py` instead of `__init__.py`
++ Update - Elements installed directly from GitHub instead of PyPI 
++ Update - Structure of the tutorial notebook
+
+## [0.3.0] - 2023-10-25
+
++ Add - DevContainer for codespaces
++ Add - `tutorial_pipeline.py`
++ Add - 60 min tutorial using Jupyter Notebooks, short demo notebook
++ Update - General improvements to increase consistency with other DataJoint Elements
+
 ## [0.2.11] - 2023-06-29
 
 + Update - Improve kilosort triggering routine - better logging, remove temporary files, robust resumable processing
@@ -126,6 +139,8 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Probe table supporting: Neuropixels probes 1.0 - 3A, 1.0 - 3B, 2.0 - SS,
   2.0 - MS
 
+[0.3.0]: https://github.com/datajoint/element-array-ephys/releases/tag/0.3.0
+[0.2.11]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.11
 [0.2.10]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.10
 [0.2.9]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.9
 [0.2.8]: https://github.com/datajoint/element-array-ephys/releases/tag/0.2.8
