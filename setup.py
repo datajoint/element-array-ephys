@@ -1,6 +1,6 @@
 from os import path
-from setuptools import find_packages, setup
 
+from setuptools import find_packages, setup
 
 pkg_name = "element_array_ephys"
 here = path.abspath(path.dirname(__file__))
@@ -16,7 +16,7 @@ with open(path.join(here, pkg_name, "version.py")) as f:
 
 setup(
     name=pkg_name.replace("_", "-"),
-    python_requires='>=3.7, <3.11',
+    python_requires=">=3.7, <3.11",
     version=__version__,  # noqa F821
     description="Extracellular Array Electrophysiology DataJoint Element",
     long_description=long_description,
@@ -50,5 +50,6 @@ setup(
         ],
         "nwb": ["dandi", "neuroconv[ecephys]", "pynwb"],
         "tests": ["pre-commit", "pytest", "pytest-cov"],
+        "spikingcircus": ["hdbscan", "numba"],
     },
 )
