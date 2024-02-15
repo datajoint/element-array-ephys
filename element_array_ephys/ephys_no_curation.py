@@ -284,6 +284,15 @@ class EphysRecording(dj.Imported):
     recording_duration: float # (seconds) duration of the recording from this probe
     """
 
+    class Channel(dj.Part):
+        definitoin = """
+        -> master
+        channel_idx: int  # channel index
+        ---
+        -> probe.ElectrodeConfig.Electrode
+        channel_name="": varchar(64)
+        """
+
     class EphysFile(dj.Part):
         """Paths of electrophysiology recording files for each insertion.
 
