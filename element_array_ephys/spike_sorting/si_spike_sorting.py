@@ -165,11 +165,10 @@ class PreProcessing(dj.Imported):
             .fetch(format="frame")
             .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
         )
-        channels_details = ephys.get_recording_channels_details(key)
-
+        
         # Create SI probe object
         si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_probe.set_device_channel_indices(channels_details["channel_ind"])
+        si_probe.set_device_channel_indices(range(len(electrodes_df)))
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
