@@ -207,38 +207,34 @@ class SIClustering(dj.Imported):
             ephys.ClusteringTask * ephys.ClusteringParamSet & key
         ).fetch1("clustering_method", "clustering_output_dir", "params")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-        recording_file = output_dir / "si_recording.pkl"
-        si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
         # Get sorter method and create output directory.
         sorter_name = (
             "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
-
+        recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
+        si_recording: si.BaseRecording = si.load_extractor(recording_file)
+        
         # Run sorting
         @memoized_result(
             parameters={**key, **params},
-            output_directory=output_dir / sorter_name,
+            output_directory=output_dir / sorter_name / "spike_sorting",
         )
         def _run_sorter(*args, **kwargs):
             si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(*args, **kwargs)
-            sorting_save_path = output_dir / sorter_name / "si_sorting.pkl"
+            sorting_save_path = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
             si_sorting.dump_to_pickle(sorting_save_path)
             return sorting_save_path
 
         sorting_save_path = _run_sorter(
             sorter_name=sorter_name,
             recording=si_recording,
-            output_folder=output_dir / sorter_name,
+            output_folder=output_dir / sorter_name / "spike_sorting",
             remove_existing_folder=True,
             verbose=True,
             docker_image=True,
             **params.get("SI_SORTING_PARAMS", {}),
         )
-
-        # Run sorting
-        sorting_save_path = output_dir / "si_sorting.pkl"
-        si_sorting.dump_to_pickle(sorting_save_path)
 
         self.insert1(
             {
@@ -266,13 +262,20 @@ class PostProcessing(dj.Imported):
     def make(self, key):
         execution_time = datetime.utcnow()
 
-        # Load sorting & recording object.
-        output_dir, params = (ephys.ClusteringTask & key).fetch1(
-            "clustering_output_dir", "params"
-        )
+        # Load recording object.
+        clustering_method, output_dir, params = (
+            ephys.ClusteringTask * ephys.ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir", "params")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-        recording_file = output_dir / "si_recording.pkl"
-        sorting_file = output_dir / "si_sorting.pkl"
+
+        # Get sorter method and create output directory.
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
+        
+        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
+        sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
 
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
         si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file)
@@ -281,7 +284,7 @@ class PostProcessing(dj.Imported):
         we: si.WaveformExtractor = si.extract_waveforms(
             si_recording,
             si_sorting,
-            folder=output_dir / "waveform",  # The folder where waveforms are cached
+            folder=output_dir / sorter_name / "waveform",  # The folder where waveforms are cached
             max_spikes_per_unit=None,
             overwrite=True,
             **params.get("SI_WAVEFORM_EXTRACTION_PARAMS", {}),
@@ -309,8 +312,11 @@ class PostProcessing(dj.Imported):
             waveform_extractor=we, **params.get("SI_QUALITY_METRICS_PARAMS", None)
         )
         # Save the output (metrics.csv to the output dir)
+        metrics_output_dir = output_dir / sorter_name / "metrics"
+        metrics_output_dir.mkdir(parents=True, exist_ok=True)
+        
         metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
-        metrics.to_csv(output_dir / "metrics.csv")
+        metrics.to_csv(metrics_output_dir / "metrics.csv")
 
         # Save results
         self.insert1(
