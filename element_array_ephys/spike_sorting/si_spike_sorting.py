@@ -110,9 +110,9 @@ class PreProcessing(dj.Imported):
             "SI_WAVEFORM_EXTRACTION_PARAMS",
             "SI_QUALITY_METRICS_PARAMS",
         ):
-            if req_key not in params:
+            if required_key not in params:
                 raise ValueError(
-                    f"{req_key} must be defined in ClusteringParamSet for SpikeInterface execution"
+                    f"{required_key} must be defined in ClusteringParamSet for SpikeInterface execution"
                 )
 
         # Set directory to store recording file.
