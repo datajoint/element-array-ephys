@@ -191,7 +191,6 @@ class SIClustering(dj.Imported):
 
     definition = """
     -> PreProcessing
-    sorter_name: varchar(30)        # name of the sorter used
     ---
     execution_time: datetime        # datetime of the start of this step
     execution_duration: float       # execution duration in hours
@@ -231,7 +230,6 @@ class SIClustering(dj.Imported):
         self.insert1(
             {
                 **key,
-                "sorter_name": sorter_name,
                 "execution_time": execution_time,
                 "execution_duration": (
                     datetime.utcnow() - execution_time

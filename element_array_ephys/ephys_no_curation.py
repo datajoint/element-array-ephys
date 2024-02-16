@@ -285,7 +285,7 @@ class EphysRecording(dj.Imported):
     """
 
     class Channel(dj.Part):
-        definitoin = """
+        definition = """
         -> master
         channel_idx: int  # channel index
         ---
