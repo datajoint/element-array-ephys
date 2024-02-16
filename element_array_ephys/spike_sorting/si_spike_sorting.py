@@ -95,11 +95,16 @@ class PreProcessing(dj.Imported):
         execution_time = datetime.utcnow()
 
         # Set the output directory
-        acq_software, output_dir, params = (
+        clustering_method, acq_software, output_dir, params = (
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
-        ).fetch1("acq_software", "clustering_output_dir", "params")
-
-        for req_key in (
+        ).fetch1("clustering_method", "acq_software", "clustering_output_dir", "params")
+        
+        # Get sorter method and create output directory.
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
+        
+        for required_key in (
             "SI_SORTING_PARAMS",
             "SI_PREPROCESSING_METHOD",
             "SI_WAVEFORM_EXTRACTION_PARAMS",
@@ -110,6 +115,7 @@ class PreProcessing(dj.Imported):
                     f"{req_key} must be defined in ClusteringParamSet for SpikeInterface execution"
                 )
 
+        # Set directory to store recording file.
         if not output_dir:
             output_dir = ephys.ClusteringTask.infer_output_dir(
                 key, relative=True, mkdir=True
@@ -118,11 +124,11 @@ class PreProcessing(dj.Imported):
             ephys.ClusteringTask.update1(
                 {**key, "clustering_output_dir": output_dir.as_posix()}
             )
-        output_dir = pathlib.Path(output_dir)
-        output_full_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-
+        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        recording_dir = output_dir / sorter_name / "recording"
+        recording_dir.mkdir(parents=True, exist_ok=True)
         recording_file = (
-            output_full_dir / "si_recording.pkl"
+            recording_dir / "si_recording.pkl"
         )  # recording cache to be created for each key
 
         # Create SI recording extractor object
