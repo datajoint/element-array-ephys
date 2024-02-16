@@ -172,9 +172,7 @@ class PreProcessing(dj.Imported):
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
-        si_preproc_func = si_preprocessing.preprocessing_function_mapping[
-            params["SI_PREPROCESSING_METHOD"]
-        ]
+        si_preproc_func = getattr(si_preprocessing, params["SI_PREPROCESSING_METHOD"])
         si_recording = si_preproc_func(si_recording)
         si_recording.dump_to_pickle(file_path=recording_file)
 
