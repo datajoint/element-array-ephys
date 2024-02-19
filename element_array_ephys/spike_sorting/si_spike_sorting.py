@@ -26,7 +26,7 @@ import pandas as pd
 import probeinterface as pi
 import spikeinterface as si
 from element_array_ephys import get_logger, probe, readers
-from element_interface.utils import find_full_path  # , memoized_result
+from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import si_preprocessing
@@ -216,19 +216,7 @@ class SIClustering(dj.Imported):
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
         # Run sorting
-        @memoized_result(
-            parameters={**key, **params},
-            output_directory=output_dir / sorter_name / "spike_sorting",
-        )
-        def _run_sorter(*args, **kwargs):
-            si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(*args, **kwargs)
-            sorting_save_path = (
-                output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
-            )
-            si_sorting.dump_to_pickle(sorting_save_path)
-            return sorting_save_path
-
-        sorting_save_path = _run_sorter(
+        si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
             sorter_name=sorter_name,
             recording=si_recording,
             output_folder=output_dir / sorter_name / "spike_sorting",
@@ -237,6 +225,11 @@ class SIClustering(dj.Imported):
             docker_image=True,
             **params.get("SI_SORTING_PARAMS", {}),
         )
+
+        sorting_save_path = (
+            output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
+        )
+        si_sorting.dump_to_pickle(sorting_save_path)
 
         self.insert1(
             {
