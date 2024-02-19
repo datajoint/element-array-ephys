@@ -989,7 +989,7 @@ class CuratedClustering(dj.Imported):
                 extremum_channel_inds=unit_peak_channel_map
             )
 
-            # Get electrode info
+            # Get electrode info !#TODO: need to be modified
             electrode_config_key = (
                 EphysRecording * probe.ElectrodeConfig & key
             ).fetch1("KEY")
@@ -1183,11 +1183,11 @@ class WaveformSet(dj.Imported):
             we: si.WaveformExtractor = si.load_waveforms(
                 output_dir / "waveform", with_recording=False
             )
-            unit_id_to_peak_channel_indices: dict[
-                int, np.ndarray
-            ] = si.ChannelSparsity.from_best_channels(
-                we, 1, peak_sign="neg"
-            ).unit_id_to_channel_indices  # {unit: peak_channel_index}
+            unit_id_to_peak_channel_indices: dict[int, np.ndarray] = (
+                si.ChannelSparsity.from_best_channels(
+                    we, 1, peak_sign="neg"
+                ).unit_id_to_channel_indices
+            )  # {unit: peak_channel_index}
 
             units = (CuratedClustering.Unit & key).fetch("KEY", order_by="unit")
 

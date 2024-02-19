@@ -26,7 +26,7 @@ import pandas as pd
 import probeinterface as pi
 import spikeinterface as si
 from element_array_ephys import get_logger, probe, readers
-from element_interface.utils import find_full_path, memoized_result
+from element_interface.utils import find_full_path  # , memoized_result
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import si_preprocessing
@@ -98,12 +98,12 @@ class PreProcessing(dj.Imported):
         clustering_method, acq_software, output_dir, params = (
             ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
         ).fetch1("clustering_method", "acq_software", "clustering_output_dir", "params")
-        
+
         # Get sorter method and create output directory.
         sorter_name = (
             "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
-        
+
         for required_key in (
             "SI_SORTING_PARAMS",
             "SI_PREPROCESSING_METHOD",
@@ -165,7 +165,7 @@ class PreProcessing(dj.Imported):
             .fetch(format="frame")
             .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
         )
-        
+
         # Create SI probe object
         si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
         si_probe.set_device_channel_indices(range(len(electrodes_df)))
@@ -214,7 +214,7 @@ class SIClustering(dj.Imported):
         )
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
-        
+
         # Run sorting
         @memoized_result(
             parameters={**key, **params},
@@ -222,7 +222,9 @@ class SIClustering(dj.Imported):
         )
         def _run_sorter(*args, **kwargs):
             si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(*args, **kwargs)
-            sorting_save_path = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
+            sorting_save_path = (
+                output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
+            )
             si_sorting.dump_to_pickle(sorting_save_path)
             return sorting_save_path
 
@@ -272,7 +274,7 @@ class PostProcessing(dj.Imported):
         sorter_name = (
             "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
-        
+
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
@@ -284,7 +286,9 @@ class PostProcessing(dj.Imported):
         we: si.WaveformExtractor = si.extract_waveforms(
             si_recording,
             si_sorting,
-            folder=output_dir / sorter_name / "waveform",  # The folder where waveforms are cached
+            folder=output_dir
+            / sorter_name
+            / "waveform",  # The folder where waveforms are cached
             max_spikes_per_unit=None,
             overwrite=True,
             **params.get("SI_WAVEFORM_EXTRACTION_PARAMS", {}),
@@ -314,7 +318,7 @@ class PostProcessing(dj.Imported):
         # Save the output (metrics.csv to the output dir)
         metrics_output_dir = output_dir / sorter_name / "metrics"
         metrics_output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
         metrics.to_csv(metrics_output_dir / "metrics.csv")
 
