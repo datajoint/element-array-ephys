@@ -40,6 +40,7 @@ setup(
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
         "element-interface @ git+https://github.com/datajoint/element-interface.git",
+        "numba",
     ],
     extras_require={
         "elements": [
@@ -50,6 +51,6 @@ setup(
         ],
         "nwb": ["dandi", "neuroconv[ecephys]", "pynwb"],
         "tests": ["pre-commit", "pytest", "pytest-cov"],
-        "spikingcircus": ["hdbscan", "numba"],
+        "spikingcircus": ["hdbscan"],
     },
 )
