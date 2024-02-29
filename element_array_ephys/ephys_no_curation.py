@@ -967,22 +967,31 @@ class CuratedClustering(dj.Imported):
 
     def make(self, key):
         """Automated population of Unit information."""
-        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
-        if (output_dir / "waveform").exists():  # read from spikeinterface outputs
+        # Get sorter method and create output directory.
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
+        waveform_dir = output_dir / sorter_name / "waveform"
+        sorting_dir = output_dir / sorter_name / "spike_sorting"
+
+        if waveform_dir.exists():  # read from spikeinterface outputs
             we: si.WaveformExtractor = si.load_waveforms(
-                output_dir / "waveform", with_recording=False
+                waveform_dir, with_recording=False
             )
             si_sorting: si.sorters.BaseSorter = si.load_extractor(
-                output_dir / "sorting.pkl"
+                sorting_dir / "si_sorting.pkl"
             )
 
             unit_peak_channel_map: dict[int, int] = si.get_template_extremum_channel(
                 we, outputs="index"
             )  # {unit: peak_channel_index}
 
-            spike_count_dict = dict[int, int] = si_sorting.count_num_spikes_per_unit()
+            spike_count_dict: dict[int, int] = si_sorting.count_num_spikes_per_unit()
             # {unit: spike_count}
 
             spikes = si_sorting.to_spike_vector(
