@@ -1011,6 +1011,21 @@ class CuratedClustering(dj.Imported):
                 zip(*electrode_query.fetch("channel", "electrode"))
             )
 
+            # Get unit id to quality label mapping
+            cluster_quality_label_map = {}
+            try:
+                cluster_quality_label_map = pd.read_csv(
+                    sorting_dir / "sorter_output" / "cluster_KSLabel.tsv",
+                    delimiter="\t",
+                )
+                cluster_quality_label_map: dict[
+                    int, str
+                ] = cluster_quality_label_map.set_index("cluster_id")[
+                    "KSLabel"
+                ].to_dict()  # {unit: quality_label}
+            except FileNotFoundError:
+                pass
+
             # Get channel to electrode mapping
             channel2depth_map = dict(zip(*electrode_query.fetch("channel", "y_coord")))
 
@@ -1038,7 +1053,9 @@ class CuratedClustering(dj.Imported):
                 units.append(
                     {
                         "unit": unit_id,
-                        "cluster_quality_label": "n.a.",
+                        "cluster_quality_label": cluster_quality_label_map.get(
+                            unit_id, "n.a."
+                        ),
                         "spike_times": si_sorting.get_unit_spike_train(
                             unit_id, return_times=True
                         ),
