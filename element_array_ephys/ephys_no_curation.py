@@ -1096,7 +1096,7 @@ class CuratedClustering(dj.Imported):
                     }
                 )
 
-        else:
+        else:  # read from kilosort outputs
             kilosort_dataset = kilosort.Kilosort(output_dir)
             acq_software, sample_rate = (EphysRecording & key).fetch1(
                 "acq_software", "sampling_rate"
@@ -1131,14 +1131,19 @@ class CuratedClustering(dj.Imported):
             kilosort_dataset.extract_spike_depths()
 
             # Get channel and electrode-site mapping
-            channel2electrodes = get_neuropixels_channel2electrode_map(
-                key, acq_software
+            channel_info = (
+                (EphysRecording.Channel & key)
+                .proj(..., "-channel_name")
+                .fetch(as_dict=True, order_by="channel_idx")
             )
+            channel_info: dict[int, dict] = {
+                ch.pop("channel_idx"): ch for ch in channel_info
+            }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
 
             # -- Spike-sites and Spike-depths --
             spike_sites = np.array(
                 [
-                    channel2electrodes[s]["electrode"]
+                    channel_info[s]["electrode"]
                     for s in kilosort_dataset.data["spike_sites"]
                 ]
             )
@@ -1157,9 +1162,10 @@ class CuratedClustering(dj.Imported):
 
                     units.append(
                         {
+                            **key,
                             "unit": unit,
                             "cluster_quality_label": unit_lbl,
-                            **channel2electrodes[unit_channel],
+                            **channel_info[unit_channel],
                             "spike_times": unit_spike_times,
                             "spike_count": spike_count,
                             "spike_sites": spike_sites[
@@ -1228,13 +1234,21 @@ class WaveformSet(dj.Imported):
 
     def make(self, key):
         """Populates waveform tables."""
-        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
 
-        if (output_dir / "waveform").exists():  # read from spikeinterface outputs
+        if (
+            output_dir / sorter_name / "waveform"
+        ).exists():  # read from spikeinterface outputs
 
+            waveform_dir = output_dir / sorter_name / "waveform"
             we: si.WaveformExtractor = si.load_waveforms(
-                output_dir / "waveform", with_recording=False
+                waveform_dir, with_recording=False
             )
             unit_id_to_peak_channel_indices: dict[int, np.ndarray] = (
                 si.ChannelSparsity.from_best_channels(
@@ -1299,11 +1313,15 @@ class WaveformSet(dj.Imported):
                 EphysRecording * ProbeInsertion & key
             ).fetch1("acq_software", "probe")
 
-            # -- Get channel and electrode-site mapping
-            recording_key = (EphysRecording & key).fetch1("KEY")
-            channel2electrodes = get_neuropixels_channel2electrode_map(
-                recording_key, acq_software
+            # Get channel and electrode-site mapping
+            channel_info = (
+                (EphysRecording.Channel & key)
+                .proj(..., "-channel_name")
+                .fetch(as_dict=True, order_by="channel_idx")
             )
+            channel_info: dict[int, dict] = {
+                ch.pop("channel_idx"): ch for ch in channel_info
+            }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
 
             # Get all units
             units = {
@@ -1335,12 +1353,12 @@ class WaveformSet(dj.Imported):
                                 unit_electrode_waveforms.append(
                                     {
                                         **units[unit_no],
-                                        **channel2electrodes[channel],
+                                        **channel_info[channel],
                                         "waveform_mean": channel_waveform,
                                     }
                                 )
                                 if (
-                                    channel2electrodes[channel]["electrode"]
+                                    channel_info[channel]["electrode"]
                                     == units[unit_no]["electrode"]
                                 ):
                                     unit_peak_waveform = {
@@ -1377,12 +1395,12 @@ class WaveformSet(dj.Imported):
                                 unit_electrode_waveforms.append(
                                     {
                                         **units[unit_no],
-                                        **channel2electrodes[channel],
+                                        **channel_info[channel],
                                         "waveform_mean": channel_waveform,
                                     }
                                 )
                                 if (
-                                    channel2electrodes[channel]["electrode"]
+                                    channel_info[channel]["electrode"]
                                     == units[unit_no]["electrode"]
                                 ):
                                     unit_peak_waveform = {
@@ -1451,13 +1469,13 @@ class WaveformSet(dj.Imported):
                             unit_electrode_waveforms.append(
                                 {
                                     **unit_dict,
-                                    **channel2electrodes[channel],
+                                    **channel_info[channel],
                                     "waveform_mean": channel_waveform.mean(axis=0),
                                     "waveforms": channel_waveform,
                                 }
                             )
                             if (
-                                channel2electrodes[channel]["electrode"]
+                                channel_info[channel]["electrode"]
                                 == unit_dict["electrode"]
                             ):
                                 unit_peak_waveform = {
