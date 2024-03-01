@@ -286,10 +286,10 @@ class EphysRecording(dj.Imported):
     class Channel(dj.Part):
         definition = """
         -> master
-        channel_idx: int  # channel index
+        channel_idx: int  # channel index (index of the raw data)
         ---
         -> probe.ElectrodeConfig.Electrode
-        channel_name="": varchar(64)
+        channel_name="": varchar(64)  # alias of the channel
         """
 
     class EphysFile(dj.Part):
@@ -1033,14 +1033,9 @@ class CuratedClustering(dj.Imported):
             ) * (dj.U("electrode", "channel_idx") & EphysRecording.Channel)
 
             channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
-
             channel_info: dict[int, dict] = {
                 ch.pop("channel_idx"): ch for ch in channel_info
             }  
-            
-            channel2electrode_map = dict(
-                zip(*electrode_query.fetch("channel_idx", "electrode"))
-            )  # {channel: electrode}
 
             # Get unit id to quality label mapping
             try:
@@ -1056,15 +1051,16 @@ class CuratedClustering(dj.Imported):
                 ] = cluster_quality_label_map.set_index("cluster_id")[
                     "KSLabel"
                 ].to_dict()  # {unit: quality_label}
-                
+            
+            # Get electrode where peak unit activity is recorded
             peak_electrode_ind = np.array(
                 [
                     channel_info[unit_peak_channel_map[unit_id]]["electrode"]
                     for unit_id in si_sorting.unit_ids
                 ]
-            )  # get the electrode where peak unit activity is recorded
+            ) 
 
-            # Get channel to depth mapping
+            # Get channel depth
             channel_depth_ind = np.array(
                 [
                     channel_info[unit_peak_channel_map[unit_id]]["y_coord"]
@@ -1707,7 +1703,7 @@ def get_openephys_probe_data(ephys_recording_key: dict) -> list:
 
 def get_neuropixels_channel2electrode_map(
     ephys_recording_key: dict, acq_software: str
-) -> dict:
+) -> dict:  #TODO: remove this function
     """Get the channel map for neuropixels probe."""
     if acq_software == "SpikeGLX":
         spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
