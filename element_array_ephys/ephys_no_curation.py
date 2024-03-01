@@ -9,8 +9,7 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 import spikeinterface as si
-from element_interface.utils import (dict_to_uuid, find_full_path,
-                                     find_root_directory)
+from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import ephys_report, probe
@@ -1032,7 +1031,7 @@ class CuratedClustering(dj.Imported):
                 probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
                 & electrode_config_key
             ) * (dj.U("electrode", "channel_idx") & EphysRecording.Channel)
-            
+
             channel2electrode_map = dict(
                 zip(*electrode_query.fetch("channel_idx", "electrode"))
             )  # {channel: electrode}
@@ -1053,7 +1052,9 @@ class CuratedClustering(dj.Imported):
                 pass
 
             # Get channel to electrode mapping
-            channel2depth_map = dict(zip(*electrode_query.fetch("channel_idx", "y_coord")))  # {channel: depth}
+            channel2depth_map = dict(
+                zip(*electrode_query.fetch("channel_idx", "y_coord"))
+            )  # {channel: depth}
 
             peak_electrode_ind = np.array(
                 [
@@ -1570,9 +1571,14 @@ class QualityMetrics(dj.Imported):
     def make(self, key):
         """Populates tables with quality metrics data."""
         # Load metrics.csv
-        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-        metric_fp = output_dir / "metrics.csv"
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
+        metric_fp = output_dir / sorter_name / "metrics" / "metrics.csv"
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
         metrics_df = pd.read_csv(metric_fp)
