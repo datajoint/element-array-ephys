@@ -9,7 +9,8 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 import spikeinterface as si
-from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
+from element_interface.utils import (dict_to_uuid, find_full_path,
+                                     find_root_directory)
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import ephys_report, probe
@@ -1022,7 +1023,7 @@ class CuratedClustering(dj.Imported):
                 extremum_channel_inds=unit_peak_channel_map
             )
 
-            # Get electrode info !#TODO: need to be modified
+            # Get electrode & channel info
             electrode_config_key = (
                 EphysRecording * probe.ElectrodeConfig & key
             ).fetch1("KEY")
@@ -1030,10 +1031,11 @@ class CuratedClustering(dj.Imported):
             electrode_query = (
                 probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
                 & electrode_config_key
-            )
+            ) * (dj.U("electrode", "channel_idx") & EphysRecording.Channel)
+            
             channel2electrode_map = dict(
-                zip(*electrode_query.fetch("channel", "electrode"))
-            )
+                zip(*electrode_query.fetch("channel_idx", "electrode"))
+            )  # {channel: electrode}
 
             # Get unit id to quality label mapping
             cluster_quality_label_map = {}
@@ -1051,24 +1053,24 @@ class CuratedClustering(dj.Imported):
                 pass
 
             # Get channel to electrode mapping
-            channel2depth_map = dict(zip(*electrode_query.fetch("channel", "y_coord")))
+            channel2depth_map = dict(zip(*electrode_query.fetch("channel_idx", "y_coord")))  # {channel: depth}
 
             peak_electrode_ind = np.array(
                 [
                     channel2electrode_map[unit_peak_channel_map[unit_id]]
                     for unit_id in si_sorting.unit_ids
                 ]
-            )
+            )  # get the electrode where peak unit activity is recorded
 
             # Get channel to depth mapping
-            electrode_depth_ind = np.array(
+            channel_depth_ind = np.array(
                 [
                     channel2depth_map[unit_peak_channel_map[unit_id]]
                     for unit_id in si_sorting.unit_ids
                 ]
             )
             spikes["electrode"] = peak_electrode_ind[spikes["unit_index"]]
-            spikes["depth"] = electrode_depth_ind[spikes["unit_index"]]
+            spikes["depth"] = channel_depth_ind[spikes["unit_index"]]
 
             units = []
 
@@ -1233,11 +1235,11 @@ class WaveformSet(dj.Imported):
             we: si.WaveformExtractor = si.load_waveforms(
                 output_dir / "waveform", with_recording=False
             )
-            unit_id_to_peak_channel_indices: dict[
-                int, np.ndarray
-            ] = si.ChannelSparsity.from_best_channels(
-                we, 1, peak_sign="neg"
-            ).unit_id_to_channel_indices  # {unit: peak_channel_index}
+            unit_id_to_peak_channel_indices: dict[int, np.ndarray] = (
+                si.ChannelSparsity.from_best_channels(
+                    we, 1, peak_sign="neg"
+                ).unit_id_to_channel_indices
+            )  # {unit: peak_channel_index}
 
             units = (CuratedClustering.Unit & key).fetch("KEY", order_by="unit")
 
