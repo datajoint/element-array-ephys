@@ -1248,6 +1248,16 @@ class WaveformSet(dj.Imported):
             "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
 
+        # Get channel and electrode-site mapping
+        channel_info = (
+            (EphysRecording.Channel & key)
+            .proj(..., "-channel_name")
+            .fetch(as_dict=True, order_by="channel_idx")
+        )
+        channel_info: dict[int, dict] = {
+            ch.pop("channel_idx"): ch for ch in channel_info
+        }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
+
         if (
             output_dir / sorter_name / "waveform"
         ).exists():  # read from spikeinterface outputs
@@ -1256,26 +1266,11 @@ class WaveformSet(dj.Imported):
             we: si.WaveformExtractor = si.load_waveforms(
                 waveform_dir, with_recording=False
             )
-            unit_id_to_peak_channel_indices: dict[int, np.ndarray] = (
+            unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
                 si.ChannelSparsity.from_best_channels(
                     we, 1, peak_sign="neg"
                 ).unit_id_to_channel_indices
             )  # {unit: peak_channel_index}
-
-            units = (CuratedClustering.Unit & key).fetch("KEY", order_by="unit")
-
-            # Get electrode info
-            electrode_config_key = (
-                EphysRecording * probe.ElectrodeConfig & key
-            ).fetch1("KEY")
-
-            electrode_query = (
-                probe.ProbeType.Electrode.proj() * probe.ElectrodeConfig.Electrode
-                & electrode_config_key
-            )
-            electrode_info = electrode_query.fetch(
-                "KEY", order_by="electrode", as_dict=True
-            )
 
             # Get mean waveform for each unit from all channels
             mean_waveforms = we.get_all_templates(
@@ -1285,13 +1280,13 @@ class WaveformSet(dj.Imported):
             unit_peak_waveform = []
             unit_electrode_waveforms = []
 
-            for unit in units:
+            for unit in (CuratedClustering.Unit & key).fetch("KEY", order_by="unit"):
                 unit_peak_waveform.append(
                     {
                         **unit,
                         "peak_electrode_waveform": we.get_template(
                             unit_id=unit["unit"], mode="average", force_dense=True
-                        )[:, unit_id_to_peak_channel_indices[unit["unit"]][0]],
+                        )[:, unit_id_to_peak_channel_map[unit["unit"]][0]],
                     }
                 )
 
@@ -1299,12 +1294,12 @@ class WaveformSet(dj.Imported):
                     [
                         {
                             **unit,
-                            **e,
+                            **channel_info[c],
                             "waveform_mean": mean_waveforms[
-                                unit["unit"], :, e["electrode"]
+                                unit["unit"] - 1, :, c
                             ],
                         }
-                        for e in electrode_info
+                        for c in channel_info
                     ]
                 )
 
@@ -1318,16 +1313,6 @@ class WaveformSet(dj.Imported):
             acq_software, probe_serial_number = (
                 EphysRecording * ProbeInsertion & key
             ).fetch1("acq_software", "probe")
-
-            # Get channel and electrode-site mapping
-            channel_info = (
-                (EphysRecording.Channel & key)
-                .proj(..., "-channel_name")
-                .fetch(as_dict=True, order_by="channel_idx")
-            )
-            channel_info: dict[int, dict] = {
-                ch.pop("channel_idx"): ch for ch in channel_info
-            }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
 
             # Get all units
             units = {
