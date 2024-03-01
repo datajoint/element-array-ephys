@@ -1032,6 +1032,12 @@ class CuratedClustering(dj.Imported):
                 & electrode_config_key
             ) * (dj.U("electrode", "channel_idx") & EphysRecording.Channel)
 
+            channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
+
+            channel_info: dict[int, dict] = {
+                ch.pop("channel_idx"): ch for ch in channel_info
+            }  
+            
             channel2electrode_map = dict(
                 zip(*electrode_query.fetch("channel_idx", "electrode"))
             )  # {channel: electrode}
@@ -1058,7 +1064,7 @@ class CuratedClustering(dj.Imported):
 
             peak_electrode_ind = np.array(
                 [
-                    channel2electrode_map[unit_peak_channel_map[unit_id]]
+                    channel_info[unit_peak_channel_map[unit_id]]["electrode"]
                     for unit_id in si_sorting.unit_ids
                 ]
             )  # get the electrode where peak unit activity is recorded
@@ -1066,19 +1072,29 @@ class CuratedClustering(dj.Imported):
             # Get channel to depth mapping
             channel_depth_ind = np.array(
                 [
-                    channel2depth_map[unit_peak_channel_map[unit_id]]
+                    channel_info[unit_peak_channel_map[unit_id]]["y_coord"]
                     for unit_id in si_sorting.unit_ids
                 ]
             )
-            spikes["electrode"] = peak_electrode_ind[spikes["unit_index"]]
-            spikes["depth"] = channel_depth_ind[spikes["unit_index"]]
+            
+            # Assign electrode and depth for each spike
+            new_spikes = np.empty(spikes.shape, spikes.dtype.descr + [('electrode', '<i8'), ('depth', '<i8')])
+            
+            for field in spikes.dtype.names:
+                new_spikes[field] = spikes[field]
+            del spikes
+            
+            new_spikes["electrode"] = peak_electrode_ind[new_spikes["unit_index"]]
+            new_spikes["depth"] = channel_depth_ind[new_spikes["unit_index"]]
 
             units = []
 
             for unit_id in si_sorting.unit_ids:
                 unit_id = int(unit_id)
                 units.append(
-                    {
+                    {   
+                        **key,
+                        **channel_info[unit_peak_channel_map[unit_id]],
                         "unit": unit_id,
                         "cluster_quality_label": cluster_quality_label_map.get(
                             unit_id, "n.a."
@@ -1087,11 +1103,11 @@ class CuratedClustering(dj.Imported):
                             unit_id, return_times=True
                         ),
                         "spike_count": spike_count_dict[unit_id],
-                        "spike_sites": spikes["electrode"][
-                            spikes["unit_index"] == unit_id
+                        "spike_sites": new_spikes["electrode"][
+                            new_spikes["unit_index"] == unit_id
                         ],
-                        "spike_depths": spikes["depth"][
-                            spikes["unit_index"] == unit_id
+                        "spike_depths": new_spikes["depth"][
+                            new_spikes["unit_index"] == unit_id
                         ],
                     }
                 )
@@ -1178,7 +1194,7 @@ class CuratedClustering(dj.Imported):
                     )
 
         self.insert1(key)
-        self.Unit.insert([{**key, **u} for u in units])
+        self.Unit.insert(units, ignore_extra_fields=True)
 
 
 @schema
