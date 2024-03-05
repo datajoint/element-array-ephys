@@ -326,7 +326,7 @@ class EphysRecording(dj.Imported):
                 break
         else:
             raise FileNotFoundError(
-                f"Ephys recording data not found! for {key}."
+                f"Ephys recording data not found in {session_dir}."
                 "Neither SpikeGLX nor Open Ephys recording files found"
             )
 
