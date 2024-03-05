@@ -364,37 +364,9 @@ class EphysRecording(dj.Imported):
                 electrode_config_hash = dict_to_uuid(
                     {k["electrode"]: k for k in electrode_group_members}
                 )
-
-                electrode_list = sorted(
-                    [k["electrode"] for k in electrode_group_members]
+                electrode_config_name = generate_electrode_config_name(
+                    probe_type, electrode_group_members
                 )
-                electrode_gaps = (
-                    [-1]
-                    + np.where(np.diff(electrode_list) > 1)[0].tolist()
-                    + [len(electrode_list) - 1]
-                )
-                electrode_config_name = "; ".join(
-                    [
-                        f"{electrode_list[start + 1]}-{electrode_list[end]}"
-                        for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
-                    ]
-                )
-
-                electrode_config_key = {"electrode_config_hash": electrode_config_hash}
-
-                # Insert into ElectrodeConfig
-                if not probe.ElectrodeConfig & electrode_config_key:
-                    probe.ElectrodeConfig.insert1(
-                        {
-                            **electrode_config_key,
-                            "probe_type": probe_type,
-                            "electrode_config_name": electrode_config_name,
-                        }
-                    )
-                    probe.ElectrodeConfig.Electrode.insert(
-                        {**electrode_config_key, **electrode}
-                        for electrode in electrode_group_members
-                    )
 
             self.insert1(
                 {
@@ -426,7 +398,7 @@ class EphysRecording(dj.Imported):
             # Get channel and electrode-site mapping
             electrode_query = (
                 probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-                & electrode_config_key
+                & {"electrode_config_hash": electrode_config_hash}
             )
 
             probe_electrodes = {
@@ -474,34 +446,20 @@ class EphysRecording(dj.Imported):
 
                 probe_electrodes = {
                     key["electrode"]: key for key in electrode_query.fetch("KEY")
-                }
+                }  # electrode configuration
 
                 electrode_group_members = [
                     probe_electrodes[channel_idx]
                     for channel_idx in probe_data.ap_meta["channels_indices"]
-                ]
+                ]  # recording session-specific electrode configuration
 
                 # Compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
                 electrode_config_hash = dict_to_uuid(
                     {k["electrode"]: k for k in electrode_group_members}
                 )
-
-                electrode_list = sorted(
-                    [k["electrode"] for k in electrode_group_members]
+                electrode_config_name = generate_electrode_config_name(
+                    probe_type, electrode_group_members
                 )
-                electrode_gaps = (
-                    [-1]
-                    + np.where(np.diff(electrode_list) > 1)[0].tolist()
-                    + [len(electrode_list) - 1]
-                )
-                electrode_config_name = "; ".join(
-                    [
-                        f"{electrode_list[start + 1]}-{electrode_list[end]}"
-                        for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
-                    ]
-                )
-
-                electrode_config_key = {"electrode_config_hash": electrode_config_hash}
 
             self.insert1(
                 {
@@ -551,6 +509,20 @@ class EphysRecording(dj.Imported):
                     {**key, "channel_idx": channel_idx, **channel_info}
                     for channel_idx, channel_info in channel2electrode_map.items()
                 ]
+            )
+
+        # Insert into probe.ElectrodeConfig (recording configuration)
+        if not probe.ElectrodeConfig & {"electrode_config_hash": electrode_config_hash}:
+            probe.ElectrodeConfig.insert1(
+                {
+                    "probe_type": probe_type,
+                    "electrode_config_hash": electrode_config_hash,
+                    "electrode_config_name": electrode_config_name,
+                }
+            )
+            probe.ElectrodeConfig.Electrode.insert(
+                {"electrode_config_hash": electrode_config_hash, **electrode}
+                for electrode in electrode_group_members
             )
 
 
@@ -1820,3 +1792,29 @@ def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
         )
 
     return channels_details
+
+
+def generate_electrode_config_name(probe_type: str, electrode_keys: list) -> str:
+    """Generate electrode config name.
+
+    Args:
+        probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
+        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
+
+    Returns:
+        electrode_config_name (str)
+    """
+    electrode_list = sorted([k["electrode"] for k in electrode_keys])
+    electrode_gaps = (
+        [-1]
+        + np.where(np.diff(electrode_list) > 1)[0].tolist()
+        + [len(electrode_list) - 1]
+    )
+    electrode_config_name = "; ".join(
+        [
+            f"{electrode_list[start + 1]}-{electrode_list[end]}"
+            for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
+        ]
+    )
+
+    return electrode_config_name
