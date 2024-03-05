@@ -195,7 +195,9 @@ class EphysSessionInfo(dj.Imported):
             & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
         )
         if not query:
-            raise FileNotFoundError(f"No EphysRawFile found BETWEEN '{key['start_time']}' AND '{key['end_time']}'")
+            raise FileNotFoundError(
+                f"No EphysRawFile found BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
+            )
 
         first_file = query.fetch("file_path", order_by="file_time", limit=1)[0]
 
