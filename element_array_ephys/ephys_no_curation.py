@@ -315,7 +315,7 @@ class EphysRecording(dj.Imported):
             "probe"
         )
 
-        # search session dir and determine acquisition software
+        # Search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in (
             ("*.ap.meta", "SpikeGLX"),
             ("*.oebin", "Open Ephys"),
@@ -338,62 +338,117 @@ class EphysRecording(dj.Imported):
         supported_probe_types = probe.ProbeType.fetch("probe_type")
 
         if acq_software == "SpikeGLX":
-            for meta_filepath in ephys_meta_filepaths:
-                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
-                if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
-                    break
-            else:
-                raise FileNotFoundError(
-                    "No SpikeGLX data found for probe insertion: {}".format(key)
-                )
+            spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+            spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
 
-            if spikeglx_meta.probe_model in supported_probe_types:
+            if spikeglx_meta.probe_model not in supported_probe_types:
+                raise NotImplementedError(
+                    f"Processing for neuropixels probe model {spikeglx_meta.probe_model} not yet implemented."
+                )
+            else:
                 probe_type = spikeglx_meta.probe_model
-                electrode_query = probe.ProbeType.Electrode & {
-                    "probe_type": probe_type
-                }
+                electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
                 probe_electrodes = {
                     (shank, shank_col, shank_row): key
                     for key, shank, shank_col, shank_row in zip(
-                        *electrode_query.fetch(
-                            "KEY", "shank", "shank_col", "shank_row"
-                        )
+                        *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
                     )
-                }
-
+                }  # electrode configuration
                 electrode_group_members = [
                     probe_electrodes[(shank, shank_col, shank_row)]
-                    for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap[
-                        "data"
-                    ]
-                ]
-            else:
-                raise NotImplementedError(
-                    "Processing for neuropixels probe model"
-                    " {} not yet implemented".format(spikeglx_meta.probe_model)
+                    for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap["data"]
+                ]  # recording session-specific electrode configuration
+
+                # Compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
+                electrode_config_hash = dict_to_uuid(
+                    {k["electrode"]: k for k in electrode_group_members}
                 )
+
+                electrode_list = sorted(
+                    [k["electrode"] for k in electrode_group_members]
+                )
+                electrode_gaps = (
+                    [-1]
+                    + np.where(np.diff(electrode_list) > 1)[0].tolist()
+                    + [len(electrode_list) - 1]
+                )
+                electrode_config_name = "; ".join(
+                    [
+                        f"{electrode_list[start + 1]}-{electrode_list[end]}"
+                        for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
+                    ]
+                )
+
+                electrode_config_key = {"electrode_config_hash": electrode_config_hash}
+
+                # Insert into ElectrodeConfig
+                if not probe.ElectrodeConfig & electrode_config_key:
+                    probe.ElectrodeConfig.insert1(
+                        {
+                            **electrode_config_key,
+                            "probe_type": probe_type,
+                            "electrode_config_name": electrode_config_name,
+                        }
+                    )
+                    probe.ElectrodeConfig.Electrode.insert(
+                        {**electrode_config_key, **electrode}
+                        for electrode in electrode_group_members
+                    )
 
             self.insert1(
                 {
                     **key,
-                    **generate_electrode_config(
-                        probe_type, electrode_group_members
-                    ),
+                    "electrode_config_hash": electrode_config_hash,
                     "acq_software": acq_software,
                     "sampling_rate": spikeglx_meta.meta["imSampRate"],
                     "recording_datetime": spikeglx_meta.recording_time,
                     "recording_duration": (
                         spikeglx_meta.recording_duration
-                        or spikeglx.retrieve_recording_duration(meta_filepath)
+                        or spikeglx.retrieve_recording_duration(spikeglx_meta_filepath)
                     ),
                 }
             )
 
-            root_dir = find_root_directory(get_ephys_root_data_dir(), meta_filepath)
-            self.EphysFile.insert1(
-                {**key, "file_path": meta_filepath.relative_to(root_dir).as_posix()}
+            root_dir = find_root_directory(
+                get_ephys_root_data_dir(), spikeglx_meta_filepath
             )
+            self.EphysFile.insert1(
+                {
+                    **key,
+                    "file_path": spikeglx_meta_filepath.relative_to(
+                        root_dir
+                    ).as_posix(),
+                }
+            )
+
+            # Insert channel information
+            # Get channel and electrode-site mapping
+            electrode_query = (
+                probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
+                & electrode_config_key
+            )
+
+            probe_electrodes = {
+                (shank, shank_col, shank_row): key
+                for key, shank, shank_col, shank_row in zip(
+                    *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
+                )
+            }
+
+            channel2electrode_map = {
+                recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
+                for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
+                    spikeglx_meta.shankmap["data"]
+                )
+            }
+            self.Channel.insert(
+                [
+                    {**key, "channel_idx": channel_idx, **channel_info}
+                    for channel_idx, channel_info in channel2electrode_map.items()
+                ]
+            )
+
         elif acq_software == "Open Ephys":
             dataset = openephys.OpenEphys(session_dir)
             for serial_number, probe_data in dataset.probes.items():
@@ -409,11 +464,13 @@ class EphysRecording(dj.Imported):
                     'No analog signals found - check "structure.oebin" file or "continuous" directory'
                 )
 
-            if probe_data.probe_model in supported_probe_types:
+            if probe_data.probe_model not in supported_probe_types:
+                raise NotImplementedError(
+                    f"Processing for neuropixels probe model {spikeglx_meta.probe_model} not yet implemented."
+                )
+            else:
                 probe_type = probe_data.probe_model
-                electrode_query = probe.ProbeType.Electrode & {
-                    "probe_type": probe_type
-                }
+                electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
                 probe_electrodes = {
                     key["electrode"]: key for key in electrode_query.fetch("KEY")
@@ -423,20 +480,33 @@ class EphysRecording(dj.Imported):
                     probe_electrodes[channel_idx]
                     for channel_idx in probe_data.ap_meta["channels_indices"]
                 ]
-            else:
-                raise NotImplementedError(
-                    "Processing for neuropixels"
-                    " probe model {} not yet implemented".format(
-                        probe_data.probe_model
-                    )
+
+                # Compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
+                electrode_config_hash = dict_to_uuid(
+                    {k["electrode"]: k for k in electrode_group_members}
                 )
+
+                electrode_list = sorted(
+                    [k["electrode"] for k in electrode_group_members]
+                )
+                electrode_gaps = (
+                    [-1]
+                    + np.where(np.diff(electrode_list) > 1)[0].tolist()
+                    + [len(electrode_list) - 1]
+                )
+                electrode_config_name = "; ".join(
+                    [
+                        f"{electrode_list[start + 1]}-{electrode_list[end]}"
+                        for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
+                    ]
+                )
+
+                electrode_config_key = {"electrode_config_hash": electrode_config_hash}
 
             self.insert1(
                 {
                     **key,
-                    **generate_electrode_config(
-                        probe_type, electrode_group_members
-                    ),
+                    "electrode_config_hash": electrode_config_hash,
                     "acq_software": acq_software,
                     "sampling_rate": probe_data.ap_meta["sample_rate"],
                     "recording_datetime": probe_data.recording_info[
@@ -462,17 +532,26 @@ class EphysRecording(dj.Imported):
             del probe_data, dataset
             gc.collect()
 
-        # Insert channel information
-        # Get channel and electrode-site mapping
-        channel2electrodes = get_neuropixels_channel2electrode_map(
-            key, acq_software
-        )
-        self.Channel.insert(
-            [
-                {**key, "channel_idx": channel_idx, **channel_info}
-                for channel_idx, channel_info in channel2electrodes.items()
-            ]
-        )
+            probe_dataset = get_openephys_probe_data(key)
+            electrode_query = (
+                probe.ProbeType.Electrode
+                * probe.ElectrodeConfig.Electrode
+                * EphysRecording
+                & key
+            )
+            probe_electrodes = {
+                key["electrode"]: key for key in electrode_query.fetch("KEY")
+            }
+            channel2electrode_map = {
+                channel_idx: probe_electrodes[channel_idx]
+                for channel_idx in probe_dataset.ap_meta["channels_indices"]
+            }
+            self.Channel.insert(
+                [
+                    {**key, "channel_idx": channel_idx, **channel_info}
+                    for channel_idx, channel_info in channel2electrode_map.items()
+                ]
+            )
 
 
 @schema
@@ -1034,7 +1113,7 @@ class CuratedClustering(dj.Imported):
             channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
             channel_info: dict[int, dict] = {
                 ch.pop("channel_idx"): ch for ch in channel_info
-            }  
+            }
 
             # Get unit id to quality label mapping
             try:
@@ -1050,14 +1129,14 @@ class CuratedClustering(dj.Imported):
                 ] = cluster_quality_label_map.set_index("cluster_id")[
                     "KSLabel"
                 ].to_dict()  # {unit: quality_label}
-            
+
             # Get electrode where peak unit activity is recorded
             peak_electrode_ind = np.array(
                 [
                     channel_info[unit_peak_channel_map[unit_id]]["electrode"]
                     for unit_id in si_sorting.unit_ids
                 ]
-            ) 
+            )
 
             # Get channel depth
             channel_depth_ind = np.array(
@@ -1066,14 +1145,17 @@ class CuratedClustering(dj.Imported):
                     for unit_id in si_sorting.unit_ids
                 ]
             )
-            
+
             # Assign electrode and depth for each spike
-            new_spikes = np.empty(spikes.shape, spikes.dtype.descr + [('electrode', '<i8'), ('depth', '<i8')])
-            
+            new_spikes = np.empty(
+                spikes.shape,
+                spikes.dtype.descr + [("electrode", "<i8"), ("depth", "<i8")],
+            )
+
             for field in spikes.dtype.names:
                 new_spikes[field] = spikes[field]
             del spikes
-            
+
             new_spikes["electrode"] = peak_electrode_ind[new_spikes["unit_index"]]
             new_spikes["depth"] = channel_depth_ind[new_spikes["unit_index"]]
 
@@ -1082,7 +1164,7 @@ class CuratedClustering(dj.Imported):
             for unit_id in si_sorting.unit_ids:
                 unit_id = int(unit_id)
                 units.append(
-                    {   
+                    {
                         **key,
                         **channel_info[unit_peak_channel_map[unit_id]],
                         "unit": unit_id,
@@ -1295,9 +1377,7 @@ class WaveformSet(dj.Imported):
                         {
                             **unit,
                             **channel_info[c],
-                            "waveform_mean": mean_waveforms[
-                                unit["unit"] - 1, :, c
-                            ],
+                            "waveform_mean": mean_waveforms[unit["unit"] - 1, :, c],
                         }
                         for c in channel_info
                     ]
@@ -1683,99 +1763,6 @@ def get_openephys_probe_data(ephys_recording_key: dict) -> list:
     gc.collect()
 
     return probe_data
-
-
-def get_neuropixels_channel2electrode_map(
-    ephys_recording_key: dict, acq_software: str
-) -> dict:  #TODO: remove this function
-    """Get the channel map for neuropixels probe."""
-    if acq_software == "SpikeGLX":
-        spikeglx_meta_filepath = get_spikeglx_meta_filepath(ephys_recording_key)
-        spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
-        electrode_config_key = (
-            EphysRecording * probe.ElectrodeConfig & ephys_recording_key
-        ).fetch1("KEY")
-
-        electrode_query = (
-            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-            & electrode_config_key
-        )
-
-        probe_electrodes = {
-            (shank, shank_col, shank_row): key
-            for key, shank, shank_col, shank_row in zip(
-                *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-            )
-        }
-
-        channel2electrode_map = {
-            recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
-            for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
-                spikeglx_meta.shankmap["data"]
-            )
-        }
-    elif acq_software == "Open Ephys":
-        probe_dataset = get_openephys_probe_data(ephys_recording_key)
-
-        electrode_query = (
-            probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode * EphysRecording
-            & ephys_recording_key
-        )
-
-        probe_electrodes = {
-            key["electrode"]: key for key in electrode_query.fetch("KEY")
-        }
-
-        channel2electrode_map = {
-            channel_idx: probe_electrodes[channel_idx]
-            for channel_idx in probe_dataset.ap_meta["channels_indices"]
-        }
-
-    return channel2electrode_map
-
-
-def generate_electrode_config(probe_type: str, electrode_keys: list) -> dict:
-    """Generate and insert new ElectrodeConfig
-
-    Args:
-        probe_type (str): probe type (e.g. neuropixels 2.0 - SS)
-        electrode_keys (list): list of keys of the probe.ProbeType.Electrode table
-
-    Returns:
-        dict: representing a key of the probe.ElectrodeConfig table
-    """
-    # compute hash for the electrode config (hash of dict of all ElectrodeConfig.Electrode)
-    electrode_config_hash = dict_to_uuid({k["electrode"]: k for k in electrode_keys})
-
-    electrode_list = sorted([k["electrode"] for k in electrode_keys])
-    electrode_gaps = (
-        [-1]
-        + np.where(np.diff(electrode_list) > 1)[0].tolist()
-        + [len(electrode_list) - 1]
-    )
-    electrode_config_name = "; ".join(
-        [
-            f"{electrode_list[start + 1]}-{electrode_list[end]}"
-            for start, end in zip(electrode_gaps[:-1], electrode_gaps[1:])
-        ]
-    )
-
-    electrode_config_key = {"electrode_config_hash": electrode_config_hash}
-
-    # ---- make new ElectrodeConfig if needed ----
-    if not probe.ElectrodeConfig & electrode_config_key:
-        probe.ElectrodeConfig.insert1(
-            {
-                **electrode_config_key,
-                "probe_type": probe_type,
-                "electrode_config_name": electrode_config_name,
-            }
-        )
-        probe.ElectrodeConfig.Electrode.insert(
-            {**electrode_config_key, **electrode} for electrode in electrode_keys
-        )
-
-    return electrode_config_key
 
 
 def get_recording_channels_details(ephys_recording_key: dict) -> np.array:
