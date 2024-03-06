@@ -14,6 +14,7 @@ import intanrhdreader
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
+from .spike_sorting import si_spike_sorting as ephys_sorter
 
 schema = dj.schema()
 
@@ -389,22 +390,18 @@ class ClusteringMethod(dj.Lookup):
     """Kilosort clustering method.
 
     Attributes:
-        clustering_method (foreign key, varchar(16) ): Kilosort clustering method.
+        clustering_method (foreign key, varchar(20) ): Kilosort clustering method.
         clustering_methods_desc (varchar(1000) ): Additional description of the clustering method.
     """
 
     definition = """
     # Method for clustering
-    clustering_method: varchar(16)
+    clustering_method: varchar(20)
     ---
     clustering_method_desc: varchar(1000)
     """
 
-    contents = [
-        ("kilosort2", "kilosort2 clustering method"),
-        ("kilosort2.5", "kilosort2.5 clustering method"),
-        ("kilosort3", "kilosort3 clustering method"),
-    ]
+    contents = [(sorter, "") for sorter in ephys_sorter.SI_SORTERS]
 
 
 @schema
