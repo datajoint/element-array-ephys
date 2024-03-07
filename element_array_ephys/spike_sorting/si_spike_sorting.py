@@ -154,9 +154,19 @@ class PreProcessing(dj.Imported):
             .fetch(format="frame", order_by="electrode")
             .reset_index()[["electrode", "x_coord", "y_coord", "shank", "channel"]]
         )
-        si_recording: si.BaseRecording = SI_READERS[acq_software](
-            folder_path=data_dir, stream_name=stream_names[0]
-        )
+
+        def get_port_indices(file_path, port_id):
+            """Get the row indices of the port from the data matrix."""
+            import intanrhdreader
+
+            data = intanrhdreader.load_file(file_path)
+            return np.array(
+                [
+                    ind
+                    for ind, ch in enumerate(data["amplifier_channels"])
+                    if ch["port_prefix"] == port_id
+                ]
+            )
 
         # Create SI recording extractor object
         si_extractor: si.extractors.neoextractors = (
@@ -197,9 +207,13 @@ class PreProcessing(dj.Imported):
                     ]
                 )
 
+        si_recording = si_recording.channel_slice(
+            si_recording.channel_ids[port_indices]
+        )  # select only the port data
+
         # Create SI probe object
         si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_probe.set_device_channel_indices(range(len(electrodes_df)))
+        si_probe.set_device_channel_indices(electrodes_df.channel.values)
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
