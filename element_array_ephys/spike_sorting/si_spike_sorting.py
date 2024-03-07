@@ -94,15 +94,14 @@ class PreProcessing(dj.Imported):
         """Triggers or imports clustering analysis."""
         execution_time = datetime.utcnow()
 
-        # Set the output directory
-        clustering_method, acq_software, output_dir, params = (
-            ephys.ClusteringTask * ephys.EphysRecording * ephys.ClusteringParamSet & key
-        ).fetch1("clustering_method", "acq_software", "clustering_output_dir", "params")
+        # Get clustering method and output directory.
+        clustering_method, output_dir, params = (
+            ephys.ClusteringTask * ephys.ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir", "params")
+        acq_software = (ephys.EphysRawFile & key).fetch("acq_software", limit=1)[0]
 
         # Get sorter method and create output directory.
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
+        sorter_name = clustering_method.replace(".", "_")
 
         for required_key in (
             "SI_SORTING_PARAMS",
@@ -127,44 +126,76 @@ class PreProcessing(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         recording_dir = output_dir / sorter_name / "recording"
         recording_dir.mkdir(parents=True, exist_ok=True)
-        recording_file = (
-            recording_dir / "si_recording.pkl"
-        )  # recording cache to be created for each key
+        recording_file = recording_dir / "si_recording.pkl"
 
-        # Create SI recording extractor object
-        if acq_software == "SpikeGLX":
-            spikeglx_meta_filepath = ephys.get_spikeglx_meta_filepath(key)
-            spikeglx_recording = readers.spikeglx.SpikeGLX(
-                spikeglx_meta_filepath.parent
-            )
-            spikeglx_recording.validate_file("ap")
-            data_dir = spikeglx_meta_filepath.parent
-        elif acq_software == "Open Ephys":
-            oe_probe = ephys.get_openephys_probe_data(key)
-            assert len(oe_probe.recording_info["recording_files"]) == 1
-            data_dir = oe_probe.recording_info["recording_files"][0]
-        else:
-            raise NotImplementedError(f"Not implemented for {acq_software}")
+        # Get probe information to recording object
+        probe_info = (ephys.EphysSessionProbe & key).fetch1()
+        probe_type = ((probe.Probe * ephys.EphysSessionProbe()) & key).fetch1(
+            "probe_type"
+        )
 
-        stream_names, stream_ids = si.extractors.get_neo_streams(
-            acq_software.strip().lower(), folder_path=data_dir
+        electrode_query = probe.ElectrodeConfig.Electrode & (
+            probe.ElectrodeConfig & {"probe_type": probe_type}
+        )
+
+        # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
+        number_of_electrodes = len(electrode_query)
+        probe_info["used_electrodes"] = probe_info["used_electrodes"] or list(
+            range(number_of_electrodes)
+        )
+        unused_electrodes = [
+            elec
+            for elec in range(number_of_electrodes)
+            if elec not in probe_info["used_electrodes"]
+        ]
+        electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
+        electrodes_df = (
+            (probe.ProbeType.Electrode * electrode_query)
+            .fetch(format="frame", order_by="electrode")
+            .reset_index()[["electrode", "x_coord", "y_coord", "shank", "channel"]]
         )
         si_recording: si.BaseRecording = SI_READERS[acq_software](
             folder_path=data_dir, stream_name=stream_names[0]
         )
 
-        # Add probe information to recording object
-        electrode_config_key = (
-            probe.ElectrodeConfig * ephys.EphysRecording & key
-        ).fetch1("KEY")
-        electrodes_df = (
-            (
-                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                & electrode_config_key
-            )
-            .fetch(format="frame")
-            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
-        )
+        # Create SI recording extractor object
+        si_extractor: si.extractors.neoextractors = (
+            si.extractors.extractorlist.recording_extractor_full_dict[
+                acq_software.replace(" ", "").lower()
+            ]
+        )  # data extractor object
+
+        files, file_times = (
+            ephys.EphysRawFile
+            & key
+            & f"file_time BETWEEN '{key['start_time']}' AND '{key['end_time']}'"
+        ).fetch("file_path", "file_time", order_by="file_time")
+
+        si_recording = None
+
+        # Read data. Concatenate if multiple files are found.
+        for file_path in (
+            find_full_path(ephys.get_ephys_root_data_dir(), f) for f in files
+        ):
+            if not si_recording:
+                stream_name = [
+                    s
+                    for s in si_extractor.get_streams(file_path)[0]
+                    if "amplifier" in s
+                ][0]
+                si_recording: si.BaseRecording = si_extractor(
+                    file_path, stream_name=stream_name
+                )
+                port_indices = get_port_indices(
+                    file_path, port_id=probe_info["port_id"]
+                )  # get the row indices of the port
+            else:
+                si_recording: si.BaseRecording = si.concatenate_recordings(
+                    [
+                        si_recording,
+                        si_extractor(file_path, stream_name=stream_name),
+                    ]
+                )
 
         # Create SI probe object
         si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
