@@ -100,9 +100,7 @@ class PreProcessing(dj.Imported):
         ).fetch1("clustering_method", "acq_software", "clustering_output_dir", "params")
 
         # Get sorter method and create output directory.
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
+        sorter_name = clustering_method.replace(".", "_")
 
         for required_key in (
             "SI_SORTING_PARAMS",
@@ -209,9 +207,7 @@ class SIClustering(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
 
         # Get sorter method and create output directory.
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
+        sorter_name = clustering_method.replace(".", "_")
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
@@ -264,10 +260,7 @@ class PostProcessing(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
 
         # Get sorter method and create output directory.
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
-
+        sorter_name = clustering_method.replace(".", "_")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
