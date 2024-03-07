@@ -217,6 +217,23 @@ class PreProcessing(dj.Imported):
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
+        if unused_electrodes:
+            electrode_to_index_map = dict(
+                zip(electrodes_df["electrode"], electrodes_df["channel"])
+            )  # electrode to channel index (data row index)
+            channel_index_to_remove = np.array(
+                sorted(
+                    [
+                        int(electrode_to_index_map[e]) + port_indices.min()
+                        for e in unused_electrodes
+                    ]
+                )
+            )
+            channel_index_to_remove = list(map(str, channel_index_to_remove))
+            si_recording = si_recording.remove_channels(
+                remove_channel_ids=channel_index_to_remove
+            )
+
         si_preproc_func = getattr(si_preprocessing, params["SI_PREPROCESSING_METHOD"])
         si_recording = si_preproc_func(si_recording)
         si_recording.dump_to_pickle(file_path=recording_file)
