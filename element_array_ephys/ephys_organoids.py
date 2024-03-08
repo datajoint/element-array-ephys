@@ -160,7 +160,7 @@ class EphysSession(dj.Manual):
     start_time                  : datetime
     end_time                    : datetime
     ---
-    session_type                : enum("lfp", "spike_sorting", "both") 
+    session_type                : enum("lfp", "spike_sorting", "both")
     """
 
 
@@ -400,7 +400,6 @@ class ClusteringMethod(dj.Lookup):
     ---
     clustering_method_desc: varchar(1000)
     """
-
     contents = [(sorter, "") for sorter in ephys_sorter.SI_SORTERS]
 
 
@@ -499,6 +498,7 @@ class ClusterQualityLabel(dj.Lookup):
         ("ok", "probably a single unit, but could be contaminated"),
         ("mua", "multi-unit activity"),
         ("noise", "bad unit"),
+        ("n.a.", "not available"),
     ]
 
 
