@@ -510,7 +510,6 @@ class ClusteringTask(dj.Manual):
         EphysSession (foreign key): EphysSession primary key.
         ClusteringParamSet (foreign key): ClusteringParamSet primary key.
         clustering_outdir_dir (varchar (255) ): Relative path to output clustering results.
-        task_mode (enum): `Trigger` computes clustering or and `load` imports existing data.
     """
 
     definition = """
@@ -519,7 +518,6 @@ class ClusteringTask(dj.Manual):
     -> ClusteringParamSet
     ---
     clustering_output_dir='': varchar(255)  #  clustering output directory relative to the clustering root data directory
-    task_mode='load': enum('load', 'trigger')  # 'load': load computed analysis results, 'trigger': trigger computation
     """
 
     @property
@@ -539,10 +537,17 @@ class ClusteringTask(dj.Manual):
                 e.g.: sub4/sess1/kilosort2_0
         """
         processed_dir = pathlib.Path(get_processed_root_data_dir())
-        sess_dir = find_full_path(
-            get_ephys_root_data_dir(), get_organoid_directory(key)
+        exp_dir = find_full_path(get_ephys_root_data_dir(), get_organoid_directory(key))
+
+        session_time = "_".join(
+            [
+                key["start_time"].strftime("%Y%m%d%H%M"),
+                key["end_time"].strftime("%Y%m%d%H%M"),
+            ]
         )
-        root_dir = find_root_directory(get_ephys_root_data_dir(), sess_dir)
+
+        session_dir = exp_dir / session_time
+        root_dir = find_root_directory(get_ephys_root_data_dir(), exp_dir)
 
         method = (
             (ClusteringParamSet * ClusteringMethod & key)
@@ -552,13 +557,13 @@ class ClusteringTask(dj.Manual):
 
         output_dir = (
             processed_dir
-            / sess_dir.relative_to(root_dir)
+            / session_dir.relative_to(root_dir)
             / f'{method}_{key["paramset_idx"]}'
         )
 
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
-            log.info(f"{output_dir} created!")
+            logger.info(f"{output_dir} created!")
 
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
@@ -575,22 +580,12 @@ class ClusteringTask(dj.Manual):
         processed_dir = get_processed_root_data_dir()
         output_dir = ClusteringTask.infer_output_dir(key, relative=False, mkdir=True)
 
-        try:
-            kilosort.Kilosort(
-                output_dir
-            )  # check if the directory is a valid Kilosort output
-        except FileNotFoundError:
-            task_mode = "trigger"
-        else:
-            task_mode = "load"
-
         cls.insert1(
             {
                 **key,
                 "clustering_output_dir": output_dir.relative_to(
                     processed_dir
                 ).as_posix(),
-                "task_mode": task_mode,
             }
         )
 
