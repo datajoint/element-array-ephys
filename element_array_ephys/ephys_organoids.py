@@ -1,24 +1,26 @@
+import gc
 import importlib
 import inspect
 import pathlib
+import re
 from datetime import datetime
 from decimal import Decimal
 
 import datajoint as dj
 import numpy as np
 import pandas as pd
+import spikeinterface as si
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
-from scipy import signal
+from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 import intanrhdreader
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
-from .spike_sorting import si_spike_sorting as ephys_sorter
-
-schema = dj.schema()
 
 logger = dj.logger
+
+schema = dj.schema()
 
 _linking_module = None
 
