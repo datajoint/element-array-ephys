@@ -680,12 +680,12 @@ class CuratedClustering(dj.Imported):
     """Clustering results after curation.
 
     Attributes:
-        Curation (foreign key): Curation primary key.
+        Clustering (foreign key): Clustering primary key.
     """
 
     definition = """
-    # Clustering results of a curation.
-    -> Curation
+    # Clustering results of the spike sorting step.
+    -> Clustering    
     """
 
     class Unit(dj.Part):
@@ -693,16 +693,16 @@ class CuratedClustering(dj.Imported):
 
         Attributes:
             CuratedClustering (foreign key): CuratedClustering primary key.
-            unit (foreign key, int): Unique integer identifying a single unit.
-            probe.ElectrodeConfig.Electrode (dict): probe.ElectrodeConfig.Electrode primary key.
-            ClusteringQualityLabel (dict): CLusteringQualityLabel primary key.
+            unit (int): Unique integer identifying a single unit.
+            probe.ElectrodeConfig.Electrode (foreign key): probe.ElectrodeConfig.Electrode primary key.
+            ClusteringQualityLabel (foreign key): CLusteringQualityLabel primary key.
             spike_count (int): Number of spikes in this recording for this unit.
-            spike_times (longblob): Spike times of this unit, relative to start time of EphysSession.
+            spike_times (longblob): Spike times of this unit, relative to start time of EphysRecording.
             spike_sites (longblob): Array of electrode associated with each spike.
             spike_depths (longblob): Array of depths associated with each spike, relative to each spike.
         """
 
-        definition = """
+        definition = """   
         # Properties of a given unit from a round of clustering (and curation)
         -> master
         unit: int
@@ -710,91 +710,211 @@ class CuratedClustering(dj.Imported):
         -> probe.ElectrodeConfig.Electrode  # electrode with highest waveform amplitude for this unit
         -> ClusterQualityLabel
         spike_count: int         # how many spikes in this recording for this unit
-        spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysSession
+        spike_times: longblob    # (s) spike times of this unit, relative to the start of the EphysRecording
         spike_sites : longblob   # array of electrode associated with each spike
-        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe
+        spike_depths=null : longblob  # (um) array of depths associated with each spike, relative to the (0, 0) of the probe    
         """
 
     def make(self, key):
         """Automated population of Unit information."""
-        output_dir = (Curation & key).fetch1("curation_output_dir")
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
+        output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
-        kilosort_dataset = kilosort.Kilosort(kilosort_dir)
-        acq_software, sample_rate = (EphysSession & key).fetch1(
-            "acq_software", "sampling_rate"
+        # Get sorter method and create output directory.
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
+        waveform_dir = output_dir / sorter_name / "waveform"
+        sorting_dir = output_dir / sorter_name / "spike_sorting"
 
-        sample_rate = kilosort_dataset.data["params"].get("sample_rate", sample_rate)
-
-        # ---------- Unit ----------
-        # -- Remove 0-spike units
-        withspike_idx = [
-            i
-            for i, u in enumerate(kilosort_dataset.data["cluster_ids"])
-            if (kilosort_dataset.data["spike_clusters"] == u).any()
-        ]
-        valid_units = kilosort_dataset.data["cluster_ids"][withspike_idx]
-        valid_unit_labels = kilosort_dataset.data["cluster_groups"][withspike_idx]
-        # -- Get channel and electrode-site mapping
-        channel2electrodes = get_neuropixels_channel2electrode_map(key, acq_software)
-
-        # -- Spike-times --
-        # spike_times_sec_adj > spike_times_sec > spike_times
-        spike_time_key = (
-            "spike_times_sec_adj"
-            if "spike_times_sec_adj" in kilosort_dataset.data
-            else (
-                "spike_times_sec"
-                if "spike_times_sec" in kilosort_dataset.data
-                else "spike_times"
+        if waveform_dir.exists():  # read from spikeinterface outputs
+            we: si.WaveformExtractor = si.load_waveforms(
+                waveform_dir, with_recording=False
             )
-        )
-        spike_times = kilosort_dataset.data[spike_time_key]
-        kilosort_dataset.extract_spike_depths()
+            si_sorting: si.sorters.BaseSorter = si.load_extractor(
+                sorting_dir / "si_sorting.pkl"
+            )
 
-        # -- Spike-sites and Spike-depths --
-        spike_sites = np.array(
-            [
-                channel2electrodes[s]["electrode"]
-                for s in kilosort_dataset.data["spike_sites"]
-            ]
-        )
-        spike_depths = kilosort_dataset.data["spike_depths"]
+            unit_peak_channel_map: dict[int, int] = si.get_template_extremum_channel(
+                we, outputs="index"
+            )  # {unit: peak_channel_index}
 
-        # -- Insert unit, label, peak-chn
-        units = []
-        for unit, unit_lbl in zip(valid_units, valid_unit_labels):
-            if (kilosort_dataset.data["spike_clusters"] == unit).any():
-                unit_channel, _ = kilosort_dataset.get_best_channel(unit)
-                unit_spike_times = (
-                    spike_times[kilosort_dataset.data["spike_clusters"] == unit]
-                    / sample_rate
+            spike_count_dict: dict[int, int] = si_sorting.count_num_spikes_per_unit()
+            # {unit: spike_count}
+
+            spikes = si_sorting.to_spike_vector(
+                extremum_channel_inds=unit_peak_channel_map
+            )
+
+            # Get electrode & channel info
+            electrode_config_key = (
+                EphysRecording * probe.ElectrodeConfig & key
+            ).fetch1("KEY")
+
+            electrode_query = (
+                probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
+                & electrode_config_key
+            ) * (dj.U("electrode", "channel_idx") & EphysRecording.Channel)
+
+            channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
+            channel_info: dict[int, dict] = {
+                ch.pop("channel_idx"): ch for ch in channel_info
+            }
+
+            # Get unit id to quality label mapping
+            try:
+                cluster_quality_label_map = pd.read_csv(
+                    sorting_dir / "sorter_output" / "cluster_KSLabel.tsv",
+                    delimiter="\t",
                 )
-                spike_count = len(unit_spike_times)
+            except FileNotFoundError:
+                cluster_quality_label_map = {}
+            else:
+                cluster_quality_label_map: dict[
+                    int, str
+                ] = cluster_quality_label_map.set_index("cluster_id")[
+                    "KSLabel"
+                ].to_dict()  # {unit: quality_label}
 
+            # Get electrode where peak unit activity is recorded
+            peak_electrode_ind = np.array(
+                [
+                    channel_info[unit_peak_channel_map[unit_id]]["electrode"]
+                    for unit_id in si_sorting.unit_ids
+                ]
+            )
+
+            # Get channel depth
+            channel_depth_ind = np.array(
+                [
+                    channel_info[unit_peak_channel_map[unit_id]]["y_coord"]
+                    for unit_id in si_sorting.unit_ids
+                ]
+            )
+
+            # Assign electrode and depth for each spike
+            new_spikes = np.empty(
+                spikes.shape,
+                spikes.dtype.descr + [("electrode", "<i8"), ("depth", "<i8")],
+            )
+
+            for field in spikes.dtype.names:
+                new_spikes[field] = spikes[field]
+            del spikes
+
+            new_spikes["electrode"] = peak_electrode_ind[new_spikes["unit_index"]]
+            new_spikes["depth"] = channel_depth_ind[new_spikes["unit_index"]]
+
+            units = []
+
+            for unit_id in si_sorting.unit_ids:
+                unit_id = int(unit_id)
                 units.append(
                     {
-                        "unit": unit,
-                        "cluster_quality_label": unit_lbl,
-                        **channel2electrodes[unit_channel],
-                        "spike_times": unit_spike_times,
-                        "spike_count": spike_count,
-                        "spike_sites": spike_sites[
-                            kilosort_dataset.data["spike_clusters"] == unit
-                        ],
-                        "spike_depths": (
-                            spike_depths[
-                                kilosort_dataset.data["spike_clusters"] == unit
-                            ]
-                            if spike_depths is not None
-                            else None
+                        **key,
+                        **channel_info[unit_peak_channel_map[unit_id]],
+                        "unit": unit_id,
+                        "cluster_quality_label": cluster_quality_label_map.get(
+                            unit_id, "n.a."
                         ),
+                        "spike_times": si_sorting.get_unit_spike_train(
+                            unit_id, return_times=True
+                        ),
+                        "spike_count": spike_count_dict[unit_id],
+                        "spike_sites": new_spikes["electrode"][
+                            new_spikes["unit_index"] == unit_id
+                        ],
+                        "spike_depths": new_spikes["depth"][
+                            new_spikes["unit_index"] == unit_id
+                        ],
                     }
                 )
 
+        else:  # read from kilosort outputs
+            kilosort_dataset = kilosort.Kilosort(output_dir)
+            acq_software, sample_rate = (EphysRecording & key).fetch1(
+                "acq_software", "sampling_rate"
+            )
+
+            sample_rate = kilosort_dataset.data["params"].get(
+                "sample_rate", sample_rate
+            )
+
+            # ---------- Unit ----------
+            # -- Remove 0-spike units
+            withspike_idx = [
+                i
+                for i, u in enumerate(kilosort_dataset.data["cluster_ids"])
+                if (kilosort_dataset.data["spike_clusters"] == u).any()
+            ]
+            valid_units = kilosort_dataset.data["cluster_ids"][withspike_idx]
+            valid_unit_labels = kilosort_dataset.data["cluster_groups"][withspike_idx]
+
+            # -- Spike-times --
+            # spike_times_sec_adj > spike_times_sec > spike_times
+            spike_time_key = (
+                "spike_times_sec_adj"
+                if "spike_times_sec_adj" in kilosort_dataset.data
+                else (
+                    "spike_times_sec"
+                    if "spike_times_sec" in kilosort_dataset.data
+                    else "spike_times"
+                )
+            )
+            spike_times = kilosort_dataset.data[spike_time_key]
+            kilosort_dataset.extract_spike_depths()
+
+            # Get channel and electrode-site mapping
+            channel_info = (
+                (EphysRecording.Channel & key)
+                .proj(..., "-channel_name")
+                .fetch(as_dict=True, order_by="channel_idx")
+            )
+            channel_info: dict[int, dict] = {
+                ch.pop("channel_idx"): ch for ch in channel_info
+            }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
+
+            # -- Spike-sites and Spike-depths --
+            spike_sites = np.array(
+                [
+                    channel_info[s]["electrode"]
+                    for s in kilosort_dataset.data["spike_sites"]
+                ]
+            )
+            spike_depths = kilosort_dataset.data["spike_depths"]
+
+            # -- Insert unit, label, peak-chn
+            units = []
+            for unit, unit_lbl in zip(valid_units, valid_unit_labels):
+                if (kilosort_dataset.data["spike_clusters"] == unit).any():
+                    unit_channel, _ = kilosort_dataset.get_best_channel(unit)
+                    unit_spike_times = (
+                        spike_times[kilosort_dataset.data["spike_clusters"] == unit]
+                        / sample_rate
+                    )
+                    spike_count = len(unit_spike_times)
+
+                    units.append(
+                        {
+                            **key,
+                            "unit": unit,
+                            "cluster_quality_label": unit_lbl,
+                            **channel_info[unit_channel],
+                            "spike_times": unit_spike_times,
+                            "spike_count": spike_count,
+                            "spike_sites": spike_sites[
+                                kilosort_dataset.data["spike_clusters"] == unit
+                            ],
+                            "spike_depths": spike_depths[
+                                kilosort_dataset.data["spike_clusters"] == unit
+                            ],
+                        }
+                    )
+
         self.insert1(key)
-        self.Unit.insert([{**key, **u} for u in units])
+        self.Unit.insert(units, ignore_extra_fields=True)
 
 
 @schema
@@ -842,115 +962,249 @@ class WaveformSet(dj.Imported):
         # Spike waveforms and their mean across spikes for the given unit
         -> master
         -> CuratedClustering.Unit
-        -> probe.ElectrodeConfig.Electrode
-        ---
+        -> probe.ElectrodeConfig.Electrode  
+        --- 
         waveform_mean: longblob   # (uV) mean waveform across spikes of the given unit
         waveforms=null: longblob  # (uV) (spike x sample) waveforms of a sampling of spikes at the given electrode for the given unit
         """
 
     def make(self, key):
         """Populates waveform tables."""
-        output_dir = (Curation & key).fetch1("curation_output_dir")
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        kilosort_dataset = kilosort.Kilosort(kilosort_dir)
-
-        acq_software, probe_serial_number = (
-            EphysSession * ProbeInsertion & key
-        ).fetch1("acq_software", "probe")
-
-        # -- Get channel and electrode-site mapping
-        recording_key = (EphysSession & key).fetch1("KEY")
-        channel2electrodes = get_neuropixels_channel2electrode_map(
-            recording_key, acq_software
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
+        output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
         )
 
-        is_qc = (Curation & key).fetch1("quality_control")
+        # Get channel and electrode-site mapping
+        channel_info = (
+            (EphysRecording.Channel & key)
+            .proj(..., "-channel_name")
+            .fetch(as_dict=True, order_by="channel_idx")
+        )
+        channel_info: dict[int, dict] = {
+            ch.pop("channel_idx"): ch for ch in channel_info
+        }  # e.g., {0: {'subject': 'sglx', 'session_id': 912231859,    'insertion_number': 1, 'electrode_config_hash': UUID('8d4cc6d8-a02d-42c8-bf27-7459c39ea0ee'), 'probe_type': 'neuropixels 1.0 - 3A', 'electrode': 0}}
 
-        # Get all units
-        units = {
-            u["unit"]: u
-            for u in (CuratedClustering.Unit & key).fetch(as_dict=True, order_by="unit")
-        }
+        if (
+            output_dir / sorter_name / "waveform"
+        ).exists():  # read from spikeinterface outputs
 
-        if is_qc:
-            unit_waveforms = np.load(
-                kilosort_dir / "mean_waveforms.npy"
-            )  # unit x channel x sample
+            waveform_dir = output_dir / sorter_name / "waveform"
+            we: si.WaveformExtractor = si.load_waveforms(
+                waveform_dir, with_recording=False
+            )
+            unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
+                si.ChannelSparsity.from_best_channels(
+                    we, 1, peak_sign="neg"
+                ).unit_id_to_channel_indices
+            )  # {unit: peak_channel_index}
 
-            def yield_unit_waveforms():
-                for unit_no, unit_waveform in zip(
-                    kilosort_dataset.data["cluster_ids"], unit_waveforms
-                ):
-                    unit_peak_waveform = {}
-                    unit_electrode_waveforms = []
-                    if unit_no in units:
+            # Get mean waveform for each unit from all channels
+            mean_waveforms = we.get_all_templates(
+                mode="average"
+            )  # (unit x sample x channel)
+
+            unit_peak_waveform = []
+            unit_electrode_waveforms = []
+
+            for unit in (CuratedClustering.Unit & key).fetch("KEY", order_by="unit"):
+                unit_peak_waveform.append(
+                    {
+                        **unit,
+                        "peak_electrode_waveform": we.get_template(
+                            unit_id=unit["unit"], mode="average", force_dense=True
+                        )[:, unit_id_to_peak_channel_map[unit["unit"]][0]],
+                    }
+                )
+
+                unit_electrode_waveforms.extend(
+                    [
+                        {
+                            **unit,
+                            **channel_info[c],
+                            "waveform_mean": mean_waveforms[unit["unit"] - 1, :, c],
+                        }
+                        for c in channel_info
+                    ]
+                )
+
+            self.insert1(key)
+            self.PeakWaveform.insert(unit_peak_waveform)
+            self.Waveform.insert(unit_electrode_waveforms)
+
+        else:
+            kilosort_dataset = kilosort.Kilosort(output_dir)
+
+            acq_software, probe_serial_number = (
+                EphysRecording * ProbeInsertion & key
+            ).fetch1("acq_software", "probe")
+
+            # Get all units
+            units = {
+                u["unit"]: u
+                for u in (CuratedClustering.Unit & key).fetch(
+                    as_dict=True, order_by="unit"
+                )
+            }
+
+            waveforms_folder = [
+                f for f in output_dir.parent.rglob(r"*/waveforms*") if f.is_dir()
+            ]
+
+            if (output_dir / "mean_waveforms.npy").exists():
+                unit_waveforms = np.load(
+                    output_dir / "mean_waveforms.npy"
+                )  # unit x channel x sample
+
+                def yield_unit_waveforms():
+                    for unit_no, unit_waveform in zip(
+                        kilosort_dataset.data["cluster_ids"], unit_waveforms
+                    ):
+                        unit_peak_waveform = {}
+                        unit_electrode_waveforms = []
+                        if unit_no in units:
+                            for channel, channel_waveform in zip(
+                                kilosort_dataset.data["channel_map"], unit_waveform
+                            ):
+                                unit_electrode_waveforms.append(
+                                    {
+                                        **units[unit_no],
+                                        **channel_info[channel],
+                                        "waveform_mean": channel_waveform,
+                                    }
+                                )
+                                if (
+                                    channel_info[channel]["electrode"]
+                                    == units[unit_no]["electrode"]
+                                ):
+                                    unit_peak_waveform = {
+                                        **units[unit_no],
+                                        "peak_electrode_waveform": channel_waveform,
+                                    }
+                        yield unit_peak_waveform, unit_electrode_waveforms
+
+                    # Spike interface mean and peak waveform extraction from we object
+
+            elif len(waveforms_folder) > 0 & (waveforms_folder[0]).exists():
+                we_kilosort = si.load_waveforms(waveforms_folder[0].parent)
+                unit_templates = we_kilosort.get_all_templates()
+                unit_waveforms = np.reshape(
+                    unit_templates,
+                    (
+                        unit_templates.shape[1],
+                        unit_templates.shape[3],
+                        unit_templates.shape[2],
+                    ),
+                )
+
+                # Approach assumes unit_waveforms was generated correctly (templates are actually the same as mean_waveforms)
+                def yield_unit_waveforms():
+                    for unit_no, unit_waveform in zip(
+                        kilosort_dataset.data["cluster_ids"], unit_waveforms
+                    ):
+                        unit_peak_waveform = {}
+                        unit_electrode_waveforms = []
+                        if unit_no in units:
+                            for channel, channel_waveform in zip(
+                                kilosort_dataset.data["channel_map"], unit_waveform
+                            ):
+                                unit_electrode_waveforms.append(
+                                    {
+                                        **units[unit_no],
+                                        **channel_info[channel],
+                                        "waveform_mean": channel_waveform,
+                                    }
+                                )
+                                if (
+                                    channel_info[channel]["electrode"]
+                                    == units[unit_no]["electrode"]
+                                ):
+                                    unit_peak_waveform = {
+                                        **units[unit_no],
+                                        "peak_electrode_waveform": channel_waveform,
+                                    }
+                        yield unit_peak_waveform, unit_electrode_waveforms
+
+                # Approach not using spike interface templates (ie. taking mean of each unit waveform)
+                # def yield_unit_waveforms():
+                #     for unit_id in we_kilosort.unit_ids:
+                #         unit_waveform = np.mean(we_kilosort.get_waveforms(unit_id), 0)
+                #         unit_peak_waveform = {}
+                #         unit_electrode_waveforms = []
+                #         if unit_id in units:
+                #             for channel, channel_waveform in zip(
+                #                 kilosort_dataset.data["channel_map"], unit_waveform
+                #             ):
+                #                 unit_electrode_waveforms.append(
+                #                     {
+                #                         **units[unit_id],
+                #                         **channel2electrodes[channel],
+                #                         "waveform_mean": channel_waveform,
+                #                     }
+                #                 )
+                #                 if (
+                #                     channel2electrodes[channel]["electrode"]
+                #                     == units[unit_id]["electrode"]
+                #                 ):
+                #                     unit_peak_waveform = {
+                #                         **units[unit_id],
+                #                         "peak_electrode_waveform": channel_waveform,
+                #                     }
+                #         yield unit_peak_waveform, unit_electrode_waveforms
+
+            else:
+                if acq_software == "SpikeGLX":
+                    spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
+                    neuropixels_recording = spikeglx.SpikeGLX(
+                        spikeglx_meta_filepath.parent
+                    )
+                elif acq_software == "Open Ephys":
+                    session_dir = find_full_path(
+                        get_ephys_root_data_dir(), get_session_directory(key)
+                    )
+                    openephys_dataset = openephys.OpenEphys(session_dir)
+                    neuropixels_recording = openephys_dataset.probes[
+                        probe_serial_number
+                    ]
+
+                def yield_unit_waveforms():
+                    for unit_dict in units.values():
+                        unit_peak_waveform = {}
+                        unit_electrode_waveforms = []
+
+                        spikes = unit_dict["spike_times"]
+                        waveforms = neuropixels_recording.extract_spike_waveforms(
+                            spikes, kilosort_dataset.data["channel_map"]
+                        )  # (sample x channel x spike)
+                        waveforms = waveforms.transpose(
+                            (1, 2, 0)
+                        )  # (channel x spike x sample)
                         for channel, channel_waveform in zip(
-                            kilosort_dataset.data["channel_map"], unit_waveform
+                            kilosort_dataset.data["channel_map"], waveforms
                         ):
                             unit_electrode_waveforms.append(
                                 {
-                                    **units[unit_no],
-                                    **channel2electrodes[channel],
-                                    "waveform_mean": channel_waveform,
+                                    **unit_dict,
+                                    **channel_info[channel],
+                                    "waveform_mean": channel_waveform.mean(axis=0),
+                                    "waveforms": channel_waveform,
                                 }
                             )
                             if (
-                                channel2electrodes[channel]["electrode"]
-                                == units[unit_no]["electrode"]
+                                channel_info[channel]["electrode"]
+                                == unit_dict["electrode"]
                             ):
                                 unit_peak_waveform = {
-                                    **units[unit_no],
-                                    "peak_electrode_waveform": channel_waveform,
+                                    **unit_dict,
+                                    "peak_electrode_waveform": channel_waveform.mean(
+                                        axis=0
+                                    ),
                                 }
-                    yield unit_peak_waveform, unit_electrode_waveforms
 
-        else:
-            if acq_software == "SpikeGLX":
-                spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
-                neuropixels_recording = spikeglx.SpikeGLX(spikeglx_meta_filepath.parent)
-            elif acq_software == "Open Ephys":
-                subject_dir = find_full_path(
-                    get_ephys_root_data_dir(), get_organoid_directory(key)
-                )
-                openephys_dataset = openephys.OpenEphys(subject_dir)
-                neuropixels_recording = openephys_dataset.probes[probe_serial_number]
-
-            def yield_unit_waveforms():
-                for unit_dict in units.values():
-                    unit_peak_waveform = {}
-                    unit_electrode_waveforms = []
-
-                    spikes = unit_dict["spike_times"]
-                    waveforms = neuropixels_recording.extract_spike_waveforms(
-                        spikes, kilosort_dataset.data["channel_map"]
-                    )  # (sample x channel x spike)
-                    waveforms = waveforms.transpose(
-                        (1, 2, 0)
-                    )  # (channel x spike x sample)
-                    for channel, channel_waveform in zip(
-                        kilosort_dataset.data["channel_map"], waveforms
-                    ):
-                        unit_electrode_waveforms.append(
-                            {
-                                **unit_dict,
-                                **channel2electrodes[channel],
-                                "waveform_mean": channel_waveform.mean(axis=0),
-                                "waveforms": channel_waveform,
-                            }
-                        )
-                        if (
-                            channel2electrodes[channel]["electrode"]
-                            == unit_dict["electrode"]
-                        ):
-                            unit_peak_waveform = {
-                                **unit_dict,
-                                "peak_electrode_waveform": channel_waveform.mean(
-                                    axis=0
-                                ),
-                            }
-
-                    yield unit_peak_waveform, unit_electrode_waveforms
+                        yield unit_peak_waveform, unit_electrode_waveforms
 
         # insert waveform on a per-unit basis to mitigate potential memory issue
         self.insert1(key)
@@ -971,7 +1225,7 @@ class QualityMetrics(dj.Imported):
 
     definition = """
     # Clusters and waveforms metrics
-    -> CuratedClustering
+    -> CuratedClustering    
     """
 
     class Cluster(dj.Part):
@@ -996,26 +1250,26 @@ class QualityMetrics(dj.Imported):
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
-        definition = """
+        definition = """   
         # Cluster metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
         ---
-        firing_rate=null: float # (Hz) firing rate for a unit
+        firing_rate=null: float # (Hz) firing rate for a unit 
         snr=null: float  # signal-to-noise ratio for a unit
         presence_ratio=null: float  # fraction of time in which spikes are present
         isi_violation=null: float   # rate of ISI violation as a fraction of overall rate
         number_violation=null: int  # total number of ISI violations
         amplitude_cutoff=null: float  # estimate of miss rate based on amplitude histogram
         isolation_distance=null: float  # distance to nearest cluster in Mahalanobis space
-        l_ratio=null: float  #
+        l_ratio=null: float  # 
         d_prime=null: float  # Classification accuracy based on LDA
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
         max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording
-        contamination_rate=null: float #
+        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
+        contamination_rate=null: float # 
         """
 
     class Waveform(dj.Part):
@@ -1035,7 +1289,7 @@ class QualityMetrics(dj.Imported):
             velocity_below (float): inverse velocity of waveform propagation from soma toward the bottom of the probe.
         """
 
-        definition = """
+        definition = """   
         # Waveform metrics for a particular unit
         -> master
         -> CuratedClustering.Unit
@@ -1053,24 +1307,39 @@ class QualityMetrics(dj.Imported):
 
     def make(self, key):
         """Populates tables with quality metrics data."""
-        output_dir = (ClusteringTask & key).fetch1("clustering_output_dir")
-        kilosort_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        metric_fp = kilosort_dir / "metrics.csv"
-        rename_dict = {
-            "isi_viol": "isi_violation",
-            "num_viol": "number_violation",
-            "contam_rate": "contamination_rate",
-        }
-
+        # Load metrics.csv
+        clustering_method, output_dir = (
+            ClusteringTask * ClusteringParamSet & key
+        ).fetch1("clustering_method", "clustering_output_dir")
+        output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
+        sorter_name = (
+            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
+        )
+        metric_fp = output_dir / sorter_name / "metrics" / "metrics.csv"
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
-
         metrics_df = pd.read_csv(metric_fp)
-        metrics_df.set_index("cluster_id", inplace=True)
+
+        # Conform the dataframe to match the table definition
+        if "cluster_id" in metrics_df.columns:
+            metrics_df.set_index("cluster_id", inplace=True)
+        else:
+            metrics_df.rename(
+                columns={metrics_df.columns[0]: "cluster_id"}, inplace=True
+            )
+            metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
         metrics_df.columns = metrics_df.columns.str.lower()
-        metrics_df.rename(columns=rename_dict, inplace=True)
+
+        metrics_df.rename(
+            columns={
+                "isi_viol": "isi_violation",
+                "num_viol": "number_violation",
+                "contam_rate": "contamination_rate",
+            },
+            inplace=True,
+        )
+
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
