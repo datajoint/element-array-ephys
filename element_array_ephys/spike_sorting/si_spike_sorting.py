@@ -8,7 +8,6 @@ from datetime import datetime
 import datajoint as dj
 import numpy as np
 import pandas as pd
-import probeinterface as pi
 import spikeinterface as si
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
@@ -296,18 +295,12 @@ class PostProcessing(dj.Imported):
     def make(self, key):
         execution_time = datetime.utcnow()
 
-        # Load recording object.
+        # Load recording & sorting object.
         clustering_method, output_dir, params = (
             ephys.ClusteringTask * ephys.ClusteringParamSet & key
         ).fetch1("clustering_method", "clustering_output_dir", "params")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-
-        # Get sorter method and create output directory.
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
-
-        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
+        sorter_name = clustering_method.replace(".", "_")
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
 
@@ -347,14 +340,13 @@ class PostProcessing(dj.Imported):
         _ = si.postprocessing.compute_principal_components(
             waveform_extractor=we, **params.get("SI_QUALITY_METRICS_PARAMS", None)
         )
-        # Save the output (metrics.csv to the output dir)
+        # Save metrics.csv to the output dir
         metrics_output_dir = output_dir / sorter_name / "metrics"
         metrics_output_dir.mkdir(parents=True, exist_ok=True)
 
         metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
         metrics.to_csv(metrics_output_dir / "metrics.csv")
 
-        # Save results
         self.insert1(
             {
                 **key,
