@@ -133,18 +133,15 @@ class PreProcessing(dj.Imported):
             .reset_index()[["electrode", "x_coord", "y_coord", "shank", "channel"]]
         )
 
-        def get_port_indices(file_path, port_id):
-            """Get the row indices of the port from the data matrix."""
-            import intanrhdreader
-
-            data = intanrhdreader.load_file(file_path)
-            return np.array(
-                [
-                    ind
-                    for ind, ch in enumerate(data["amplifier_channels"])
-                    if ch["port_prefix"] == port_id
-                ]
-            )
+        """Get the row indices of the port from the data matrix."""
+        session_info = (ephys.EphysSessionInfo & key).fetch1("session_info")
+        port_indices = np.array(
+            [
+                ind
+                for ind, ch in enumerate(session_info["amplifier_channels"])
+                if ch["port_prefix"] == probe_info["port_id"]
+            ]
+        )  # get the row indices of the port
 
         # Create SI recording extractor object
         si_extractor: si.extractors.neoextractors = (
@@ -174,9 +171,6 @@ class PreProcessing(dj.Imported):
                 si_recording: si.BaseRecording = si_extractor(
                     file_path, stream_name=stream_name
                 )
-                port_indices = get_port_indices(
-                    file_path, port_id=probe_info["port_id"]
-                )  # get the row indices of the port
             else:
                 si_recording: si.BaseRecording = si.concatenate_recordings(
                     [
