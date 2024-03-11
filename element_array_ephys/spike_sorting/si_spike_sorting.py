@@ -107,13 +107,9 @@ class PreProcessing(dj.Imported):
         recording_file = recording_dir / "si_recording.pkl"
 
         # Get probe information to recording object
-        probe_info = (ephys.EphysSessionProbe & key).fetch1()
-        probe_type = ((probe.Probe * ephys.EphysSessionProbe()) & key).fetch1(
-            "probe_type"
-        )
-
+        probe_info = (probe.Probe * ephys.EphysSessionProbe & key).fetch1()
         electrode_query = probe.ElectrodeConfig.Electrode & (
-            probe.ElectrodeConfig & {"probe_type": probe_type}
+            probe.ElectrodeConfig & {"probe_type": probe_info["probe_type"]}
         )
 
         # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
