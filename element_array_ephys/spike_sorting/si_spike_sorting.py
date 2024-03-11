@@ -330,11 +330,11 @@ class PostProcessing(dj.Imported):
         _ = si.postprocessing.compute_principal_components(
             waveform_extractor=we, **params.get("SI_QUALITY_METRICS_PARAMS", None)
         )
+        metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
+
         # Save metrics.csv to the output dir
         metrics_output_dir = output_dir / sorter_name / "metrics"
         metrics_output_dir.mkdir(parents=True, exist_ok=True)
-
-        metrics = si.qualitymetrics.compute_quality_metrics(waveform_extractor=we)
         metrics.to_csv(metrics_output_dir / "metrics.csv")
 
         self.insert1(
