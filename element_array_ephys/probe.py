@@ -116,5 +116,5 @@ class ElectrodeConfig(dj.Lookup):
         -> master
         -> ProbeType.Electrode
         ---
-        channel  : varchar(16) # channel name fetched from raw data (e.g., A-001)
+        channel_idx: smallint unsigned  # channel index (index of the raw data)
         """
