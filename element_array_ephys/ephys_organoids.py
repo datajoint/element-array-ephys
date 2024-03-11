@@ -899,8 +899,6 @@ class WaveformSet(dj.Imported):
             ClusteringTask * ClusteringParamSet & key
         ).fetch1("clustering_method", "clustering_output_dir")
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-
-        # Get sorter method and create output directory.
         sorter_name = clustering_method.replace(".", "_")
 
         # Get electrode & channel info
@@ -1050,8 +1048,8 @@ class QualityMetrics(dj.Imported):
         -> master
         -> CuratedClustering.Unit
         ---
-        amplitude: float  # (uV) absolute difference between waveform peak and trough
-        duration: float  # (ms) time between waveform peak and trough
+        amplitude=null: float  # (uV) absolute difference between waveform peak and trough
+        duration=null: float  # (ms) time between waveform peak and trough
         halfwidth=null: float  # (ms) spike width at half max amplitude
         pt_ratio=null: float  # absolute amplitude of peak divided by absolute amplitude of trough relative to 0
         repolarization_slope=null: float  # the repolarization slope was defined by fitting a regression line to the first 30us from trough to peak
@@ -1063,14 +1061,13 @@ class QualityMetrics(dj.Imported):
 
     def make(self, key):
         """Populates tables with quality metrics data."""
-        # Load metrics.csv
         clustering_method, output_dir = (
             ClusteringTask * ClusteringParamSet & key
         ).fetch1("clustering_method", "clustering_output_dir")
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
-        sorter_name = (
-            "kilosort2_5" if clustering_method == "kilosort2.5" else clustering_method
-        )
+        sorter_name = clustering_method.replace(".", "_")
+
+        # Load metrics.csv
         metric_fp = output_dir / sorter_name / "metrics" / "metrics.csv"
         if not metric_fp.exists():
             raise FileNotFoundError(f"QC metrics file not found: {metric_fp}")
@@ -1095,7 +1092,6 @@ class QualityMetrics(dj.Imported):
             },
             inplace=True,
         )
-
         metrics_list = [
             dict(metrics_df.loc[unit_key["unit"]], **unit_key)
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
