@@ -1,34 +1,17 @@
 """
-The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the
-"spikeinterface" pipeline.
-Spikeinterface developed by Alessio Buccino, Samuel Garcia, Cole Hurwitz, Jeremy Magland, and Matthias Hennig (https://github.com/SpikeInterface)
-
-The DataJoint pipeline currently incorporated Spikeinterfaces approach of running Kilosort using a container
-
-The follow pipeline features intermediary tables:
-1. PreProcessing - for preprocessing steps (no GPU required)
-    - create recording extractor and link it to a probe
-    - bandpass filtering
-    - common mode referencing
-2. SIClustering - kilosort (MATLAB) - requires GPU and docker/singularity containers
-    - supports kilosort 2.0, 2.5 or 3.0 (https://github.com/MouseLand/Kilosort.git)
-3. PostProcessing - for postprocessing steps (no GPU required)
-    - create waveform extractor object
-    - extract templates, waveforms and snrs
-    - quality_metrics
+The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the "spikeinterface" pipeline. Spikeinterface was developed by Alessio Buccino, Samuel Garcia, Cole Hurwitz, Jeremy Magland, and Matthias Hennig (https://github.com/SpikeInterface)
 """
 
-import pathlib
 from datetime import datetime
 
 import datajoint as dj
 import pandas as pd
-import probeinterface as pi
 import spikeinterface as si
 from element_array_ephys import get_logger, probe, readers
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
+from .. import get_logger, probe, readers
 from . import si_preprocessing
 
 log = get_logger(__name__)
