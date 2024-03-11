@@ -47,12 +47,6 @@ def activate(
 
 SI_SORTERS = [s.replace("_", ".") for s in si.sorters.sorter_dict.keys()]
 
-SI_READERS = {
-    "Open Ephys": si.extractors.read_openephys,
-    "SpikeGLX": si.extractors.read_spikeglx,
-    "Intan": si.extractors.read_intan,
-}
-
 
 @schema
 class PreProcessing(dj.Imported):
@@ -108,9 +102,7 @@ class PreProcessing(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         recording_dir = output_dir / sorter_name / "recording"
         recording_dir.mkdir(parents=True, exist_ok=True)
-        recording_file = (
-            recording_dir / "si_recording.pkl"
-        )  # recording cache to be created for each key
+        recording_file = recording_dir / "si_recording.pkl"
 
         # Create SI recording extractor object
         if acq_software == "SpikeGLX":
@@ -125,12 +117,16 @@ class PreProcessing(dj.Imported):
             assert len(oe_probe.recording_info["recording_files"]) == 1
             data_dir = oe_probe.recording_info["recording_files"][0]
         else:
-            raise NotImplementedError(f"Not implemented for {acq_software}")
+            si_extractor: si.extractors.neoextractors = (
+                si.extractors.extractorlist.recording_extractor_full_dict[
+                    acq_software.replace(" ", "").lower()
+                ]
+            )  # data extractor object
 
         stream_names, stream_ids = si.extractors.get_neo_streams(
             acq_software.strip().lower(), folder_path=data_dir
         )
-        si_recording: si.BaseRecording = SI_READERS[acq_software](
+        si_recording: si.BaseRecording = si_extractor[acq_software](
             folder_path=data_dir, stream_name=stream_names[0]
         )
 
