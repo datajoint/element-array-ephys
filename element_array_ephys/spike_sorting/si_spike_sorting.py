@@ -205,23 +205,23 @@ class SIClustering(dj.Imported):
             ephys.ClusteringTask * ephys.ClusteringParamSet & key
         ).fetch1("clustering_method", "clustering_output_dir", "params")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
-
-        # Get sorter method and create output directory.
         sorter_name = clustering_method.replace(".", "_")
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         si_recording: si.BaseRecording = si.load_extractor(recording_file)
 
         # Run sorting
+        # Sorting performed in a dedicated docker environment if the sorter is not built in the spikeinterface package.
         si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
             sorter_name=sorter_name,
             recording=si_recording,
             output_folder=output_dir / sorter_name / "spike_sorting",
             remove_existing_folder=True,
             verbose=True,
-            docker_image=True,
+            docker_image=sorter_name not in si.sorters.installed_sorters(),
             **params.get("SI_SORTING_PARAMS", {}),
         )
 
+        # Save sorting object
         sorting_save_path = (
             output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
         )
