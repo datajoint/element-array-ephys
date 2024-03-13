@@ -916,13 +916,6 @@ class WaveformSet(dj.Imported):
         channel_info: dict[int, dict] = {
             ch.pop("channel_idx"): key | ch for ch in channel_info
         }  # e.g., {0: {'organoid_id': 'O09',
-        # 'experiment_start_time': datetime.datetime(2023, 5, 18, 12, 25),
-        # 'insertion_number': 0,
-        # 'start_time': datetime.datetime(2023, 5, 18, 12, 25),
-        # 'end_time': datetime.datetime(2023, 5, 18, 12, 30),
-        # 'electrode_config_hash': UUID('699af5e0-31fa-acc9-1aeb-132c6972d25e'),
-        # 'probe_type': 'A1x32-6mm-100-177-H32_21mm',
-        # 'electrode': 27}
 
         waveform_dir = output_dir / sorter_name / "waveform"
         if not waveform_dir.exists():
