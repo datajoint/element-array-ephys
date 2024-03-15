@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import spikeinterface as si
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
+from scipy import signal
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 import intanrhdreader
