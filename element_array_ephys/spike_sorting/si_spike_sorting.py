@@ -126,7 +126,7 @@ class PreProcessing(dj.Imported):
         electrodes_df = (
             (probe.ProbeType.Electrode * electrode_query)
             .fetch(format="frame", order_by="electrode")
-            .reset_index()[["electrode", "x_coord", "y_coord", "shank", "channel"]]
+            .reset_index()[["electrode", "x_coord", "y_coord", "shank", "channel_idx"]]
         )
 
         """Get the row indices of the port from the data matrix."""
@@ -181,13 +181,13 @@ class PreProcessing(dj.Imported):
 
         # Create SI probe object
         si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_probe.set_device_channel_indices(electrodes_df.channel.values)
+        si_probe.set_device_channel_indices(electrodes_df["channel_idx"].values)
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
         if unused_electrodes:
             electrode_to_index_map = dict(
-                zip(electrodes_df["electrode"], electrodes_df["channel"])
+                zip(electrodes_df["electrode"], electrodes_df["channel_idx"])
             )  # electrode to channel index (data row index)
             channel_index_to_remove = np.array(
                 sorted(
