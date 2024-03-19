@@ -122,7 +122,6 @@ class PreProcessing(dj.Imported):
             for elec in range(number_of_electrodes)
             if elec not in probe_info["used_electrodes"]
         ]
-        electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
         electrodes_df = (
             (probe.ProbeType.Electrode * electrode_query)
             .fetch(format="frame", order_by="electrode")
