@@ -209,8 +209,12 @@ class EphysSessionInfo(dj.Imported):
 
         # Read file header
         with open(first_file, "rb") as f:
-            header = intanrhdreader.read_header(f)
-            del header["spike_triggers"], header["aux_input_channels"]
+            try:
+                header = intanrhdreader.read_header(f)
+            except OSError:
+                raise OSError(f"Error occurred when reading file {first_file}")
+            else:
+                del header["spike_triggers"], header["aux_input_channels"]
 
         logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
 
