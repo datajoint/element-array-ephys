@@ -209,8 +209,12 @@ class EphysSessionInfo(dj.Imported):
 
         # Read file header
         with open(first_file, "rb") as f:
-            header = intanrhdreader.read_header(f)
-            del header["spike_triggers"], header["aux_input_channels"]
+            try:
+                header = intanrhdreader.read_header(f)
+            except OSError:
+                raise OSError(f"Error occurred when reading file {first_file}")
+            else:
+                del header["spike_triggers"], header["aux_input_channels"]
 
         logger.info(f"Populating ephys.EphysSessionInfo for <{key}>")
 
@@ -242,17 +246,14 @@ class LFP(dj.Imported):
 
     @property
     def key_source(self):
-        return (EphysSession & EphysSessionProbe) - "session_type='spike_sorting'"
+        return (EphysSessionInfo & EphysSessionProbe) - "session_type='spike_sorting'"
 
     def make(self, key):
         TARGET_SAMPLING_RATE = 2500  # Hz
         POWERLINE_NOISE_FREQ = 60  # Hz
         LFP_DURATION = 30  # minutes
 
-        start_time = datetime.strptime(key["start_time"], "%Y-%m-%d %H:%M:%S")
-        end_time = datetime.strptime(key["end_time"], "%Y-%m-%d %H:%M:%S")
-        duration = (end_time - start_time).total_seconds() / 60  # minutes
-
+        duration = (key["end_time"] - key["start_time"]).total_seconds() / 60  # minutes
         assert (
             duration <= LFP_DURATION
         ), f"LFP sessions cannot exceeds {LFP_DURATION} minutes in duration."
@@ -549,7 +550,7 @@ class ClusteringTask(dj.Manual):
             ]
         )
 
-        session_dir = exp_dir / session_time
+        session_dir = exp_dir / session_time / key["organoid_id"]
         root_dir = find_root_directory(get_ephys_root_data_dir(), exp_dir)
 
         method = (
