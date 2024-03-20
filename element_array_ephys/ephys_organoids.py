@@ -550,7 +550,7 @@ class ClusteringTask(dj.Manual):
             ]
         )
 
-        session_dir = exp_dir / session_time
+        session_dir = exp_dir / session_time / key["organoid_id"]
         root_dir = find_root_directory(get_ephys_root_data_dir(), exp_dir)
 
         method = (
