@@ -24,12 +24,13 @@ def dj_config():
             "database.user": os.environ.get("DJ_USER") or dj.config["database.user"],
         }
     )
+    os.environ["DATABASE_PREFIX"] = "test_"
     return
 
 
 @pytest.fixture(autouse=True, scope="session")
 def pipeline():
-    import tutorial_pipeline as pipeline
+    from . import tutorial_pipeline as pipeline
 
     yield {
         "lab": pipeline.lab,
@@ -37,11 +38,17 @@ def pipeline():
         "session": pipeline.session,
         "probe": pipeline.probe,
         "ephys": pipeline.ephys,
+        "ephys_report": pipeline.ephys_report,
         "get_ephys_root_data_dir": pipeline.get_ephys_root_data_dir,
     }
 
     if _tear_down:
-        pipeline.subject.Subject.delete()
+        pipeline.ephys_report.schema.drop()
+        pipeline.ephys.schema.drop()
+        pipeline.probe.schema.drop()
+        pipeline.session.schema.drop()
+        pipeline.subject.schema.drop()
+        pipeline.lab.schema.drop()
 
 
 @pytest.fixture(scope="session")
@@ -53,37 +60,46 @@ def insert_upstreams(pipeline):
     ephys = pipeline["ephys"]
 
     subject.Subject.insert1(
-        dict(subject="subject5", subject_birth_date="2023-01-01", sex="U")
+        dict(subject="subject5", subject_birth_date="2023-01-01", sex="U"),
+        skip_duplicates=True,
     )
 
     session_key = dict(subject="subject5", session_datetime="2023-01-01 00:00:00")
+    session.Session.insert1(session_key, skip_duplicates=True)
     session_dir = "raw/subject5/session1"
 
-    session.SessionDirectory.insert1(dict(**session_key, session_dir=session_dir))
-    probe.Probe.insert1(dict(probe="714000838", probe_type="neuropixels 1.0 - 3B"))
+    session.SessionDirectory.insert1(
+        dict(**session_key, session_dir=session_dir), skip_duplicates=True
+    )
+    probe.Probe.insert1(
+        dict(probe="714000838", probe_type="neuropixels 1.0 - 3B"), skip_duplicates=True
+    )
     ephys.ProbeInsertion.insert1(
         dict(
-            session_key,
+            **session_key,
             insertion_number=1,
             probe="714000838",
-        )
+        ),
+        skip_duplicates=True,
     )
-    yield
 
-    if _tear_down:
-        subject.Subject.delete()
-        probe.Probe.delete()
+    return
 
 
 @pytest.fixture(scope="session")
-def populate_ephys_recording(pipeline, insert_upstream):
+def populate_ephys_recording(pipeline, insert_upstreams):
     ephys = pipeline["ephys"]
     ephys.EphysRecording.populate()
 
-    yield
+    return
 
-    if _tear_down:
-        ephys.EphysRecording.delete()
+
+@pytest.fixture(scope="session")
+def populate_lfp(pipeline, insert_upstreams):
+    ephys = pipeline["ephys"]
+    ephys.LFP.populate()
+
+    return
 
 
 @pytest.fixture(scope="session")
@@ -129,25 +145,20 @@ def insert_clustering_task(pipeline, populate_ephys_recording):
             paramset_idx=0,
             task_mode="load",  # load or trigger
             clustering_output_dir="processed/subject5/session1/probe_1/kilosort2-5_1",
-        )
+        ),
+        skip_duplicates=True,
     )
 
-    yield
-
-    if _tear_down:
-        ephys.ClusteringParamSet.delete()
+    return
 
 
 @pytest.fixture(scope="session")
-def processing(pipeline, populate_ephys_recording):
+def processing(pipeline, insert_clustering_task):
 
     ephys = pipeline["ephys"]
+    ephys.Clustering.populate()
     ephys.CuratedClustering.populate()
-    ephys.LFP.populate()
     ephys.WaveformSet.populate()
+    ephys.QualityMetrics.populate()
 
-    yield
-
-    if _tear_down:
-        ephys.CuratedClustering.delete()
-        ephys.LFP.delete()
+    return
