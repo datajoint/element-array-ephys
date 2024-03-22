@@ -75,9 +75,11 @@ class ProbeLevelReport(dj.Computed):
             fig_prefix = (
                 "-".join(
                     [
-                        v.strftime("%Y%m%d%H%M%S")
-                        if isinstance(v, datetime.datetime)
-                        else str(v)
+                        (
+                            v.strftime("%Y%m%d%H%M%S")
+                            if isinstance(v, datetime.datetime)
+                            else str(v)
+                        )
                         for v in key.values()
                     ]
                 )
