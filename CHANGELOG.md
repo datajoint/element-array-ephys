@@ -3,6 +3,12 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.3.4] - 2024-03-22
+
++ Add - pytest
++ Update - Ephys schema changed from `ephys_acute` to `ephys_no_curation` in `tutorial.ipynb`
+
+
 ## [0.3.3] - 2024-01-24
 + Update - remove PyPi release from `release.yml` since it will fail after the new `setup.py`
 
