@@ -307,7 +307,9 @@ class LFP(dj.Imported):
                     downsample_factor = int(lfp_sampling_rate / TARGET_SAMPLING_RATE)
 
                     # Get LFP indices (row index of the LFP matrix to be used)
-                    lfp_indices = np.array(electrode_query.fetch("channel"), dtype=int)
+                    lfp_indices = np.array(
+                        electrode_query.fetch("channel_idx"), dtype=int
+                    )
                     port_indices = np.array(
                         [
                             ind
@@ -335,7 +337,7 @@ class LFP(dj.Imported):
                     electrode_df = electrode_query.fetch(format="frame").reset_index()
 
                     channel_to_electrode_map = dict(
-                        zip(electrode_df["channel"], electrode_df["electrode"])
+                        zip(electrode_df["channel_idx"], electrode_df["electrode"])
                     )
 
                     channel_to_electrode_map = {
@@ -768,10 +770,8 @@ class CuratedClustering(dj.Imported):
         )
         electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
 
-        channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
-        channel_info: dict[int, dict] = {
-            ch.pop("channel_idx"): ch for ch in channel_info
-        }
+        channel_info = electrode_query.fetch(as_dict=True, order_by="electrode")
+        channel_info: dict[int, dict] = {ch["electrode"]: ch for ch in channel_info}
 
         # Get unit id to quality label mapping
         try:
