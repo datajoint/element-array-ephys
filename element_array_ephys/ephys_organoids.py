@@ -352,10 +352,8 @@ class LFP(dj.Imported):
                 del data
 
             # Check for missing files or short trace durations in min
-            trace_duration = lfp_concat.shape[1] / TARGET_SAMPLING_RATE / 60  # in min
-            if trace_duration != (EphysSession & key).proj(
-                duration="TIMESTAMPDIFF(MINUTE, start_time, end_time)"
-            ).fetch1("duration"):
+            trace_duration = lfp_concat.shape[1] / lfp_sampling_rate / 60  # in min
+            if trace_duration != duration:
                 raise ValueError(
                     f"Trace legnth ({trace_duration} min) is less than session duration"
                 )

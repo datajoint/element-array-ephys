@@ -20,7 +20,6 @@ The follow pipeline features three tables:
     - quality_metrics
 """
 
-
 import datajoint as dj
 from element_array_ephys import get_logger
 from decimal import Decimal
