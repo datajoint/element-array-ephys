@@ -21,7 +21,6 @@ The follow pipeline features three tables:
 """
 
 import datajoint as dj
-from element_array_ephys import get_logger
 from decimal import Decimal
 import json
 from datetime import datetime, timedelta
@@ -32,7 +31,7 @@ from element_array_ephys.readers import (
     kilosort_triggering,
 )
 
-log = get_logger(__name__)
+logger = dj.logger
 
 schema = dj.schema()
 
