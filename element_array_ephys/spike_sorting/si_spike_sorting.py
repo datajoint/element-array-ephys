@@ -12,10 +12,10 @@ import spikeinterface as si
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
-from .. import get_logger, probe, readers
+from .. import probe, readers
 from . import si_preprocessing
 
-log = get_logger(__name__)
+logger = dj.logger
 
 schema = dj.schema()
 
