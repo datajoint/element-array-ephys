@@ -908,8 +908,10 @@ class WaveformSet(dj.Imported):
         )
         electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
 
-        channel_info = electrode_query.fetch(as_dict=True, order_by="electrode")
-        channel_info: dict[int, dict] = {ch_idx: ch for ch_idx, ch in enumerate(channel_info)}
+        channel_info = electrode_query.fetch(as_dict=True, order_by="channel_idx")
+        channel_info: dict[int, dict] = {
+            ch.pop("channel_idx"): key | ch for ch in channel_info
+        }  # e.g., {0: {'organoid_id': 'O09',
 
         waveform_dir = output_dir / sorter_name / "waveform"
         if not waveform_dir.exists():
