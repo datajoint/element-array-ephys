@@ -763,7 +763,7 @@ class CuratedClustering(dj.Imported):
         electrode_query &= f'electrode IN {tuple(probe_info["used_electrodes"])}'
 
         channel_info = electrode_query.fetch(as_dict=True, order_by="electrode")
-        channel_info: dict[int, dict] = {ch["electrode"]: ch for ch in channel_info}
+        channel_info: dict[int, dict] = {ch_idx: ch for ch_idx, ch in enumerate(channel_info)}
 
         # Get unit id to quality label mapping
         try:
