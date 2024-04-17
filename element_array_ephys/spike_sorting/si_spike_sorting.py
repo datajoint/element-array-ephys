@@ -150,7 +150,7 @@ class PreProcessing(dj.Imported):
         # Run preprocessing and save results to output folder
         si_preproc_func = getattr(si_preprocessing, params["SI_PREPROCESSING_METHOD"])
         si_recording = si_preproc_func(si_recording)
-        si_recording.dump_to_pickle(file_path=recording_file)
+        si_recording.dump_to_pickle(file_path=recording_file, relative_to=output_dir)
 
         self.insert1(
             {
@@ -203,7 +203,7 @@ class SIClustering(dj.Imported):
         sorting_save_path = (
             output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
         )
-        si_sorting.dump_to_pickle(sorting_save_path)
+        si_sorting.dump_to_pickle(sorting_save_path, relative_to=output_dir)
 
         self.insert1(
             {
