@@ -988,9 +988,11 @@ class CuratedClustering(dj.Imported):
         spike_time_key = (
             "spike_times_sec_adj"
             if "spike_times_sec_adj" in kilosort_dataset.data
-            else "spike_times_sec"
-            if "spike_times_sec" in kilosort_dataset.data
-            else "spike_times"
+            else (
+                "spike_times_sec"
+                if "spike_times_sec" in kilosort_dataset.data
+                else "spike_times"
+            )
         )
         spike_times = kilosort_dataset.data[spike_time_key]
         kilosort_dataset.extract_spike_depths()
