@@ -114,8 +114,10 @@ class PreProcessing(dj.Imported):
 
         # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
         number_of_electrodes = len(electrode_query)
-        probe_info["used_electrodes"] = probe_info["used_electrodes"] or list(
-            range(number_of_electrodes)
+        probe_info["used_electrodes"] = (
+            probe_info["used_electrodes"]
+            if probe_info["used_electrodes"] is not None
+            else list(range(number_of_electrodes))
         )
         unused_electrodes = [
             elec
@@ -337,9 +339,14 @@ class PostProcessing(dj.Imported):
         metrics.to_csv(metrics_output_dir / "metrics.csv")
 
         # Save to phy format
-        si.exporters.export_to_phy(waveform_extractor=we, output_folder=output_dir / sorter_name / "phy")
+        si.exporters.export_to_phy(
+            waveform_extractor=we, output_folder=output_dir / sorter_name / "phy"
+        )
         # Generate spike interface report
-        si.exporters.export_report(waveform_extractor=we, output_folder=output_dir / sorter_name / "spikeinterface_report")
+        si.exporters.export_report(
+            waveform_extractor=we,
+            output_folder=output_dir / sorter_name / "spikeinterface_report",
+        )
 
         self.insert1(
             {

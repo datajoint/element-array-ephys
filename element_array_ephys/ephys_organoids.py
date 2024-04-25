@@ -768,7 +768,9 @@ class CuratedClustering(dj.Imported):
         }  # e.g., {0: {'organoid_id': 'O09',
 
         # reorder channel2electrode_map according to recording channel ids
-        channel2electrode_map = {chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids}
+        channel2electrode_map = {
+            chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids
+        }
 
         # Get unit id to quality label mapping
         try:
@@ -923,14 +925,16 @@ class WaveformSet(dj.Imported):
             raise FileNotFoundError(f"Waveform directory not found: {waveform_dir}")
 
         we: si.WaveformExtractor = si.load_waveforms(waveform_dir, with_recording=False)
-        unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
-            si.ChannelSparsity.from_best_channels(
-                we, 1, peak_sign="neg"
-            ).unit_id_to_channel_ids
-        )  # {unit: peak_channel_id}
+        unit_id_to_peak_channel_map: dict[
+            int, np.ndarray
+        ] = si.ChannelSparsity.from_best_channels(
+            we, 1, peak_sign="neg"
+        ).unit_id_to_channel_indices  # {unit: peak_channel_index}
 
         # reorder channel2electrode_map according to recording channel ids
-        channel2electrode_map = {chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids}
+        channel2electrode_map = {
+            chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids
+        }
 
         # Get mean waveform for each unit from all channels
         mean_waveforms = we.get_all_templates(
@@ -942,9 +946,11 @@ class WaveformSet(dj.Imported):
 
         for unit in (CuratedClustering.Unit & key).fetch("KEY", order_by="unit"):
             unit_waveforms = we.get_template(
-                        unit_id=unit["unit"], mode="average", force_dense=True
-                    )  # (sample x channel)
-            peak_chn_idx = list(we.channel_ids).index(unit_id_to_peak_channel_map[unit["unit"]][0])
+                unit_id=unit["unit"], mode="average", force_dense=True
+            )  # (sample x channel)
+            peak_chn_idx = list(we.channel_ids).index(
+                unit_id_to_peak_channel_map[unit["unit"]][0]
+            )
             unit_peak_waveform.append(
                 {
                     **unit,

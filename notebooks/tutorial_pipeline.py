@@ -25,6 +25,7 @@ def get_ephys_root_data_dir():
     else:
         raise TypeError("`ephys_root_data_dir` must be a string, pathlib, or list")
 
+
 # Activate schemas
 lab.activate(db_prefix + "lab")
 subject.activate(db_prefix + "subject", linking_module=__name__)
