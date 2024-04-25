@@ -339,9 +339,14 @@ class PostProcessing(dj.Imported):
         metrics.to_csv(metrics_output_dir / "metrics.csv")
 
         # Save to phy format
-        si.exporters.export_to_phy(waveform_extractor=we, output_folder=output_dir / sorter_name / "phy")
+        si.exporters.export_to_phy(
+            waveform_extractor=we, output_folder=output_dir / sorter_name / "phy"
+        )
         # Generate spike interface report
-        si.exporters.export_report(waveform_extractor=we, output_folder=output_dir / sorter_name / "spikeinterface_report")
+        si.exporters.export_report(
+            waveform_extractor=we,
+            output_folder=output_dir / sorter_name / "spikeinterface_report",
+        )
 
         self.insert1(
             {
