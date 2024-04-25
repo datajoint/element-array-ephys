@@ -918,11 +918,11 @@ class WaveformSet(dj.Imported):
             raise FileNotFoundError(f"Waveform directory not found: {waveform_dir}")
 
         we: si.WaveformExtractor = si.load_waveforms(waveform_dir, with_recording=False)
-        unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
-            si.ChannelSparsity.from_best_channels(
-                we, 1, peak_sign="neg"
-            ).unit_id_to_channel_indices
-        )  # {unit: peak_channel_index}
+        unit_id_to_peak_channel_map: dict[
+            int, np.ndarray
+        ] = si.ChannelSparsity.from_best_channels(
+            we, 1, peak_sign="neg"
+        ).unit_id_to_channel_indices  # {unit: peak_channel_index}
 
         # Get mean waveform for each unit from all channels
         mean_waveforms = we.get_all_templates(
