@@ -114,8 +114,10 @@ class PreProcessing(dj.Imported):
 
         # Filter for used electrodes. If probe_info["used_electrodes"] is None, it means all electrodes were used.
         number_of_electrodes = len(electrode_query)
-        probe_info["used_electrodes"] = probe_info["used_electrodes"] or list(
-            range(number_of_electrodes)
+        probe_info["used_electrodes"] = (
+            probe_info["used_electrodes"]
+            if probe_info["used_electrodes"] is not None
+            else list(range(number_of_electrodes))
         )
         unused_electrodes = [
             elec
