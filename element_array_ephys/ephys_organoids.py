@@ -929,6 +929,9 @@ class WaveformSet(dj.Imported):
             we, 1, peak_sign="neg"
         ).unit_id_to_channel_indices  # {unit: peak_channel_index}
 
+        # reorder channel2electrode_map according to recording channel ids
+        channel2electrode_map = {chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids}
+        
         # Get mean waveform for each unit from all channels
         mean_waveforms = we.get_all_templates(
             mode="average"
