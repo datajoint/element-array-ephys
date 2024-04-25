@@ -1,18 +1,12 @@
 from os import path
-
 from setuptools import find_packages, setup
 
-pkg_name = next(p for p in find_packages() if "." not in p)
+
+pkg_name = "element_array_ephys"
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, "README.md"), "r") as f:
     long_description = f.read()
-
-with open(path.join(here, "requirements.txt")) as f:
-    requirements = f.read().splitlines()
-
-with open(path.join(here, "requirements_dev.txt")) as f:
-    requirements_dev = f.read().splitlines()
 
 with open(path.join(here, "element_array_ephys/export/nwb/requirements.txt")) as f:
     requirements_nwb = f.read().splitlines()
@@ -23,7 +17,7 @@ with open(path.join(here, pkg_name, "version.py")) as f:
 setup(
     name=pkg_name.replace("_", "-"),
     version=__version__,  # noqa F821
-    description="DataJoint Element for Extracellular Array Electrophysiology",
+    description="Extracellular Array Electrophysiology DataJoint Element",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="DataJoint",
@@ -32,7 +26,28 @@ setup(
     url=f'https://github.com/datajoint/{pkg_name.replace("_", "-")}',
     keywords="neuroscience electrophysiology science datajoint",
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
-    extras_require={"dev": requirements_dev, "nwb": requirements_nwb},
     scripts=[],
-    install_requires=requirements,
+    install_requires=[
+        "datajoint>=0.13.0",
+        "ipykernel>=6.0.1",
+        "ipywidgets",
+        "openpyxl",
+        "plotly",
+        "seaborn",
+        "spikeinterface",
+        "scikit-image",
+        "nbformat>=4.2.0",
+        "pyopenephys>=1.1.6",
+    ],
+    extras_require={
+        "elements": [
+            "element-animal @ git+https://github.com/datajoint/element-animal.git",
+            "element-event @ git+https://github.com/datajoint/element-event.git",
+            "element-interface @ git+https://github.com/datajoint/element-interface.git",
+            "element-lab @ git+https://github.com/datajoint/element-lab.git",
+            "element-session @ git+https://github.com/datajoint/element-session.git",
+        ],
+        "nwb": ["dandi", "neuroconv[ecephys]", "pynwb"],
+        "tests": ["pre-commit", "pytest", "pytest-cov"],
+    },
 )

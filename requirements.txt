@@ -1,8 +1,0 @@
-datajoint>=0.13
-element-interface>=0.4.0
-ipywidgets
-openpyxl
-plotly
-pyopenephys>=1.1.6
-seaborn
-intanrhdreader @ git+https://github.com/datajoint/intanrhdreader.git
