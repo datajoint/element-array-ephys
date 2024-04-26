@@ -7,14 +7,13 @@ from datetime import datetime
 import datajoint as dj
 import pandas as pd
 import spikeinterface as si
-from element_array_ephys import get_logger, probe, readers
+from element_array_ephys import probe, readers
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
-from .. import get_logger, probe, readers
 from . import si_preprocessing
 
-log = get_logger(__name__)
+log = dj.logger
 
 schema = dj.schema()
 
