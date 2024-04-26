@@ -117,10 +117,13 @@ class PreProcessing(dj.Imported):
             assert len(oe_probe.recording_info["recording_files"]) == 1
             data_dir = oe_probe.recording_info["recording_files"][0]
         else:
-            acq_software = acq_software.replace(" ", "").lower()
-            si_extractor: si.extractors.neoextractors = (
-                si.extractors.extractorlist.recording_extractor_full_dict[acq_software]
-            )  # data extractor object
+            raise NotImplementedError(
+                f"SpikeInterface processing for {acq_software} not yet implemented."
+            )
+        acq_software = acq_software.replace(" ", "").lower()
+        si_extractor: si.extractors.neoextractors = (
+            si.extractors.extractorlist.recording_extractor_full_dict[acq_software]
+        )  # data extractor object
 
         stream_names, stream_ids = si.extractors.get_neo_streams(
             acq_software, folder_path=data_dir
