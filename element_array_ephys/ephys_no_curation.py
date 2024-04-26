@@ -338,8 +338,15 @@ class EphysRecording(dj.Imported):
         supported_probe_types = probe.ProbeType.fetch("probe_type")
 
         if acq_software == "SpikeGLX":
-            spikeglx_meta_filepath = get_spikeglx_meta_filepath(key)
-            spikeglx_meta = spikeglx.SpikeGLXMeta(spikeglx_meta_filepath)
+            for meta_filepath in ephys_meta_filepaths:
+                spikeglx_meta = spikeglx.SpikeGLXMeta(meta_filepath)
+                if str(spikeglx_meta.probe_SN) == inserted_probe_serial_number:
+                    spikeglx_meta_filepath = meta_filepath
+                    break
+            else:
+                raise FileNotFoundError(
+                    "No SpikeGLX data found for probe insertion: {}".format(key)
+                )
 
             if spikeglx_meta.probe_model not in supported_probe_types:
                 raise NotImplementedError(
