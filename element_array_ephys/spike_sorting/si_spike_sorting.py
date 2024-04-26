@@ -132,21 +132,18 @@ class PreProcessing(dj.Imported):
         )
 
         # Add probe information to recording object
-        electrode_config_key = (
-            probe.ElectrodeConfig * ephys.EphysRecording & key
-        ).fetch1("KEY")
         electrodes_df = (
             (
-                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                & electrode_config_key
+                ephys.EphysRecording.Channel * probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                & key
             )
             .fetch(format="frame")
-            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+            .reset_index()
         )
 
         # Create SI probe object
-        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_probe.set_device_channel_indices(range(len(electrodes_df)))
+        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df[["electrode", "x_coord", "y_coord", "shank"]])
+        si_probe.set_device_channel_indices(electrodes_df["channel_idx"].values)
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
