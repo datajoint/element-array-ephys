@@ -352,24 +352,24 @@ class EphysRecording(dj.Imported):
                 raise NotImplementedError(
                     f"Processing for neuropixels probe model {spikeglx_meta.probe_model} not yet implemented."
                 )
-            else:
-                probe_type = spikeglx_meta.probe_model
-                electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
-                probe_electrodes = {
-                    (shank, shank_col, shank_row): key
-                    for key, shank, shank_col, shank_row in zip(
-                        *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-                    )
-                }  # electrode configuration
-                electrode_group_members = [
-                    probe_electrodes[(shank, shank_col, shank_row)]
-                    for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap["data"]
-                ]  # recording session-specific electrode configuration
+            probe_type = spikeglx_meta.probe_model
+            electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
-                econfig_entry, econfig_electrodes = generate_electrode_config_entry(
-                    probe_type, electrode_group_members
+            probe_electrodes = {
+                (shank, shank_col, shank_row): key
+                for key, shank, shank_col, shank_row in zip(
+                    *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
                 )
+            }  # electrode configuration
+            electrode_group_members = [
+                probe_electrodes[(shank, shank_col, shank_row)]
+                for shank, shank_col, shank_row, _ in spikeglx_meta.shankmap["data"]
+            ]  # recording session-specific electrode configuration
+
+            econfig_entry, econfig_electrodes = generate_electrode_config_entry(
+                probe_type, electrode_group_members
+            )
 
             ephys_recording_entry = {
                 **key,
@@ -398,18 +398,6 @@ class EphysRecording(dj.Imported):
 
             # Insert channel information
             # Get channel and electrode-site mapping
-            electrode_query = (
-                probe.ProbeType.Electrode * probe.ElectrodeConfig.Electrode
-                & {"electrode_config_hash": econfig_entry["electrode_config_hash"]}
-            )
-
-            probe_electrodes = {
-                (shank, shank_col, shank_row): key
-                for key, shank, shank_col, shank_row in zip(
-                    *electrode_query.fetch("KEY", "shank", "shank_col", "shank_row")
-                )
-            }
-
             channel2electrode_map = {
                 recorded_site: probe_electrodes[(shank, shank_col, shank_row)]
                 for recorded_site, (shank, shank_col, shank_row, _) in enumerate(
@@ -418,7 +406,12 @@ class EphysRecording(dj.Imported):
             }
 
             ephys_channel_entries = [
-                {**key, "channel_idx": channel_idx, **channel_info}
+                {
+                    **key,
+                    "electrode_config_hash": econfig_entry["electrode_config_hash"],
+                    "channel_idx": channel_idx,
+                    **channel_info,
+                }
                 for channel_idx, channel_info in channel2electrode_map.items()
             ]
         elif acq_software == "Open Ephys":
@@ -438,24 +431,24 @@ class EphysRecording(dj.Imported):
 
             if probe_data.probe_model not in supported_probe_types:
                 raise NotImplementedError(
-                    f"Processing for neuropixels probe model {spikeglx_meta.probe_model} not yet implemented."
+                    f"Processing for neuropixels probe model {probe_data.probe_model} not yet implemented."
                 )
-            else:
-                probe_type = probe_data.probe_model
-                electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
-                probe_electrodes = {
-                    key["electrode"]: key for key in electrode_query.fetch("KEY")
-                }  # electrode configuration
+            probe_type = probe_data.probe_model
+            electrode_query = probe.ProbeType.Electrode & {"probe_type": probe_type}
 
-                electrode_group_members = [
-                    probe_electrodes[channel_idx]
-                    for channel_idx in probe_data.ap_meta["channels_indices"]
-                ]  # recording session-specific electrode configuration
+            probe_electrodes = {
+                key["electrode"]: key for key in electrode_query.fetch("KEY")
+            }  # electrode configuration
 
-                econfig_entry, econfig_electrodes = generate_electrode_config_entry(
-                    probe_type, electrode_group_members
-                )
+            electrode_group_members = [
+                probe_electrodes[channel_idx]
+                for channel_idx in probe_data.ap_meta["channels_indices"]
+            ]  # recording session-specific electrode configuration
+
+            econfig_entry, econfig_electrodes = generate_electrode_config_entry(
+                probe_type, electrode_group_members
+            )
 
             ephys_recording_entry = {
                 **key,
@@ -480,29 +473,24 @@ class EphysRecording(dj.Imported):
                 for fp in probe_data.recording_info["recording_files"]
             ]
 
-            # Explicitly garbage collect "dataset" as these may have large memory footprint and may not be cleared fast enough
-            del probe_data, dataset
-            gc.collect()
-
-            probe_dataset = get_openephys_probe_data(key)
-            electrode_query = (
-                probe.ProbeType.Electrode
-                * probe.ElectrodeConfig.Electrode
-                * EphysRecording
-                & key
-            )
-            probe_electrodes = {
-                key["electrode"]: key for key in electrode_query.fetch("KEY")
-            }
             channel2electrode_map = {
                 channel_idx: probe_electrodes[channel_idx]
-                for channel_idx in probe_dataset.ap_meta["channels_indices"]
+                for channel_idx in probe_data.ap_meta["channels_indices"]
             }
 
             ephys_channel_entries = [
-                {**key, "channel_idx": channel_idx, **channel_info}
+                {
+                    **key,
+                    "electrode_config_hash": econfig_entry["electrode_config_hash"],
+                    "channel_idx": channel_idx,
+                    **channel_info,
+                }
                 for channel_idx, channel_info in channel2electrode_map.items()
             ]
+
+            # Explicitly garbage collect "dataset" as these may have large memory footprint and may not be cleared fast enough
+            del probe_data, dataset
+            gc.collect()
         else:
             raise NotImplementedError(
                 f"Processing ephys files from acquisition software of type {acq_software} is not yet implemented."
@@ -1041,10 +1029,7 @@ class CuratedClustering(dj.Imported):
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
 
         # Get channel and electrode-site mapping
-        electrode_query = (
-            (EphysRecording.Channel & key)
-            .proj(..., "-channel_name")
-        )
+        electrode_query = (EphysRecording.Channel & key).proj(..., "-channel_name")
         channel2electrode_map = electrode_query.fetch(as_dict=True)
         channel2electrode_map: dict[int, dict] = {
             chn.pop("channel_idx"): chn for chn in channel2electrode_map
@@ -1058,7 +1043,9 @@ class CuratedClustering(dj.Imported):
         if si_waveform_dir.exists():
 
             # Read from spikeinterface outputs
-            we: si.WaveformExtractor = si.load_waveforms(si_waveform_dir, with_recording=False)
+            we: si.WaveformExtractor = si.load_waveforms(
+                si_waveform_dir, with_recording=False
+            )
             si_sorting: si.sorters.BaseSorter = si.load_extractor(
                 si_sorting_dir / "si_sorting.pkl"
             )
@@ -1139,10 +1126,10 @@ class CuratedClustering(dj.Imported):
                         "spike_count": spike_count_dict[unit_id],
                         "spike_sites": new_spikes["electrode"][
                             new_spikes["unit_index"] == unit_id
-                            ],
+                        ],
                         "spike_depths": new_spikes["depth"][
                             new_spikes["unit_index"] == unit_id
-                            ],
+                        ],
                     }
                 )
 
@@ -1281,10 +1268,7 @@ class WaveformSet(dj.Imported):
         sorter_name = clustering_method.replace(".", "_")
 
         # Get channel and electrode-site mapping
-        electrode_query = (
-            (EphysRecording.Channel & key)
-            .proj(..., "-channel_name")
-        )
+        electrode_query = (EphysRecording.Channel & key).proj(..., "-channel_name")
         channel2electrode_map = electrode_query.fetch(as_dict=True)
         channel2electrode_map: dict[int, dict] = {
             chn.pop("channel_idx"): chn for chn in channel2electrode_map
@@ -1292,12 +1276,14 @@ class WaveformSet(dj.Imported):
 
         si_waveform_dir = output_dir / sorter_name / "waveform"
         if si_waveform_dir.exists():  # read from spikeinterface outputs
-            we: si.WaveformExtractor = si.load_waveforms(si_waveform_dir, with_recording=False)
-            unit_id_to_peak_channel_map: dict[
-                int, np.ndarray
-            ] = si.ChannelSparsity.from_best_channels(
-                we, 1, peak_sign="neg"
-            ).unit_id_to_channel_indices  # {unit: peak_channel_index}
+            we: si.WaveformExtractor = si.load_waveforms(
+                si_waveform_dir, with_recording=False
+            )
+            unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
+                si.ChannelSparsity.from_best_channels(
+                    we, 1, peak_sign="neg"
+                ).unit_id_to_channel_indices
+            )  # {unit: peak_channel_index}
 
             # reorder channel2electrode_map according to recording channel ids
             channel2electrode_map = {
@@ -1391,6 +1377,7 @@ class WaveformSet(dj.Imported):
                         yield unit_peak_waveform, unit_electrode_waveforms
 
                     # Spike interface mean and peak waveform extraction from we object
+
             elif len(waveforms_folder) > 0 & (waveforms_folder[0]).exists():
                 we_kilosort = si.load_waveforms(waveforms_folder[0].parent)
                 unit_templates = we_kilosort.get_all_templates()
@@ -1618,7 +1605,10 @@ class QualityMetrics(dj.Imported):
         sorter_name = clustering_method.replace(".", "_")
 
         # find metric_fp
-        for metric_fp in [output_dir / "metrics.csv", output_dir / sorter_name / "metrics" / "metrics.csv"]:
+        for metric_fp in [
+            output_dir / "metrics.csv",
+            output_dir / sorter_name / "metrics" / "metrics.csv",
+        ]:
             if metric_fp.exists():
                 break
         else:

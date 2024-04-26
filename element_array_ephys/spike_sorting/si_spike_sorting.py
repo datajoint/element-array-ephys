@@ -127,7 +127,7 @@ class PreProcessing(dj.Imported):
         stream_names, stream_ids = si.extractors.get_neo_streams(
             acq_software, folder_path=data_dir
         )
-        si_recording: si.BaseRecording = si_extractor[acq_software](
+        si_recording: si.BaseRecording = si_extractor(
             folder_path=data_dir, stream_name=stream_names[0]
         )
 
@@ -184,7 +184,7 @@ class SIClustering(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         sorter_name = clustering_method.replace(".", "_")
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
-        si_recording: si.BaseRecording = si.load_extractor(recording_file)
+        si_recording: si.BaseRecording = si.load_extractor(recording_file, base_folder=output_dir)
 
         # Run sorting
         # Sorting performed in a dedicated docker environment if the sorter is not built in the spikeinterface package.
@@ -241,8 +241,8 @@ class PostProcessing(dj.Imported):
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
 
-        si_recording: si.BaseRecording = si.load_extractor(recording_file)
-        si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file)
+        si_recording: si.BaseRecording = si.load_extractor(recording_file, base_folder=output_dir)
+        si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file, base_folder=output_dir)
 
         # Extract waveforms
         we: si.WaveformExtractor = si.extract_waveforms(
