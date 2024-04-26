@@ -371,31 +371,30 @@ class EphysRecording(dj.Imported):
                     probe_type, electrode_group_members
                 )
 
-            self.insert1(
-                {
-                    **key,
-                    "electrode_config_hash": econfig_entry["electrode_config_hash"],
-                    "acq_software": acq_software,
-                    "sampling_rate": spikeglx_meta.meta["imSampRate"],
-                    "recording_datetime": spikeglx_meta.recording_time,
-                    "recording_duration": (
-                        spikeglx_meta.recording_duration
-                        or spikeglx.retrieve_recording_duration(spikeglx_meta_filepath)
-                    ),
-                }
-            )
+            ephys_recording_entry = {
+                **key,
+                "electrode_config_hash": econfig_entry["electrode_config_hash"],
+                "acq_software": acq_software,
+                "sampling_rate": spikeglx_meta.meta["imSampRate"],
+                "recording_datetime": spikeglx_meta.recording_time,
+                "recording_duration": (
+                    spikeglx_meta.recording_duration
+                    or spikeglx.retrieve_recording_duration(spikeglx_meta_filepath)
+                ),
+            }
 
             root_dir = find_root_directory(
                 get_ephys_root_data_dir(), spikeglx_meta_filepath
             )
-            self.EphysFile.insert1(
+
+            ephys_file_entries = [
                 {
                     **key,
                     "file_path": spikeglx_meta_filepath.relative_to(
                         root_dir
                     ).as_posix(),
                 }
-            )
+            ]
 
             # Insert channel information
             # Get channel and electrode-site mapping
@@ -417,13 +416,11 @@ class EphysRecording(dj.Imported):
                     spikeglx_meta.shankmap["data"]
                 )
             }
-            self.Channel.insert(
-                [
-                    {**key, "channel_idx": channel_idx, **channel_info}
-                    for channel_idx, channel_info in channel2electrode_map.items()
-                ]
-            )
 
+            ephys_channel_entries = [
+                {**key, "channel_idx": channel_idx, **channel_info}
+                for channel_idx, channel_info in channel2electrode_map.items()
+            ]
         elif acq_software == "Open Ephys":
             dataset = openephys.OpenEphys(session_dir)
             for serial_number, probe_data in dataset.probes.items():
@@ -460,31 +457,29 @@ class EphysRecording(dj.Imported):
                     probe_type, electrode_group_members
                 )
 
-            self.insert1(
-                {
-                    **key,
-                    "electrode_config_hash": econfig_entry["electrode_config_hash"],
-                    "acq_software": acq_software,
-                    "sampling_rate": probe_data.ap_meta["sample_rate"],
-                    "recording_datetime": probe_data.recording_info[
-                        "recording_datetimes"
-                    ][0],
-                    "recording_duration": np.sum(
-                        probe_data.recording_info["recording_durations"]
-                    ),
-                }
-            )
+            ephys_recording_entry = {
+                **key,
+                "electrode_config_hash": econfig_entry["electrode_config_hash"],
+                "acq_software": acq_software,
+                "sampling_rate": probe_data.ap_meta["sample_rate"],
+                "recording_datetime": probe_data.recording_info["recording_datetimes"][
+                    0
+                ],
+                "recording_duration": np.sum(
+                    probe_data.recording_info["recording_durations"]
+                ),
+            }
 
             root_dir = find_root_directory(
                 get_ephys_root_data_dir(),
                 probe_data.recording_info["recording_files"][0],
             )
-            self.EphysFile.insert(
-                [
-                    {**key, "file_path": fp.relative_to(root_dir).as_posix()}
-                    for fp in probe_data.recording_info["recording_files"]
-                ]
-            )
+
+            ephys_file_entries = [
+                {**key, "file_path": fp.relative_to(root_dir).as_posix()}
+                for fp in probe_data.recording_info["recording_files"]
+            ]
+
             # Explicitly garbage collect "dataset" as these may have large memory footprint and may not be cleared fast enough
             del probe_data, dataset
             gc.collect()
@@ -503,11 +498,14 @@ class EphysRecording(dj.Imported):
                 channel_idx: probe_electrodes[channel_idx]
                 for channel_idx in probe_dataset.ap_meta["channels_indices"]
             }
-            self.Channel.insert(
-                [
-                    {**key, "channel_idx": channel_idx, **channel_info}
-                    for channel_idx, channel_info in channel2electrode_map.items()
-                ]
+
+            ephys_channel_entries = [
+                {**key, "channel_idx": channel_idx, **channel_info}
+                for channel_idx, channel_info in channel2electrode_map.items()
+            ]
+        else:
+            raise NotImplementedError(
+                f"Processing ephys files from acquisition software of type {acq_software} is not yet implemented."
             )
 
         # Insert into probe.ElectrodeConfig (recording configuration)
@@ -516,6 +514,10 @@ class EphysRecording(dj.Imported):
         }:
             probe.ElectrodeConfig.insert1(econfig_entry)
             probe.ElectrodeConfig.Electrode.insert(econfig_electrodes)
+
+        self.insert1(ephys_recording_entry)
+        self.EphysFile.insert(ephys_file_entries)
+        self.Channel.insert(ephys_channel_entries)
 
 
 @schema
