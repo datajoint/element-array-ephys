@@ -1,6 +1,7 @@
 """
 Neuropixels Probes
 """
+
 import datajoint as dj
 
 from .readers import probe_geometry

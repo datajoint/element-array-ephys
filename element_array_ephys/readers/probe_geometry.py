@@ -200,7 +200,7 @@ def build_electrode_layouts(
         row_offset = np.zeros_like(x_coords)
     else:
         assert len(row_offset) == row_count
-        row_offset = np.tile(row_offset, col_count_per_shank)
+        row_offset = np.repeat(row_offset, col_count_per_shank)
     x_coords = x_coords + row_offset
 
     shank_cols = np.tile(range(col_count_per_shank), row_count)
