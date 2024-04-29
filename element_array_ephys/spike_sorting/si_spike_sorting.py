@@ -7,14 +7,13 @@ from datetime import datetime
 import datajoint as dj
 import pandas as pd
 import spikeinterface as si
-from element_array_ephys import get_logger, probe, readers
+from element_array_ephys import probe, readers
 from element_interface.utils import find_full_path
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
-from .. import get_logger, probe, readers
 from . import si_preprocessing
 
-log = get_logger(__name__)
+log = dj.logger
 
 schema = dj.schema()
 
@@ -128,26 +127,23 @@ class PreProcessing(dj.Imported):
         stream_names, stream_ids = si.extractors.get_neo_streams(
             acq_software, folder_path=data_dir
         )
-        si_recording: si.BaseRecording = si_extractor[acq_software](
+        si_recording: si.BaseRecording = si_extractor(
             folder_path=data_dir, stream_name=stream_names[0]
         )
 
         # Add probe information to recording object
-        electrode_config_key = (
-            probe.ElectrodeConfig * ephys.EphysRecording & key
-        ).fetch1("KEY")
         electrodes_df = (
             (
-                probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
-                & electrode_config_key
+                ephys.EphysRecording.Channel * probe.ElectrodeConfig.Electrode * probe.ProbeType.Electrode
+                & key
             )
             .fetch(format="frame")
-            .reset_index()[["electrode", "x_coord", "y_coord", "shank"]]
+            .reset_index()
         )
 
         # Create SI probe object
-        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df)
-        si_probe.set_device_channel_indices(range(len(electrodes_df)))
+        si_probe = readers.probe_geometry.to_probeinterface(electrodes_df[["electrode", "x_coord", "y_coord", "shank"]])
+        si_probe.set_device_channel_indices(electrodes_df["channel_idx"].values)
         si_recording.set_probe(probe=si_probe, in_place=True)
 
         # Run preprocessing and save results to output folder
@@ -188,7 +184,7 @@ class SIClustering(dj.Imported):
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         sorter_name = clustering_method.replace(".", "_")
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
-        si_recording: si.BaseRecording = si.load_extractor(recording_file)
+        si_recording: si.BaseRecording = si.load_extractor(recording_file, base_folder=output_dir)
 
         # Run sorting
         # Sorting performed in a dedicated docker environment if the sorter is not built in the spikeinterface package.
@@ -245,8 +241,8 @@ class PostProcessing(dj.Imported):
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
 
-        si_recording: si.BaseRecording = si.load_extractor(recording_file)
-        si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file)
+        si_recording: si.BaseRecording = si.load_extractor(recording_file, base_folder=output_dir)
+        si_sorting: si.sorters.BaseSorter = si.load_extractor(sorting_file, base_folder=output_dir)
 
         # Extract waveforms
         we: si.WaveformExtractor = si.extract_waveforms(
@@ -287,6 +283,11 @@ class PostProcessing(dj.Imported):
         metrics_output_dir = output_dir / sorter_name / "metrics"
         metrics_output_dir.mkdir(parents=True, exist_ok=True)
         metrics.to_csv(metrics_output_dir / "metrics.csv")
+
+        # Save to phy format
+        si.exporters.export_to_phy(waveform_extractor=we, output_folder=output_dir / sorter_name / "phy")
+        # Generate spike interface report
+        si.exporters.export_report(waveform_extractor=we, output_folder=output_dir / sorter_name / "spikeinterface_report")
 
         self.insert1(
             {

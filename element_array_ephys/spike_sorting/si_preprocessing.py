@@ -2,7 +2,7 @@ import spikeinterface as si
 from spikeinterface import preprocessing
 
 
-def catGT(recording):
+def CatGT(recording):
     recording = si.preprocessing.phase_shift(recording)
     recording = si.preprocessing.common_reference(
         recording, operator="median", reference="global"
