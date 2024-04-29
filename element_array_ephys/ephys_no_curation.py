@@ -1040,18 +1040,16 @@ class CuratedClustering(dj.Imported):
         si_waveform_dir = output_dir / sorter_name / "waveform"
         si_sorting_dir = output_dir / sorter_name / "spike_sorting"
 
-        if si_waveform_dir.exists():
-
-            # Read from spikeinterface outputs
+        if si_waveform_dir.exists():  # Read from spikeinterface outputs
             we: si.WaveformExtractor = si.load_waveforms(
                 si_waveform_dir, with_recording=False
             )
             si_sorting: si.sorters.BaseSorter = si.load_extractor(
-                si_sorting_dir / "si_sorting.pkl"
+                si_sorting_dir / "si_sorting.pkl", base_folder=output_dir
             )
 
             unit_peak_channel: dict[int, int] = si.get_template_extremum_channel(
-                we, outputs="id"
+                we, outputs="index"
             )  # {unit: peak_channel_id}
 
             spike_count_dict: dict[int, int] = si_sorting.count_num_spikes_per_unit()
@@ -1061,7 +1059,8 @@ class CuratedClustering(dj.Imported):
 
             # reorder channel2electrode_map according to recording channel ids
             channel2electrode_map = {
-                chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids
+                chn_idx: channel2electrode_map[chn_idx]
+                for chn_idx in we.channel_ids_to_indices(we.channel_ids)
             }
 
             # Get unit id to quality label mapping
@@ -1090,7 +1089,7 @@ class CuratedClustering(dj.Imported):
             # Get channel depth
             channel_depth_ind = np.array(
                 [
-                    channel2electrode_map[unit_peak_channel[unit_id]]["y_coord"]
+                    we.get_probe().contact_positions[unit_peak_channel[unit_id]][1]
                     for unit_id in si_sorting.unit_ids
                 ]
             )
@@ -1132,7 +1131,6 @@ class CuratedClustering(dj.Imported):
                         ],
                     }
                 )
-
         else:  # read from kilosort outputs
             kilosort_dataset = kilosort.Kilosort(output_dir)
             acq_software, sample_rate = (EphysRecording & key).fetch1(
@@ -1286,46 +1284,38 @@ class WaveformSet(dj.Imported):
             )  # {unit: peak_channel_index}
 
             # reorder channel2electrode_map according to recording channel ids
+            channel_indices = we.channel_ids_to_indices(we.channel_ids).tolist()
             channel2electrode_map = {
-                chn_id: channel2electrode_map[int(chn_id)] for chn_id in we.channel_ids
+                chn_idx: channel2electrode_map[chn_idx] for chn_idx in channel_indices
             }
 
-            # Get mean waveform for each unit from all channels
-            mean_waveforms = we.get_all_templates(
-                mode="average"
-            )  # (unit x sample x channel)
-
-            unit_peak_waveform = []
-            unit_electrode_waveforms = []
-
-            for unit in (CuratedClustering.Unit & key).fetch("KEY", order_by="unit"):
-                unit_waveforms = we.get_template(
-                    unit_id=unit["unit"], mode="average", force_dense=True
-                )  # (sample x channel)
-                peak_chn_idx = list(we.channel_ids).index(
-                    unit_id_to_peak_channel_map[unit["unit"]][0]
-                )
-                unit_peak_waveform.append(
-                    {
+            def yield_unit_waveforms():
+                for unit in (CuratedClustering.Unit & key).fetch(
+                    "KEY", order_by="unit"
+                ):
+                    # Get mean waveform for this unit from all channels - (sample x channel)
+                    unit_waveforms = we.get_template(
+                        unit_id=unit["unit"], mode="average", force_dense=True
+                    )
+                    peak_chn_idx = channel_indices.index(
+                        unit_id_to_peak_channel_map[unit["unit"]][0]
+                    )
+                    unit_peak_waveform = {
                         **unit,
                         "peak_electrode_waveform": unit_waveforms[:, peak_chn_idx],
                     }
-                )
-                unit_electrode_waveforms.extend(
-                    [
+
+                    unit_electrode_waveforms = [
                         {
                             **unit,
-                            **channel2electrode_map[c],
-                            "waveform_mean": mean_waveforms[unit["unit"] - 1, :, c_idx],
+                            **channel2electrode_map[chn_idx],
+                            "waveform_mean": unit_waveforms[:, chn_idx],
                         }
-                        for c_idx, c in enumerate(channel2electrode_map)
+                        for chn_idx in channel_indices
                     ]
-                )
 
-            self.insert1(key)
-            self.PeakWaveform.insert(unit_peak_waveform)
-            self.Waveform.insert(unit_electrode_waveforms)
-        else:
+                    yield unit_peak_waveform, unit_electrode_waveforms
+        else:  # read from kilosort outputs
             kilosort_dataset = kilosort.Kilosort(output_dir)
 
             acq_software, probe_serial_number = (
@@ -1339,10 +1329,6 @@ class WaveformSet(dj.Imported):
                     as_dict=True, order_by="unit"
                 )
             }
-
-            waveforms_folder = [
-                f for f in output_dir.parent.rglob(r"*/waveforms*") if f.is_dir()
-            ]
 
             if (output_dir / "mean_waveforms.npy").exists():
                 unit_waveforms = np.load(
@@ -1375,75 +1361,6 @@ class WaveformSet(dj.Imported):
                                         "peak_electrode_waveform": channel_waveform,
                                     }
                         yield unit_peak_waveform, unit_electrode_waveforms
-
-                    # Spike interface mean and peak waveform extraction from we object
-
-            elif len(waveforms_folder) > 0 & (waveforms_folder[0]).exists():
-                we_kilosort = si.load_waveforms(waveforms_folder[0].parent)
-                unit_templates = we_kilosort.get_all_templates()
-                unit_waveforms = np.reshape(
-                    unit_templates,
-                    (
-                        unit_templates.shape[1],
-                        unit_templates.shape[3],
-                        unit_templates.shape[2],
-                    ),
-                )
-
-                # Approach assumes unit_waveforms was generated correctly (templates are actually the same as mean_waveforms)
-                def yield_unit_waveforms():
-                    for unit_no, unit_waveform in zip(
-                        kilosort_dataset.data["cluster_ids"], unit_waveforms
-                    ):
-                        unit_peak_waveform = {}
-                        unit_electrode_waveforms = []
-                        if unit_no in units:
-                            for channel, channel_waveform in zip(
-                                kilosort_dataset.data["channel_map"], unit_waveform
-                            ):
-                                unit_electrode_waveforms.append(
-                                    {
-                                        **units[unit_no],
-                                        **channel2electrode_map[channel],
-                                        "waveform_mean": channel_waveform,
-                                    }
-                                )
-                                if (
-                                    channel2electrode_map[channel]["electrode"]
-                                    == units[unit_no]["electrode"]
-                                ):
-                                    unit_peak_waveform = {
-                                        **units[unit_no],
-                                        "peak_electrode_waveform": channel_waveform,
-                                    }
-                        yield unit_peak_waveform, unit_electrode_waveforms
-
-                # Approach not using spike interface templates (ie. taking mean of each unit waveform)
-                # def yield_unit_waveforms():
-                #     for unit_id in we_kilosort.unit_ids:
-                #         unit_waveform = np.mean(we_kilosort.get_waveforms(unit_id), 0)
-                #         unit_peak_waveform = {}
-                #         unit_electrode_waveforms = []
-                #         if unit_id in units:
-                #             for channel, channel_waveform in zip(
-                #                 kilosort_dataset.data["channel_map"], unit_waveform
-                #             ):
-                #                 unit_electrode_waveforms.append(
-                #                     {
-                #                         **units[unit_id],
-                #                         **channel2electrodes[channel],
-                #                         "waveform_mean": channel_waveform,
-                #                     }
-                #                 )
-                #                 if (
-                #                     channel2electrodes[channel]["electrode"]
-                #                     == units[unit_id]["electrode"]
-                #                 ):
-                #                     unit_peak_waveform = {
-                #                         **units[unit_id],
-                #                         "peak_electrode_waveform": channel_waveform,
-                #                     }
-                #         yield unit_peak_waveform, unit_electrode_waveforms
 
             else:
                 if acq_software == "SpikeGLX":
