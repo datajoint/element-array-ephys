@@ -1003,8 +1003,8 @@ class QualityMetrics(dj.Imported):
             d_prime (float): Classification accuracy based on LDA.
             nn_hit_rate (float): Fraction of neighbors for target cluster that are also in target cluster.
             nn_miss_rate (float): Fraction of neighbors outside target cluster that are in the target cluster.
-            silhouette_core (float): Maximum change in spike depth throughout recording.
-            cumulative_drift (float): Cumulative change in spike depth throughout recording.
+            silhouette_core (float): Peak-to-peak of the drift signal for each unit.
+            cumulative_drift (float): Median absolute deviation of the drift signal for each unit.
             contamination_rate (float): Frequency of spikes in the refractory period.
         """
 
@@ -1025,8 +1025,8 @@ class QualityMetrics(dj.Imported):
         nn_hit_rate=null: float  # Fraction of neighbors for target cluster that are also in target cluster
         nn_miss_rate=null: float # Fraction of neighbors outside target cluster that are in target cluster
         silhouette_score=null: float  # Standard metric for cluster overlap
-        max_drift=null: float  # Maximum change in spike depth throughout recording
-        cumulative_drift=null: float  # Cumulative change in spike depth throughout recording 
+        max_drift=null: float  # Peak-to-peak of the drift signal for each unit
+        cumulative_drift=null: float  # Median absolute deviation of the drift signal for each unit 
         contamination_rate=null: float # 
         """
 
@@ -1090,9 +1090,12 @@ class QualityMetrics(dj.Imported):
 
         metrics_df.rename(
             columns={
-                "isi_viol": "isi_violation",
-                "num_viol": "number_violation",
-                "contam_rate": "contamination_rate",
+                "isi_violations_ratio": "isi_violation",
+                "isi_violations_count": "number_violation",
+                "silhouette":"silhouette_score",
+                "rp_contamination": "contamination_rate",
+                "drift_ptp":"max_drift",
+                "drift_mad":"cumulative_drift"
             },
             inplace=True,
         )
