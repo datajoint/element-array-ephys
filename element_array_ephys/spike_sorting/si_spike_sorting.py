@@ -42,6 +42,7 @@ def activate(
         create_tables=create_tables,
         add_objects=ephys.__dict__,
     )
+    ephys.Clustering.key_source -= PreProcessing.key_source.proj()
 
 
 SI_SORTERS = [s.replace("_", ".") for s in si.sorters.sorter_dict.keys()]
