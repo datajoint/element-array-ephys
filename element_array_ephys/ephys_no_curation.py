@@ -1277,11 +1277,11 @@ class WaveformSet(dj.Imported):
             we: si.WaveformExtractor = si.load_waveforms(
                 si_waveform_dir, with_recording=False
             )
-            unit_id_to_peak_channel_map: dict[int, np.ndarray] = (
-                si.ChannelSparsity.from_best_channels(
-                    we, 1, peak_sign="neg"
-                ).unit_id_to_channel_indices
-            )  # {unit: peak_channel_index}
+            unit_id_to_peak_channel_map: dict[
+                int, np.ndarray
+            ] = si.ChannelSparsity.from_best_channels(
+                we, 1, peak_sign="neg"
+            ).unit_id_to_channel_indices  # {unit: peak_channel_index}
 
             # reorder channel2electrode_map according to recording channel ids
             channel_indices = we.channel_ids_to_indices(we.channel_ids).tolist()
@@ -1315,6 +1315,7 @@ class WaveformSet(dj.Imported):
                     ]
 
                     yield unit_peak_waveform, unit_electrode_waveforms
+
         else:  # read from kilosort outputs
             kilosort_dataset = kilosort.Kilosort(output_dir)
 
@@ -1546,9 +1547,14 @@ class QualityMetrics(dj.Imported):
 
         metrics_df.rename(
             columns={
-                "isi_viol": "isi_violation",
-                "num_viol": "number_violation",
-                "contam_rate": "contamination_rate",
+                "isi_violations_ratio": "isi_violation",
+                "isi_violations_count": "number_violation",
+                "silhouette": "silhouette_score",
+                "rp_contamination": "contamination_rate",
+                "drift_ptp": "max_drift",
+                "drift_mad": "cumulative_drift",
+                "half_width": "halfwidth",
+                "peak_trough_ratio": "pt_ratio",
             },
             inplace=True,
         )
