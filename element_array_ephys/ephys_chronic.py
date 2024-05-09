@@ -1287,9 +1287,14 @@ class QualityMetrics(dj.Imported):
 
         metric_fp = kilosort_dir / "metrics.csv"
         rename_dict = {
-            "isi_viol": "isi_violation",
-            "num_viol": "number_violation",
-            "contam_rate": "contamination_rate",
+            "isi_violations_ratio": "isi_violation",
+            "isi_violations_count": "number_violation",
+            "silhouette": "silhouette_score",
+            "rp_contamination": "contamination_rate",
+            "drift_ptp": "max_drift",
+            "drift_mad": "cumulative_drift",
+            "half_width": "halfwidth",
+            "peak_trough_ratio": "pt_ratio",
         }
 
         if not metric_fp.exists():
