@@ -287,7 +287,7 @@ class PostProcessing(dj.Imported):
         _ = si.postprocessing.compute_correlograms(we)
 
         metric_names = si.qualitymetrics.get_quality_metric_list()
-        metric_names.extend(si.qualitymetrics.get_quality_pca_metric_list())
+        metric_names.extend(si.qualitymetrics.get_quality_pca_metric_list()) 
 
         # To compute commonly used cluster quality metrics.
         qc_metrics = si.qualitymetrics.compute_quality_metrics(
@@ -309,7 +309,7 @@ class PostProcessing(dj.Imported):
         metrics = pd.DataFrame()
         metrics = pd.concat([qc_metrics, template_metrics], axis=1)
 
-        # Save the output (metrics.csv to the output dir)
+        # Save metrics.csv to the output dir
         metrics_output_dir = output_dir / sorter_name / "metrics"
         metrics_output_dir.mkdir(parents=True, exist_ok=True)
         metrics.to_csv(metrics_output_dir / "metrics.csv")
