@@ -1308,7 +1308,7 @@ class QualityMetrics(dj.Imported):
                 columns={metrics_df.columns[0]: "cluster_id"}, inplace=True
             )
 
-        metrics_df.set_index("cluster_id", inplace=True)
+            metrics_df.set_index("cluster_id", inplace=True)
         metrics_df.replace([np.inf, -np.inf], np.nan, inplace=True)
         metrics_df.columns = metrics_df.columns.str.lower()
 
