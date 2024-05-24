@@ -270,28 +270,33 @@ class PostProcessing(dj.Imported):
                 overwrite=True,
             )
 
-        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get("job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"})
+        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get(
+            "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
+        )
         extensions_params = params["SI_POSTPROCESSING_PARAMS"].get("extensions", {})
         # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()
         # each extension is parameterized by params specified in extensions_params dictionary (skip if not specified)
-        extensions_to_compute = {ext_name: extensions_params[ext_name]
-                                 for ext_name in sorting_analyzer.get_computable_extensions()
-                                 if ext_name in extensions_params}
+        extensions_to_compute = {
+            ext_name: extensions_params[ext_name]
+            for ext_name in sorting_analyzer.get_computable_extensions()
+            if ext_name in extensions_params
+        }
 
         sorting_analyzer.compute(extensions_to_compute, **job_kwargs)
 
         # Save to phy format
         if params["SI_POSTPROCESSING_PARAMS"].get("export_to_phy", False):
             si.exporters.export_to_phy(
-                sorting_analyzer=sorting_analyzer, output_folder=output_dir / sorter_name / "phy",
-                **job_kwargs
+                sorting_analyzer=sorting_analyzer,
+                output_folder=output_dir / sorter_name / "phy",
+                **job_kwargs,
             )
         # Generate spike interface report
         if params["SI_POSTPROCESSING_PARAMS"].get("export_report", True):
             si.exporters.export_report(
                 sorting_analyzer=sorting_analyzer,
                 output_folder=output_dir / sorter_name / "spikeinterface_report",
-                **job_kwargs
+                **job_kwargs,
             )
 
         self.insert1(

@@ -1256,7 +1256,9 @@ class WaveformSet(dj.Imported):
             unit_peak_channel = {u: chn[0] for u, chn in unit_peak_channel.items()}
 
             # reorder channel2electrode_map according to recording channel ids
-            channel_indices = sorting_analyzer.channel_ids_to_indices(sorting_analyzer.channel_ids).tolist()
+            channel_indices = sorting_analyzer.channel_ids_to_indices(
+                sorting_analyzer.channel_ids
+            ).tolist()
             channel2electrode_map = {
                 chn_idx: channel2electrode_map[chn_idx] for chn_idx in channel_indices
             }
@@ -1500,7 +1502,9 @@ class QualityMetrics(dj.Imported):
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             qc_metrics = sorting_analyzer.get_extension("quality_metrics").get_data()
-            template_metrics = sorting_analyzer.get_extension("template_metrics").get_data()
+            template_metrics = sorting_analyzer.get_extension(
+                "template_metrics"
+            ).get_data()
             metrics_df = pd.concat([qc_metrics, template_metrics], axis=1)
 
             metrics_df.rename(
@@ -1514,7 +1518,7 @@ class QualityMetrics(dj.Imported):
                     "drift_mad": "cumulative_drift",
                     "half_width": "halfwidth",
                     "peak_trough_ratio": "pt_ratio",
-                    "peak_to_valley": "duration"
+                    "peak_to_valley": "duration",
                 },
                 inplace=True,
             )
