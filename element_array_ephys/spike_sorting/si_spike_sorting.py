@@ -82,6 +82,7 @@ class PreProcessing(dj.Imported):
         for required_key in (
             "SI_SORTING_PARAMS",
             "SI_PREPROCESSING_METHOD",
+            "SI_POSTPROCESSING_PARAMS",
             "SI_WAVEFORM_EXTRACTION_PARAMS",
             "SI_QUALITY_METRICS_PARAMS",
         ):
@@ -257,7 +258,7 @@ class PostProcessing(dj.Imported):
 
         # Sorting Analyzer
         analyzer_output_dir = output_dir / sorter_name / "sorting_analyzer"
-        if analyzer_output_dir.exists():
+        if (analyzer_output_dir / "extensions").exists():
             sorting_analyzer = si.load_sorting_analyzer(folder=analyzer_output_dir)
         else:
             sorting_analyzer = si.create_sorting_analyzer(
@@ -269,83 +270,29 @@ class PostProcessing(dj.Imported):
                 overwrite=True,
             )
 
-        job_kwargs = params.get("SI_JOB_KWARGS", {"n_jobs": -1, "chunk_duration": "1s"})
-        all_computable_extensions = ['random_spikes', 'waveforms', 'templates', 'noise_levels', 'amplitude_scalings', 'correlograms', 'isi_histograms', 'principal_components', 'spike_amplitudes', 'spike_locations', 'template_metrics', 'template_similarity', 'unit_locations', 'quality_metrics']
-        extensions_to_compute = ['random_spikes', 'waveforms', 'templates', 'noise_levels',
-                                 'spike_amplitudes', 'spike_locations', 'unit_locations',
-                                 'principal_components',
-                                 'template_metrics', 'quality_metrics']
+        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get("job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"})
+        extensions_params = params["SI_POSTPROCESSING_PARAMS"].get("extensions", {})
+        # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()
+        # each extension is parameterized by params specified in extensions_params dictionary (skip if not specified)
+        extensions_to_compute = {ext_name: extensions_params[ext_name]
+                                 for ext_name in sorting_analyzer.get_computable_extensions()
+                                 if ext_name in extensions_params}
 
         sorting_analyzer.compute(extensions_to_compute, **job_kwargs)
 
-        # Extract waveforms
-        we: si.WaveformExtractor = si.extract_waveforms(
-            si_recording,
-            si_sorting,
-            folder=output_dir
-            / sorter_name
-            / "waveform",  # The folder where waveforms are cached
-            overwrite=True,
-            allow_unfiltered=True,
-            **params.get("SI_WAVEFORM_EXTRACTION_PARAMS", {}),
-            **params.get("SI_JOB_KWARGS", {"n_jobs": -1, "chunk_size": 30000}),
-        )
-
-        # Calculate Cluster and Waveform Metrics
-
-        # To provide waveform_principal_component
-        _ = si.postprocessing.compute_principal_components(
-            waveform_extractor=we, **params.get("SI_QUALITY_METRICS_PARAMS", None)
-        )
-
-        # To estimate the location of each spike in the sorting output.
-        # The drift metrics require the `spike_locations` waveform extension.
-        _ = si.postprocessing.compute_spike_locations(waveform_extractor=we)
-
-        # The `sd_ratio` metric requires the `spike_amplitudes` waveform extension.
-        # It is highly recommended before calculating amplitude-based quality metrics.
-        _ = si.postprocessing.compute_spike_amplitudes(waveform_extractor=we)
-
-        # To compute correlograms for spike trains.
-        _ = si.postprocessing.compute_correlograms(we)
-
-        metric_names = si.qualitymetrics.get_quality_metric_list()
-        # metric_names.extend(si.qualitymetrics.get_quality_pca_metric_list())  # TODO: temporarily removed
-
-        # To compute commonly used cluster quality metrics.
-        qc_metrics = si.qualitymetrics.compute_quality_metrics(
-            waveform_extractor=we,
-            metric_names=metric_names,
-        )
-
-        # To compute commonly used waveform/template metrics.
-        template_metric_names = si.postprocessing.get_template_metric_names()
-        template_metric_names.extend(["amplitude", "duration"])  # TODO: does this do anything?
-
-        template_metrics = si.postprocessing.compute_template_metrics(
-            waveform_extractor=we,
-            include_multi_channel_metrics=True,
-            metric_names=template_metric_names,
-        )
-
-        # Save the output (metrics.csv to the output dir)
-        metrics = pd.DataFrame()
-        metrics = pd.concat([qc_metrics, template_metrics], axis=1)
-
-        # Save metrics.csv to the output dir
-        metrics_output_dir = output_dir / sorter_name / "metrics"
-        metrics_output_dir.mkdir(parents=True, exist_ok=True)
-        metrics.to_csv(metrics_output_dir / "metrics.csv")
-
         # Save to phy format
-        si.exporters.export_to_phy(
-            waveform_extractor=we, output_folder=output_dir / sorter_name / "phy"
-        )
+        if params["SI_POSTPROCESSING_PARAMS"].get("export_to_phy", False):
+            si.exporters.export_to_phy(
+                sorting_analyzer=sorting_analyzer, output_folder=output_dir / sorter_name / "phy",
+                **job_kwargs
+            )
         # Generate spike interface report
-        si.exporters.export_report(
-            waveform_extractor=we,
-            output_folder=output_dir / sorter_name / "spikeinterface_report",
-        )
+        if params["SI_POSTPROCESSING_PARAMS"].get("export_report", True):
+            si.exporters.export_report(
+                sorting_analyzer=sorting_analyzer,
+                output_folder=output_dir / sorter_name / "spikeinterface_report",
+                **job_kwargs
+            )
 
         self.insert1(
             {
