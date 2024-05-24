@@ -35,7 +35,7 @@ setup(
         "openpyxl",
         "plotly",
         "seaborn",
-        "spikeinterface",
+        "spikeinterface>=0.101.0",
         "scikit-image",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",

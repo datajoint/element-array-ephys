@@ -255,6 +255,29 @@ class PostProcessing(dj.Imported):
             sorting_file, base_folder=output_dir
         )
 
+        # Sorting Analyzer
+        analyzer_output_dir = output_dir / sorter_name / "sorting_analyzer"
+        if analyzer_output_dir.exists():
+            sorting_analyzer = si.load_sorting_analyzer(folder=analyzer_output_dir)
+        else:
+            sorting_analyzer = si.create_sorting_analyzer(
+                sorting=si_sorting,
+                recording=si_recording,
+                format="binary_folder",
+                folder=analyzer_output_dir,
+                sparse=True,
+                overwrite=True,
+            )
+
+        job_kwargs = params.get("SI_JOB_KWARGS", {"n_jobs": -1, "chunk_duration": "1s"})
+        all_computable_extensions = ['random_spikes', 'waveforms', 'templates', 'noise_levels', 'amplitude_scalings', 'correlograms', 'isi_histograms', 'principal_components', 'spike_amplitudes', 'spike_locations', 'template_metrics', 'template_similarity', 'unit_locations', 'quality_metrics']
+        extensions_to_compute = ['random_spikes', 'waveforms', 'templates', 'noise_levels',
+                                 'spike_amplitudes', 'spike_locations', 'unit_locations',
+                                 'principal_components',
+                                 'template_metrics', 'quality_metrics']
+
+        sorting_analyzer.compute(extensions_to_compute, **job_kwargs)
+
         # Extract waveforms
         we: si.WaveformExtractor = si.extract_waveforms(
             si_recording,
@@ -287,7 +310,7 @@ class PostProcessing(dj.Imported):
         _ = si.postprocessing.compute_correlograms(we)
 
         metric_names = si.qualitymetrics.get_quality_metric_list()
-        metric_names.extend(si.qualitymetrics.get_quality_pca_metric_list()) 
+        # metric_names.extend(si.qualitymetrics.get_quality_pca_metric_list())  # TODO: temporarily removed
 
         # To compute commonly used cluster quality metrics.
         qc_metrics = si.qualitymetrics.compute_quality_metrics(
@@ -297,7 +320,7 @@ class PostProcessing(dj.Imported):
 
         # To compute commonly used waveform/template metrics.
         template_metric_names = si.postprocessing.get_template_metric_names()
-        template_metric_names.extend(["amplitude", "duration"])
+        template_metric_names.extend(["amplitude", "duration"])  # TODO: does this do anything?
 
         template_metrics = si.postprocessing.compute_template_metrics(
             waveform_extractor=we,
