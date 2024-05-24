@@ -80,11 +80,9 @@ class PreProcessing(dj.Imported):
         sorter_name = clustering_method.replace(".", "_")
 
         for required_key in (
-            "SI_SORTING_PARAMS",
             "SI_PREPROCESSING_METHOD",
+            "SI_SORTING_PARAMS",
             "SI_POSTPROCESSING_PARAMS",
-            "SI_WAVEFORM_EXTRACTION_PARAMS",
-            "SI_QUALITY_METRICS_PARAMS",
         ):
             if required_key not in params:
                 raise ValueError(
@@ -256,6 +254,10 @@ class PostProcessing(dj.Imported):
             sorting_file, base_folder=output_dir
         )
 
+        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get(
+            "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
+        )
+
         # Sorting Analyzer
         analyzer_output_dir = output_dir / sorter_name / "sorting_analyzer"
         if (analyzer_output_dir / "extensions").exists():
@@ -268,14 +270,12 @@ class PostProcessing(dj.Imported):
                 folder=analyzer_output_dir,
                 sparse=True,
                 overwrite=True,
+                **job_kwargs
             )
 
-        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get(
-            "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
-        )
-        extensions_params = params["SI_POSTPROCESSING_PARAMS"].get("extensions", {})
         # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()
         # each extension is parameterized by params specified in extensions_params dictionary (skip if not specified)
+        extensions_params = params["SI_POSTPROCESSING_PARAMS"].get("extensions", {})
         extensions_to_compute = {
             ext_name: extensions_params[ext_name]
             for ext_name in sorting_analyzer.get_computable_extensions()
