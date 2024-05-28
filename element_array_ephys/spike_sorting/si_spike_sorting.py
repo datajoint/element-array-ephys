@@ -216,6 +216,8 @@ class SIClustering(dj.Imported):
             sorting_save_path = sorting_output_dir / "si_sorting.pkl"
             si_sorting.dump_to_pickle(sorting_save_path, relative_to=output_dir)
 
+        _run_sorter()
+
         self.insert1(
             {
                 **key,
