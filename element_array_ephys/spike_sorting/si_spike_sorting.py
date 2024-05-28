@@ -8,7 +8,7 @@ import datajoint as dj
 import pandas as pd
 import spikeinterface as si
 from element_array_ephys import probe, readers
-from element_interface.utils import find_full_path
+from element_interface.utils import find_full_path, memoized_result
 from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import si_preprocessing
@@ -192,23 +192,29 @@ class SIClustering(dj.Imported):
             recording_file, base_folder=output_dir
         )
 
-        # Run sorting
-        # Sorting performed in a dedicated docker environment if the sorter is not built in the spikeinterface package.
-        si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
-            sorter_name=sorter_name,
-            recording=si_recording,
-            output_folder=output_dir / sorter_name / "spike_sorting",
-            remove_existing_folder=True,
-            verbose=True,
-            docker_image=sorter_name not in si.sorters.installed_sorters(),
-            **params.get("SI_SORTING_PARAMS", {}),
-        )
+        sorting_params = params["SI_SORTING_PARAMS"]
+        sorting_output_dir = output_dir / sorter_name / "spike_sorting"
 
-        # Save sorting object
-        sorting_save_path = (
-            output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
+        # Run sorting
+        @memoized_result(
+            uniqueness_dict=sorting_params,
+            output_directory=sorting_output_dir,
         )
-        si_sorting.dump_to_pickle(sorting_save_path, relative_to=output_dir)
+        def _run_sorter():
+            # Sorting performed in a dedicated docker environment if the sorter is not built in the spikeinterface package.
+            si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
+                sorter_name=sorter_name,
+                recording=si_recording,
+                output_folder=sorting_output_dir,
+                remove_existing_folder=True,
+                verbose=True,
+                docker_image=sorter_name not in si.sorters.installed_sorters(),
+                **sorting_params,
+            )
+
+            # Save sorting object
+            sorting_save_path = sorting_output_dir / "si_sorting.pkl"
+            si_sorting.dump_to_pickle(sorting_save_path, relative_to=output_dir)
 
         self.insert1(
             {
@@ -254,15 +260,20 @@ class PostProcessing(dj.Imported):
             sorting_file, base_folder=output_dir
         )
 
-        job_kwargs = params["SI_POSTPROCESSING_PARAMS"].get(
+        postprocessing_params = params["SI_POSTPROCESSING_PARAMS"]
+
+        job_kwargs = postprocessing_params.get(
             "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
         )
 
-        # Sorting Analyzer
         analyzer_output_dir = output_dir / sorter_name / "sorting_analyzer"
-        if (analyzer_output_dir / "extensions").exists():
-            sorting_analyzer = si.load_sorting_analyzer(folder=analyzer_output_dir)
-        else:
+
+        @memoized_result(
+            uniqueness_dict=postprocessing_params,
+            output_directory=analyzer_output_dir,
+        )
+        def _sorting_analyzer_compute():
+            # Sorting Analyzer
             sorting_analyzer = si.create_sorting_analyzer(
                 sorting=si_sorting,
                 recording=si_recording,
@@ -273,31 +284,33 @@ class PostProcessing(dj.Imported):
                 **job_kwargs
             )
 
-        # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()
-        # each extension is parameterized by params specified in extensions_params dictionary (skip if not specified)
-        extensions_params = params["SI_POSTPROCESSING_PARAMS"].get("extensions", {})
-        extensions_to_compute = {
-            ext_name: extensions_params[ext_name]
-            for ext_name in sorting_analyzer.get_computable_extensions()
-            if ext_name in extensions_params
-        }
+            # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()
+            # each extension is parameterized by params specified in extensions_params dictionary (skip if not specified)
+            extensions_params = postprocessing_params.get("extensions", {})
+            extensions_to_compute = {
+                ext_name: extensions_params[ext_name]
+                for ext_name in sorting_analyzer.get_computable_extensions()
+                if ext_name in extensions_params
+            }
 
-        sorting_analyzer.compute(extensions_to_compute, **job_kwargs)
+            sorting_analyzer.compute(extensions_to_compute, **job_kwargs)
 
-        # Save to phy format
-        if params["SI_POSTPROCESSING_PARAMS"].get("export_to_phy", False):
-            si.exporters.export_to_phy(
-                sorting_analyzer=sorting_analyzer,
-                output_folder=output_dir / sorter_name / "phy",
-                **job_kwargs,
-            )
-        # Generate spike interface report
-        if params["SI_POSTPROCESSING_PARAMS"].get("export_report", True):
-            si.exporters.export_report(
-                sorting_analyzer=sorting_analyzer,
-                output_folder=output_dir / sorter_name / "spikeinterface_report",
-                **job_kwargs,
-            )
+            # Save to phy format
+            if postprocessing_params.get("export_to_phy", False):
+                si.exporters.export_to_phy(
+                    sorting_analyzer=sorting_analyzer,
+                    output_folder=analyzer_output_dir / "phy",
+                    **job_kwargs,
+                )
+            # Generate spike interface report
+            if postprocessing_params.get("export_report", True):
+                si.exporters.export_report(
+                    sorting_analyzer=sorting_analyzer,
+                    output_folder=analyzer_output_dir / "spikeinterface_report",
+                    **job_kwargs,
+                )
+
+        _sorting_analyzer_compute()
 
         self.insert1(
             {

@@ -6,6 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.4.0] - 2024-05-28
 
 + Add - support for SpikeInterface version >= 0.101.0 (updated API)
++ Add - feature for memoization of spike sorting results (prevent duplicated runs)
 
 
 ## [0.3.4] - 2024-03-22
