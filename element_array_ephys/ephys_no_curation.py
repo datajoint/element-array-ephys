@@ -1048,8 +1048,8 @@ class CuratedClustering(dj.Imported):
                 si.ChannelSparsity.from_best_channels(
                     sorting_analyzer, 1, peak_sign="neg"
                 ).unit_id_to_channel_indices
-            )  # {unit: peak_channel_index}
-            unit_peak_channel = {u: chn[0] for u, chn in unit_peak_channel.items()}
+            )
+            unit_peak_channel: dict[int, int] = {u: chn[0] for u, chn in unit_peak_channel.items()}
 
             spike_count_dict: dict[int, int] = si_sorting.count_num_spikes_per_unit()
             # {unit: spike_count}
@@ -1076,9 +1076,9 @@ class CuratedClustering(dj.Imported):
             spikes_df = pd.DataFrame(spike_locations.spikes)
 
             units = []
-            for unit_id in si_sorting.unit_ids:
+            for unit_idx, unit_id in enumerate(si_sorting.unit_ids):
                 unit_id = int(unit_id)
-                unit_spikes_df = spikes_df[spikes_df.unit_index == unit_id]
+                unit_spikes_df = spikes_df[spikes_df.unit_index == unit_idx]
                 spike_sites = np.array(
                     [
                         channel2electrode_map[chn_idx]["electrode"]
@@ -1087,6 +1087,9 @@ class CuratedClustering(dj.Imported):
                 )
                 unit_spikes_loc = spike_locations.get_data()[unit_spikes_df.index]
                 _, spike_depths = zip(*unit_spikes_loc)  # x-coordinates, y-coordinates
+                spike_times = si_sorting.get_unit_spike_train(unit_id, return_times=True)
+
+                assert len(spike_times) == len(spike_sites) == len(spike_depths)
 
                 units.append(
                     {
@@ -1094,9 +1097,7 @@ class CuratedClustering(dj.Imported):
                         **channel2electrode_map[unit_peak_channel[unit_id]],
                         "unit": unit_id,
                         "cluster_quality_label": cluster_quality_label_map[unit_id],
-                        "spike_times": si_sorting.get_unit_spike_train(
-                            unit_id, return_times=True
-                        ),
+                        "spike_times": spike_times,
                         "spike_count": spike_count_dict[unit_id],
                         "spike_sites": spike_sites,
                         "spike_depths": spike_depths,
