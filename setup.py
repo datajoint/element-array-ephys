@@ -35,11 +35,11 @@ setup(
         "openpyxl",
         "plotly",
         "seaborn",
-        "spikeinterface",
+        "spikeinterface @ git+https://github.com/SpikeInterface/spikeinterface.git",
         "scikit-image",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
-        "element-interface @ git+https://github.com/datajoint/element-interface.git",
+        "element-interface @ git+https://github.com/datajoint/element-interface.git@dev_memoized_results",
         "numba",
     ],
     extras_require={
