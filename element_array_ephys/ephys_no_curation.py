@@ -8,14 +8,12 @@ from decimal import Decimal
 import datajoint as dj
 import numpy as np
 import pandas as pd
-import spikeinterface as si
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
-from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
 
-log = dj.logger
+logger = dj.logger
 
 schema = dj.schema()
 
@@ -824,7 +822,7 @@ class ClusteringTask(dj.Manual):
 
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
-            log.info(f"{output_dir} created!")
+            logger.info(f"{output_dir} created!")
 
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
@@ -1040,6 +1038,8 @@ class CuratedClustering(dj.Imported):
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
 
         if si_sorting_analyzer_dir.exists():  # Read from spikeinterface outputs
+            import spikeinterface as si
+
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             si_sorting = sorting_analyzer.sorting
 
@@ -1246,6 +1246,8 @@ class WaveformSet(dj.Imported):
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
+            import spikeinterface as si
+            
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
 
             # Find representative channel for each unit
@@ -1501,6 +1503,8 @@ class QualityMetrics(dj.Imported):
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
+            import spikeinterface as si
+            
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             qc_metrics = sorting_analyzer.get_extension("quality_metrics").get_data()
             template_metrics = sorting_analyzer.get_extension(
