@@ -1045,7 +1045,7 @@ class CuratedClustering(dj.Imported):
             # Find representative channel for each unit
             unit_peak_channel: dict[int, np.ndarray] = (
                 si.ChannelSparsity.from_best_channels(
-                    sorting_analyzer, 1, peak_sign="neg"
+                    sorting_analyzer, 1, peak_sign="both"
                 ).unit_id_to_channel_indices
             )
             unit_peak_channel: dict[int, int] = {u: chn[0] for u, chn in unit_peak_channel.items()}
@@ -1249,7 +1249,7 @@ class WaveformSet(dj.Imported):
             # Find representative channel for each unit
             unit_peak_channel: dict[int, np.ndarray] = (
                 si.ChannelSparsity.from_best_channels(
-                    sorting_analyzer, 1, peak_sign="neg"
+                    sorting_analyzer, 1, peak_sign="both"
                 ).unit_id_to_channel_indices
             )  # {unit: peak_channel_index}
             unit_peak_channel = {u: chn[0] for u, chn in unit_peak_channel.items()}

@@ -301,6 +301,7 @@ class PostProcessing(dj.Imported):
                 si.exporters.export_to_phy(
                     sorting_analyzer=sorting_analyzer,
                     output_folder=analyzer_output_dir / "phy",
+                    use_relative_path=True,
                     **job_kwargs,
                 )
             # Generate spike interface report
