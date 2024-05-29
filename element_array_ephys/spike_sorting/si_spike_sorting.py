@@ -216,6 +216,8 @@ class SIClustering(dj.Imported):
             sorting_save_path = sorting_output_dir / "si_sorting.pkl"
             si_sorting.dump_to_pickle(sorting_save_path, relative_to=output_dir)
 
+        _run_sorter()
+
         self.insert1(
             {
                 **key,
@@ -248,7 +250,6 @@ class PostProcessing(dj.Imported):
         ).fetch1("clustering_method", "clustering_output_dir", "params")
         output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
         sorter_name = clustering_method.replace(".", "_")
-        output_dir = find_full_path(ephys.get_ephys_root_data_dir(), output_dir)
 
         recording_file = output_dir / sorter_name / "recording" / "si_recording.pkl"
         sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
@@ -281,7 +282,7 @@ class PostProcessing(dj.Imported):
                 folder=analyzer_output_dir,
                 sparse=True,
                 overwrite=True,
-                **job_kwargs
+                **job_kwargs,
             )
 
             # The order of extension computation is drawn from sorting_analyzer.get_computable_extensions()

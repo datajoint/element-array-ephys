@@ -8,14 +8,12 @@ from decimal import Decimal
 import datajoint as dj
 import numpy as np
 import pandas as pd
-import spikeinterface as si
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
-from spikeinterface import exporters, postprocessing, qualitymetrics, sorters
 
 from . import ephys_report, probe
 from .readers import kilosort, openephys, spikeglx
 
-log = dj.logger
+logger = dj.logger
 
 schema = dj.schema()
 
@@ -824,7 +822,7 @@ class ClusteringTask(dj.Manual):
 
         if mkdir:
             output_dir.mkdir(parents=True, exist_ok=True)
-            log.info(f"{output_dir} created!")
+            logger.info(f"{output_dir} created!")
 
         return output_dir.relative_to(processed_dir) if relative else output_dir
 
@@ -1030,9 +1028,8 @@ class CuratedClustering(dj.Imported):
 
         # Get channel and electrode-site mapping
         electrode_query = (EphysRecording.Channel & key).proj(..., "-channel_name")
-        channel2electrode_map = electrode_query.fetch(as_dict=True)
         channel2electrode_map: dict[int, dict] = {
-            chn.pop("channel_idx"): chn for chn in channel2electrode_map
+            chn.pop("channel_idx"): chn for chn in electrode_query.fetch(as_dict=True)
         }
 
         # Get sorter method and create output directory.
@@ -1040,6 +1037,8 @@ class CuratedClustering(dj.Imported):
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
 
         if si_sorting_analyzer_dir.exists():  # Read from spikeinterface outputs
+            import spikeinterface as si
+
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             si_sorting = sorting_analyzer.sorting
 
@@ -1054,12 +1053,10 @@ class CuratedClustering(dj.Imported):
             spike_count_dict: dict[int, int] = si_sorting.count_num_spikes_per_unit()
             # {unit: spike_count}
 
-            # reorder channel2electrode_map according to recording channel ids
+            # update channel2electrode_map to match with probe's channel index
             channel2electrode_map = {
-                chn_idx: channel2electrode_map[chn_idx]
-                for chn_idx in sorting_analyzer.channel_ids_to_indices(
-                    sorting_analyzer.channel_ids
-                )
+                idx: channel2electrode_map[int(chn_idx)]
+                for idx, chn_idx in enumerate(sorting_analyzer.get_probe().contact_ids)
             }
 
             # Get unit id to quality label mapping
@@ -1239,13 +1236,14 @@ class WaveformSet(dj.Imported):
 
         # Get channel and electrode-site mapping
         electrode_query = (EphysRecording.Channel & key).proj(..., "-channel_name")
-        channel2electrode_map = electrode_query.fetch(as_dict=True)
         channel2electrode_map: dict[int, dict] = {
-            chn.pop("channel_idx"): chn for chn in channel2electrode_map
+            chn.pop("channel_idx"): chn for chn in electrode_query.fetch(as_dict=True)
         }
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
+            import spikeinterface as si
+            
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
 
             # Find representative channel for each unit
@@ -1256,12 +1254,10 @@ class WaveformSet(dj.Imported):
             )  # {unit: peak_channel_index}
             unit_peak_channel = {u: chn[0] for u, chn in unit_peak_channel.items()}
 
-            # reorder channel2electrode_map according to recording channel ids
-            channel_indices = sorting_analyzer.channel_ids_to_indices(
-                sorting_analyzer.channel_ids
-            ).tolist()
+            # update channel2electrode_map to match with probe's channel index
             channel2electrode_map = {
-                chn_idx: channel2electrode_map[chn_idx] for chn_idx in channel_indices
+                idx: channel2electrode_map[int(chn_idx)]
+                for idx, chn_idx in enumerate(sorting_analyzer.get_probe().contact_ids)
             }
 
             templates = sorting_analyzer.get_extension("templates")
@@ -1274,12 +1270,9 @@ class WaveformSet(dj.Imported):
                     unit_waveforms = templates.get_unit_template(
                         unit_id=unit["unit"], operator="average"
                     )
-                    peak_chn_idx = channel_indices.index(
-                        unit_peak_channel[unit["unit"]]
-                    )
                     unit_peak_waveform = {
                         **unit,
-                        "peak_electrode_waveform": unit_waveforms[:, peak_chn_idx],
+                        "peak_electrode_waveform": unit_waveforms[:, unit_peak_channel[unit["unit"]]],
                     }
 
                     unit_electrode_waveforms = [
@@ -1288,7 +1281,7 @@ class WaveformSet(dj.Imported):
                             **channel2electrode_map[chn_idx],
                             "waveform_mean": unit_waveforms[:, chn_idx],
                         }
-                        for chn_idx in channel_indices
+                        for chn_idx in channel2electrode_map
                     ]
 
                     yield unit_peak_waveform, unit_electrode_waveforms
@@ -1501,6 +1494,8 @@ class QualityMetrics(dj.Imported):
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
+            import spikeinterface as si
+            
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             qc_metrics = sorting_analyzer.get_extension("quality_metrics").get_data()
             template_metrics = sorting_analyzer.get_extension(
