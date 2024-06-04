@@ -205,7 +205,7 @@ class SIClustering(dj.Imported):
             si_sorting: si.sorters.BaseSorter = si.sorters.run_sorter(
                 sorter_name=sorter_name,
                 recording=si_recording,
-                output_folder=sorting_output_dir,
+                folder=sorting_output_dir,
                 remove_existing_folder=True,
                 verbose=True,
                 docker_image=sorter_name not in si.sorters.installed_sorters(),
