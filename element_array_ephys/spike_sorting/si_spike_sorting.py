@@ -239,7 +239,7 @@ class PostProcessing(dj.Imported):
     ---
     execution_time: datetime   # datetime of the start of this step
     execution_duration: float  # execution duration in hours
-    do_si_export=1: bool       # whether to export to phy
+    do_si_export=0: bool       # whether to export to phy
     """
 
     def make(self, key):
@@ -331,7 +331,7 @@ class SIExport(dj.Computed):
     @property
     def key_source(self):
         return PostProcessing & "do_si_export = 1"
-    
+
     def make(self, key):
         execution_time = datetime.utcnow()
 
