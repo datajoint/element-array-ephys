@@ -111,25 +111,30 @@ class PreProcessing(dj.Imported):
             )
             spikeglx_recording.validate_file("ap")
             data_dir = spikeglx_meta_filepath.parent
+
+            si_extractor = si.extractors.neoextractors.spikeglx.SpikeGLXRecordingExtractor
+            stream_names, stream_ids = si.extractors.get_neo_streams(
+                acq_software, folder_path=data_dir
+            )
+            si_recording: si.BaseRecording = si_extractor(
+                folder_path=data_dir, stream_name=stream_names[0]
+            )
         elif acq_software == "Open Ephys":
             oe_probe = ephys.get_openephys_probe_data(key)
             assert len(oe_probe.recording_info["recording_files"]) == 1
             data_dir = oe_probe.recording_info["recording_files"][0]
+            si_extractor = si.extractors.neoextractors.openephys.OpenEphysBinaryRecordingExtractor
+
+            stream_names, stream_ids = si.extractors.get_neo_streams(
+                acq_software, folder_path=data_dir
+            )
+            si_recording: si.BaseRecording = si_extractor(
+                folder_path=data_dir, stream_name=stream_names[0]
+            )
         else:
             raise NotImplementedError(
                 f"SpikeInterface processing for {acq_software} not yet implemented."
             )
-        acq_software = acq_software.replace(" ", "").lower()
-        si_extractor: si.extractors.neoextractors = (
-            si.extractors.extractorlist.recording_extractor_full_dict[acq_software]
-        )  # data extractor object
-
-        stream_names, stream_ids = si.extractors.get_neo_streams(
-            acq_software, folder_path=data_dir
-        )
-        si_recording: si.BaseRecording = si_extractor(
-            folder_path=data_dir, stream_name=stream_names[0]
-        )
 
         # Add probe information to recording object
         electrodes_df = (
