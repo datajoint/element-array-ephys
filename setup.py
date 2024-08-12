@@ -35,7 +35,7 @@ setup(
         "plotly",
         "seaborn",
         "spikeinterface",
-        "scikit-image",
+        "scikit-image>=0.20",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
     ],
