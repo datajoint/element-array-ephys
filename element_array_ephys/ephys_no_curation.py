@@ -190,7 +190,7 @@ class ProbeInsertion(dj.Manual):
 
                 probe_dir = meta_filepath.parent
                 try:
-                    probe_number = re.search("(imec)?\d{1}$", probe_dir.name).group()
+                    probe_number = re.search(r"(imec)?\d{1}$", probe_dir.name).group()
                     probe_number = int(probe_number.replace("imec", ""))
                 except AttributeError:
                     probe_number = meta_fp_idx
