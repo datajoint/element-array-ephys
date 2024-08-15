@@ -170,5 +170,5 @@ def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
         **{**probe_params, "probe_type": probe_type}
     )
     with ProbeType.connection.transaction:
-        ProbeType.insert1(probe_type)
+        ProbeType.insert1({"probe_type": probe_type})
         ProbeType.Electrode.insert(electrode_layouts)
