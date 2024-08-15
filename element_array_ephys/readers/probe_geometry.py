@@ -101,6 +101,14 @@ M = dict(
     ]
 )
 
+# additional alias to maintain compatibility with previous naming in the pipeline
+M["neuropixels 1.0 - 3A"] = M["3A"]
+M["neuropixels 1.0 - 3B"] = M["NP1010"]
+M["neuropixels 1.0"] = M["NP1010"]
+M["neuropixels UHD"] = M["NP1100"]
+M["neuropixels 2.0 - SS"] = M["NP2000"]
+M["neuropixels 2.0 - MS"] = M["NP2010"]
+
 
 def build_npx_probe(
     nShank: int,
