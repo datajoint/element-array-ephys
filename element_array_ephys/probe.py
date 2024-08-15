@@ -155,21 +155,19 @@ def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
     Electrode numbering is 0-indexing
     """
     npx_probes_config = probe_geometry.M
-    npx_probes_config["neuropixels 1.0 - 3A"] = npx_probes_config["3A"]
-    npx_probes_config["neuropixels 1.0 - 3B"] = npx_probes_config["NP1010"]
-    npx_probes_config["neuropixels UHD"] = npx_probes_config["NP1100"]
-    npx_probes_config["neuropixels 2.0 - SS"] = npx_probes_config["NP2000"]
-    npx_probes_config["neuropixels 2.0 - MS"] = npx_probes_config["NP2010"]
+    if probe_type not in npx_probes_config:
+        raise ValueError(
+            f"Probe type {probe_type} not found in probe_geometry configuration. Not a Neuropixels probe?"
+        )
 
-    probe_type = {"probe_type": probe_type}
     probe_params = dict(
         zip(
             probe_geometry.geom_param_names,
-            npx_probes_config[probe_type["probe_type"]],
+            npx_probes_config[probe_type],
         )
     )
     electrode_layouts = probe_geometry.build_npx_probe(
-        **{**probe_params, **probe_type}
+        **{**probe_params, "probe_type": probe_type}
     )
     with ProbeType.connection.transaction:
         ProbeType.insert1(probe_type)
