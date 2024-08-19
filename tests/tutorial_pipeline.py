@@ -64,5 +64,7 @@ def get_session_directory(session_key):
 
 ephys.activate(db_prefix + "ephys", db_prefix + "probe", linking_module=__name__)
 
+probe.create_neuropixels_probe_types()
+
 
 __all__ = [""]
