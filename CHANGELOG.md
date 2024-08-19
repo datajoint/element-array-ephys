@@ -3,10 +3,16 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.4.0] - 2024-05-28
+## [0.4.0] - 2024-08-16
 
 + Add - support for SpikeInterface version >= 0.101.0 (updated API)
 + Add - feature for memoization of spike sorting results (prevent duplicated runs)
+
+
+## [0.3.5] - 2024-08-16
+
++ Fix - Improve `spikeglx` loader in extracting neuropixels probe type from the meta file
++ Update - Explicit call to `probe.create_neuropixels_probe_types()` to create entries in ProbeType
 
 
 ## [0.3.4] - 2024-03-22
