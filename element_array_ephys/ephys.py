@@ -897,7 +897,7 @@ class Clustering(dj.Imported):
             ).fetch1("acq_software", "clustering_method", "params")
 
             if "kilosort" in clustering_method:
-                from element_array_ephys.readers import kilosort_triggering
+                from .spike_sorting import kilosort_triggering
 
                 # add additional probe-recording and channels details into `params`
                 params = {**params, **get_recording_channels_details(key)}
