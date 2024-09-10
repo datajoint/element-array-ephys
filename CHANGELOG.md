@@ -3,6 +3,12 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.3.5] - 2024-08-16
+
++ Fix - Improve `spikeglx` loader in extracting neuropixels probe type from the meta file
++ Update - Explicit call to `probe.create_neuropixels_probe_types()` to create entries in ProbeType
+
+
 ## [0.3.4] - 2024-03-22
 
 + Add - pytest

@@ -204,14 +204,14 @@ def extract_clustering_info(cluster_output_dir):
         is_curated = bool(np.any(curation_row))
         if creation_time is None and is_curated:
             row_meta = phylog.meta[np.where(curation_row)[0].max()]
-            datetime_str = re.search("\d{2}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}", row_meta)
+            datetime_str = re.search(r"\d{2}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}", row_meta)
             if datetime_str:
                 creation_time = datetime.strptime(
                     datetime_str.group(), "%Y-%m-%d %H:%M:%S"
                 )
             else:
                 creation_time = datetime.fromtimestamp(phylog_filepath.stat().st_ctime)
-                time_str = re.search("\d{2}:\d{2}:\d{2}", row_meta)
+                time_str = re.search(r"\d{2}:\d{2}:\d{2}", row_meta)
                 if time_str:
                     creation_time = datetime.combine(
                         creation_time.date(),
