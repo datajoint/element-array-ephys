@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from element_interface.utils import dict_to_uuid, find_full_path, find_root_directory
 
-from . import ephys_report, probe
+from . import probe
 from .readers import kilosort, openephys, spikeglx
 
 logger = dj.logger
@@ -22,7 +22,6 @@ _linking_module = None
 
 def activate(
     ephys_schema_name: str,
-    probe_schema_name: str = None,
     *,
     create_schema: bool = True,
     create_tables: bool = True,
@@ -32,7 +31,6 @@ def activate(
 
     Args:
         ephys_schema_name (str): A string containing the name of the ephys schema.
-        probe_schema_name (str): A string containing the name of the probe schema.
         create_schema (bool): If True, schema will be created in the database.
         create_tables (bool): If True, tables related to the schema will be created in the database.
         linking_module (str): A string containing the module name or module containing the required dependencies to activate the schema.
@@ -46,7 +44,6 @@ def activate(
         get_ephys_root_data_dir(): Returns absolute path for root data director(y/ies) with all electrophysiological recording sessions, as a list of string(s).
         get_session_direction(session_key: dict): Returns path to electrophysiology data for the a particular session as a list of strings.
         get_processed_data_dir(): Optional. Returns absolute path for processed data. Defaults to root directory.
-
     """
 
     if isinstance(linking_module, str):
@@ -58,17 +55,15 @@ def activate(
     global _linking_module
     _linking_module = linking_module
 
-    # activate
-    probe.activate(
-        probe_schema_name, create_schema=create_schema, create_tables=create_tables
-    )
+    if not probe.schema.is_activated():
+        raise RuntimeError("Please activate the `probe` schema first.")
+
     schema.activate(
         ephys_schema_name,
         create_schema=create_schema,
         create_tables=create_tables,
         add_objects=_linking_module.__dict__,
     )
-    ephys_report.activate(f"{ephys_schema_name}_report", ephys_schema_name)
 
 
 # -------------- Functions required by the elements-ephys  ---------------

@@ -3,6 +3,15 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+
+## [1.0.0] - 2024-09-10
+
++ Update - No longer support multiple variation of ephys module, keep only `ephys_no_curation` module, renamed to `ephys`
++ Update - Remove other ephys modules (e.g. `ephys_acute`, `ephys_chronic`) (moved to different branches)
++ Update - Add support for `SpikeInterface`
++ Update - Remove support for `ecephys_spike_sorting` (moved to a different branch)
++ Update - Simplify the "activate" mechanism
+
 ## [0.4.0] - 2024-08-16
 
 + Add - support for SpikeInterface version >= 0.101.0 (updated API)

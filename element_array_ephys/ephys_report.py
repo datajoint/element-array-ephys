@@ -7,26 +7,24 @@ from uuid import UUID
 import datajoint as dj
 from element_interface.utils import dict_to_uuid
 
-from . import probe
+from . import probe, ephys
 
 schema = dj.schema()
 
-ephys = None
 
-
-def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
+def activate(schema_name, *, create_schema=True, create_tables=True):
     """Activate the current schema.
 
     Args:
         schema_name (str): schema name on the database server to activate the `ephys_report` schema.
-        ephys_schema_name (str): schema name of the activated ephys element for which
-                this ephys_report schema will be downstream from.
         create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
         create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
+    if not probe.schema.is_activated():
+        raise RuntimeError("Please activate the `probe` schema first.")
+    if not ephys.schema.is_activated():
+        raise RuntimeError("Please activate the `ephys` schema first.")
 
-    global ephys
-    ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
         schema_name,
         create_schema=create_schema,

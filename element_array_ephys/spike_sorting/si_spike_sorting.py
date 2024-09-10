@@ -1,5 +1,7 @@
 """
-The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the "spikeinterface" pipeline. Spikeinterface was developed by Alessio Buccino, Samuel Garcia, Cole Hurwitz, Jeremy Magland, and Matthias Hennig (https://github.com/SpikeInterface)
+The following DataJoint pipeline implements the sequence of steps in the spike-sorting routine featured in the "spikeinterface" pipeline.
+Spikeinterface was developed by Alessio Buccino, Samuel Garcia, Cole Hurwitz, Jeremy Magland, and Matthias Hennig (https://github.com/SpikeInterface)
+If you use this pipeline, please cite SpikeInterface and the relevant sorter(s) used in your publication (see https://github.com/SpikeInterface for additional details for citation).
 """
 
 from datetime import datetime
@@ -7,7 +9,7 @@ from datetime import datetime
 import datajoint as dj
 import pandas as pd
 import spikeinterface as si
-from element_array_ephys import probe, readers
+from element_array_ephys import probe, ephys, readers
 from element_interface.utils import find_full_path, memoized_result
 from spikeinterface import exporters, extractors, sorters
 
@@ -17,25 +19,25 @@ log = dj.logger
 
 schema = dj.schema()
 
-ephys = None
-
 
 def activate(
     schema_name,
     *,
-    ephys_module,
     create_schema=True,
     create_tables=True,
 ):
+    """Activate the current schema.
+
+    Args:
+        schema_name (str): schema name on the database server to activate the `si_spike_sorting` schema.
+        create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
+        create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
-    activate(schema_name, *, create_schema=True, create_tables=True, activated_ephys=None)
-        :param schema_name: schema name on the database server to activate the `spike_sorting` schema
-        :param ephys_module: the activated ephys element for which this `spike_sorting` schema will be downstream from
-        :param create_schema: when True (default), create schema in the database if it does not yet exist.
-        :param create_tables: when True (default), create tables in the database if they do not yet exist.
-    """
-    global ephys
-    ephys = ephys_module
+    if not probe.schema.is_activated():
+        raise RuntimeError("Please activate the `probe` schema first.")
+    if not ephys.schema.is_activated():
+        raise RuntimeError("Please activate the `ephys` schema first.")
+
     schema.activate(
         schema_name,
         create_schema=create_schema,
