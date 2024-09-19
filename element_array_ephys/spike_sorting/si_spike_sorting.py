@@ -114,7 +114,9 @@ class PreProcessing(dj.Imported):
             spikeglx_recording.validate_file("ap")
             data_dir = spikeglx_meta_filepath.parent
 
-            si_extractor = si.extractors.neoextractors.spikeglx.SpikeGLXRecordingExtractor
+            si_extractor = (
+                si.extractors.neoextractors.spikeglx.SpikeGLXRecordingExtractor
+            )
             stream_names, stream_ids = si.extractors.get_neo_streams(
                 "spikeglx", folder_path=data_dir
             )
@@ -125,7 +127,9 @@ class PreProcessing(dj.Imported):
             oe_probe = ephys.get_openephys_probe_data(key)
             assert len(oe_probe.recording_info["recording_files"]) == 1
             data_dir = oe_probe.recording_info["recording_files"][0]
-            si_extractor = si.extractors.neoextractors.openephys.OpenEphysBinaryRecordingExtractor
+            si_extractor = (
+                si.extractors.neoextractors.openephys.OpenEphysBinaryRecordingExtractor
+            )
 
             stream_names, stream_ids = si.extractors.get_neo_streams(
                 "openephysbinary", folder_path=data_dir
