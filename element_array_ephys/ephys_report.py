@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import pathlib
+import tempfile
 from uuid import UUID
 
 import datajoint as dj
@@ -53,7 +54,7 @@ class ProbeLevelReport(dj.Computed):
     def make(self, key):
         from .plotting.probe_level import plot_driftmap
 
-        save_dir = _make_save_dir()
+        save_dir = tempfile.TemporaryDirectory()
 
         units = ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
 
@@ -88,12 +89,14 @@ class ProbeLevelReport(dj.Computed):
             fig_dict = _save_figs(
                 figs=(fig,),
                 fig_names=("drift_map_plot",),
-                save_dir=save_dir,
+                save_dir=save_dir.name,
                 fig_prefix=fig_prefix,
                 extension=".png",
             )
 
             self.insert1({**key, **fig_dict, "shank": shank_no})
+
+        save_dir.cleanup()
 
 
 @schema
@@ -266,17 +269,10 @@ class QualityMetricReport(dj.Computed):
         )
 
 
-def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
-    if root_dir is None:
-        root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "temp_ephys_figures"
-    save_dir.mkdir(parents=True, exist_ok=True)
-    return save_dir
-
-
 def _save_figs(
     figs, fig_names, save_dir, fig_prefix, extension=".png"
 ) -> dict[str, pathlib.Path]:
+    save_dir = pathlib.Path(save_dir)
     fig_dict = {}
     for fig, fig_name in zip(figs, fig_names):
         fig_filepath = save_dir / (fig_prefix + "_" + fig_name + extension)
