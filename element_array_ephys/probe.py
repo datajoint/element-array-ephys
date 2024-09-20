@@ -1,11 +1,9 @@
-"""
-Neuropixels Probes
-"""
-
 import datajoint as dj
 
 from .readers import probe_geometry
 from .readers.probe_geometry import build_electrode_layouts
+
+log = dj.logger
 
 schema = dj.schema()
 
@@ -32,20 +30,6 @@ def activate(
     schema.activate(
         schema_name, create_schema=create_schema, create_tables=create_tables
     )
-
-    # Add neuropixels probes
-    for probe_type in (
-        "neuropixels 1.0 - 3A",
-        "neuropixels 1.0 - 3B",
-        "neuropixels UHD",
-        "neuropixels 2.0 - SS",
-        "neuropixels 2.0 - MS",
-    ):
-        if not (ProbeType & {"probe_type": probe_type}):
-            try:
-                ProbeType.create_neuropixels_probe(probe_type)
-            except dj.errors.DataJointError as e:
-                print(f"Unable to create probe-type: {probe_type}\n{str(e)}")
 
 
 @schema
@@ -87,39 +71,10 @@ class ProbeType(dj.Lookup):
 
     @staticmethod
     def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
-        """
-        Create `ProbeType` and `Electrode` for neuropixels probes:
-        + neuropixels 1.0 - 3A
-        + neuropixels 1.0 - 3B
-        + neuropixels UHD
-        + neuropixels 2.0 - SS
-        + neuropixels 2.0 - MS
-
-        For electrode location, the (0, 0) is the
-         bottom left corner of the probe (ignore the tip portion)
-        Electrode numbering is 0-indexing
-        """
-
-        npx_probes_config = probe_geometry.M
-        npx_probes_config["neuropixels 1.0 - 3A"] = npx_probes_config["3A"]
-        npx_probes_config["neuropixels 1.0 - 3B"] = npx_probes_config["NP1010"]
-        npx_probes_config["neuropixels UHD"] = npx_probes_config["NP1100"]
-        npx_probes_config["neuropixels 2.0 - SS"] = npx_probes_config["NP2000"]
-        npx_probes_config["neuropixels 2.0 - MS"] = npx_probes_config["NP2010"]
-
-        probe_type = {"probe_type": probe_type}
-        probe_params = dict(
-            zip(
-                probe_geometry.geom_param_names,
-                npx_probes_config[probe_type["probe_type"]],
-            )
+        log.warning(
+            "Class method `ProbeType.create_neuropixels_probe` is deprecated. Use `create_neuropixels_probe` instead.",
         )
-        electrode_layouts = probe_geometry.build_npx_probe(
-            **{**probe_params, **probe_type}
-        )
-        with ProbeType.connection.transaction:
-            ProbeType.insert1(probe_type, skip_duplicates=True)
-            ProbeType.Electrode.insert(electrode_layouts, skip_duplicates=True)
+        return create_neuropixels_probe(probe_type)
 
 
 @schema
@@ -171,3 +126,49 @@ class ElectrodeConfig(dj.Lookup):
         -> master
         -> ProbeType.Electrode
         """
+
+
+def create_neuropixels_probe_types():
+    # Add neuropixels probes
+    for probe_type in (
+        "neuropixels 1.0 - 3A",
+        "neuropixels 1.0 - 3B",
+        "neuropixels UHD",
+        "neuropixels 2.0 - SS",
+        "neuropixels 2.0 - MS",
+    ):
+        if not (ProbeType & {"probe_type": probe_type}):
+            create_neuropixels_probe(probe_type)
+
+
+def create_neuropixels_probe(probe_type: str = "neuropixels 1.0 - 3A"):
+    """
+    Create `ProbeType` and `Electrode` for neuropixels probes:
+    + neuropixels 1.0 - 3A
+    + neuropixels 1.0 - 3B
+    + neuropixels UHD
+    + neuropixels 2.0 - SS
+    + neuropixels 2.0 - MS
+
+    For electrode location, the (0, 0) is the
+     bottom left corner of the probe (ignore the tip portion)
+    Electrode numbering is 0-indexing
+    """
+    npx_probes_config = probe_geometry.M
+    if probe_type not in npx_probes_config:
+        raise ValueError(
+            f"Probe type {probe_type} not found in probe_geometry configuration. Not a Neuropixels probe?"
+        )
+
+    probe_params = dict(
+        zip(
+            probe_geometry.geom_param_names,
+            npx_probes_config[probe_type],
+        )
+    )
+    electrode_layouts = probe_geometry.build_npx_probe(
+        **{**probe_params, "probe_type": probe_type}
+    )
+    with ProbeType.connection.transaction:
+        ProbeType.insert1({"probe_type": probe_type})
+        ProbeType.Electrode.insert(electrode_layouts)
