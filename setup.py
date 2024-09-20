@@ -36,7 +36,7 @@ setup(
         "plotly",
         "seaborn",
         "spikeinterface @ git+https://github.com/SpikeInterface/spikeinterface.git",
-        "scikit-image",
+        "scikit-image>=0.20",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
         "element-interface @ git+https://github.com/datajoint/element-interface.git",
