@@ -2,31 +2,30 @@ from __future__ import annotations
 
 import datetime
 import pathlib
+import tempfile
 from uuid import UUID
 
 import datajoint as dj
 from element_interface.utils import dict_to_uuid
 
-from . import probe
+from . import probe, ephys
 
 schema = dj.schema()
 
-ephys = None
 
-
-def activate(schema_name, ephys_schema_name, *, create_schema=True, create_tables=True):
+def activate(schema_name, *, create_schema=True, create_tables=True):
     """Activate the current schema.
 
     Args:
         schema_name (str): schema name on the database server to activate the `ephys_report` schema.
-        ephys_schema_name (str): schema name of the activated ephys element for which
-                this ephys_report schema will be downstream from.
         create_schema (bool, optional): If True (default), create schema in the database if it does not yet exist.
         create_tables (bool, optional): If True (default), create tables in the database if they do not yet exist.
     """
+    if not probe.schema.is_activated():
+        raise RuntimeError("Please activate the `probe` schema first.")
+    if not ephys.schema.is_activated():
+        raise RuntimeError("Please activate the `ephys` schema first.")
 
-    global ephys
-    ephys = dj.create_virtual_module("ephys", ephys_schema_name)
     schema.activate(
         schema_name,
         create_schema=create_schema,
@@ -55,7 +54,7 @@ class ProbeLevelReport(dj.Computed):
     def make(self, key):
         from .plotting.probe_level import plot_driftmap
 
-        save_dir = _make_save_dir()
+        save_dir = tempfile.TemporaryDirectory()
 
         units = ephys.CuratedClustering.Unit & key & "cluster_quality_label='good'"
 
@@ -90,12 +89,14 @@ class ProbeLevelReport(dj.Computed):
             fig_dict = _save_figs(
                 figs=(fig,),
                 fig_names=("drift_map_plot",),
-                save_dir=save_dir,
+                save_dir=save_dir.name,
                 fig_prefix=fig_prefix,
                 extension=".png",
             )
 
             self.insert1({**key, **fig_dict, "shank": shank_no})
+
+        save_dir.cleanup()
 
 
 @schema
@@ -268,17 +269,10 @@ class QualityMetricReport(dj.Computed):
         )
 
 
-def _make_save_dir(root_dir: pathlib.Path = None) -> pathlib.Path:
-    if root_dir is None:
-        root_dir = pathlib.Path().absolute()
-    save_dir = root_dir / "temp_ephys_figures"
-    save_dir.mkdir(parents=True, exist_ok=True)
-    return save_dir
-
-
 def _save_figs(
     figs, fig_names, save_dir, fig_prefix, extension=".png"
 ) -> dict[str, pathlib.Path]:
+    save_dir = pathlib.Path(save_dir)
     fig_dict = {}
     for fig, fig_name in zip(figs, fig_names):
         fig_filepath = save_dir / (fig_prefix + "_" + fig_name + extension)
