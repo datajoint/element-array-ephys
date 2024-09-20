@@ -9,18 +9,7 @@ nav:
   - Concepts: concepts.md
   - Tutorials:
       - Overview: tutorials/index.md
-      - Data Download: tutorials/00-data-download-optional.ipynb
-      - Configure: tutorials/01-configure.ipynb
-      - Workflow Structure: tutorials/02-workflow-structure-optional.ipynb
-      - Process: tutorials/03-process.ipynb
-      - Automate: tutorials/04-automate-optional.ipynb
-      - Explore: tutorials/05-explore.ipynb
-      - Drop: tutorials/06-drop-optional.ipynb
-      - Downstream Analysis: tutorials/07-downstream-analysis.ipynb
-      - Visualizations: tutorials/10-data_visualization.ipynb
-      - Electrode Localization: tutorials/08-electrode-localization.ipynb
-      - NWB Export: tutorials/09-NWB-export.ipynb
-      - Quality Metrics: tutorials/quality_metrics.ipynb
+      - Tutorial: tutorials/tutorial.ipynb
   - Citation: citation.md
   - API: api/ # defer to gen-files + literate-nav
   - Changelog: changelog.md
