@@ -1,12 +1,10 @@
-import logging
-import pathlib
-import re
-from datetime import datetime
 from os import path
-
-import numpy as np
+from datetime import datetime
+import pathlib
 import pandas as pd
-
+import numpy as np
+import re
+import logging
 from .utils import convert_to_number
 
 log = logging.getLogger(__name__)
@@ -117,7 +115,8 @@ class Kilosort:
 
         # Read the Cluster Groups
         for cluster_pattern, cluster_col_name in zip(
-            ["cluster_group.*", "cluster_KSLabel.*"], ["group", "KSLabel"]
+            ["cluster_group.*", "cluster_KSLabel.*", "cluster_group.*"],
+            ["group", "KSLabel", "KSLabel"],
         ):
             try:
                 cluster_file = next(self._kilosort_dir.glob(cluster_pattern))
@@ -126,21 +125,25 @@ class Kilosort:
             else:
                 cluster_file_suffix = cluster_file.suffix
                 assert cluster_file_suffix in (".tsv", ".xlsx")
-                break
+
+                if cluster_file_suffix == ".tsv":
+                    df = pd.read_csv(cluster_file, sep="\t", header=0)
+                elif cluster_file_suffix == ".xlsx":
+                    df = pd.read_excel(cluster_file, engine="openpyxl")
+                else:
+                    df = pd.read_csv(cluster_file, delimiter="\t")
+
+                try:
+                    self._data["cluster_groups"] = np.array(df[cluster_col_name].values)
+                    self._data["cluster_ids"] = np.array(df["cluster_id"].values)
+                except KeyError:
+                    continue
+                else:
+                    break
         else:
             raise FileNotFoundError(
                 'Neither "cluster_groups" nor "cluster_KSLabel" file found!'
             )
-
-        if cluster_file_suffix == ".tsv":
-            df = pd.read_csv(cluster_file, sep="\t", header=0)
-        elif cluster_file_suffix == ".xlsx":
-            df = pd.read_excel(cluster_file, engine="openpyxl")
-        else:
-            df = pd.read_csv(cluster_file, delimiter="\t")
-
-        self._data["cluster_groups"] = np.array(df[cluster_col_name].values)
-        self._data["cluster_ids"] = np.array(df["cluster_id"].values)
 
     def get_best_channel(self, unit):
         template_idx = self.data["spike_templates"][

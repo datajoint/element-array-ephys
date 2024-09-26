@@ -1,7 +1,11 @@
 name: Test
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 jobs:
   devcontainer-build:
@@ -31,4 +35,3 @@ jobs:
         run: |
           python_version=${{matrix.py_ver}}
           black element_array_ephys --check --verbose --target-version py${python_version//.}
-
