@@ -1038,6 +1038,16 @@ class CuratedClustering(dj.Imported):
 
         if si_sorting_analyzer_dir.exists():  # Read from spikeinterface outputs
             import spikeinterface as si
+            from spikeinterface import sorters
+
+            sorting_file = output_dir / sorter_name / "spike_sorting" / "si_sorting.pkl"
+            si_sorting_: si.sorters.BaseSorter = si.load_extractor(
+                sorting_file, base_folder=output_dir
+            )
+            if si_sorting_.unit_ids.size == 0:
+                logger.info(f"No units found in {sorting_file}. Skipping Unit ingestion...")
+                self.insert1(key)
+                return
 
             sorting_analyzer = si.load_sorting_analyzer(folder=si_sorting_analyzer_dir)
             si_sorting = sorting_analyzer.sorting
@@ -1241,6 +1251,11 @@ class WaveformSet(dj.Imported):
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
         sorter_name = clustering_method.replace(".", "_")
 
+        self.insert1(key)
+        if not len(CuratedClustering.Unit & key):
+            logger.info(f"No CuratedClustering.Unit found for {key}, skipping Waveform ingestion.")
+            return
+
         # Get channel and electrode-site mapping
         electrode_query = (EphysRecording.Channel & key).proj(..., "-channel_name")
         channel2electrode_map: dict[int, dict] = {
@@ -1294,7 +1309,6 @@ class WaveformSet(dj.Imported):
                     ]
 
                     yield unit_peak_waveform, unit_electrode_waveforms
-
         else:  # read from kilosort outputs (ecephys pipeline)
             kilosort_dataset = kilosort.Kilosort(output_dir)
 
@@ -1394,7 +1408,6 @@ class WaveformSet(dj.Imported):
                         yield unit_peak_waveform, unit_electrode_waveforms
 
         # insert waveform on a per-unit basis to mitigate potential memory issue
-        self.insert1(key)
         for unit_peak_waveform, unit_electrode_waveforms in yield_unit_waveforms():
             if unit_peak_waveform:
                 self.PeakWaveform.insert1(unit_peak_waveform, ignore_extra_fields=True)
@@ -1501,6 +1514,11 @@ class QualityMetrics(dj.Imported):
         output_dir = find_full_path(get_ephys_root_data_dir(), output_dir)
         sorter_name = clustering_method.replace(".", "_")
 
+        self.insert1(key)
+        if not len(CuratedClustering.Unit & key):
+            logger.info(f"No CuratedClustering.Unit found for {key}, skipping QualityMetrics ingestion.")
+            return
+
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
         if si_sorting_analyzer_dir.exists():  # read from spikeinterface outputs
             import spikeinterface as si
@@ -1556,7 +1574,6 @@ class QualityMetrics(dj.Imported):
             for unit_key in (CuratedClustering.Unit & key).fetch("KEY")
         ]
 
-        self.insert1(key)
         self.Cluster.insert(metrics_list, ignore_extra_fields=True)
         self.Waveform.insert(metrics_list, ignore_extra_fields=True)
 
