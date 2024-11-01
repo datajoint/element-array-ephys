@@ -14,6 +14,7 @@ AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from A
 IMAX = {
     "neuropixels 1.0 - 3A": 512,
     "neuropixels 1.0 - 3B": 512,
+    "NP1015": 512,
     "neuropixels 2.0 - SS": 8192,
     "neuropixels 2.0 - MS": 8192,
 }
