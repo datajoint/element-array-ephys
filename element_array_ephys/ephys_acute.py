@@ -204,10 +204,7 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": oe_probe.probe_model,
                     "probe": oe_probe.probe_SN,
                 }
-                if (
-                    probe_key["probe"] not in [p["probe"] for p in probe_list]
-                    and probe_key not in probe.Probe()
-                ):
+                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
                     probe_list.append(probe_key)
                 probe_insertion_list.append(
                     {
