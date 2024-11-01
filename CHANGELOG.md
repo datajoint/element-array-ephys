@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.7 (2024-11-01)
+
+### Fix
+
+* Fi(spikeglx): robust IMAX value detection from IMEC file
+
 ## v0.3.6 (2024-10-01)
 
 ### Chore
