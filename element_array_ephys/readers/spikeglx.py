@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 AP_GAIN = 80  # For NP 2.0 probes; APGain = 80 for all AP (LF is computed from AP)
 
 # Imax values for different probe types - see metaguides (http://billkarsh.github.io/SpikeGLX/#metadata-guides)
+IMAX = {
+    "neuropixels 1.0 - 3A": 512,
+    "neuropixels 1.0 - 3B": 512,
+    "neuropixels 2.0 - SS": 8192,
+    "neuropixels 2.0 - MS": 8192,
+}
 
 
 class SpikeGLX:
@@ -90,15 +96,15 @@ class SpikeGLX:
                 dataVolts = dataInt * Vmax / Imax / gain
         """
         vmax = float(self.apmeta.meta["imAiRangeMax"])
+        imax = self.apmeta.meta.get("imMaxInt")
+        imax = float(imax) if imax else IMAX[self.apmeta.probe_model]
 
         if band == "ap":
-            imax = self.apmeta.meta["imMaxInt"]
             imroTbl_data = self.apmeta.imroTbl["data"]
             imroTbl_idx = 3
             chn_ind = self.apmeta.get_recording_channels_indices(exclude_sync=True)
 
         elif band == "lf":
-            imax = self.lfmeta.meta["imMaxInt"]
             imroTbl_data = self.lfmeta.imroTbl["data"]
             imroTbl_idx = 4
             chn_ind = self.lfmeta.get_recording_channels_indices(exclude_sync=True)
