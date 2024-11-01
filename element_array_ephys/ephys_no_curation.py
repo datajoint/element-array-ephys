@@ -58,7 +58,6 @@ def activate(
     global _linking_module
     _linking_module = linking_module
 
-    # activate
     probe.activate(
         probe_schema_name, create_schema=create_schema, create_tables=create_tables
     )
