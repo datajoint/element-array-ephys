@@ -126,7 +126,7 @@ class AcquisitionSoftware(dj.Lookup):
         acq_software ( varchar(24) ): Acquisition software, e.g,. SpikeGLX, OpenEphys
     """
 
-    definition = """  # Software used for recording of neuropixels probes
+    definition = """  # Name of software used for recording of neuropixels probes - SpikeGLX or Open Ephys
     acq_software: varchar(24)
     """
     contents = zip(["SpikeGLX", "Open Ephys"])
@@ -533,7 +533,6 @@ class LFP(dj.Imported):
                 - 1 : 0 : -self._skip_channel_counts
             ]
 
-            # (sample x channel)
             lfp = oe_probe.lfp_timeseries[:, lfp_channel_ind]
             lfp = (
                 lfp * np.array(oe_probe.lfp_meta["channels_gains"])[lfp_channel_ind]
