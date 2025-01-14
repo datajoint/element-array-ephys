@@ -13,7 +13,7 @@ The Element is comprised of `probe` and `ephys` schemas. Visit the
 `ephys` schemas and an explanation of the tables. To get started with building your own
 data pipeline, visit the [Tutorials page](./tutorials/index.md).
 
-Prior to version `0.4.0` , several `ephys` schemas were
+Prior to version `1.0.0` , several `ephys` schemas were
 developed and supported to handle various use cases of this pipeline and workflow. These
  are now deprecated but still available on their own branch within the repository:
 

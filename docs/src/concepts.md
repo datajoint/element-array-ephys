@@ -68,7 +68,7 @@ existing spike sorting methods, named
 by Alessio Buccino, et al. SpikeInterface provides a convenient Python-based wrapper to
 invoke, extract, compare spike sorting results from different sorting algorithms. 
 SpikeInterface is the primary tool supported by Element Array Electrophysiology for 
-spike sorting as of version `0.4.0`.
+spike sorting as of version `1.0.0`.
 
 ## Key Partnerships
 
