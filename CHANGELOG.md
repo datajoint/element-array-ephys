@@ -3,15 +3,23 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [v0.3.8] - 2025-01-16
+## [0.4.0] - 2025-01-24
+
++ Update - No longer support multiple variation of ephys module, keep only `ephys_no_curation` module, renamed to `ephys`
++ Update - Remove other ephys modules (e.g. `ephys_acute`, `ephys_chronic`) (moved to different branches)
++ Update - Add support for `SpikeInterface`
++ Update - Remove support for `ecephys_spike_sorting` (moved to a different branch)
++ Update - Simplify the "activate" mechanism
+
+## [0.3.8] - 2025-01-16
 
 * Change - Revert GHA Semantic Release caller and update changelog
 
-## [v0.3.7] - 2024-11-01
+## [0.3.7] - 2024-11-01
 
 * Fix - robust IMAX value detection from IMEC file (metadata 3.0)
 
-## [v0.3.6] - 2024-10-01
+## [0.3.6] - 2024-10-01
 
 * Fix - Minor bugfix in reading npx probe model of older versions and in reaeding probe model
 * Add - New GitHub Action callers for devcontainer, mkdocs, and semantic release
