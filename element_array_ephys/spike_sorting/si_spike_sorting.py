@@ -290,7 +290,9 @@ class PostProcessing(dj.Imported):
         def _sorting_analyzer_compute():
             if not has_units:
                 log.info("No units found in sorting object. Skipping sorting analyzer.")
-                analyzer_output_dir.mkdir(parents=True, exist_ok=True)  # create empty directory anyway, for consistency
+                analyzer_output_dir.mkdir(
+                    parents=True, exist_ok=True
+                )  # create empty directory anyway, for consistency
                 return
 
             # Sorting Analyzer
@@ -316,7 +318,9 @@ class PostProcessing(dj.Imported):
 
         _sorting_analyzer_compute()
 
-        do_si_export = postprocessing_params.get("export_to_phy", False) or postprocessing_params.get("export_report", False)
+        do_si_export = postprocessing_params.get(
+            "export_to_phy", False
+        ) or postprocessing_params.get("export_report", False)
 
         self.insert1(
             {

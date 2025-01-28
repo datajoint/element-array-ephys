@@ -1034,7 +1034,9 @@ class CuratedClustering(dj.Imported):
                 sorting_file, base_folder=output_dir
             )
             if si_sorting_.unit_ids.size == 0:
-                logger.info(f"No units found in {sorting_file}. Skipping Unit ingestion...")
+                logger.info(
+                    f"No units found in {sorting_file}. Skipping Unit ingestion..."
+                )
                 self.insert1(key)
                 return
 
@@ -1247,7 +1249,9 @@ class WaveformSet(dj.Imported):
 
         self.insert1(key)
         if not len(CuratedClustering.Unit & key):
-            logger.info(f"No CuratedClustering.Unit found for {key}, skipping Waveform ingestion.")
+            logger.info(
+                f"No CuratedClustering.Unit found for {key}, skipping Waveform ingestion."
+            )
             return
 
         # Get channel and electrode-site mapping
@@ -1303,6 +1307,7 @@ class WaveformSet(dj.Imported):
                     ]
 
                     yield unit_peak_waveform, unit_electrode_waveforms
+
         else:  # read from kilosort outputs (ecephys pipeline)
             kilosort_dataset = kilosort.Kilosort(output_dir)
 
@@ -1510,7 +1515,9 @@ class QualityMetrics(dj.Imported):
 
         self.insert1(key)
         if not len(CuratedClustering.Unit & key):
-            logger.info(f"No CuratedClustering.Unit found for {key}, skipping QualityMetrics ingestion.")
+            logger.info(
+                f"No CuratedClustering.Unit found for {key}, skipping QualityMetrics ingestion."
+            )
             return
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"
