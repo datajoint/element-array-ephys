@@ -1,7 +1,11 @@
 name: Test
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 jobs:
   devcontainer-build:
@@ -11,12 +15,7 @@ jobs:
     strategy:
       matrix:
         py_ver: ["3.9", "3.10"]
-        mysql_ver: ["8.0", "5.7"]
-        include:
-          - py_ver: "3.8"
-            mysql_ver: "5.7"
-          - py_ver: "3.7"
-            mysql_ver: "5.7"
+        mysql_ver: ["8.0"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{matrix.py_ver}}
@@ -31,4 +30,3 @@ jobs:
         run: |
           python_version=${{matrix.py_ver}}
           black element_array_ephys --check --verbose --target-version py${python_version//.}
-

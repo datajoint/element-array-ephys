@@ -3,6 +3,14 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.4.0] - 2025-01-28
+
++ Update - No longer support multiple variation of ephys module, keep only `ephys_no_curation` module, renamed to `ephys`
++ Update - Remove other ephys modules (e.g. `ephys_acute`, `ephys_chronic`) (moved to different branches)
++ Feat - Add support for `SpikeInterface`
++ Update - Remove support for `ecephys_spike_sorting` (moved to a different branch)
++ Update - Simplify the "activate" mechanism
+
 ## [0.3.8] - 2025-01-16
 
 * Fix - Revert GHA Semantic Release caller and update changelog

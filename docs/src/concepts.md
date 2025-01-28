@@ -59,12 +59,16 @@ significant community uptake:
 Kilosort provides most automation and has gained significant popularity, being adopted
 as one of the key spike sorting methods in the majority of the teams/collaborations we
 have worked with. As part of our Year-1 NIH U24 effort, we provide support for data
-ingestion of spike sorting results from Kilosort. Further effort will be devoted for the
+ingestion of spike sorting results from Kilosort. 
+
+Further effort has been devoted for the
 ingestion support of other spike sorting methods. On this end, a framework for unifying
 existing spike sorting methods, named
 [SpikeInterface](https://github.com/SpikeInterface/spikeinterface), has been developed
 by Alessio Buccino, et al. SpikeInterface provides a convenient Python-based wrapper to
-invoke, extract, compare spike sorting results from different sorting algorithms.
+invoke, extract, compare spike sorting results from different sorting algorithms. 
+SpikeInterface is the primary tool supported by Element Array Electrophysiology for 
+spike sorting as of version `0.4.0`.
 
 ## Key Partnerships
 
@@ -95,21 +99,9 @@ Each of the DataJoint Elements creates a set of tables for common neuroscience d
 modalities to organize, preprocess, and analyze data. Each node in the following diagram
 is a table within the Element or a table connected to the Element.
 
-### `ephys_acute` module
+### `ephys` module
 
 ![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
-
-### `ephys_chronic` module
-
-![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_chronic.svg)
-
-### `ephys_precluster` module
-
-![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_precluster.svg)
-
-### `ephys_no_curation` module
-
-![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_no_curation.svg)
 
 ### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
 
@@ -181,12 +173,11 @@ Major features of the Array Electrophysiology Element include:
     + Probe-insertion, ephys-recordings, LFP extraction, clusterings, curations, sorted
       units and the associated data (e.g. spikes, waveforms, etc.).
     
-    + Store/track/manage different curations of the spike sorting results - supporting
-      both curated clustering and kilosort triggered clustering (i.e., `no_curation`).
+    + Store/track/manage the spike sorting results.
 
 + Ingestion support for data acquired with SpikeGLX and OpenEphys acquisition systems. 
-+ Ingestion support for spike sorting outputs from Kilosort.
-+ Triggering support for workflow integrated Kilosort processing.
++ Ingestion support for spike sorting outputs from SpikeInterface.
++ Triggering support for workflow integrated SpikeInterface processing.
 + Sample data and complete test suite for quality assurance.
 
 ## Data Export and Publishing
@@ -208,8 +199,7 @@ pip install element-array-ephys[nwb]
 
 ## Roadmap
 
-Incorporation of SpikeInterface into the Array Electrophysiology Element will be
-on DataJoint Elements development roadmap. Dr. Loren Frank has led a development
+Dr. Loren Frank has led a development
 effort of a DataJoint pipeline with SpikeInterface framework and
 NeurodataWithoutBorders format integrated
 [https://github.com/LorenFrankLab/nwb_datajoint](https://github.com/LorenFrankLab/nwb_datajoint).
