@@ -3,17 +3,17 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.4.0] - 2025-01-24
+## [0.4.0] - 2025-01-28
 
 + Update - No longer support multiple variation of ephys module, keep only `ephys_no_curation` module, renamed to `ephys`
 + Update - Remove other ephys modules (e.g. `ephys_acute`, `ephys_chronic`) (moved to different branches)
-+ Update - Add support for `SpikeInterface`
++ Feat - Add support for `SpikeInterface`
 + Update - Remove support for `ecephys_spike_sorting` (moved to a different branch)
 + Update - Simplify the "activate" mechanism
 
 ## [0.3.8] - 2025-01-16
 
-* Change - Revert GHA Semantic Release caller and update changelog
+* Fix - Revert GHA Semantic Release caller and update changelog
 
 ## [0.3.7] - 2024-11-01
 
@@ -32,7 +32,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.3.4] - 2024-03-22
 
 * Add - pytest
-* Update - Ephys schema changed from `ephys_acute` to `ephys_no_curation` in `tutorial.ipynb`
+* Fix - Fix regex patterns and add minimum version for scikit-image
 
 ## [0.3.3] - 2024-01-24
 
