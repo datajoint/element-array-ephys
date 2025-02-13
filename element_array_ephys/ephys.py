@@ -177,10 +177,7 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": spikeglx_meta.probe_model,
                     "probe": spikeglx_meta.probe_SN,
                 }
-                if (
-                    probe_key["probe"] not in [p["probe"] for p in probe_list]
-                    and probe_key not in probe.Probe()
-                ):
+                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
                     probe_list.append(probe_key)
 
                 probe_dir = meta_filepath.parent
@@ -204,10 +201,7 @@ class ProbeInsertion(dj.Manual):
                     "probe_type": oe_probe.probe_model,
                     "probe": oe_probe.probe_SN,
                 }
-                if (
-                    probe_key["probe"] not in [p["probe"] for p in probe_list]
-                    and probe_key not in probe.Probe()
-                ):
+                if probe_key["probe"] not in [p["probe"] for p in probe_list]:
                     probe_list.append(probe_key)
                 probe_insertion_list.append(
                     {
@@ -219,7 +213,7 @@ class ProbeInsertion(dj.Manual):
         else:
             raise NotImplementedError(f"Unknown acquisition software: {acq_software}")
 
-        probe.Probe.insert(probe_list)
+        probe.Probe.insert(probe_list, skip_duplicates=True)
         cls.insert(probe_insertion_list, skip_duplicates=True)
 
 
@@ -1040,7 +1034,9 @@ class CuratedClustering(dj.Imported):
                 sorting_file, base_folder=output_dir
             )
             if si_sorting_.unit_ids.size == 0:
-                logger.info(f"No units found in {sorting_file}. Skipping Unit ingestion...")
+                logger.info(
+                    f"No units found in {sorting_file}. Skipping Unit ingestion..."
+                )
                 self.insert1(key)
                 return
 
@@ -1253,7 +1249,9 @@ class WaveformSet(dj.Imported):
 
         self.insert1(key)
         if not len(CuratedClustering.Unit & key):
-            logger.info(f"No CuratedClustering.Unit found for {key}, skipping Waveform ingestion.")
+            logger.info(
+                f"No CuratedClustering.Unit found for {key}, skipping Waveform ingestion."
+            )
             return
 
         # Get channel and electrode-site mapping
@@ -1309,6 +1307,7 @@ class WaveformSet(dj.Imported):
                     ]
 
                     yield unit_peak_waveform, unit_electrode_waveforms
+
         else:  # read from kilosort outputs (ecephys pipeline)
             kilosort_dataset = kilosort.Kilosort(output_dir)
 
@@ -1516,7 +1515,9 @@ class QualityMetrics(dj.Imported):
 
         self.insert1(key)
         if not len(CuratedClustering.Unit & key):
-            logger.info(f"No CuratedClustering.Unit found for {key}, skipping QualityMetrics ingestion.")
+            logger.info(
+                f"No CuratedClustering.Unit found for {key}, skipping QualityMetrics ingestion."
+            )
             return
 
         si_sorting_analyzer_dir = output_dir / sorter_name / "sorting_analyzer"

@@ -96,15 +96,15 @@ class SpikeGLX:
                 dataVolts = dataInt * Vmax / Imax / gain
         """
         vmax = float(self.apmeta.meta["imAiRangeMax"])
+        imax = self.apmeta.meta.get("imMaxInt")
+        imax = float(imax) if imax else IMAX[self.apmeta.probe_model]
 
         if band == "ap":
-            imax = IMAX[self.apmeta.probe_model]
             imroTbl_data = self.apmeta.imroTbl["data"]
             imroTbl_idx = 3
             chn_ind = self.apmeta.get_recording_channels_indices(exclude_sync=True)
 
         elif band == "lf":
-            imax = IMAX[self.lfmeta.probe_model]
             imroTbl_data = self.lfmeta.imroTbl["data"]
             imroTbl_idx = 4
             chn_ind = self.lfmeta.get_recording_channels_indices(exclude_sync=True)
