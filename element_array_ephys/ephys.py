@@ -213,7 +213,7 @@ class ProbeInsertion(dj.Manual):
         else:
             raise NotImplementedError(f"Unknown acquisition software: {acq_software}")
 
-        probe.Probe.insert(probe_list)
+        probe.Probe.insert(probe_list, skip_duplicates=True)
         cls.insert(probe_insertion_list, skip_duplicates=True)
 
 
