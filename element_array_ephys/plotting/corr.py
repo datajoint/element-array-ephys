@@ -1,5 +1,4 @@
-"""Code adapted from International Brain Laboratory, T. (2021). ibllib [Computer software]. https://github.com/int-brain-lab/ibllib
-"""
+"""Code adapted from International Brain Laboratory, T. (2021). ibllib [Computer software]. https://github.com/int-brain-lab/ibllib"""
 
 import numpy as np
 
