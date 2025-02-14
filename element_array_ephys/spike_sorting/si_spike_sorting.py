@@ -61,6 +61,14 @@ class PreProcessing(dj.Imported):
     execution_duration: float  # execution duration in hours
     """
 
+    class File(dj.Part):
+        definition = """
+        -> master
+        file_name: varchar(255)
+        ---
+        file: filepath@ephys-processed
+        """
+
     @property
     def key_source(self):
         return (
@@ -176,6 +184,14 @@ class PreProcessing(dj.Imported):
                 / 3600,
             }
         )
+        # Insert result files
+        self.File.insert(
+            [
+                {**key, "file_name": f.relative_to(recording_dir).as_posix(), "file": f}
+                for f in recording_dir.rglob("*")
+                if f.is_file()
+            ]
+        )
 
 
 @schema
@@ -188,6 +204,14 @@ class SIClustering(dj.Imported):
     execution_time: datetime        # datetime of the start of this step
     execution_duration: float       # execution duration in hours
     """
+
+    class File(dj.Part):
+        definition = """
+        -> master
+        file_name: varchar(255)
+        ---
+        file: filepath@ephys-processed
+        """
 
     def make(self, key):
         execution_time = datetime.utcnow()
@@ -239,6 +263,18 @@ class SIClustering(dj.Imported):
                 / 3600,
             }
         )
+        # Insert result files
+        self.File.insert(
+            [
+                {
+                    **key,
+                    "file_name": f.relative_to(sorting_output_dir).as_posix(),
+                    "file": f,
+                }
+                for f in sorting_output_dir.rglob("*")
+                if f.is_file()
+            ]
+        )
 
 
 @schema
@@ -252,6 +288,14 @@ class PostProcessing(dj.Imported):
     execution_duration: float  # execution duration in hours
     do_si_export=0: bool       # whether to export to phy
     """
+
+    class File(dj.Part):
+        definition = """
+        -> master
+        file_name: varchar(255)
+        ---
+        file: filepath@ephys-processed
+        """
 
     def make(self, key):
         execution_time = datetime.utcnow()
@@ -333,6 +377,17 @@ class PostProcessing(dj.Imported):
                 "do_si_export": do_si_export and has_units,
             }
         )
+        self.File.insert(
+            [
+                {
+                    **key,
+                    "file_name": f.relative_to(analyzer_output_dir).as_posix(),
+                    "file": f,
+                }
+                for f in analyzer_output_dir.rglob("*")
+                if f.is_file()
+            ]
+        )
 
         # Once finished, insert this `key` into ephys.Clustering
         ephys.Clustering.insert1(
@@ -350,6 +405,14 @@ class SIExport(dj.Computed):
     execution_time: datetime
     execution_duration: float
     """
+
+    class File(dj.Part):
+        definition = """
+        -> master
+        file_name: varchar(255)
+        ---
+        file: filepath@ephys-processed
+        """
 
     @property
     def key_source(self):
@@ -413,3 +476,16 @@ class SIExport(dj.Computed):
                 / 3600,
             }
         )
+        # Insert result files
+        for report_dirname in ("spikeinterface_report", "phy"):
+            self.File.insert(
+                [
+                    {
+                        **key,
+                        "file_name": f.relative_to(analyzer_output_dir).as_posix(),
+                        "file": f,
+                    }
+                    for f in (analyzer_output_dir / report_dirname).rglob("*")
+                    if f.is_file()
+                ]
+            )
