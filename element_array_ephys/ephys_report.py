@@ -50,6 +50,12 @@ class ProbeLevelReport(dj.Computed):
     ---
     drift_map_plot: attach
     """
+    
+    @property
+    def key_source(self):
+        return ephys.CuratedClustering & (
+            ephys.CuratedClustering.Unit & "cluster_quality_label='good'"
+        )
 
     def make(self, key):
         from .plotting.probe_level import plot_driftmap
