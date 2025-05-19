@@ -11,7 +11,7 @@ all the necessary dependencies and sample data to run the tutorials.
 
 Installation of the Element requires an integrated development environment and database.
 Instructions to setup each of the components can be found on the
-[User Instructions](https://datajoint.com/docs/elements/user-guide/) page. The example
+[User Instructions](https://docs.datajoint.com/elements/user-guide/) page. The example
 tutorial uses several Elements (Lab, Animal, Session, Event, and Electrophysiology) to construct
 a complete pipeline, and is able to ingest experimental metadata and run model training
 and inference.

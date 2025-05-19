@@ -103,7 +103,7 @@ is a table within the Element or a table connected to the Element.
 
 ![diagram](https://raw.githubusercontent.com/datajoint/element-array-ephys/main/images/attached_array_ephys_element_acute.svg)
 
-### `subject` schema ([API docs](https://datajoint.com/docs/elements/element-animal/api/element_animal/subject))
+### `subject` schema ([API docs](https://docs.datajoint.com/elements/element-animal/0.1/api/element_animal/subject/))
 
 Although not required, most choose to connect the `Session` table to a `Subject` table.
 
@@ -111,7 +111,7 @@ Although not required, most choose to connect the `Session` table to a `Subject`
 | --- | --- |
 | Subject | A table containing basic information of the research subject. |
 
-### `session` schema ([API docs](https://datajoint.com/docs/elements/element-session/api/element_session/session_with_datetime))
+### `session` schema ([API docs](https://docs.datajoint.com/elements/element-session/))
 
 | Table | Description |
 | --- | --- |

@@ -1,7 +1,7 @@
 --- # ---------------------- PROJECT SPECIFIC ---------------------------
 
 site_name: DataJoint Documentation
-site_url: http://localhost/docs/elements/element-array-ephys
+site_url: https://docs.datajoint.com/elements/element-array-ephys/
 repo_url: https://github.com/datajoint/element-array-ephys
 repo_name: datajoint/element-array-ephys
 nav:
