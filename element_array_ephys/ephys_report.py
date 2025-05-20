@@ -8,7 +8,7 @@ from uuid import UUID
 import datajoint as dj
 from element_interface.utils import dict_to_uuid
 
-from . import probe, ephys
+from . import ephys, probe
 
 schema = dj.schema()
 
@@ -50,7 +50,7 @@ class ProbeLevelReport(dj.Computed):
     ---
     drift_map_plot: attach
     """
-    
+
     @property
     def key_source(self):
         return ephys.CuratedClustering & (
