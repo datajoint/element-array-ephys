@@ -21,8 +21,6 @@ class Kilosort:
         "similar_templates.npy",
         "spike_templates.npy",
         "spike_times.npy",
-        "template_features.npy",
-        "template_feature_ind.npy",
         "templates.npy",
         "templates_ind.npy",
         "whitening_mat.npy",
@@ -35,6 +33,8 @@ class Kilosort:
         "spike_times_sec_adj.npy",
         "cluster_groups.csv",
         "cluster_KSLabel.tsv",
+        "template_features.npy",
+        "template_feature_ind.npy",
     ]
 
     kilosort_files = _kilosort_core_files + _kilosort_additional_files
