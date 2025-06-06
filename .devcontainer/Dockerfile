@@ -8,7 +8,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER root
 
 RUN \
-    adduser --system --disabled-password --shell /bin/bash vscode && \
     # install docker
     apt-get update && \
     apt-get install ca-certificates curl gnupg lsb-release -y && \
