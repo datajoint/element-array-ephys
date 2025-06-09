@@ -47,9 +47,6 @@ ENV DJ_PASS simple
 ENV EPHYS_ROOT_DATA_DIR /workspaces/element-array-ephys/example_data
 ENV DATABASE_PREFIX neuro_
 
-# Set up Jupyter kernel
-RUN python -m ipykernel install --user --name=python3 --display-name="Python 3.11"
-
 USER vscode
 
 CMD bash -c "sudo rm /var/run/docker.pid; sudo dockerd"
