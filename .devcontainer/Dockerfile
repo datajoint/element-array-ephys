@@ -1,10 +1,13 @@
-FROM python:3.9-slim@sha256:5f0192a4f58a6ce99f732fe05e3b3d00f12ae62e183886bca3ebe3d202686c7f
+ARG PY_VER=3.11
+ARG DISTRO=bullseye
+FROM mcr.microsoft.com/devcontainers/python:${PY_VER}-${DISTRO}
 
-ENV PATH /usr/local/bin:$PATH
-ENV PYTHON_VERSION 3.9.17
+# Avoid warnings by switching to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+USER root
 
 RUN \
-    adduser --system --disabled-password --shell /bin/bash vscode && \
     # install docker
     apt-get update && \
     apt-get install ca-certificates curl gnupg lsb-release -y && \
@@ -45,4 +48,5 @@ ENV EPHYS_ROOT_DATA_DIR /workspaces/element-array-ephys/example_data
 ENV DATABASE_PREFIX neuro_
 
 USER vscode
+
 CMD bash -c "sudo rm /var/run/docker.pid; sudo dockerd"
