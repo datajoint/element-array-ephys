@@ -319,7 +319,7 @@ class PostProcessing(dj.Imported):
 
         postprocessing_params = params["SI_POSTPROCESSING_PARAMS"]
 
-        job_kwargs = postprocessing_params.get(
+        job_kwargs = postprocessing_params.pop(
             "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
         )
 
@@ -429,7 +429,7 @@ class SIExport(dj.Computed):
 
         postprocessing_params = params["SI_POSTPROCESSING_PARAMS"]
 
-        job_kwargs = postprocessing_params.get(
+        job_kwargs = postprocessing_params.pop(
             "job_kwargs", {"n_jobs": -1, "chunk_duration": "1s"}
         )
 
@@ -446,6 +446,8 @@ class SIExport(dj.Computed):
                 sorting_analyzer=sorting_analyzer,
                 output_folder=analyzer_output_dir / "phy",
                 use_relative_path=True,
+                remove_if_exists=True,
+                copy_binary=True,
                 **job_kwargs,
             )
 
@@ -458,6 +460,7 @@ class SIExport(dj.Computed):
             si.exporters.export_report(
                 sorting_analyzer=sorting_analyzer,
                 output_folder=analyzer_output_dir / "spikeinterface_report",
+                remove_if_exists=True,
                 **job_kwargs,
             )
 
