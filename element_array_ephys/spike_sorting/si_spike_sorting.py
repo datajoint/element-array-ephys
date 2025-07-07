@@ -264,17 +264,15 @@ class SIClustering(dj.Imported):
             }
         )
         # Insert result files
-        self.File.insert(
-            [
-                {
-                    **key,
-                    "file_name": f.relative_to(sorting_output_dir).as_posix(),
-                    "file": f,
-                }
-                for f in sorting_output_dir.rglob("*")
-                if f.is_file()
-            ]
-        )
+        for f in sorting_output_dir.rglob("*"):
+            if f.is_file():
+                self.File.insert1(
+                    {
+                        **key,
+                        "file_name": f.relative_to(sorting_output_dir).as_posix(),
+                        "file": f,
+                    }
+                )
 
 
 @schema
@@ -377,17 +375,15 @@ class PostProcessing(dj.Imported):
                 "do_si_export": do_si_export and has_units,
             }
         )
-        self.File.insert(
-            [
-                {
-                    **key,
-                    "file_name": f.relative_to(analyzer_output_dir).as_posix(),
-                    "file": f,
-                }
-                for f in analyzer_output_dir.rglob("*")
-                if f.is_file()
-            ]
-        )
+        for f in analyzer_output_dir.rglob("*"):
+            if f.is_file():
+                self.File.insert1(
+                    {
+                        **key,
+                        "file_name": f.relative_to(analyzer_output_dir).as_posix(),
+                        "file": f,
+                    }
+                )
 
         # Once finished, insert this `key` into ephys.Clustering
         ephys.Clustering.insert1(
@@ -481,14 +477,12 @@ class SIExport(dj.Computed):
         )
         # Insert result files
         for report_dirname in ("spikeinterface_report", "phy"):
-            self.File.insert(
-                [
-                    {
-                        **key,
-                        "file_name": f.relative_to(analyzer_output_dir).as_posix(),
-                        "file": f,
-                    }
-                    for f in (analyzer_output_dir / report_dirname).rglob("*")
-                    if f.is_file()
-                ]
-            )
+            for f in (analyzer_output_dir / report_dirname).rglob("*"):
+                if f.is_file():
+                    self.File.insert1(
+                        {
+                            **key,
+                            "file_name": f.relative_to(analyzer_output_dir).as_posix(),
+                            "file": f,
+                        }
+                    )
