@@ -3,6 +3,11 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
  [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.4.5] - 2025-09-17
+
++ Fix - Rename `env.yml` to `conda_env.yml` for consistency with other projects
++ Update - Passing tests by blackifying previous updates
+
 ## [0.4.4] - 2025-06-06
 
 + Update - Update params in test/tutorial
