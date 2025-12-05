@@ -96,15 +96,15 @@ class SpikeGLX:
                 dataVolts = dataInt * Vmax / Imax / gain
         """
         vmax = float(self.apmeta.meta["imAiRangeMax"])
+        imax = self.apmeta.meta.get("imMaxInt")
+        imax = float(imax) if imax else IMAX[self.apmeta.probe_model]
 
         if band == "ap":
-            imax = IMAX[self.apmeta.probe_model]
             imroTbl_data = self.apmeta.imroTbl["data"]
             imroTbl_idx = 3
             chn_ind = self.apmeta.get_recording_channels_indices(exclude_sync=True)
 
         elif band == "lf":
-            imax = IMAX[self.lfmeta.probe_model]
             imroTbl_data = self.lfmeta.imroTbl["data"]
             imroTbl_idx = 4
             chn_ind = self.lfmeta.get_recording_channels_indices(exclude_sync=True)
@@ -262,13 +262,18 @@ class SpikeGLXMeta:
         self.fname = meta_filepath
         self.meta = _read_meta(meta_filepath)
 
+        # Get probe part number
+        self.probe_PN = self.meta.get("imDatPrb_pn", "3A")
+
         # Infer npx probe model (e.g. 1.0 (3A, 3B) or 2.0)
-        probe_model = self.meta.get("imDatPrb_type", 1)
-        if probe_model <= 1:
-            if "typeEnabled" in self.meta:
+        probe_model = self.meta.get("imDatPrb_type", 0)
+        if probe_model < 1:
+            if "typeEnabled" in self.meta and self.probe_PN == "3A":
                 self.probe_model = "neuropixels 1.0 - 3A"
-            elif "typeImEnabled" in self.meta:
-                self.probe_model = "neuropixels 1.0 - 3B"
+            elif "typeImEnabled" in self.meta and self.probe_PN == "NP1010":
+                self.probe_model = "neuropixels 1.0"
+            else:
+                self.probe_model = self.probe_PN
         elif probe_model == 1100:
             self.probe_model = "neuropixels UHD"
         elif probe_model == 21:
@@ -293,8 +298,6 @@ class SpikeGLXMeta:
                 "Probe Serial Number not found in"
                 ' either "imProbeSN" or "imDatPrb_sn"'
             )
-        # Get probe part number
-        self.probe_PN = self.meta.get("imDatPrb_pn", "3A")
 
         # Parse channel info
         self.chanmap = (

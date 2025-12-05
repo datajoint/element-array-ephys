@@ -1,6 +1,6 @@
 from os import path
-from setuptools import find_packages, setup
 
+from setuptools import find_packages, setup
 
 pkg_name = "element_array_ephys"
 here = path.abspath(path.dirname(__file__))
@@ -16,6 +16,7 @@ with open(path.join(here, pkg_name, "version.py")) as f:
 
 setup(
     name=pkg_name.replace("_", "-"),
+    python_requires=">=3.7, <3.12",
     version=__version__,  # noqa F821
     description="Extracellular Array Electrophysiology DataJoint Element",
     long_description=long_description,
@@ -36,19 +37,21 @@ setup(
         "seaborn",
         "neo @ git+https://github.com/NeuralEnsemble/python-neo.git",  # install neo from source until 0.14.1 release
         "spikeinterface",
-        "scikit-image",
+        "scikit-image>=0.20",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
+        "element-interface @ git+https://github.com/datajoint/element-interface.git",
+        "numba",
     ],
     extras_require={
         "elements": [
             "element-animal @ git+https://github.com/datajoint/element-animal.git",
             "element-event @ git+https://github.com/datajoint/element-event.git",
-            "element-interface @ git+https://github.com/datajoint/element-interface.git",
             "element-lab @ git+https://github.com/datajoint/element-lab.git",
             "element-session @ git+https://github.com/datajoint/element-session.git",
         ],
         "nwb": ["dandi", "neuroconv[ecephys]", "pynwb"],
         "tests": ["pre-commit", "pytest", "pytest-cov"],
+        "spikingcircus": ["hdbscan"],
     },
 )

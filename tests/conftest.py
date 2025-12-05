@@ -105,35 +105,47 @@ def populate_lfp(pipeline, insert_upstreams):
 @pytest.fixture(scope="session")
 def insert_clustering_task(pipeline, populate_ephys_recording):
     ephys = pipeline["ephys"]
-    params_ks = {
-        "fs": 30000,
-        "fshigh": 150,
+    params = {}
+    params["SI_PREPROCESSING_METHOD"] = "CatGT"
+    params["SI_SORTING_PARAMS"] = {
         "minfr_goodchannels": 0.1,
-        "Th": [10, 4],
         "lam": 10,
         "AUCsplit": 0.9,
         "minFR": 0.02,
         "momentum": [20, 400],
         "sigmaMask": 30,
-        "ThPr": 8,
-        "spkTh": -6,
-        "reorder": 1,
-        "nskip": 25,
-        "GPU": 1,
-        "Nfilt": 1024,
         "nfilt_factor": 4,
         "ntbuff": 64,
-        "whiteningRange": 32,
-        "nSkipCov": 25,
         "scaleproc": 200,
         "nPCs": 3,
-        "useRAM": 0,
     }
+    params["SI_POSTPROCESSING_PARAMS"] = {
+        "extensions": {
+            "random_spikes": {},
+            "waveforms": {},
+            "templates": {},
+            "noise_levels": {},
+            # "amplitude_scalings": {},
+            "correlograms": {},
+            "isi_histograms": {},
+            "principal_components": {"n_components": 5, "mode": "by_channel_local"},
+            "spike_amplitudes": {},
+            "spike_locations": {},
+            "template_metrics": {"include_multi_channel_metrics": True},
+            "template_similarity": {},
+            "unit_locations": {},
+            "quality_metrics": {},
+        },
+        "job_kwargs": {"n_jobs": 0.8, "chunk_duration": "1s"},
+        "export_to_phy": True,
+        "export_report": True,
+    }
+
     ephys.ClusteringParamSet.insert_new_params(
-        clustering_method="kilosort2",
+        clustering_method="kilosort2.5",
+        paramset_desc="Default parameter set for Kilosort2.0 with SpikeInterface",
+        params=params,
         paramset_idx=0,
-        params=params_ks,
-        paramset_desc="Spike sorting using Kilosort2",
     )
 
     session_key = dict(subject="subject5", session_datetime="2023-01-01 00:00:00")

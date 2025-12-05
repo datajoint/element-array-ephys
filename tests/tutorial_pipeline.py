@@ -3,7 +3,7 @@ import pathlib
 import datajoint as dj
 from element_animal import subject
 from element_animal.subject import Subject
-from element_array_ephys import probe, ephys_no_curation as ephys, ephys_report
+from element_array_ephys import probe, ephys, ephys_report
 from element_lab import lab
 from element_lab.lab import Lab, Location, Project, Protocol, Source, User
 from element_lab.lab import Device as Equipment
@@ -62,7 +62,11 @@ def get_session_directory(session_key):
     return pathlib.Path(session_directory)
 
 
-ephys.activate(db_prefix + "ephys", db_prefix + "probe", linking_module=__name__)
+probe.activate(db_prefix + "probe")
+ephys.activate(db_prefix + "ephys", linking_module=__name__)
+ephys_report.activate(db_prefix + "ephys_report")
+
+probe.create_neuropixels_probe_types()
 
 
 __all__ = [""]

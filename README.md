@@ -44,7 +44,7 @@ environment and notebooks to learn the pipeline.
 + [Interactive tutorial on GitHub
   Codespaces](https://github.com/datajoint/element-array-ephys#interactive-tutorial)
 
-+ [Documentation](https://datajoint.com/docs/elements/element-array-ephys)
++ [Documentation](https://docs.datajoint.com/elements/element-array-ephys/)
 
 ## Support
 

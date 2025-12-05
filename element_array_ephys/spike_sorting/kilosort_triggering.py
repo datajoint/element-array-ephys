@@ -98,7 +98,7 @@ class SGLXKilosortPipeline:
 
     def parse_input_filename(self):
         meta_filename = next(self._npx_input_dir.glob("*.ap.meta")).name
-        match = re.search("(.*)_g(\d)_t(\d+|cat)\.imec(\d?)\.ap\.meta", meta_filename)
+        match = re.search(r"(.*)_g(\d)_t(\d+|cat)\.imec(\d?)\.ap\.meta", meta_filename)
         session_str, gate_str, trigger_str, probe_str = match.groups()
         return session_str, gate_str, trigger_str, probe_str or "0"
 
@@ -719,7 +719,7 @@ class OpenEphysKilosortPipeline:
                         ) and previous_line.startswith("Total processing time:"):
                             # regex to search for the processing duration - a float value
                             duration = int(
-                                re.search("\d+\.?\d+", previous_line).group()
+                                re.search(r"\d+\.?\d+", previous_line).group()
                             )
                             return duration
                         previous_line = line

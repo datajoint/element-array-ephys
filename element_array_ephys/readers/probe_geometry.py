@@ -101,6 +101,14 @@ M = dict(
     ]
 )
 
+# additional alias to maintain compatibility with previous naming in the pipeline
+M["neuropixels 1.0 - 3A"] = M["3A"]
+M["neuropixels 1.0 - 3B"] = M["NP1010"]
+M["neuropixels 1.0"] = M["NP1010"]
+M["neuropixels UHD"] = M["NP1100"]
+M["neuropixels 2.0 - SS"] = M["NP2000"]
+M["neuropixels 2.0 - MS"] = M["NP2010"]
+
 
 def build_npx_probe(
     nShank: int,
@@ -132,8 +140,8 @@ def build_npx_probe(
     return elec_pos_df
 
 
-def to_probeinterface(electrodes_df):
-    from probeinterface import Probe
+def to_probeinterface(electrodes_df, **kwargs):
+    import probeinterface as pi
 
     probe_df = electrodes_df.copy()
     probe_df.rename(
@@ -145,10 +153,22 @@ def to_probeinterface(electrodes_df):
         },
         inplace=True,
     )
-    probe_df["contact_shapes"] = "square"
-    probe_df["width"] = 12
+    # Get the contact shapes. By default, it's set to circle with a radius of 10.
+    contact_shapes = kwargs.get("contact_shapes", "circle")
+    assert (
+        contact_shapes in pi.probe._possible_contact_shapes
+    ), f"contacts shape should be in {pi.probe._possible_contact_shapes}"
 
-    return Probe.from_dataframe(probe_df)
+    probe_df["contact_shapes"] = contact_shapes
+    if contact_shapes == "circle":
+        probe_df["radius"] = kwargs.get("radius", 10)
+    elif contact_shapes == "square":
+        probe_df["width"] = kwargs.get("width", 10)
+    elif contact_shapes == "rect":
+        probe_df["width"] = kwargs.get("width")
+        probe_df["height"] = kwargs.get("height")
+
+    return pi.Probe.from_dataframe(probe_df)
 
 
 def build_electrode_layouts(

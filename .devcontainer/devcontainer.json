@@ -22,8 +22,8 @@
 		},
 		"vscode": {
 			"extensions": [
-				"ms-python.python@2023.8.0",
-				"ms-toolsai.jupyter@2023.3.1201040234"
+				"ms-python.python@2025.6.1",
+				"ms-toolsai.jupyter@2025.4.1"
 			]
 		}
 	}

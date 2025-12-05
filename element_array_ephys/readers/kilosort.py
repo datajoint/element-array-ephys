@@ -1,12 +1,10 @@
-import logging
-import pathlib
-import re
-from datetime import datetime
 from os import path
-
-import numpy as np
+from datetime import datetime
+import pathlib
 import pandas as pd
-
+import numpy as np
+import re
+import logging
 from .utils import convert_to_number
 
 log = logging.getLogger(__name__)
@@ -23,8 +21,6 @@ class Kilosort:
         "similar_templates.npy",
         "spike_templates.npy",
         "spike_times.npy",
-        "template_features.npy",
-        "template_feature_ind.npy",
         "templates.npy",
         "templates_ind.npy",
         "whitening_mat.npy",
@@ -37,6 +33,8 @@ class Kilosort:
         "spike_times_sec_adj.npy",
         "cluster_groups.csv",
         "cluster_KSLabel.tsv",
+        "template_features.npy",
+        "template_feature_ind.npy",
     ]
 
     kilosort_files = _kilosort_core_files + _kilosort_additional_files
@@ -117,7 +115,8 @@ class Kilosort:
 
         # Read the Cluster Groups
         for cluster_pattern, cluster_col_name in zip(
-            ["cluster_group.*", "cluster_KSLabel.*"], ["group", "KSLabel"]
+            ["cluster_group.*", "cluster_KSLabel.*", "cluster_group.*"],
+            ["group", "KSLabel", "KSLabel"],
         ):
             try:
                 cluster_file = next(self._kilosort_dir.glob(cluster_pattern))
@@ -126,21 +125,25 @@ class Kilosort:
             else:
                 cluster_file_suffix = cluster_file.suffix
                 assert cluster_file_suffix in (".tsv", ".xlsx")
-                break
+
+                if cluster_file_suffix == ".tsv":
+                    df = pd.read_csv(cluster_file, sep="\t", header=0)
+                elif cluster_file_suffix == ".xlsx":
+                    df = pd.read_excel(cluster_file, engine="openpyxl")
+                else:
+                    df = pd.read_csv(cluster_file, delimiter="\t")
+
+                try:
+                    self._data["cluster_groups"] = np.array(df[cluster_col_name].values)
+                    self._data["cluster_ids"] = np.array(df["cluster_id"].values)
+                except KeyError:
+                    continue
+                else:
+                    break
         else:
             raise FileNotFoundError(
                 'Neither "cluster_groups" nor "cluster_KSLabel" file found!'
             )
-
-        if cluster_file_suffix == ".tsv":
-            df = pd.read_csv(cluster_file, sep="\t", header=0)
-        elif cluster_file_suffix == ".xlsx":
-            df = pd.read_excel(cluster_file, engine="openpyxl")
-        else:
-            df = pd.read_csv(cluster_file, delimiter="\t")
-
-        self._data["cluster_groups"] = np.array(df[cluster_col_name].values)
-        self._data["cluster_ids"] = np.array(df["cluster_id"].values)
 
     def get_best_channel(self, unit):
         template_idx = self.data["spike_templates"][
@@ -201,14 +204,14 @@ def extract_clustering_info(cluster_output_dir):
         is_curated = bool(np.any(curation_row))
         if creation_time is None and is_curated:
             row_meta = phylog.meta[np.where(curation_row)[0].max()]
-            datetime_str = re.search("\d{2}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}", row_meta)
+            datetime_str = re.search(r"\d{2}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}", row_meta)
             if datetime_str:
                 creation_time = datetime.strptime(
                     datetime_str.group(), "%Y-%m-%d %H:%M:%S"
                 )
             else:
                 creation_time = datetime.fromtimestamp(phylog_filepath.stat().st_ctime)
-                time_str = re.search("\d{2}:\d{2}:\d{2}", row_meta)
+                time_str = re.search(r"\d{2}:\d{2}:\d{2}", row_meta)
                 if time_str:
                     creation_time = datetime.combine(
                         creation_time.date(),
