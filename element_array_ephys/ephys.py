@@ -4,7 +4,7 @@ import inspect
 import pathlib
 import re
 from decimal import Decimal
-
+from typing import Any, Dict, List, Tuple
 import datajoint as dj
 import numpy as np
 import pandas as pd
@@ -293,14 +293,28 @@ class EphysRecording(dj.Imported):
         file_path: varchar(255)  # filepath relative to root data directory
         """
 
-    def make(self, key):
-        """Populates table with electrophysiology recording information."""
+    def make_fetch(self, key: dict) -> Tuple[pathlib.Path, str, List[str], List[str]]:
+        """Fetch required data from database for processing."""
         session_dir = find_full_path(
             get_ephys_root_data_dir(), get_session_directory(key)
         )
         inserted_probe_serial_number = (ProbeInsertion * probe.Probe & key).fetch1(
             "probe"
         )
+        supported_probe_types = list(probe.ProbeType.fetch("probe_type"))
+        supported_acq_software = list(AcquisitionSoftware.fetch("acq_software"))
+
+        return session_dir, inserted_probe_serial_number, supported_probe_types, supported_acq_software
+
+    def make_compute(
+        self,
+        key: dict,
+        session_dir: pathlib.Path,
+        inserted_probe_serial_number: str,
+        supported_probe_types: List[str],
+        supported_acq_software: List[str],
+    ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Populates table with electrophysiology recording information."""
 
         # Search session dir and determine acquisition software
         for ephys_pattern, ephys_acq_type in (
@@ -317,12 +331,10 @@ class EphysRecording(dj.Imported):
                 "Neither SpikeGLX nor Open Ephys recording files found"
             )
 
-        if acq_software not in AcquisitionSoftware.fetch("acq_software"):
+        if acq_software not in supported_acq_software:
             raise NotImplementedError(
                 f"Processing ephys files from acquisition software of type {acq_software} is not yet implemented."
             )
-
-        supported_probe_types = probe.ProbeType.fetch("probe_type")
 
         if acq_software == "SpikeGLX":
             for meta_filepath in ephys_meta_filepaths:
@@ -483,6 +495,18 @@ class EphysRecording(dj.Imported):
                 f"Processing ephys files from acquisition software of type {acq_software} is not yet implemented."
             )
 
+        return econfig_entry, econfig_electrodes, ephys_recording_entry, ephys_file_entries, ephys_channel_entries
+
+    def make_insert(
+        self,
+        key: dict,
+        econfig_entry: Dict[str, Any],
+        econfig_electrodes: List[Dict[str, Any]],
+        ephys_recording_entry: Dict[str, Any],
+        ephys_file_entries: List[Dict[str, Any]],
+        ephys_channel_entries: List[Dict[str, Any]],
+    ) -> None:
+        """Insert computed data into database tables."""
         # Insert into probe.ElectrodeConfig (recording configuration)
         if not probe.ElectrodeConfig & {
             "electrode_config_hash": econfig_entry["electrode_config_hash"]
