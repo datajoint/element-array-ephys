@@ -35,8 +35,7 @@ setup(
         "openpyxl",
         "plotly",
         "seaborn",
-        "neo @ git+https://github.com/NeuralEnsemble/python-neo.git",  # install neo from source until 0.14.1 release
-        "spikeinterface",
+        "spikeinterface @ git+https://github.com/SpikeInterface/spikeinterface.git",
         "scikit-image>=0.20",
         "nbformat>=4.2.0",
         "pyopenephys>=1.1.6",
