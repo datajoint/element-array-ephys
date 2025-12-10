@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import re
 import logging
-from .utils import convert_to_number
+from element_array_ephys.readers.utils import convert_to_number
 
 log = logging.getLogger(__name__)
 
@@ -22,9 +22,6 @@ class Kilosort:
         "spike_templates.npy",
         "spike_times.npy",
         "templates.npy",
-        "templates_ind.npy",
-        "whitening_mat.npy",
-        "whitening_mat_inv.npy",
         "spike_clusters.npy",
     ]
 
@@ -35,6 +32,9 @@ class Kilosort:
         "cluster_KSLabel.tsv",
         "template_features.npy",
         "template_feature_ind.npy",
+        "templates_ind.npy",
+        "whitening_mat.npy",
+        "whitening_mat_inv.npy",
     ]
 
     kilosort_files = _kilosort_core_files + _kilosort_additional_files
@@ -47,7 +47,7 @@ class Kilosort:
 
         self.validate()
 
-        params_filepath = kilosort_dir / "params.py"
+        params_filepath = self._kilosort_dir / "params.py"
         self._info = {
             "time_created": datetime.fromtimestamp(params_filepath.stat().st_ctime),
             "time_modified": datetime.fromtimestamp(params_filepath.stat().st_mtime),
