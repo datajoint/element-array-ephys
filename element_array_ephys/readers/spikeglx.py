@@ -281,7 +281,7 @@ class SpikeGLXMeta:
         elif probe_model == 24:
             self.probe_model = "neuropixels 2.0 - MS"
         else:
-            self.probe_model = str(probe_model)
+            self.probe_model = self.probe_PN
 
         # Get recording time
         self.recording_time = datetime.strptime(
