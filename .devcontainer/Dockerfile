@@ -32,8 +32,7 @@ COPY ./ /tmp/element-array-ephys/
 RUN \
     # pipeline dependencies
     apt-get install gcc g++ ffmpeg libsm6 libxext6 -y && \
-    # datajoint 2 drops dj.schema; setuptools 82+ drops pkg_resources (used by datajoint<2)
-    pip install --no-cache-dir -e "/tmp/element-array-ephys[elements,tests]" "datajoint<2" "setuptools<82" && \
+    pip install --no-cache-dir -e "/tmp/element-array-ephys[elements,tests]" && \
     # clean up
     rm -rf /tmp/element-array-ephys && \
     apt-get clean

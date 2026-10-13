@@ -129,18 +129,9 @@ updates:
     ignore:
       # datajoint 2.x removed dj.schema and ignores the dj_local_conf.json that
       # the BrainCOGS repos ship, so `import element_array_ephys` fails on it.
-      # pyproject.toml constrains the dev environment to datajoint<2 and
-      # U19-pipeline-python pins datajoint<2.0.0 for the same reason. Remove
+      # pyproject.toml and U19-pipeline-python pin datajoint==0.14.10 for the
+      # same reason. Remove
       # once the datajoint 2.x migration lands.
       - dependency-name: "datajoint"
         versions:
           - ">=2.0"
-      # datajoint <2.0 imports pkg_resources (plugin.py, pulled in by
-      # connection.py on every `import datajoint`). setuptools 82.0.0 removed
-      # pkg_resources outright and there is no installable replacement, so any
-      # bump to >=82 makes `import datajoint` fail with ModuleNotFoundError.
-      # Verified in tech_calendar_streamlit#110. Remove together with the
-      # datajoint ignore above.
-      - dependency-name: "setuptools"
-        versions:
-          - ">=82"

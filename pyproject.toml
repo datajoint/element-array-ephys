@@ -12,7 +12,10 @@ authors = [{ name = "DataJoint", email = "info@datajoint.com" }]
 keywords = ["neuroscience", "electrophysiology", "science", "datajoint"]
 requires-python = ">=3.11"
 dependencies = [
-    "datajoint>=0.13.0",
+    # The code uses the datajoint 0.14 API (dj.schema(), dj_local_conf.json),
+    # which 2.x removed. 0.14.10 is the first 0.14 release without
+    # pkg_resources; pin it exactly, matching U19-pipeline-python.
+    "datajoint==0.14.10",
     "ipykernel>=6.0.1",
     "ipywidgets",
     "openpyxl",
@@ -74,19 +77,6 @@ exclude-newer = "7 days"
 # command runs without `--preview-features audit-command` on the command line,
 # so local runs and the CI audit job invoke it identically.
 preview-features = ["audit-command"]
-
-# Constraints for this repo's own dev/CI environment only; they are not part of
-# the published metadata, so downstream installs are unaffected.
-constraint-dependencies = [
-    # The code uses the datajoint 0.14 API (dj.schema(), dj_local_conf.json);
-    # datajoint 2.x removed dj.schema, so `import element_array_ephys` fails.
-    # U19-pipeline-python pins datajoint<2.0.0 for the same reason.
-    "datajoint<2",
-    # datajoint <2.0 imports pkg_resources on every `import datajoint`;
-    # setuptools 82 removed it (datajoint 0.14.9 also declares setuptools<82).
-    # <82 matches U19-pipeline-python's pin.
-    "setuptools<82",
-]
 
 [tool.ruff]
 # Upstream formats with black at 88; keep it so upstream merges stay clean.
@@ -176,10 +166,6 @@ log_level = "INFO"
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    # setuptools>=81 raises this as a UserWarning when datajoint<2 imports
-    # pkg_resources, so the category stays unpinned or every test errors at
-    # collection. Belongs to datajoint, not this repo.
-    "ignore:pkg_resources is deprecated as an API",
     # datajoint calls pyparsing APIs that pyparsing itself deprecated
     # (delimitedList, setResultsName, ...) at import time.
     "ignore::pyparsing.warnings.PyparsingDeprecationWarning",
